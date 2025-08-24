@@ -22,23 +22,33 @@ class BootReceiver : BroadcastReceiver() {
             val pendingResult = goAsync()
 
             CoroutineScope(Dispatchers.IO).launch {
-                val reminders = getStoredReminders(context)
-                for (reminder in reminders) {
-                    val timeInMillis =
-                        getNextValidTimeFromOriginal(reminder.timeInMillis, reminder.repeat)
-                    if (timeInMillis != -1L) {
-                        scheduleReminder(
-                            context = context,
-                            id = reminder.id,
-                            type = reminder.type,
-                            repeat = reminder.repeat,
-                            timeInMillis = timeInMillis,
-                            title = reminder.title,
-                            description = reminder.description
-                        )
-                    }
-                }
+                rescheduleReminders(context)
+
+
                 pendingResult.finish()
+            }
+        }
+    }
+
+    private suspend fun startAttentionMonitor() {
+
+    }
+
+    private suspend fun rescheduleReminders(context: Context) {
+        val reminders = getStoredReminders(context)
+        for (reminder in reminders) {
+            val timeInMillis =
+                getNextValidTimeFromOriginal(reminder.timeInMillis, reminder.repeat)
+            if (timeInMillis != -1L) {
+                scheduleReminder(
+                    context = context,
+                    id = reminder.id,
+                    type = reminder.type,
+                    repeat = reminder.repeat,
+                    timeInMillis = timeInMillis,
+                    title = reminder.title,
+                    description = reminder.description
+                )
             }
         }
     }
