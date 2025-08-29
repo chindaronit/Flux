@@ -8,13 +8,7 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-<<<<<<< HEAD
 import androidx.activity.addCallback
-=======
-import android.os.Process
-import android.provider.Settings
-import android.widget.Toast
->>>>>>> d60390c (basic background service implemented + some notifications refactoring)
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
@@ -73,7 +67,7 @@ class MainActivity : AppCompatActivity() {
         // Splash screen condition
         val splashScreen = installSplashScreen()
         splashScreen.setKeepOnScreenCondition { keepSplashScreen.value }
-        
+
         startAttentionManager(applicationContext)
 
 //        if (!checkUsageStatsPermission()) {
