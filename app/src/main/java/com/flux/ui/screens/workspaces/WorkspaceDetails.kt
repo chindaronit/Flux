@@ -409,7 +409,16 @@ fun WorkspaceDetails(
                     workspace.copy(selectedSpaces = workspace.selectedSpaces.minus(it))
                 )
             )
-            removeSpaceData(workspaceId, it, context, onTaskEvents, onTodoEvents, onHabitEvents, onNotesEvents, onJournalEvents)
+            removeSpaceData(
+                workspaceId,
+                it,
+                context,
+                onTaskEvents,
+                onTodoEvents,
+                onHabitEvents,
+                onNotesEvents,
+                onJournalEvents
+            )
         },
         onSelect = {
             if (selectedSpaceId.intValue == -1) selectedSpaceId.intValue = it

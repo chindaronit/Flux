@@ -1,6 +1,5 @@
 package com.flux
 
-
 import android.app.AppOpsManager
 import android.content.ActivityNotFoundException
 import android.content.Intent
@@ -8,6 +7,9 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.os.Process
+import android.provider.Settings
+import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -31,7 +33,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flux.navigation.AppNavHost
 import com.flux.navigation.Loader
 import com.flux.other.Notifications
-import com.flux.other.startAttentionManager
 import com.flux.ui.effects.ScreenEffect
 import com.flux.ui.theme.FluxTheme
 import com.flux.ui.viewModel.BackupViewModel
@@ -68,7 +69,7 @@ class MainActivity : AppCompatActivity() {
         val splashScreen = installSplashScreen()
         splashScreen.setKeepOnScreenCondition { keepSplashScreen.value }
 
-        startAttentionManager(applicationContext)
+//        startAttentionManager(applicationContext)
 
 //        if (!checkUsageStatsPermission()) {
 //            requestUsageStatsPermission();
