@@ -12,13 +12,15 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
@@ -52,6 +54,8 @@ fun AppPicker(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val data = settings.data
+    val filteredApps by viewModel.filteredApps.collectAsState()
+    val searchQuery by viewModel.searchQuery.collectAsState()
 
     BasicScaffold(
         title = "Application Picker",
@@ -65,21 +69,37 @@ fun AppPicker(
             if (uiState.isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             } else {
-                LazyColumn(
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                ) {
-                    items(uiState.apps) { app ->
-                        Application(
-                            label = app.label,
-                            packageName = app.packageName,
-                            icon = app.icon,
-                            radius = shapeManager(
-                                radius = data.cornerRadius,
-                                isLast = true
-                            ),
-                            actionType = ActionType.None
-                        )
+                Column(modifier = Modifier.fillMaxSize()) {
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { viewModel.onSearchQueryChanged(it) },
+                        label = { Text("Search Apps") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp)
+                    )
+
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .padding(horizontal = 16.dp)
+                    ) {
+                        itemsIndexed(
+                            items = filteredApps,
+                            key = { index, item -> item.packageName }) { index, app ->
+                            Application(
+                                label = app.label,
+                                packageName = app.packageName,
+                                icon = app.icon,
+                                radius = shapeManager(
+                                    radius = data.cornerRadius,
+                                    isFirst = index == 0,
+                                    isLast = index == filteredApps.lastIndex
+                                ),
+                                actionType = ActionType.None
+                            )
+                        }
                     }
                 }
             }
@@ -133,7 +153,7 @@ fun Application(
                         modifier = Modifier
                             .clip(CircleShape)
                             .background(MaterialTheme.colorScheme.surfaceContainerLow)
-                            .padding(4.dp)
+                            .size(40.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
