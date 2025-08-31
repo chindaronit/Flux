@@ -68,7 +68,7 @@ sealed class NavRoutes(val route: String) {
     data object Contact : NavRoutes("settings/contact")
     data object Backup : NavRoutes("setting/backup")
     data object MainAttentionManager : NavRoutes("settings/attention_manager")
-    data object AttentionManagerAppPicker : NavRoutes("attention_manager/app_picker")
+    data object AttentionManagerAppPicker : NavRoutes("settings/attention_manager/app_picker")
 
     fun withArgs(vararg args: String): String {
         return buildString {

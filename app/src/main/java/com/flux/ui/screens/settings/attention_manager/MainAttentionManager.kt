@@ -68,8 +68,8 @@ fun AttentionManager(
                     description = "Set blocked apps list",
                     icon = Icons.Filled.Check,
                     radius = shapeManager(radius = data.cornerRadius, isBoth = true),
-                    actionType = ActionType.CUSTOM,
-                    customButton = {
+                    actionType = ActionType.LINK,
+                    linkClicked = {
                         navController.navigate(NavRoutes.AttentionManagerAppPicker.route)
                     }
                 )
