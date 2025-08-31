@@ -18,5 +18,7 @@ data class SettingsModel(
     val amoledTheme: Boolean = false,
     val isScreenProtection: Boolean = false,
     val workspaceGridColumns: Int = 1,
-    val is24HourFormat: Boolean = false
+    val is24HourFormat: Boolean = false,
+    val isAttentionManagerEnabled: Boolean = false,
+    val blockedApps: List<String> = emptyList()
 )

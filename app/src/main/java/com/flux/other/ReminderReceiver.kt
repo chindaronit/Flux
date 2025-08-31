@@ -1,23 +1,17 @@
 package com.flux.other
 
-import android.Manifest
-import android.app.Activity
 import android.app.AlarmManager
-import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.ActivityNotFoundException
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Build
 import android.provider.Settings
 import android.widget.Toast
 import androidx.annotation.RequiresApi
-import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
-import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import com.flux.R
 import java.util.Calendar
@@ -30,7 +24,7 @@ class ReminderReceiver : BroadcastReceiver() {
         val id = intent.getStringExtra("ID") ?: "" // UUID string
         val type = intent.getStringExtra("TYPE") ?: "HABIT"
         val repeat = intent.getStringExtra("REPEAT") ?: "NONE"
-        val notificationId = getUniqueRequestCode(type, id)
+        val notificationId = Notifications.getUniqueRequestCode(type, id)
 
         val notification = NotificationCompat.Builder(context, "notification_channel")
             .setSmallIcon(R.mipmap.ic_launcher_foreground)
@@ -63,18 +57,6 @@ class ReminderReceiver : BroadcastReceiver() {
             )
         }
     }
-}
-
-@RequiresApi(Build.VERSION_CODES.TIRAMISU)
-fun createNotificationChannel(context: Context) {
-    if (!isNotificationPermissionGranted(context)) {
-        requestNotificationPermission(context as Activity)
-    }
-
-    val importance = NotificationManager.IMPORTANCE_HIGH
-    val channel = NotificationChannel("notification_channel", "Reminders", importance)
-    val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-    manager.createNotificationChannel(channel)
 }
 
 @RequiresApi(Build.VERSION_CODES.S)
@@ -114,7 +96,7 @@ fun scheduleReminder(
     try {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val intent = createReminderIntent(context, id, type, title, description, repeat)
-        val requestCode = getUniqueRequestCode(type, id)
+        val requestCode = Notifications.getUniqueRequestCode(type, id)
 
         val pendingIntent = PendingIntent.getBroadcast(
             context,
@@ -149,10 +131,6 @@ fun createReminderIntent(
     }
 }
 
-fun getUniqueRequestCode(type: String, uuid: String): Int {
-    return (type + uuid).hashCode()
-}
-
 fun cancelReminder(
     context: Context,
     id: String, // UUID string
@@ -170,7 +148,7 @@ fun cancelReminder(
             description = description,
             repeat = repeat
         )
-        val requestCode = getUniqueRequestCode(type, id)
+        val requestCode = Notifications.getUniqueRequestCode(type, id)
         val pendingIntent = PendingIntent.getBroadcast(
             context,
             requestCode,
@@ -184,28 +162,4 @@ fun cancelReminder(
         e.printStackTrace()
         Toast.makeText(context, "Error: Failed to cancel alarm", Toast.LENGTH_LONG).show()
     }
-}
-
-@RequiresApi(Build.VERSION_CODES.TIRAMISU)
-fun isNotificationPermissionGranted(context: Context): Boolean {
-    return ContextCompat.checkSelfPermission(
-        context,
-        Manifest.permission.POST_NOTIFICATIONS
-    ) == PackageManager.PERMISSION_GRANTED
-}
-
-@RequiresApi(Build.VERSION_CODES.TIRAMISU)
-fun requestNotificationPermission(activity: Activity, requestCode: Int = 1001) {
-    ActivityCompat.requestPermissions(
-        activity,
-        arrayOf(Manifest.permission.POST_NOTIFICATIONS),
-        requestCode
-    )
-}
-
-fun openAppNotificationSettings(context: Context) {
-    val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
-        putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
-    }
-    context.startActivity(intent)
 }
