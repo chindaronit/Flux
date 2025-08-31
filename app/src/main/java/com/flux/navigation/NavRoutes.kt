@@ -24,6 +24,8 @@ import com.flux.ui.screens.settings.Customize
 import com.flux.ui.screens.settings.Languages
 import com.flux.ui.screens.settings.Privacy
 import com.flux.ui.screens.settings.Settings
+import com.flux.ui.screens.settings.attention_manager.AppPicker
+import com.flux.ui.screens.settings.attention_manager.AttentionManager
 import com.flux.ui.screens.todo.TodoDetail
 import com.flux.ui.screens.workspaces.WorkSpaces
 import com.flux.ui.screens.workspaces.WorkspaceDetails
@@ -65,6 +67,8 @@ sealed class NavRoutes(val route: String) {
     data object About : NavRoutes("settings/about")
     data object Contact : NavRoutes("settings/contact")
     data object Backup : NavRoutes("setting/backup")
+    data object MainAttentionManager : NavRoutes("settings/attention_manager")
+    data object AttentionManagerAppPicker : NavRoutes("attention_manager/app_picker")
 
     fun withArgs(vararg args: String): String {
         return buildString {
@@ -151,6 +155,12 @@ val SettingsScreens =
         },
         NavRoutes.Languages.route to { navController, _, states, _ ->
             Languages(navController, states.settings)
+        },
+        NavRoutes.MainAttentionManager.route to { navController, _, states, viewModels ->
+            AttentionManager(navController, states.settings, viewModels.settingsViewModel::onEvent)
+        },
+        NavRoutes.AttentionManagerAppPicker.route to { navController, _, states, _ ->
+            AppPicker(navController, states.settings)
         },
         NavRoutes.Customize.route to { navController, _, states, viewModels ->
             Customize(navController, states.settings, viewModels.settingsViewModel::onEvent)

@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ContactSupport
 import androidx.compose.material.icons.filled.Coffee
+import androidx.compose.material.icons.rounded.AppBlocking
 import androidx.compose.material.icons.rounded.Backup
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Language
@@ -83,6 +84,21 @@ fun Settings(
                         navController.navigate(NavRoutes.Backup.route)
                     }
                 )
+            }
+
+            item {
+                SettingCategory(
+                    isLast = true,
+                    title = "Attention Manager",
+                    subTitle = "",
+                    icon = Icons.Rounded.AppBlocking,
+                    shape = shapeManager(radius = settings.data.cornerRadius, isBoth = true),
+                    action = {
+                        navController.navigate(NavRoutes.MainAttentionManager.route) {
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    })
             }
 
             item {

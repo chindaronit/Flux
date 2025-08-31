@@ -12,9 +12,9 @@
     <!--        android:name="android.permission.FOREGROUND_SERVICE"-->
     <!--        tools:ignore="ForegroundServicesPolicy" />-->
     <!--    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />-->
-    <!--    <uses-permission-->
-    <!--        android:name="android.permission.QUERY_ALL_PACKAGES"-->
-    <!--        tools:ignore="PackageVisibilityPolicy,QueryAllPackagesPermission" />-->
+    <uses-permission
+        android:name="android.permission.QUERY_ALL_PACKAGES"
+        tools:ignore="PackageVisibilityPolicy,QueryAllPackagesPermission" />
     <!--    <uses-permission-->
     <!--        android:name="android.permission.PACKAGE_USAGE_STATS"-->
     <!--        tools:ignore="ProtectedPermissions" />-->
@@ -55,7 +55,7 @@
             android:exported="false" />
 
         <service
-            android:name=".other.attention_mgr.MyAccessibilityService"
+            android:name=".other.attention_manager.MyAccessibilityService"
             android:exported="true"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
             <intent-filter>

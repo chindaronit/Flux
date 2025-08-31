@@ -1,4 +1,4 @@
-package com.flux.other.attention_mgr
+package com.flux.other.attention_manager
 
 import android.accessibilityservice.AccessibilityService
 import android.annotation.SuppressLint

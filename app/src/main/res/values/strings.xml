@@ -8,6 +8,7 @@
 
     <!-- Settings -->
     <string name="Settings">Settings</string>
+    <string name="Attention_Manager">Attention Manager</string>
     <string name="Customize">Customize</string>
     <string name="Customize_desc">Theme • Shape • Contrast</string>
     <string name="About">About</string>
