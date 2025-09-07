@@ -91,24 +91,22 @@ fun EmptyHabits() {
 @Composable
 fun HabitDateCard(
     radius: Int,
-    isDone: Boolean,
     isTodayDone: Boolean,
+    isDone: Boolean,
     day: String,
     date: Int,
     modifier: Modifier = Modifier
 ) {
     val containerColor = when {
         isTodayDone && isDone -> MaterialTheme.colorScheme.primary
-        isTodayDone -> MaterialTheme.colorScheme.primaryContainer
-        isDone -> MaterialTheme.colorScheme.tertiary
-        else -> MaterialTheme.colorScheme.tertiaryContainer
+        isTodayDone && !isDone -> MaterialTheme.colorScheme.primaryContainer
+        isDone -> MaterialTheme.colorScheme.primary
+        else -> MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)
     }
 
     val contentColor = when {
-        isTodayDone && isDone -> MaterialTheme.colorScheme.onPrimary
-        isTodayDone -> MaterialTheme.colorScheme.onPrimaryContainer
-        isDone -> MaterialTheme.colorScheme.onTertiary
-        else -> MaterialTheme.colorScheme.onTertiaryContainer
+        isDone -> MaterialTheme.colorScheme.onPrimary
+        else -> MaterialTheme.colorScheme.onSurface
     }
 
     Card(
@@ -139,92 +137,82 @@ fun HabitDateCard(
     }
 }
 
-
 @Composable
 fun HabitPreviewCard(
     radius: Int,
     habit: HabitModel,
     instances: List<HabitInstanceModel>,
     settings: Settings,
-    onToggleDone: (LocalDate) -> Unit,
+    onToggleDone: (Long) -> Unit,
     onAnalyticsClicked: () -> Unit
 ) {
-    val today = LocalDate.now()
-    val isTodayDone = instances.any { it.instanceDate == today }
-    val monday = today.with(DayOfWeek.MONDAY)
-    val weekDates = (0..6).map { monday.plusDays(it.toLong()) }
+    val todayEpoch = LocalDate.now().toEpochDay()
+    val isTodayDone = instances.any { it.instanceDate == todayEpoch }
+
+    // Get Monday of this week
+    val mondayEpoch = LocalDate.now().with(DayOfWeek.MONDAY).toEpochDay()
+    val weekDates = (0L..6L).map { mondayEpoch + it }
+
     val (currentStreak, _) = calculateStreaks(instances)
 
     Card(
-        onClick = { onToggleDone(today) },
+        onClick = { onToggleDone(todayEpoch) },
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = if (isTodayDone) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.tertiaryContainer),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isTodayDone) MaterialTheme.colorScheme.primaryContainer
+            else MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)
+        ),
         shape = shapeManager(radius = radius * 2)
     ) {
         Column {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = if (isTodayDone) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary,
-                    contentColor = MaterialTheme.colorScheme.onTertiary
-                ),
-                shape = shapeManager(radius = radius * 2)
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Column(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp)
-                ) {
-                    Row(
-                        Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Row {
-                            IconRadioButton(
-                                selected = isTodayDone,
-                                checkedTint = MaterialTheme.colorScheme.onTertiary,
-                                uncheckedTint = MaterialTheme.colorScheme.onTertiary
-                            ) { onToggleDone(today) }
-                            Column {
-                                Text(
-                                    habit.title,
-                                    fontWeight = FontWeight.SemiBold,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                                Text(
-                                    habit.startDateTime.toFormattedTime(settings.data.is24HourFormat),
-                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.ExtraLight),
-                                    modifier = Modifier.alpha(0.9f)
-                                )
-                            }
-                        }
+                Row {
+                    IconRadioButton(
+                        selected = isTodayDone,
+                    ) { onToggleDone(todayEpoch) }
 
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            IconButton({}) { Icon(Icons.Default.LocalFireDepartment, null) }
-                            Text("$currentStreak")
-                            IconButton(onAnalyticsClicked) { Icon(Icons.Default.Analytics, null) }
-                        }
+                    Column(Modifier.padding(top = 8.dp)) {
+                        Text(
+                            habit.title,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            habit.startDateTime.toFormattedTime(settings.data.is24HourFormat),
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.ExtraLight),
+                            modifier = Modifier.alpha(0.9f)
+                        )
                     }
+                }
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton({}) { Icon(Icons.Default.LocalFireDepartment, null) }
+                    Text("$currentStreak")
+                    IconButton(onAnalyticsClicked) { Icon(Icons.Default.Analytics, null) }
                 }
             }
 
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 4.dp, vertical = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(2.dp)
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                weekDates.forEach { date ->
-                    val isDone = instances.any { it.instanceDate == date }
+                weekDates.forEach { epochDay ->
+                    val localDate = LocalDate.ofEpochDay(epochDay)
+                    val isCardDone = instances.any { it.instanceDate == epochDay }
+
                     HabitDateCard(
-                        radius,
-                        isDone,
-                        isTodayDone,
-                        date.dayOfWeek.name.take(3),
-                        date.dayOfMonth,
-                        Modifier.weight(1f)
+                        radius = radius,
+                        isTodayDone=isTodayDone,
+                        isDone = isCardDone,
+                        day = localDate.dayOfWeek.name.take(3),
+                        date = localDate.dayOfMonth,
+                        modifier = Modifier.weight(1f)
                     )
                 }
             }
@@ -244,15 +232,22 @@ fun HabitCalendarCard(
     val habitStartMonth =
         Instant.ofEpochMilli(startDateTime).atZone(ZoneId.systemDefault()).toLocalDate()
             .let { YearMonth.of(it.year, it.month) }
+
     var currentMonth by remember { mutableStateOf(YearMonth.now()) }
     val currentYearMonth = YearMonth.now()
     val endOfYear = YearMonth.of(currentYearMonth.year, 12)
+
     val canGoBack = currentMonth > habitStartMonth
     val canGoForward = currentMonth < endOfYear
+
     val daysInMonth = currentMonth.lengthOfMonth()
     val firstDayOfWeek = currentMonth.atDay(1).dayOfWeek.value % 7
     val dates = (1..daysInMonth).map { currentMonth.atDay(it) }
+
     val daysOfWeek = listOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
+
+    val habitStartDate =
+        Instant.ofEpochMilli(startDateTime).atZone(ZoneId.systemDefault()).toLocalDate()
 
     Card(
         modifier = Modifier
@@ -261,12 +256,11 @@ fun HabitCalendarCard(
         onClick = {},
         shape = shapeManager(radius = radius * 2),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(
-                2.dp
-            )
+            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
         )
     ) {
         Column(Modifier.padding(16.dp)) {
+            // Month navigation
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -287,10 +281,9 @@ fun HabitCalendarCard(
                     )
                 }
                 Text(
-                    text = currentMonth.month.getDisplayName(
-                        TextStyle.FULL,
-                        Locale.getDefault()
-                    ) + " ${currentMonth.year}", style = MaterialTheme.typography.titleMedium
+                    text = currentMonth.month.getDisplayName(TextStyle.FULL, Locale.getDefault()) +
+                            " ${currentMonth.year}",
+                    style = MaterialTheme.typography.titleMedium
                 )
                 IconButton(
                     onClick = { if (canGoForward) currentMonth = currentMonth.plusMonths(1) },
@@ -306,6 +299,7 @@ fun HabitCalendarCard(
                 }
             }
 
+            // Days of week row
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 daysOfWeek.forEach {
                     Text(
@@ -318,6 +312,7 @@ fun HabitCalendarCard(
                 }
             }
 
+            // Calendar grid
             LazyVerticalGrid(
                 columns = GridCells.Fixed(7),
                 userScrollEnabled = false,
@@ -325,19 +320,22 @@ fun HabitCalendarCard(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // Add empty boxes for alignment before 1st day
+                // Empty cells before 1st day
                 items(firstDayOfWeek) { Box(modifier = Modifier.size(32.dp)) }
 
                 items(dates) { date ->
-                    val instance = habitInstances.find { it.instanceDate == date }
+                    val epochDay = date.toEpochDay()
+                    val instance = habitInstances.find { it.instanceDate == epochDay }
                     val isMarked = instance != null
+
                     val backgroundColor =
-                        if (isMarked) MaterialTheme.colorScheme.primary.copy(alpha = 0.8f) else Color.Transparent
+                        if (isMarked) MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                        else Color.Transparent
+
                     val textColor =
-                        if (isMarked) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
-                    val habitStartDate =
-                        Instant.ofEpochMilli(startDateTime).atZone(ZoneId.systemDefault())
-                            .toLocalDate()
+                        if (isMarked) MaterialTheme.colorScheme.onPrimary
+                        else MaterialTheme.colorScheme.onSurface
+
                     val isBeforeStart = date.isBefore(habitStartDate)
                     val dateAlpha = if (isBeforeStart) 0.2f else 1f
 
@@ -355,8 +353,8 @@ fun HabitCalendarCard(
                                         HabitEvents.MarkDone(
                                             HabitInstanceModel(
                                                 habitId = habitId,
-                                                instanceDate = date,
-                                                workspaceId = workspaceId
+                                                workspaceId = workspaceId,
+                                                instanceDate = epochDay
                                             )
                                         )
                                     )
@@ -449,11 +447,15 @@ fun HabitStartCard(startDateTime: Long, radius: Int) {
 }
 
 @Composable
-fun MonthlyHabitAnalyticsCard(radius: Int, habitInstances: List<HabitInstanceModel>) {
+fun MonthlyHabitAnalyticsCard(
+    radius: Int,
+    habitInstances: List<HabitInstanceModel>
+) {
     val today = LocalDate.now()
     val yearMonth = YearMonth.of(today.year, today.month)
     val daysInMonth = yearMonth.lengthOfMonth()
 
+    // Break month into week ranges (1–7, 8–14, etc.)
     val weekRanges = remember(daysInMonth) {
         val ranges = mutableListOf<IntRange>()
         var start = 1
@@ -465,13 +467,15 @@ fun MonthlyHabitAnalyticsCard(radius: Int, habitInstances: List<HabitInstanceMod
         ranges
     }
 
+    // Count completed habits per week
     val weekCounts = remember(habitInstances) {
         val counts = MutableList(weekRanges.size) { 0 }
 
         habitInstances
-            .distinctBy { it.instanceDate }
+            .distinctBy { it.instanceDate } // avoid duplicates
             .forEach { instance ->
-                val day = instance.instanceDate.dayOfMonth
+                val date = LocalDate.ofEpochDay(instance.instanceDate) // ✅ convert Long -> LocalDate
+                val day = date.dayOfMonth
                 weekRanges.forEachIndexed { index, range ->
                     if (day in range) {
                         counts[index]++
@@ -509,6 +513,7 @@ fun MonthlyHabitAnalyticsCard(radius: Int, habitInstances: List<HabitInstanceMod
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(bottom = 24.dp)
             )
+
             HabitBarChart(
                 weekCounts = weekCounts,
                 weekLabels = weekRanges.map { "${it.first}-${it.last}" }
@@ -516,7 +521,6 @@ fun MonthlyHabitAnalyticsCard(radius: Int, habitInstances: List<HabitInstanceMod
         }
     }
 }
-
 
 @Composable
 fun HabitBarChart(
@@ -617,30 +621,41 @@ fun HabitBarChart(
 fun calculateStreaks(instances: List<HabitInstanceModel>): Pair<Int, Int> {
     if (instances.isEmpty()) return 0 to 0
 
-    val today = LocalDate.now()
-    val dates = instances.map { it.instanceDate }.sorted()
+    // Collect unique days as epochDays
+    val daysSorted = instances.map { it.instanceDate }.distinct().sorted()
+    val daysSet = daysSorted.toHashSet()
 
-    var bestStreak = 0
-    var currentStreak = 0
-    var streak = 0
-    var previousDate: LocalDate? = null
-
-    for (date in dates) {
-        if (previousDate == null || date == previousDate.plusDays(1)) {
-            streak++
-        } else if (date != previousDate) {
-            streak = 1
+    // --- Best streak (max consecutive run) ---
+    var bestStreak = 1
+    var run = 1
+    for (i in 1 until daysSorted.size) {
+        if (daysSorted[i] == daysSorted[i - 1] + 1) {
+            run++
+        } else {
+            run = 1
         }
-        bestStreak = maxOf(bestStreak, streak)
-        previousDate = date
+        if (run > bestStreak) bestStreak = run
     }
 
-    // Calculate current streak (ending at today or yesterday)
-    var cursor = today
-    while (dates.contains(cursor)) {
-        currentStreak++
-        cursor = cursor.minusDays(1)
+    val todayEpoch = LocalDate.now().toEpochDay()
+    val anchor = if (daysSet.contains(todayEpoch)) todayEpoch else todayEpoch - 1
+
+    fun countStreak(anchor: Long): Int {
+        var count = 1
+        var d = anchor - 1
+        while (daysSet.contains(d)) {
+            count++
+            d--
+        }
+        d = anchor + 1
+        while (daysSet.contains(d)) {
+            count++
+            d++
+        }
+        return count
     }
+
+    val currentStreak = if (daysSet.contains(anchor)) countStreak(anchor) else 0
 
     return currentStreak to bestStreak
 }

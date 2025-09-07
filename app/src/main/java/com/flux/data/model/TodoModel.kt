@@ -3,7 +3,9 @@ package com.flux.data.model
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import java.util.UUID
+import kotlinx.serialization.Serializable
 
+@Serializable
 @Entity
 data class TodoModel(
     @PrimaryKey
@@ -13,6 +15,7 @@ data class TodoModel(
     val items: List<TodoItem> = emptyList()
 )
 
+@Serializable
 data class TodoItem(
     var value: String = "",
     var isChecked: Boolean = false

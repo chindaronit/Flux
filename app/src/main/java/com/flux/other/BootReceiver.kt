@@ -103,7 +103,7 @@ class BootReceiver : BroadcastReceiver() {
 
         val reminders = mutableListOf<Reminder>()
 
-        val habits = habitRepository.loadAllHabits() // Should be suspend in repo
+        val habits = habitRepository.loadAllHabits()
         val events = eventRepository.loadAllEvents()
 
         reminders += habits.map {
@@ -121,7 +121,7 @@ class BootReceiver : BroadcastReceiver() {
             Reminder(
                 id = it.eventId,
                 type = "EVENT",
-                repeat = it.repetition.toString(),
+                repeat = it.repetition,
                 timeInMillis = it.startDateTime - it.notificationOffset,
                 title = it.title,
                 description = it.description

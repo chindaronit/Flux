@@ -37,7 +37,6 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.flux.data.model.WorkspaceModel
 import com.flux.navigation.NavRoutes
-import com.flux.ui.components.DeleteAlert
 import com.flux.ui.components.EmptySpaces
 import com.flux.ui.components.NewWorkspaceBottomSheet
 import com.flux.ui.components.SelectedBar
@@ -52,6 +51,7 @@ import com.flux.ui.events.TodoEvents
 import com.flux.ui.events.WorkspaceEvents
 import kotlinx.coroutines.launch
 import com.flux.R
+import java.time.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,7 +71,6 @@ fun WorkSpaces(
     var query by rememberSaveable { mutableStateOf("") }
     var addWorkspace by remember { mutableStateOf(false) }
     val selectedWorkspace = remember { mutableStateListOf<WorkspaceModel>() }
-    var showDeleteAlert by remember { mutableStateOf(false) }
     var lockedWorkspace by remember { mutableStateOf<WorkspaceModel?>(null) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
@@ -84,6 +83,7 @@ fun WorkSpaces(
                 onNotesEvents(NotesEvents.LoadAllLabels(it.workspaceId))
                 onTaskEvents(TaskEvents.LoadAllInstances(it.workspaceId))
                 onTaskEvents(TaskEvents.LoadAllTask(it.workspaceId))
+                onTaskEvents(TaskEvents.LoadDateTask(it.workspaceId, LocalDate.now().toEpochDay()))
                 onHabitEvents(HabitEvents.LoadAllHabits(it.workspaceId))
                 onHabitEvents(HabitEvents.LoadAllInstances(it.workspaceId))
                 onTodoEvents(TodoEvents.LoadAllLists(it.workspaceId))
@@ -103,6 +103,7 @@ fun WorkSpaces(
             onNotesEvents(NotesEvents.LoadAllLabels(space.workspaceId))
             onTaskEvents(TaskEvents.LoadAllInstances(space.workspaceId))
             onTaskEvents(TaskEvents.LoadAllTask(space.workspaceId))
+            onTaskEvents(TaskEvents.LoadDateTask(space.workspaceId, LocalDate.now().toEpochDay()))
             onHabitEvents(HabitEvents.LoadAllHabits(space.workspaceId))
             onHabitEvents(HabitEvents.LoadAllInstances(space.workspaceId))
             onTodoEvents(TodoEvents.LoadAllLists(space.workspaceId))
@@ -258,15 +259,6 @@ fun WorkSpaces(
                 }
             }
         }
-    }
-
-    if (showDeleteAlert) {
-        DeleteAlert(onDismissRequest = {
-            showDeleteAlert = false
-            selectedWorkspace.clear()
-        }, onConfirmation = {
-            showDeleteAlert = false
-        })
     }
 
     NewWorkspaceBottomSheet(isVisible = addWorkspace, sheetState = sheetState, onDismiss = {

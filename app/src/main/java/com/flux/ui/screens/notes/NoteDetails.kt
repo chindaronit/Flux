@@ -38,6 +38,7 @@ import com.flux.ui.components.NoteDetailsTopBar
 import com.flux.ui.components.NotesInputCard
 import com.flux.ui.components.SelectLabelDialog
 import com.flux.ui.components.SettingOption
+import com.flux.ui.components.convertMillisToDate
 import com.flux.ui.components.shapeManager
 import com.flux.ui.events.NotesEvents
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
@@ -46,10 +47,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
-import java.time.LocalDate
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.Date
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalRichTextApi::class)
 @Composable
@@ -113,7 +110,7 @@ fun NoteDetails(
     NotesInfoBottomSheet(
         words = countWords("$title ${richTextState.toHtml()}"),
         characters = countCharacters("$title ${richTextState.toHtml()}"),
-        lastEdited = formatLastEdited(note.lastEdited),
+        lastEdited = convertMillisToDate(note.lastEdited),
         isVisible = showAboutNotes,
         sheetState = sheetState,
         onDismiss = {
@@ -195,7 +192,7 @@ fun NoteDetails(
                     title = title,
                     description = richTextState.toHtml(),
                     isPinned = isPinned,
-                    lastEdited = Date(),
+                    lastEdited = System.currentTimeMillis(),
                     labels = noteLabels.map { it.labelId }
                 )
             )
@@ -239,17 +236,6 @@ fun NoteDetails(
             },
             onLabelClicked = { showSelectLabels = true }
         )
-    }
-}
-
-fun formatLastEdited(date: Date): String {
-    val zoneId = ZoneId.systemDefault()
-    val localDateTime = date.toInstant().atZone(zoneId).toLocalDateTime()
-
-    return if (localDateTime.toLocalDate() == LocalDate.now()) {
-        localDateTime.format(DateTimeFormatter.ofPattern("HH:mm"))
-    } else {
-        localDateTime.format(DateTimeFormatter.ofPattern("dd-MM-yyyy"))
     }
 }
 

@@ -55,7 +55,6 @@ import com.flux.R
 import com.flux.data.model.EventInstanceModel
 import com.flux.data.model.EventModel
 import com.flux.data.model.EventStatus
-import com.flux.data.model.Repetition
 import com.flux.other.cancelReminder
 import com.flux.ui.components.CustomNotificationDialog
 import com.flux.ui.components.DatePickerModal
@@ -166,7 +165,7 @@ fun EventDetails(
                                 "EVENT",
                                 title,
                                 description,
-                                event.repetition.toString()
+                                event.repetition
                             )
                             onTaskEvents(TaskEvents.ToggleStatus(eventInstance.copy(status = status)))
                             onTaskEvents(
@@ -193,7 +192,7 @@ fun EventDetails(
                             "EVENT",
                             event.title,
                             event.description,
-                            event.repetition.toString()
+                            event.repetition
                         )
                         navController.popBackStack()
                         onTaskEvents(TaskEvents.DeleteTask(event))
@@ -319,7 +318,7 @@ fun EventDetails(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Icon(Icons.Default.Repeat, null)
-                Text(getRepetitionText(eventRepetition))
+                Text(eventRepetition)
             }
             HorizontalDivider(Modifier.fillMaxWidth())
             Row(
@@ -379,21 +378,10 @@ fun getStatusText(status: EventStatus): String {
     }
 }
 
-@Composable
-fun getRepetitionText(repetition: Repetition): String {
-    return when (repetition) {
-        Repetition.DAILY -> stringResource(R.string.Daily)
-        Repetition.WEEKLY -> stringResource(R.string.Weekly)
-        Repetition.MONTHLY -> stringResource(R.string.Monthly)
-        Repetition.YEARLY -> stringResource(R.string.Yearly)
-        else -> stringResource(R.string.NONE)
-    }
-}
-
 fun getNextValidReminderTime(
     initialTimeMillis: Long,
     offset: Long,
-    repetition: Repetition
+    repetition: String
 ): Long? {
     var reminderTime = initialTimeMillis - offset
     val now = System.currentTimeMillis()
@@ -402,21 +390,21 @@ fun getNextValidReminderTime(
 
     // Adjust based on repetition
     return when (repetition) {
-        Repetition.DAILY -> {
+        "DAILY" -> {
             while (reminderTime <= now) {
                 reminderTime += DateUtils.DAY_IN_MILLIS
             }
             reminderTime
         }
 
-        Repetition.WEEKLY -> {
+        "WEEKLY" -> {
             while (reminderTime <= now) {
                 reminderTime += DateUtils.WEEK_IN_MILLIS
             }
             reminderTime
         }
 
-        Repetition.MONTHLY -> {
+        "MONTHLY" -> {
             val calendar = Calendar.getInstance().apply { timeInMillis = reminderTime }
             while (calendar.timeInMillis <= now) {
                 calendar.add(Calendar.MONTH, 1)
@@ -424,7 +412,7 @@ fun getNextValidReminderTime(
             calendar.timeInMillis
         }
 
-        Repetition.YEARLY -> {
+        "YEARLY" -> {
             val calendar = Calendar.getInstance().apply { timeInMillis = reminderTime }
             while (calendar.timeInMillis <= now) {
                 calendar.add(Calendar.YEAR, 1)
@@ -432,7 +420,7 @@ fun getNextValidReminderTime(
             calendar.timeInMillis
         }
 
-        Repetition.NONE -> null
+        else -> null
     }
 }
 

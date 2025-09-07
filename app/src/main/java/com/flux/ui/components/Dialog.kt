@@ -70,8 +70,6 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.flux.R
 import com.flux.data.model.LabelModel
-import com.flux.data.model.Repetition
-import com.flux.ui.screens.events.getRepetitionText
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -346,7 +344,6 @@ fun TimePicker(
 
     var showDial by remember { mutableStateOf(true) }
 
-    /** The icon used for the icon button that switches from dial to input */
     val toggleIcon = if (showDial) {
         Icons.Filled.EditCalendar
     } else {
@@ -433,16 +430,16 @@ fun TimePickerDialog(
 
 @Composable
 fun TaskRepetitionDialog(
-    repeatPeriod: Repetition,
-    onChange: (Repetition) -> Unit,
+    repeatPeriod: String,
+    onChange: (String) -> Unit,
     onDismissRequest: () -> Unit
 ) {
     val options = listOf(
-        Repetition.NONE,
-        Repetition.DAILY,
-        Repetition.WEEKLY,
-        Repetition.MONTHLY,
-        Repetition.YEARLY
+        "NONE",
+        "DAILY",
+        "WEEKLY",
+        "MONTHLY",
+        "YEARLY"
     )
 
     Dialog(onDismissRequest = onDismissRequest) {
@@ -482,7 +479,7 @@ fun TaskRepetitionDialog(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(getRepetitionText(option))
+                        Text(option)
                         RadioButton(
                             selected = repeatPeriod == option,
                             onClick = {

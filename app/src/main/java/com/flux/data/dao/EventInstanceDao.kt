@@ -6,12 +6,11 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.flux.data.model.EventInstanceModel
 import kotlinx.coroutines.flow.Flow
-import java.time.LocalDate
 
 @Dao
 interface EventInstanceDao {
     @Query("SELECT EXISTS(SELECT 1 FROM EventInstanceModel WHERE eventId = :eventId and instanceDate = :instanceDate)")
-    suspend fun exists(eventId: String, instanceDate: LocalDate): Boolean
+    suspend fun exists(eventId: String, instanceDate: Long): Boolean
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertEventInstance(event: EventInstanceModel)

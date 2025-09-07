@@ -3,7 +3,9 @@ package com.flux.data.model
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import java.util.UUID
+import kotlinx.serialization.Serializable
 
+@Serializable
 @Entity
 data class JournalModel(
     @PrimaryKey

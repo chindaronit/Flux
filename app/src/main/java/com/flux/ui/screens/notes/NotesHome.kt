@@ -11,9 +11,11 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.flux.R
 import com.flux.data.model.LabelModel
 import com.flux.data.model.NotesModel
 import com.flux.navigation.Loader
@@ -47,7 +49,7 @@ fun LazyListScope.notesHomeItems(
                 if (pinnedNotes.isNotEmpty()) {
                     item {
                         Text(
-                            "Pinned",
+                            stringResource(R.string.Pinned),
                             modifier = Modifier.padding(vertical = 8.dp),
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.primary
@@ -96,7 +98,7 @@ fun LazyListScope.notesHomeItems(
                 if (pinnedNotes.isNotEmpty()) {
                     item {
                         Text(
-                            "Others",
+                            stringResource(R.string.Others),
                             modifier = Modifier.padding(vertical = 8.dp),
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.primary

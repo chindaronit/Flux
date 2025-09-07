@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.2.10"
 }
 
 android {
@@ -57,8 +58,11 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+            freeCompilerArgs.add("-XXLanguage:+PropertyParamAnnotationDefaultTargetMode")
+        }
     }
     buildFeatures {
         compose = true
@@ -73,7 +77,6 @@ android {
         }
     }
     buildToolsVersion = "35.0.0"
-
 }
 
 dependencies {
@@ -87,6 +90,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.biometric)
+    implementation(libs.firebase.dataconnect)
 
     // Hilt
     ksp(libs.hilt.android.compiler)
@@ -105,5 +109,5 @@ dependencies {
     implementation(libs.gson)
 
     implementation(libs.richeditor.compose)
-
+    implementation(libs.kotlinx.serialization.json)
 }

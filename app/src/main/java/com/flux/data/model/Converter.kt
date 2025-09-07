@@ -3,46 +3,8 @@ package com.flux.data.model
 import androidx.room.TypeConverter
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import java.time.LocalDate
-import java.time.format.DateTimeParseException
-import java.util.Date
 
 class Converter {
-    // Convert Date to Long and back
-    @TypeConverter
-    fun fromDate(date: Date?): Long? {
-        return date?.time
-    }
-
-    @TypeConverter
-    fun toDate(millis: Long?): Date? {
-        return millis?.let { Date(it) }
-    }
-
-    @TypeConverter
-    fun fromRepetition(value: Repetition): String = value.name
-
-    @TypeConverter
-    fun toRepetition(value: String): Repetition = Repetition.valueOf(value)
-
-    @TypeConverter
-    fun toLocalDate(dateString: String?): LocalDate {
-        return try {
-            if (dateString.isNullOrBlank() || dateString == "0000-00-00") {
-                LocalDate.of(1970, 1, 1) // default safe date
-            } else {
-                LocalDate.parse(dateString)
-            }
-        } catch (_: DateTimeParseException) {
-            LocalDate.of(1970, 1, 1)
-        }
-    }
-
-    @TypeConverter
-    fun fromLocalDate(date: LocalDate?): String {
-        return date?.toString() ?: "1970-01-01"
-    }
-
     @TypeConverter
     fun fromEventStatus(status: EventStatus): String = status.name
 

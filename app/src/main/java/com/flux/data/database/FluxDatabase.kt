@@ -27,7 +27,7 @@ import com.flux.data.model.WorkspaceModel
 
 @Database(
     entities = [EventModel::class, LabelModel::class, EventInstanceModel::class, SettingsModel::class, NotesModel::class, HabitModel::class, HabitInstanceModel::class, WorkspaceModel::class, TodoModel::class, JournalModel::class],
-    version = 2,
+    version = 1,
     exportSchema = false
 )
 @TypeConverters(Converter::class)

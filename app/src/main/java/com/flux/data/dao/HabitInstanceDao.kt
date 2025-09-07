@@ -7,12 +7,11 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.flux.data.model.HabitInstanceModel
 import kotlinx.coroutines.flow.Flow
-import java.time.LocalDate
 
 @Dao
 interface HabitInstanceDao {
     @Query("SELECT EXISTS(SELECT 1 FROM HabitInstanceModel WHERE habitId = :habitId and instanceDate = :instanceDate)")
-    suspend fun exists(habitId: String, instanceDate: LocalDate): Boolean
+    suspend fun exists(habitId: String, instanceDate: Long): Boolean
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertInstance(habitInstance: HabitInstanceModel)

@@ -19,7 +19,6 @@ import com.flux.ui.events.TaskEvents
 import com.flux.ui.screens.events.EmptyEvents
 import com.flux.ui.screens.events.EventCard
 import com.flux.ui.state.Settings
-import java.time.LocalDate
 import java.time.YearMonth
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -29,7 +28,7 @@ fun LazyListScope.calendarItems(
     isLoading: Boolean,
     workspaceId: String,
     selectedMonth: YearMonth,
-    selectedDate: LocalDate,
+    selectedDate: Long,
     settings: Settings,
     datedEvents: List<EventModel>,
     allEventInstances: List<EventInstanceModel>,
@@ -68,14 +67,12 @@ fun LazyListScope.calendarItems(
         item { Spacer(Modifier.height(24.dp)) }
 
         val pendingTasks = datedEvents.filter { task ->
-            val instance =
-                allEventInstances.find { it.eventId == task.eventId && it.instanceDate == selectedDate }
+            val instance = allEventInstances.find { it.eventId == task.eventId && it.instanceDate == selectedDate }
             instance == null || instance.status == EventStatus.PENDING
         }
 
         val completedTasks = datedEvents.filter { task ->
-            val instance =
-                allEventInstances.find { it.eventId == task.eventId && it.instanceDate == selectedDate }
+            val instance = allEventInstances.find { it.eventId == task.eventId && it.instanceDate == selectedDate }
             instance != null && instance.status == EventStatus.COMPLETED
         }
 
@@ -108,6 +105,7 @@ fun LazyListScope.calendarItems(
                         )
                     }
                 )
+                Spacer(Modifier.height(8.dp))
             }
         }
         if (completedTasks.isNotEmpty()) {
@@ -134,6 +132,7 @@ fun LazyListScope.calendarItems(
                         )
                     }
                 )
+                Spacer(Modifier.height(8.dp))
             }
         }
     }

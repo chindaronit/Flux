@@ -1,23 +1,25 @@
 [versions]
 agp = "8.12.2"
+kotlin = "2.2.10"
+ksp = "2.2.10-2.0.2"
+kotlinxSerializationJson = "1.7.3"
 biometric = "1.4.0-alpha04"
-gson = "2.11.0"
-kotlin = "2.0.0"
+gson = "2.13.1"
 coreKtx = "1.17.0"
 appcompat = "1.7.1"
-ksp = "2.0.0-1.0.24"
-lifecycleRuntimeKtx = "2.9.2"
+lifecycleRuntimeKtx = "2.9.3"
 activityCompose = "1.10.1"
-composeBom = "2025.08.00"
+composeBom = "2025.08.01"
 coreSplashscreen = "1.0.1"
 navigationCompose = "2.9.3"
-richeditorCompose = "1.0.0-rc05-k2"
+richeditorCompose = "1.0.0-rc13"
 room = "2.7.2"
 coilCompose = "2.7.0"
 
 # Hilt
-hilt = "2.52"
+hilt = "2.57.1"
 hiltNavigationCompose = "1.2.0"
+firebaseDataconnect = "17.0.0"
 
 [libraries]
 androidx-biometric = { module = "androidx.biometric:biometric", version.ref = "biometric" }
@@ -44,7 +46,9 @@ hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", ve
 
 #Coil (Image rendering)
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 richeditor-compose = { module = "com.mohamedrejeb.richeditor:richeditor-compose", version.ref = "richeditorCompose" }
+firebase-dataconnect = { group = "com.google.firebase", name = "firebase-dataconnect", version.ref = "firebaseDataconnect" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

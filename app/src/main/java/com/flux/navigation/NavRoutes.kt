@@ -29,7 +29,6 @@ import com.flux.ui.screens.workspaces.WorkSpaces
 import com.flux.ui.screens.workspaces.WorkspaceDetails
 import com.flux.ui.state.States
 import com.flux.ui.viewModel.ViewModels
-import java.time.LocalDate
 
 sealed class NavRoutes(val route: String) {
     // auth screen
@@ -170,8 +169,8 @@ val EventScreens =
                 navController,
                 states.eventState.allEvent.find { it.eventId == eventId }
                     ?: EventModel(workspaceId = workspaceId),
-                states.eventState.allEventInstances.find { it.eventId == eventId && it.instanceDate == LocalDate.now() }
-                    ?: EventInstanceModel(eventId = eventId, instanceDate = LocalDate.now()),
+                states.eventState.allEventInstances.find { it.eventId == eventId && it.instanceDate == System.currentTimeMillis() }
+                    ?: EventInstanceModel(eventId = eventId, instanceDate = System.currentTimeMillis()),
                 states.settings,
                 viewModels.eventViewModel::onEvent
             )

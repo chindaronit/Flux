@@ -52,7 +52,6 @@ import com.flux.data.model.EventModel
 import com.flux.data.model.EventStatus
 import com.flux.data.model.HabitInstanceModel
 import com.flux.data.model.JournalModel
-import com.flux.data.model.Repetition
 import com.flux.data.model.WorkspaceModel
 import com.flux.ui.components.ActionType
 import com.flux.ui.components.SettingOption
@@ -119,7 +118,6 @@ data class WeeklyEventStats(
     val completed: Int,
     val failed: Int
 )
-
 fun calculateWeeklyEventStats(
     events: List<EventModel>,
     instances: List<EventInstanceModel>
@@ -130,7 +128,7 @@ fun calculateWeeklyEventStats(
     val weekStart = today.with(DayOfWeek.MONDAY)
     val weekEnd = today.with(DayOfWeek.SUNDAY)
 
-    val instanceMap = instances.associateBy { it.eventId to it.instanceDate }
+    val instanceMap = instances.associateBy { it.eventId to LocalDate.ofEpochDay(it.instanceDate) }
 
     var upcoming = 0
     var completed = 0
@@ -146,17 +144,18 @@ fun calculateWeeklyEventStats(
 
         for (date in dateRange(weekStart, weekEnd)) {
             val matches = when (event.repetition) {
-                Repetition.DAILY -> true
-                Repetition.WEEKLY -> baseDateTime.dayOfWeek == date.dayOfWeek
-                Repetition.MONTHLY -> baseDateTime.dayOfMonth == date.dayOfMonth
-                Repetition.YEARLY -> baseDateTime.dayOfYear == date.dayOfYear
-                Repetition.NONE -> baseDateTime.toLocalDate() == date
+                "DAILY" -> true
+                "WEEKLY" -> baseDateTime.dayOfWeek == date.dayOfWeek
+                "MONTHLY" -> baseDateTime.dayOfMonth == date.dayOfMonth
+                "YEARLY" -> baseDateTime.dayOfYear == date.dayOfYear
+                "NONE" -> baseDateTime.toLocalDate() == date
+                else -> false
             }
 
             if (!matches) continue
 
             val instance = instanceMap[event.eventId to date]
-            val instanceDateTime = baseDateTime.with(date)
+            val instanceDateTime = LocalDateTime.of(date, baseDateTime.toLocalTime())
 
             val status = instance?.status ?: EventStatus.PENDING
 
@@ -188,8 +187,9 @@ fun HabitHeatMap(radius: Int, allHabitInstances: List<HabitInstanceModel>, total
     val totalDays = ChronoUnit.DAYS.between(yearStart, today).toInt() + 1
     val allDates = (0 until totalDays).map { yearStart.plusDays(it.toLong()) }
 
+    // ✅ Convert instanceDate (Long) → LocalDate for grouping
     val habitMap = remember(allHabitInstances) {
-        allHabitInstances.groupBy { it.instanceDate }
+        allHabitInstances.groupBy { LocalDate.ofEpochDay(it.instanceDate) }
     }
 
     // Create week columns with proper day alignment
@@ -212,6 +212,7 @@ fun HabitHeatMap(radius: Int, allHabitInstances: List<HabitInstanceModel>, total
             currentWeek = MutableList(7) { null }
         }
     }
+
     val boxSize = 24.dp
     val lazyListState = rememberLazyListState()
 
@@ -223,14 +224,13 @@ fun HabitHeatMap(radius: Int, allHabitInstances: List<HabitInstanceModel>, total
         }.takeIf { it != -1 } ?: 0
     }
 
-    val todayHabit = allHabitInstances.count { it.instanceDate == today }
+    // ✅ Fix: convert today → epochDay for comparison
+    val todayHabit = allHabitInstances.count { it.instanceDate == today.toEpochDay() }
 
     // Auto-scroll to current month on first composition
     LaunchedEffect(currentMonthStartIndex) {
         if (currentMonthStartIndex > 0) {
-            lazyListState.scrollToItem(
-                index = maxOf(0, currentMonthStartIndex - 2)
-            )
+            lazyListState.scrollToItem(index = maxOf(0, currentMonthStartIndex - 2))
         }
     }
 
@@ -239,21 +239,18 @@ fun HabitHeatMap(radius: Int, allHabitInstances: List<HabitInstanceModel>, total
         modifier = Modifier.fillMaxWidth(),
         shape = shapeManager(radius = radius),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(
-                4.dp
-            )
+            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(4.dp)
         )
     ) {
         Column(
             Modifier
                 .fillMaxWidth()
-                .padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)
+                .padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
                 stringResource(R.string.HeatMap),
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Bold
-                ),
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.primary,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
@@ -280,10 +277,7 @@ fun HabitHeatMap(radius: Int, allHabitInstances: List<HabitInstanceModel>, total
                                 .height(boxSize),
                             contentAlignment = Alignment.CenterStart
                         ) {
-                            Text(
-                                text = day.name.take(3),
-                                fontSize = 9.sp
-                            )
+                            Text(text = day.name.take(3), fontSize = 9.sp)
                         }
                     }
                 }
@@ -299,10 +293,8 @@ fun HabitHeatMap(radius: Int, allHabitInstances: List<HabitInstanceModel>, total
                         val month = firstDate?.month
 
                         // Show month label if this is the first week of the month
-                        // or if it's the very first column
                         val showMonth =
-                            month != null && (index == 0 || weekColumns.getOrNull(index - 1)
-                                ?.firstOrNull()?.month != month)
+                            month != null && (index == 0 || weekColumns.getOrNull(index - 1)?.firstOrNull()?.month != month)
 
                         Column(
                             verticalArrangement = Arrangement.spacedBy(2.dp),
@@ -323,14 +315,12 @@ fun HabitHeatMap(radius: Int, allHabitInstances: List<HabitInstanceModel>, total
                             }
 
                             // Heatmap boxes
-                            columnDates.forEachIndexed { dayIndex, date ->
+                            columnDates.forEach { date ->
                                 if (date != null) {
                                     val count = habitMap[date]?.size ?: 0
                                     val intensity =
-                                        (count / if (totalHabits > 0) totalHabits.toFloat() else 2f).coerceIn(
-                                            0f,
-                                            1f
-                                        )
+                                        (count / if (totalHabits > 0) totalHabits.toFloat() else 2f)
+                                            .coerceIn(0f, 1f)
                                     val color = lerp(
                                         MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
                                         MaterialTheme.colorScheme.primary,
@@ -345,7 +335,9 @@ fun HabitHeatMap(radius: Int, allHabitInstances: List<HabitInstanceModel>, total
                                         Text(
                                             text = date.dayOfMonth.toString(),
                                             fontSize = 9.sp,
-                                            color = if (intensity > 0.5f) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+                                            color = if (intensity > 0.5f)
+                                                MaterialTheme.colorScheme.onPrimary
+                                            else MaterialTheme.colorScheme.onSurface
                                         )
                                     }
                                 } else {

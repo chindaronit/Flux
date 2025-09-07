@@ -4,7 +4,9 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import java.time.LocalDate
 import java.util.UUID
+import kotlinx.serialization.Serializable
 
+@Serializable
 @Entity
 data class HabitModel(
     @PrimaryKey
@@ -15,10 +17,10 @@ data class HabitModel(
     val bestStreak: Long = 0L,
     val startDateTime: Long = System.currentTimeMillis()
 )
-
+@Serializable
 @Entity(primaryKeys = ["habitId", "instanceDate"])
 data class HabitInstanceModel(
     val habitId: String = "",
     val workspaceId: String = "",
-    val instanceDate: LocalDate = LocalDate.now()
+    val instanceDate: Long = LocalDate.now().toEpochDay()
 )

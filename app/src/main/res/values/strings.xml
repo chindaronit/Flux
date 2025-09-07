@@ -72,7 +72,7 @@
     <string name="Compact_Mode_Desc">Show workspace in compact mode</string>
     <string name="Extreme_Compact_Mode">Extreme Compact Mode</string>
     <string name="Extreme_Compact_Mode_Desc">Tighter the spacing between workspaces</string>
-    <string name="Theme_Palette">Theme_Palette</string>
+    <string name="Theme_Palette">Theme Palette</string>
 
     <!-- Settings - Privacy -->
     <string name="Privacy">Privacy</string>

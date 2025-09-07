@@ -9,7 +9,9 @@ import com.flux.data.model.LabelModel
 import com.flux.data.model.NotesModel
 import com.flux.data.model.TodoModel
 import com.flux.data.model.WorkspaceModel
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class FluxBackup(
     val workspaces: List<WorkspaceModel> = emptyList(),
     val notes: List<NotesModel> = emptyList(),

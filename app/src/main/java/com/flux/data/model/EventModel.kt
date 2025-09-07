@@ -4,15 +4,14 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import java.time.LocalDate
 import java.util.UUID
+import kotlinx.serialization.Serializable
 
-enum class Repetition {
-    NONE, DAILY, WEEKLY, MONTHLY, YEARLY
-}
-
+@Serializable
 enum class EventStatus {
     PENDING, COMPLETED
 }
 
+@Serializable
 @Entity
 data class EventModel(
     @PrimaryKey
@@ -20,16 +19,17 @@ data class EventModel(
     val workspaceId: String = "",
     val title: String = "",
     val description: String = "",
-    val repetition: Repetition = Repetition.NONE,
+    val repetition: String = "NONE",
     val isAllDay: Boolean = false,
     val notificationOffset: Long = 0L,
     val startDateTime: Long = System.currentTimeMillis(),
 )
 
+@Serializable
 @Entity(primaryKeys = ["eventId", "instanceDate"])
 data class EventInstanceModel(
     val eventId: String = "",
     val workspaceId: String = "",
-    val instanceDate: LocalDate = LocalDate.now(),
+    val instanceDate: Long = LocalDate.now().toEpochDay(),
     val status: EventStatus = EventStatus.PENDING
 )

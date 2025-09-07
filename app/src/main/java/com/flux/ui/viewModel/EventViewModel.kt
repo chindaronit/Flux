@@ -5,7 +5,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flux.data.model.EventInstanceModel
 import com.flux.data.model.EventModel
-import com.flux.data.model.Repetition
 import com.flux.data.repository.EventRepository
 import com.flux.other.cancelReminder
 import com.flux.other.scheduleReminder
@@ -65,9 +64,10 @@ class EventViewModel @Inject constructor(
             }
 
             is TaskEvents.ChangeDate -> safeUpdateState {
+                val newDate = event.newLocalDate
                 it.copy(
-                    selectedDate = event.newLocalDate,
-                    selectedYearMonth = YearMonth.from(event.newLocalDate)
+                    selectedDate = newDate,
+                    selectedYearMonth = YearMonth.from(LocalDate.ofEpochDay(newDate))
                 )
             }
         }
@@ -85,7 +85,7 @@ class EventViewModel @Inject constructor(
                     context = context,
                     id = data.eventId,
                     type = "EVENT",
-                    repeat = data.repetition.toString(),
+                    repeat = data.repetition,
                     timeInMillis = adjustedTime,
                     title = data.title,
                     description = data.description
@@ -107,7 +107,7 @@ class EventViewModel @Inject constructor(
                     "EVENT",
                     event.title,
                     event.description,
-                    event.repetition.toString()
+                    event.repetition
                 )
             }
             repository.deleteAllWorkspaceEvent(workspaceId)
@@ -116,24 +116,25 @@ class EventViewModel @Inject constructor(
 
     private fun filterEventsByDate(
         events: List<EventModel>,
-        date: LocalDate
+        epochDay: Long
     ): List<EventModel> {
+        val date = LocalDate.ofEpochDay(epochDay)
+
         return events.filter { task ->
             val taskStartDate = Instant.ofEpochMilli(task.startDateTime)
                 .atZone(ZoneId.systemDefault())
                 .toLocalDate()
 
             when (task.repetition) {
-                Repetition.NONE -> taskStartDate == date
-                Repetition.DAILY -> !date.isBefore(taskStartDate)
-                Repetition.WEEKLY -> !date.isBefore(taskStartDate) &&
+                "NONE" -> taskStartDate == date
+                "DAILY" -> !date.isBefore(taskStartDate)
+                "WEEKLY" -> !date.isBefore(taskStartDate) &&
                         date.dayOfWeek == taskStartDate.dayOfWeek
-
-                Repetition.MONTHLY -> !date.isBefore(taskStartDate) &&
+                "MONTHLY" -> !date.isBefore(taskStartDate) &&
                         date.dayOfMonth == taskStartDate.dayOfMonth
-
-                Repetition.YEARLY -> !date.isBefore(taskStartDate) &&
+                "YEARLY" -> !date.isBefore(taskStartDate) &&
                         date.dayOfYear == taskStartDate.dayOfYear
+                else -> false
             }
         }
     }
@@ -147,7 +148,7 @@ class EventViewModel @Inject constructor(
             .collect { events -> onEvents(events) }
     }
 
-    private suspend fun loadDateEvents(workspaceId: String, date: LocalDate) {
+    private suspend fun loadDateEvents(workspaceId: String, date: Long) {
         safeUpdateState { it.copy(isDatedEventLoading = true) }
 
         collectWorkspaceEvents(workspaceId) { events ->

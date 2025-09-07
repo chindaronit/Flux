@@ -42,7 +42,6 @@ import com.flux.R
 import com.flux.data.model.EventInstanceModel
 import com.flux.data.model.EventModel
 import com.flux.data.model.EventStatus
-import com.flux.data.model.Repetition
 import com.flux.navigation.Loader
 import com.flux.navigation.NavRoutes
 import com.flux.ui.components.shapeManager
@@ -69,25 +68,42 @@ fun LazyListScope.eventHomeItems(
     workspaceId: String,
     onTaskEvents: (TaskEvents) -> Unit
 ) {
-    if (isLoading) item { Loader() }
-    else if (allEvents.isEmpty()) item { EmptyEvents() }
-    else {
+    if (isLoading) {
+        item { Loader() }
+    } else if (allEvents.isEmpty()) {
+        item { EmptyEvents() }
+    } else {
+        val zoneId = ZoneId.systemDefault()
         val today = LocalDate.now()
 
+        // 🔹 Events scheduled for today
         val todayEvents = allEvents
-            .filter { it.startDateTime.toLocalDate() == today }
+            .filter { event ->
+                val eventDate = Instant.ofEpochMilli(event.startDateTime)
+                    .atZone(zoneId).toLocalDate()
+                eventDate == today
+            }
             .sortedBy { event ->
-                allEventInstances
-                    .find { it.eventId == event.eventId && it.instanceDate == today }
-                    ?.status == EventStatus.COMPLETED
+                val instance = allEventInstances.find {
+                    it.eventId == event.eventId && it.instanceDate == today.toEpochDay()
+                }
+                instance?.status == EventStatus.COMPLETED
             }
 
+        // 🔹 Upcoming events (after today)
         val upcomingEvents = allEvents
-            .filter { it.startDateTime.toLocalDate() > today }
+            .filter { event ->
+                val eventDate = Instant.ofEpochMilli(event.startDateTime)
+                    .atZone(zoneId).toLocalDate()
+                eventDate.isAfter(today)
+            }
             .sortedBy { event ->
-                allEventInstances
-                    .find { it.eventId == event.eventId && it.instanceDate == today }
-                    ?.status == EventStatus.COMPLETED
+                val eventDate = Instant.ofEpochMilli(event.startDateTime)
+                    .atZone(zoneId).toLocalDate()
+                val instance = allEventInstances.find {
+                    it.eventId == event.eventId && it.instanceDate == eventDate.toEpochDay()
+                }
+                instance?.status == EventStatus.COMPLETED
             }
 
         if (todayEvents.isNotEmpty()) {
@@ -102,13 +118,13 @@ fun LazyListScope.eventHomeItems(
             }
 
             items(todayEvents) { event ->
-                val instance =
-                    allEventInstances.find { it.eventId == event.eventId && it.instanceDate == today }
-                        ?: EventInstanceModel(
-                            eventId = event.eventId,
-                            instanceDate = today,
-                            workspaceId = workspaceId
-                        )
+                val instance = allEventInstances.find {
+                    it.eventId == event.eventId && it.instanceDate == today.toEpochDay()
+                } ?: EventInstanceModel(
+                    eventId = event.eventId,
+                    instanceDate = today.toEpochDay(),
+                    workspaceId = workspaceId
+                )
 
                 EventCard(
                     radius = radius,
@@ -122,16 +138,14 @@ fun LazyListScope.eventHomeItems(
                     onChangeStatus = { onTaskEvents(TaskEvents.ToggleStatus(it)) },
                     onClick = {
                         navController.navigate(
-                            NavRoutes.EventDetails.withArgs(
-                                workspaceId,
-                                event.eventId
-                            )
+                            NavRoutes.EventDetails.withArgs(workspaceId, event.eventId)
                         )
                     }
                 )
                 Spacer(Modifier.height(8.dp))
             }
         }
+
         if (upcomingEvents.isNotEmpty()) {
             item {
                 Text(
@@ -144,13 +158,16 @@ fun LazyListScope.eventHomeItems(
             }
 
             items(upcomingEvents) { event ->
-                val instance =
-                    allEventInstances.find { it.eventId == event.eventId && it.instanceDate == today }
-                        ?: EventInstanceModel(
-                            eventId = event.eventId,
-                            instanceDate = today,
-                            workspaceId = workspaceId
-                        )
+                val eventDate = Instant.ofEpochMilli(event.startDateTime)
+                    .atZone(zoneId).toLocalDate()
+
+                val instance = allEventInstances.find {
+                    it.eventId == event.eventId && it.instanceDate == eventDate.toEpochDay()
+                } ?: EventInstanceModel(
+                    eventId = event.eventId,
+                    instanceDate = eventDate.toEpochDay(),
+                    workspaceId = workspaceId
+                )
 
                 EventCard(
                     radius = radius,
@@ -164,10 +181,7 @@ fun LazyListScope.eventHomeItems(
                     onChangeStatus = { onTaskEvents(TaskEvents.ToggleStatus(it)) },
                     onClick = {
                         navController.navigate(
-                            NavRoutes.EventDetails.withArgs(
-                                workspaceId,
-                                event.eventId
-                            )
+                            NavRoutes.EventDetails.withArgs(workspaceId, event.eventId)
                         )
                     }
                 )
@@ -198,8 +212,8 @@ fun EmptyEvents() {
 @Composable
 fun IconRadioButton(
     modifier: Modifier = Modifier,
-    uncheckedTint: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-    checkedTint: Color = completed,
+    uncheckedTint: Color = MaterialTheme.colorScheme.onSurface,
+    checkedTint: Color = MaterialTheme.colorScheme.onSurface,
     selected: Boolean,
     onClick: () -> Unit
 ) {
@@ -228,7 +242,7 @@ fun EventCard(
     title: String,
     timeline: Long,
     description: String,
-    repeat: Repetition,
+    repeat: String,
     settings: Settings,
     onChangeStatus: (EventInstanceModel) -> Unit,
     onClick: () -> Unit
@@ -274,7 +288,7 @@ fun EventCard(
                         Modifier.padding(vertical = 2.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        if (repeat != Repetition.NONE) {
+                        if (repeat != "NONE") {
                             Row(
                                 modifier = Modifier.padding(end = 6.dp),
                                 verticalAlignment = Alignment.CenterVertically,
@@ -282,7 +296,7 @@ fun EventCard(
                             ) {
                                 Icon(Icons.Default.Repeat, null, modifier = Modifier.size(15.dp))
                                 Text(
-                                    repeat.toString(),
+                                    repeat,
                                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                                     modifier = Modifier.alpha(0.9f)
                                 )
@@ -292,10 +306,10 @@ fun EventCard(
                         Text(
                             when {
                                 isAllDay -> "All Day"
-                                repeat == Repetition.DAILY -> timeline.toFormattedDailyTime(context,settings.data.is24HourFormat)
-                                repeat == Repetition.WEEKLY -> timeline.toFormattedWeeklyTime(context,settings.data.is24HourFormat)
-                                repeat == Repetition.MONTHLY -> timeline.toFormattedMonthlyTime(settings.data.is24HourFormat)
-                                repeat == Repetition.YEARLY -> timeline.toFormattedYearlyTime(settings.data.is24HourFormat)
+                                repeat == "DAILY" -> timeline.toFormattedDailyTime(context,settings.data.is24HourFormat)
+                                repeat == "WEEKLY" -> timeline.toFormattedWeeklyTime(context,settings.data.is24HourFormat)
+                                repeat == "MONTHLY" -> timeline.toFormattedMonthlyTime(settings.data.is24HourFormat)
+                                repeat == "YEARLY" -> timeline.toFormattedYearlyTime(settings.data.is24HourFormat)
                                 else -> timeline.toFormattedDateTime(context,settings.data.is24HourFormat)
                             },
                             style = MaterialTheme.typography.bodyMedium,
@@ -397,10 +411,4 @@ private fun getDayOfMonthSuffix(day: Int, locale: Locale = Locale.getDefault()):
         "fr" -> if (day == 1) "er" else "" // 1er in French
         else -> "" // default: no suffix
     }
-}
-
-fun Long.toLocalDate(): LocalDate {
-    return Instant.ofEpochMilli(this)
-        .atZone(ZoneId.systemDefault())
-        .toLocalDate()
 }

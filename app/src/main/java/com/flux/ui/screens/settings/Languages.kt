@@ -111,7 +111,7 @@ private fun getSupportedLanguages(context: Context): Map<String, String> {
         e.printStackTrace()
     }
     return localeList.map { it.toString() }
-        .associateBy({ getLanguageInfo(it.toString()).displayName })
+        .associateBy { getLanguageInfo(it).displayName }
 }
 
 data class LanguageInfo(
@@ -120,7 +120,10 @@ data class LanguageInfo(
     val iconRes: Int
 )
 
+@Suppress("DEPRECATION")
 private fun getLanguageInfo(languageCode: String): LanguageInfo {
+    val locale = Locale.forLanguageTag(languageCode)
+
     return when (languageCode) {
         "en" -> LanguageInfo(
             displayName = "English",
@@ -141,8 +144,8 @@ private fun getLanguageInfo(languageCode: String): LanguageInfo {
         )
 
         else -> LanguageInfo(
-            displayName = Locale(languageCode).displayName,
-            description = "Change language to ${Locale(languageCode).displayName}",
+            displayName = locale.displayName,
+            description = "Change language to ${locale.displayName}",
             iconRes = R.drawable.translate
         )
     }
