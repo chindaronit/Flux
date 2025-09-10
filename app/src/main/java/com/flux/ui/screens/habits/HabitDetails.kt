@@ -18,7 +18,6 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.flux.data.model.HabitInstanceModel
 import com.flux.data.model.HabitModel
-import com.flux.other.cancelReminder
 import com.flux.ui.components.HabitBottomSheet
 import com.flux.ui.components.HabitCalendarCard
 import com.flux.ui.components.HabitScaffold
@@ -52,9 +51,8 @@ fun HabitDetails(
         description = habit.description,
         onBackPressed = { navController.popBackStack() },
         onDeleteClicked = {
-            cancelReminder(context, habit.habitId, "HABIT", habit.title, habit.description, "DAILY")
             navController.popBackStack()
-            onHabitEvents(HabitEvents.DeleteHabit(habit))
+            onHabitEvents(HabitEvents.DeleteHabit(habit, context))
         },
         onEditClicked = { showHabitDialog = true },
         content = { innerPadding ->
@@ -92,7 +90,6 @@ fun HabitDetails(
             scope.launch { sheetState.hide() }.invokeOnCompletion { showHabitDialog = false }
         },
         onConfirm = { newHabit, adjustedTime ->
-            cancelReminder(context, habit.habitId, "HABIT", habit.title, habit.description, "DAILY")
             onHabitEvents(HabitEvents.UpsertHabit(context, newHabit, adjustedTime))
             scope.launch { sheetState.hide() }.invokeOnCompletion { showHabitDialog = false }
         }

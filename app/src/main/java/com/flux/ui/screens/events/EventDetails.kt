@@ -382,7 +382,7 @@ fun getNextValidReminderTime(
     initialTimeMillis: Long,
     offset: Long,
     repetition: String
-): Long? {
+): Long {
     var reminderTime = initialTimeMillis - offset
     val now = System.currentTimeMillis()
 
@@ -412,15 +412,13 @@ fun getNextValidReminderTime(
             calendar.timeInMillis
         }
 
-        "YEARLY" -> {
+        else -> {
             val calendar = Calendar.getInstance().apply { timeInMillis = reminderTime }
             while (calendar.timeInMillis <= now) {
                 calendar.add(Calendar.YEAR, 1)
             }
             calendar.timeInMillis
         }
-
-        else -> null
     }
 }
 

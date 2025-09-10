@@ -7,6 +7,9 @@ import androidx.lifecycle.viewModelScope
 import com.flux.data.database.FluxBackup
 import com.flux.data.database.FluxDatabase
 import com.flux.di.IODispatcher
+import com.flux.other.scheduleReminder
+import com.flux.ui.components.getAdjustedTime
+import com.flux.ui.screens.events.getNextValidReminderTime
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -42,7 +45,7 @@ class BackupViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val json = readFromUri(context, uri)
-                uploadBackupToDatabase(json)
+                uploadBackupToDatabase(context, json)
                 _backupResult.emit(Result.success(Unit))
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -80,7 +83,7 @@ class BackupViewModel @Inject constructor(
                 ?: throw IllegalStateException("Could not open InputStream")
         }
 
-    private suspend fun uploadBackupToDatabase(json: String) = withContext(ioDispatcher) {
+    private suspend fun uploadBackupToDatabase(context: Context, json: String) = withContext(ioDispatcher) {
         // Explicit serializer here too
         val backup = Json.decodeFromString(FluxBackup.serializer(), json)
 
@@ -101,7 +104,18 @@ class BackupViewModel @Inject constructor(
 
         // --- Habits ---
         backup.habits.forEach { habit ->
-            if (!db.habitDao.exists(habit.habitId)) db.habitDao.upsertHabit(habit)
+            if (!db.habitDao.exists(habit.habitId)){
+                scheduleReminder(
+                    context = context,
+                    id = habit.habitId,
+                    type = "HABIT",
+                    repeat = "DAILY",
+                    timeInMillis = getAdjustedTime(habit.startDateTime),
+                    title = habit.title,
+                    description = habit.description
+                )
+                db.habitDao.upsertHabit(habit)
+            }
         }
 
         // --- Habit Instances ---
@@ -121,7 +135,18 @@ class BackupViewModel @Inject constructor(
 
         // --- Events ---
         backup.events.forEach { event ->
-            if (!db.eventDao.exists(event.eventId)) db.eventDao.upsertEvent(event)
+            if (!db.eventDao.exists(event.eventId)){
+                scheduleReminder(
+                    context = context,
+                    id = event.eventId,
+                    type = "EVENT",
+                    repeat = event.repetition,
+                    timeInMillis = getNextValidReminderTime(event.startDateTime, 0L, event.repetition),
+                    title = event.title,
+                    description = event.description
+                )
+                db.eventDao.upsertEvent(event)
+            }
         }
 
         // --- Event Instances ---

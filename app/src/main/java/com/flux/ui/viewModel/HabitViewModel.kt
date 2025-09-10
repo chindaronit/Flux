@@ -37,20 +37,13 @@ class HabitViewModel @Inject constructor(private val repository: HabitRepository
 
     private suspend fun reduce(event: HabitEvents) {
         when (event) {
-            is HabitEvents.DeleteHabit -> deleteHabit(event.habit)
+            is HabitEvents.DeleteHabit -> deleteHabit(event.habit, event.context)
             is HabitEvents.LoadAllHabits -> loadAllHabits(event.workspaceId)
-            is HabitEvents.UpsertHabit -> upsertHabit(
-                event.context,
-                event.habit,
-                event.adjustedTime
-            )
+            is HabitEvents.UpsertHabit -> upsertHabit(event.context, event.habit, event.adjustedTime)
             is HabitEvents.LoadAllInstances -> loadAllInstances(event.workspaceId)
             is HabitEvents.MarkDone -> upsertInstance(event.habitInstance)
             is HabitEvents.MarkUndone -> deleteInstance(event.habitInstance)
-            is HabitEvents.DeleteAllWorkspaceHabits -> deleteWorkspaceHabits(
-                event.workspaceId,
-                event.context
-            )
+            is HabitEvents.DeleteAllWorkspaceHabits -> deleteWorkspaceHabits(event.workspaceId, event.context)
         }
     }
 
@@ -78,12 +71,17 @@ class HabitViewModel @Inject constructor(private val repository: HabitRepository
         viewModelScope.launch(Dispatchers.IO) { repository.upsertHabitInstance(instance) }
     }
 
-    private fun deleteHabit(data: HabitModel) {
-        viewModelScope.launch(Dispatchers.IO) { repository.deleteHabit(data) }
+    private fun deleteHabit(data: HabitModel, context: Context) {
+        viewModelScope.launch(Dispatchers.IO) {
+            cancelReminder(context, data.habitId, "HABIT", data.title, data.description, "DAILY")
+            repository.deleteHabit(data)
+        }
     }
 
     private fun upsertHabit(context: Context, data: HabitModel, adjustedTime: Long) {
         viewModelScope.launch(Dispatchers.IO) {
+            // delete existing habit on update.
+            cancelReminder(context, data.habitId, "HABIT", data.title, data.description, "DAILY")
             repository.upsertHabit(data)
             scheduleReminder(
                 context = context,

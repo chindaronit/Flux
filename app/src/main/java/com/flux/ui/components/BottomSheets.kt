@@ -256,17 +256,17 @@ fun HabitBottomSheet(
 fun getAdjustedTime(time: Long): Long {
     val now = Calendar.getInstance()
     val habitCalendar = Calendar.getInstance().apply { timeInMillis = time }
-    val adjustedCalendar = Calendar.getInstance().apply {
-        timeInMillis = habitCalendar.timeInMillis
-        set(Calendar.SECOND, 0)
-        set(Calendar.MILLISECOND, 0)
 
-        // If the time has already passed today, schedule for tomorrow
-        if (before(now)) {
-            add(Calendar.DAY_OF_YEAR, 1)
-        }
+    // Normalize seconds and milliseconds
+    habitCalendar.set(Calendar.SECOND, 0)
+    habitCalendar.set(Calendar.MILLISECOND, 0)
+
+    // Keep adding days until it's in the future
+    while (habitCalendar.before(now)) {
+        habitCalendar.add(Calendar.DAY_OF_YEAR, 1)
     }
-    return adjustedCalendar.timeInMillis
+
+    return habitCalendar.timeInMillis
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -454,7 +454,7 @@ fun AddNewSpacesBottomSheet(
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
     var removeSpace by remember { mutableIntStateOf(-1) }
-    val SpacesList = getSpacesList()
+    val spacesList = getSpacesList()
     if (showDeleteDialog) {
         DeleteAlert(onConfirmation = {
             onRemove(removeSpace)
@@ -496,7 +496,7 @@ fun AddNewSpacesBottomSheet(
                         }
                     }
                 }
-                if (selectedSpaces.size != SpacesList.size) {
+                if (selectedSpaces.size != spacesList.size) {
                     item {
                         Text(
                             stringResource(R.string.Available_Spaces),
@@ -511,7 +511,7 @@ fun AddNewSpacesBottomSheet(
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        SpacesList.filterNot { id -> selectedSpaces.contains(id) }
+                        spacesList.filterNot { id -> selectedSpaces.contains(id) }
                             .forEach { space ->
                                 SpaceCard(space, false, { onSelect(space.id) }, { })
                             }
