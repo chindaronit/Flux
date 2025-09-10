@@ -52,10 +52,12 @@ import com.flux.ui.theme.pending
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.LocalDate
+import java.time.Month
 import java.time.ZoneId
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import kotlin.math.min
 
 @OptIn(ExperimentalMaterial3Api::class)
 fun LazyListScope.eventHomeItems(
@@ -79,31 +81,50 @@ fun LazyListScope.eventHomeItems(
         // 🔹 Events scheduled for today
         val todayEvents = allEvents
             .filter { event ->
-                val eventDate = Instant.ofEpochMilli(event.startDateTime)
-                    .atZone(zoneId).toLocalDate()
-                eventDate == today
+                occursOnDate(event, today)
             }
             .sortedBy { event ->
-                val instance = allEventInstances.find {
-                    it.eventId == event.eventId && it.instanceDate == today.toEpochDay()
-                }
-                instance?.status == EventStatus.COMPLETED
+                val eventTime = Instant.ofEpochMilli(event.startDateTime)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalTime()
+
+                today.atTime(eventTime).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            }
+            .sortedBy { event ->
+                allEventInstances
+                    .find { it.eventId == event.eventId && it.instanceDate == today.toEpochDay() * 86400000 }
+                    ?.status == EventStatus.COMPLETED
             }
 
         // 🔹 Upcoming events (after today)
         val upcomingEvents = allEvents
             .filter { event ->
-                val eventDate = Instant.ofEpochMilli(event.startDateTime)
-                    .atZone(zoneId).toLocalDate()
-                eventDate.isAfter(today)
+                val eventStartDate = Instant.ofEpochMilli(event.startDateTime)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate()
+
+                eventStartDate.isAfter(today) ||
+                        (eventStartDate <= today && event.repetition != "NONE")
+            }
+            .filter { event ->
+                !occursOnDate(event, today)
             }
             .sortedBy { event ->
-                val eventDate = Instant.ofEpochMilli(event.startDateTime)
-                    .atZone(zoneId).toLocalDate()
-                val instance = allEventInstances.find {
-                    it.eventId == event.eventId && it.instanceDate == eventDate.toEpochDay()
+                val nextOccurrenceDate = calculateNextOccurrence(event, today)
+                val eventTime = Instant.ofEpochMilli(event.startDateTime)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalTime()
+
+                if (nextOccurrenceDate != null) {
+                    nextOccurrenceDate.atTime(eventTime).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                } else {
+                    Long.MAX_VALUE
                 }
-                instance?.status == EventStatus.COMPLETED
+            }
+            .sortedBy { event ->
+                allEventInstances
+                    .find { it.eventId == event.eventId && it.instanceDate == today.toEpochDay() * 86400000 }
+                    ?.status == EventStatus.COMPLETED
             }
 
         if (todayEvents.isNotEmpty()) {
@@ -410,5 +431,73 @@ private fun getDayOfMonthSuffix(day: Int, locale: Locale = Locale.getDefault()):
         }
         "fr" -> if (day == 1) "er" else "" // 1er in French
         else -> "" // default: no suffix
+    }
+}
+
+private fun occursOnDate(event: EventModel, date: LocalDate): Boolean {
+    val eventStartDate = Instant.ofEpochMilli(event.startDateTime)
+        .atZone(ZoneId.systemDefault())
+        .toLocalDate()
+
+    return when (event.repetition) {
+        "DAILY" -> {
+            // Daily event: occurs if date is on or after start date
+            !date.isBefore(eventStartDate)
+        }
+        "WEEKLY" -> {
+            // Weekly: same day of week and on/after start date
+            !date.isBefore(eventStartDate) &&
+                    date.dayOfWeek == eventStartDate.dayOfWeek
+        }
+        "MONTHLY" -> {
+            // Monthly: same day of month and on/after start date
+            !date.isBefore(eventStartDate) &&
+                    date.dayOfMonth == eventStartDate.dayOfMonth
+        }
+        "YEARLY" -> {
+            // Yearly: same month/day and on/after start date
+            !date.isBefore(eventStartDate) &&
+                    date.month == eventStartDate.month &&
+                    date.dayOfMonth == eventStartDate.dayOfMonth
+        }
+        "NONE" -> {
+            // One-time event: exact match
+            date == eventStartDate
+        }
+        else -> {
+            false
+        }
+    }
+}
+
+private fun calculateNextOccurrence(event: EventModel, today: LocalDate): LocalDate? {
+    val eventStartDate = Instant.ofEpochMilli(event.startDateTime)
+        .atZone(ZoneId.systemDefault())
+        .toLocalDate()
+
+    if (today.isBefore(eventStartDate)) {
+        return eventStartDate
+    }
+
+    return when (event.repetition) {
+        "DAILY" -> today.plusDays(1)
+        "WEEKLY" -> {
+            val daysToAdd = (7 - (today.dayOfWeek.value - eventStartDate.dayOfWeek.value)) % 7
+            today.plusDays(if (daysToAdd == 0) 7L else daysToAdd.toLong())
+        }
+        "MONTHLY" -> {
+            today.plusMonths(1).withDayOfMonth(eventStartDate.dayOfMonth)
+        }
+        "YEARLY" -> {
+            val nextYear = today.plusYears(1)
+            // Handle February 29th edge case
+            if (eventStartDate.month == Month.FEBRUARY && eventStartDate.dayOfMonth == 29) {
+                nextYear.withDayOfMonth(min(29, nextYear.month.length(nextYear.isLeapYear)))
+            } else {
+                nextYear.withMonth(eventStartDate.monthValue).withDayOfMonth(eventStartDate.dayOfMonth)
+            }
+        }
+        "NONE" -> if (eventStartDate.isAfter(today)) eventStartDate else null
+        else -> null
     }
 }
