@@ -15,9 +15,9 @@ sealed class TaskEvents {
         val taskEvent: EventModel,
         val adjustedTime: Long?
     ) : TaskEvents()
-
     data class DeleteTask(val taskEvent: EventModel) : TaskEvents()
-    data class ToggleStatus(val taskInstance: EventInstanceModel) : TaskEvents()
+    data class UpsertInstance(val taskInstance: EventInstanceModel) : TaskEvents()
+    data class DeleteInstance(val taskInstance: EventInstanceModel) : TaskEvents()
     data class ChangeMonth(val newYearMonth: YearMonth) : TaskEvents()
     data class ChangeDate(val newLocalDate: Long) : TaskEvents()
 }

@@ -33,10 +33,7 @@ class EventViewModel @Inject constructor(
     private val _state: MutableStateFlow<EventState> = MutableStateFlow(EventState())
     val state: StateFlow<EventState> = _state.asStateFlow()
 
-    fun onEvent(event: TaskEvents) {
-        viewModelScope.launch { reduce(event = event) }
-    }
-
+    fun onEvent(event: TaskEvents) { viewModelScope.launch { reduce(event = event) } }
     private suspend fun safeUpdateState(reducer: (EventState) -> EventState) {
         mutex.withLock { _state.value = reducer(_state.value) }
     }
@@ -49,8 +46,6 @@ class EventViewModel @Inject constructor(
                 event.taskEvent,
                 event.adjustedTime
             )
-
-            is TaskEvents.ToggleStatus -> toggleStatus(event.taskInstance)
             is TaskEvents.LoadDateTask -> loadDateEvents(event.workspaceId, event.selectedDate)
             is TaskEvents.LoadAllTask -> loadAllEvents(event.workspaceId)
             is TaskEvents.LoadAllInstances -> loadAllEventsInstances(event.workspaceId)
@@ -70,7 +65,18 @@ class EventViewModel @Inject constructor(
                     selectedYearMonth = YearMonth.from(LocalDate.ofEpochDay(newDate))
                 )
             }
+            is TaskEvents.DeleteInstance -> { deleteInstance(event.taskInstance) }
+            is TaskEvents.UpsertInstance -> { upsertInstance(event.taskInstance) }
         }
+    }
+
+
+    private fun deleteInstance(data: EventInstanceModel) {
+        viewModelScope.launch(Dispatchers.IO) { repository.deleteEventInstance(data) }
+    }
+
+    private fun upsertInstance(data: EventInstanceModel) {
+        viewModelScope.launch(Dispatchers.IO) { repository.upsertEventInstance(data) }
     }
 
     private fun deleteEvent(data: EventModel) {
@@ -92,10 +98,6 @@ class EventViewModel @Inject constructor(
                 )
             }
         }
-    }
-
-    private fun toggleStatus(data: EventInstanceModel) {
-        viewModelScope.launch(Dispatchers.IO) { repository.toggleStatus(data) }
     }
 
     private fun deleteWorkspaceEvents(workspaceId: String, context: Context) {

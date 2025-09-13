@@ -54,7 +54,6 @@ import androidx.navigation.NavController
 import com.flux.R
 import com.flux.data.model.EventInstanceModel
 import com.flux.data.model.EventModel
-import com.flux.data.model.EventStatus
 import com.flux.other.cancelReminder
 import com.flux.ui.components.CustomNotificationDialog
 import com.flux.ui.components.DatePickerModal
@@ -67,21 +66,23 @@ import com.flux.ui.events.TaskEvents
 import com.flux.ui.state.Settings
 import com.flux.ui.theme.completed
 import com.flux.ui.theme.pending
+import java.time.LocalDate
 import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventDetails(
     navController: NavController,
+    workspaceId: String,
     event: EventModel,
-    eventInstance: EventInstanceModel,
+    isPending: Boolean,
     settings: Settings,
     onTaskEvents: (TaskEvents) -> Unit
 ) {
     val context = LocalContext.current
     var title by remember { mutableStateOf(event.title) }
     var description by remember { mutableStateOf(event.description) }
-    var status by remember { mutableStateOf(eventInstance.status) }
+    var status by remember { mutableStateOf(isPending) }
     var eventRepetition by remember { mutableStateOf(event.repetition) }
     var checked by remember { mutableStateOf(event.isAllDay) }
     var showDatePicker by remember { mutableStateOf(false) }
@@ -91,7 +92,6 @@ fun EventDetails(
     var showNotificationDialog by remember { mutableStateOf(false) }
     var notificationOffset by remember { mutableLongStateOf(event.notificationOffset) }
     var selectedDateTime by remember { mutableLongStateOf(event.startDateTime) }
-    val isPending = status == EventStatus.PENDING
 
     if (showCustomNotificationDialog) {
         CustomNotificationDialog({
@@ -167,23 +167,42 @@ fun EventDetails(
                                 description,
                                 event.repetition
                             )
-                            onTaskEvents(TaskEvents.ToggleStatus(eventInstance.copy(status = status)))
-                            onTaskEvents(
-                                TaskEvents.UpsertTask(
-                                    context,
-                                    event.copy(
-                                        title = title,
-                                        description = description,
-                                        isAllDay = checked,
-                                        startDateTime = selectedDateTime,
-                                        repetition = eventRepetition,
-                                        notificationOffset = notificationOffset
-                                    ),
-                                    adjustedTime
-                                )
+
+                            val updatedEvent = event.copy(
+                                title = title,
+                                description = description,
+                                isAllDay = checked,
+                                startDateTime = selectedDateTime,
+                                repetition = eventRepetition,
+                                notificationOffset = notificationOffset,
                             )
+
+                            if(isPending) {
+                                onTaskEvents(
+                                    TaskEvents.UpsertInstance(
+                                        EventInstanceModel(
+                                            eventId = event.eventId,
+                                            workspaceId = workspaceId,
+                                            instanceDate = LocalDate.now().toEpochDay()
+                                        )
+                                    )
+                                )
+                            }
+                            else {
+                                onTaskEvents(
+                                    TaskEvents.DeleteInstance(
+                                        EventInstanceModel(
+                                            eventId = event.eventId,
+                                            workspaceId = workspaceId,
+                                            instanceDate = LocalDate.now().toEpochDay()
+                                        )
+                                    )
+                                )
+                            }
+                            onTaskEvents(TaskEvents.UpsertTask(context, updatedEvent, adjustedTime))
                             navController.popBackStack()
-                        })
+                        }
+                    )
                     { Icon(Icons.Default.Check, null) }
                     IconButton({
                         cancelReminder(
@@ -341,11 +360,11 @@ fun EventDetails(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Icon(
-                    if (isPending) Icons.Filled.Pending else Icons.Filled.CheckCircle,
+                    if (status) Icons.Filled.Pending else Icons.Filled.CheckCircle,
                     null,
-                    tint = if (isPending) pending else completed
+                    tint = if (status) pending else completed
                 )
-                Text(getStatusText(status))
+                Text(if (status) stringResource(R.string.Status_Pending) else stringResource(R.string.Status_Completed))
             }
             Row(
                 modifier = Modifier
@@ -354,13 +373,11 @@ fun EventDetails(
                 horizontalArrangement = Arrangement.Center
             ) {
                 ElevatedButton(
-                    onClick = {
-                        status = if (isPending) EventStatus.COMPLETED else EventStatus.PENDING
-                    },
+                    onClick = { status = !status },
                     colors = ButtonDefaults.buttonColors()
                 ) {
                     Text(
-                        if (isPending) stringResource(R.string.Mark_As_Completed) else stringResource(
+                        if (status) stringResource(R.string.Mark_As_Completed) else stringResource(
                             R.string.Mark_As_Uncompleted
                         ), style = MaterialTheme.typography.titleMedium
                     )
@@ -370,13 +387,6 @@ fun EventDetails(
     }
 }
 
-@Composable
-fun getStatusText(status: EventStatus): String {
-    return when (status) {
-        EventStatus.PENDING -> stringResource(R.string.Status_Pending)
-        else -> stringResource(R.string.Status_Completed)
-    }
-}
 
 fun getNextValidReminderTime(
     initialTimeMillis: Long,

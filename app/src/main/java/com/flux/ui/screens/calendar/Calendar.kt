@@ -10,7 +10,6 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.flux.data.model.EventInstanceModel
 import com.flux.data.model.EventModel
-import com.flux.data.model.EventStatus
 import com.flux.navigation.Loader
 import com.flux.navigation.NavRoutes
 import com.flux.ui.components.DailyViewCalendar
@@ -19,6 +18,7 @@ import com.flux.ui.events.TaskEvents
 import com.flux.ui.screens.events.EmptyEvents
 import com.flux.ui.screens.events.EventCard
 import com.flux.ui.state.Settings
+import java.time.LocalDate
 import java.time.YearMonth
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -68,34 +68,41 @@ fun LazyListScope.calendarItems(
 
         val pendingTasks = datedEvents.filter { task ->
             val instance = allEventInstances.find { it.eventId == task.eventId && it.instanceDate == selectedDate }
-            instance == null || instance.status == EventStatus.PENDING
+            instance == null
         }
 
         val completedTasks = datedEvents.filter { task ->
             val instance = allEventInstances.find { it.eventId == task.eventId && it.instanceDate == selectedDate }
-            instance != null && instance.status == EventStatus.COMPLETED
+            instance != null
         }
 
         if (pendingTasks.isNotEmpty()) {
             items(pendingTasks) { task ->
                 val instance =
                     allEventInstances.find { it.eventId == task.eventId && it.instanceDate == selectedDate }
-                        ?: EventInstanceModel(
-                            eventId = task.eventId,
-                            instanceDate = selectedDate,
-                            workspaceId = workspaceId
-                        )
 
                 EventCard(
                     radius = radius,
                     isAllDay = task.isAllDay,
-                    eventInstance = instance,
+                    isPending = instance == null,
                     title = task.title,
                     timeline = task.startDateTime,
-                    description = task.description,
                     repeat = task.repetition,
                     settings = settings,
-                    onChangeStatus = { onTaskEvents(TaskEvents.ToggleStatus(it)) },
+                    onChangeStatus = {
+                        if(instance == null) {
+                            onTaskEvents(
+                                TaskEvents.UpsertInstance(
+                                    EventInstanceModel(
+                                        eventId = task.eventId,
+                                        workspaceId = workspaceId,
+                                        instanceDate = LocalDate.now().toEpochDay()
+                                    )
+                                )
+                            )
+                        }
+                        else { onTaskEvents(TaskEvents.DeleteInstance(instance)) }
+                    },
                     onClick = {
                         navController.navigate(
                             NavRoutes.EventDetails.withArgs(
@@ -111,17 +118,29 @@ fun LazyListScope.calendarItems(
         if (completedTasks.isNotEmpty()) {
             items(completedTasks) { task ->
                 val instance =
-                    allEventInstances.find { it.eventId == task.eventId && it.instanceDate == selectedDate }!!
+                    allEventInstances.find { it.eventId == task.eventId && it.instanceDate == selectedDate }
 
                 EventCard(
                     radius = radius,
                     isAllDay = task.isAllDay,
-                    eventInstance = instance,
+                    isPending = instance == null,
                     title = task.title,
                     timeline = task.startDateTime,
-                    description = task.description,
                     repeat = task.repetition,
-                    onChangeStatus = { onTaskEvents(TaskEvents.ToggleStatus(it)) },
+                    onChangeStatus = {
+                        if(instance == null) {
+                            onTaskEvents(
+                                TaskEvents.UpsertInstance(
+                                    EventInstanceModel(
+                                        eventId = task.eventId,
+                                        workspaceId = workspaceId,
+                                        instanceDate = LocalDate.now().toEpochDay()
+                                    )
+                                )
+                            )
+                        }
+                        else { onTaskEvents(TaskEvents.DeleteInstance(instance)) }
+                    },
                     settings = settings,
                     onClick = {
                         navController.navigate(

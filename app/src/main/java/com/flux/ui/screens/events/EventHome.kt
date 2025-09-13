@@ -1,9 +1,7 @@
 package com.flux.ui.screens.events
 
 import android.content.Context
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,22 +9,21 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.TaskAlt
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
+import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,20 +32,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.flux.R
 import com.flux.data.model.EventInstanceModel
 import com.flux.data.model.EventModel
-import com.flux.data.model.EventStatus
 import com.flux.navigation.Loader
 import com.flux.navigation.NavRoutes
 import com.flux.ui.components.shapeManager
 import com.flux.ui.events.TaskEvents
 import com.flux.ui.state.Settings
-import com.flux.ui.theme.completed
-import com.flux.ui.theme.pending
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.LocalDate
@@ -90,11 +83,6 @@ fun LazyListScope.eventHomeItems(
 
                 today.atTime(eventTime).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
             }
-            .sortedBy { event ->
-                allEventInstances
-                    .find { it.eventId == event.eventId && it.instanceDate == today.toEpochDay() * 86400000 }
-                    ?.status == EventStatus.COMPLETED
-            }
 
         // 🔹 Upcoming events (after today)
         val upcomingEvents = allEvents
@@ -121,11 +109,6 @@ fun LazyListScope.eventHomeItems(
                     Long.MAX_VALUE
                 }
             }
-            .sortedBy { event ->
-                allEventInstances
-                    .find { it.eventId == event.eventId && it.instanceDate == today.toEpochDay() * 86400000 }
-                    ?.status == EventStatus.COMPLETED
-            }
 
         if (todayEvents.isNotEmpty()) {
             item {
@@ -141,22 +124,30 @@ fun LazyListScope.eventHomeItems(
             items(todayEvents) { event ->
                 val instance = allEventInstances.find {
                     it.eventId == event.eventId && it.instanceDate == today.toEpochDay()
-                } ?: EventInstanceModel(
-                    eventId = event.eventId,
-                    instanceDate = today.toEpochDay(),
-                    workspaceId = workspaceId
-                )
+                }
 
                 EventCard(
                     radius = radius,
                     isAllDay = event.isAllDay,
-                    eventInstance = instance,
+                    isPending = instance == null,
                     title = event.title,
                     timeline = event.startDateTime,
-                    description = event.description,
                     repeat = event.repetition,
                     settings = settings,
-                    onChangeStatus = { onTaskEvents(TaskEvents.ToggleStatus(it)) },
+                    onChangeStatus = {
+                        if(instance == null) {
+                            onTaskEvents(
+                                TaskEvents.UpsertInstance(
+                                    EventInstanceModel(
+                                        eventId = event.eventId,
+                                        workspaceId = workspaceId,
+                                        instanceDate = LocalDate.now().toEpochDay()
+                                    )
+                                )
+                            )
+                        }
+                        else { onTaskEvents(TaskEvents.DeleteInstance(instance)) }
+                    },
                     onClick = {
                         navController.navigate(
                             NavRoutes.EventDetails.withArgs(workspaceId, event.eventId)
@@ -184,22 +175,30 @@ fun LazyListScope.eventHomeItems(
 
                 val instance = allEventInstances.find {
                     it.eventId == event.eventId && it.instanceDate == eventDate.toEpochDay()
-                } ?: EventInstanceModel(
-                    eventId = event.eventId,
-                    instanceDate = eventDate.toEpochDay(),
-                    workspaceId = workspaceId
-                )
+                }
 
                 EventCard(
                     radius = radius,
                     isAllDay = event.isAllDay,
-                    eventInstance = instance,
+                    isPending = instance == null,
                     title = event.title,
                     timeline = event.startDateTime,
-                    description = event.description,
                     repeat = event.repetition,
                     settings = settings,
-                    onChangeStatus = { onTaskEvents(TaskEvents.ToggleStatus(it)) },
+                    onChangeStatus = {
+                        if(instance == null) {
+                            onTaskEvents(
+                                TaskEvents.UpsertInstance(
+                                    EventInstanceModel(
+                                        eventId = event.eventId,
+                                        workspaceId = workspaceId,
+                                        instanceDate = LocalDate.now().toEpochDay()
+                                    )
+                                )
+                            )
+                        }
+                        else { onTaskEvents(TaskEvents.DeleteInstance(instance)) }
+                    },
                     onClick = {
                         navController.navigate(
                             NavRoutes.EventDetails.withArgs(workspaceId, event.eventId)
@@ -234,7 +233,7 @@ fun EmptyEvents() {
 fun IconRadioButton(
     modifier: Modifier = Modifier,
     uncheckedTint: Color = MaterialTheme.colorScheme.onSurface,
-    checkedTint: Color = MaterialTheme.colorScheme.onSurface,
+    checkedTint: Color = MaterialTheme.colorScheme.onPrimaryContainer,
     selected: Boolean,
     onClick: () -> Unit
 ) {
@@ -259,90 +258,65 @@ fun IconRadioButton(
 fun EventCard(
     radius: Int,
     isAllDay: Boolean,
-    eventInstance: EventInstanceModel,
+    isPending: Boolean,
     title: String,
     timeline: Long,
-    description: String,
     repeat: String,
     settings: Settings,
-    onChangeStatus: (EventInstanceModel) -> Unit,
+    onChangeStatus: () -> Unit,
     onClick: () -> Unit
 ) {
     val context = LocalContext.current
+    val containerColor = if (isPending) MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp) else MaterialTheme.colorScheme.primaryContainer
+    val contentColor = if (isPending) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onPrimaryContainer
 
-    val eventStatus = eventInstance.status
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        IconRadioButton(
-            selected = eventStatus == EventStatus.COMPLETED,
-            onClick = {
-                val newStatus =
-                    if (eventStatus == EventStatus.COMPLETED) EventStatus.PENDING else EventStatus.COMPLETED
-                onChangeStatus(eventInstance.copy(status = newStatus))
-            }
-        )
-        OutlinedCard(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(if (description.isEmpty()) 55.dp else 76.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-            shape = shapeManager(radius = radius * 2),
-            onClick = onClick
-        ) {
-            Row(Modifier.fillMaxWidth()) {
-                Box(
-                    modifier = Modifier
-                        .width(16.dp)
-                        .height(if (description.isEmpty()) 55.dp else 76.dp)
-                        .background(
-                            if (eventStatus == EventStatus.PENDING) pending else completed,
-                            RoundedCornerShape(topStart = 24.dp, bottomStart = 24.dp)
-                        )
-                )
-
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = containerColor, contentColor = contentColor),
+        shape = shapeManager(radius = radius * 2),
+        onClick = onClick
+    ) {
+        Row(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+            IconRadioButton(
+                selected = !isPending,
+                onClick = onChangeStatus
+            )
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+            ) {
+                Text(title, style = MaterialTheme.typography.titleMedium)
+                Row(
+                    Modifier.padding(vertical = 2.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(title, style = MaterialTheme.typography.titleMedium)
-                    Row(
-                        Modifier.padding(vertical = 2.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        if (repeat != "NONE") {
-                            Row(
-                                modifier = Modifier.padding(end = 6.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(2.dp),
-                            ) {
-                                Icon(Icons.Default.Repeat, null, modifier = Modifier.size(15.dp))
-                                Text(
-                                    repeat,
-                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                                    modifier = Modifier.alpha(0.9f)
-                                )
-                            }
-
+                    if (repeat != "NONE") {
+                        Row(
+                            modifier = Modifier.padding(end = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(2.dp),
+                        ) {
+                            Icon(Icons.Default.Repeat, null, modifier = Modifier.size(15.dp))
+                            Text(
+                                repeat,
+                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                                modifier = Modifier.alpha(0.9f)
+                            )
                         }
-                        Text(
-                            when {
-                                isAllDay -> "All Day"
-                                repeat == "DAILY" -> timeline.toFormattedDailyTime(context,settings.data.is24HourFormat)
-                                repeat == "WEEKLY" -> timeline.toFormattedWeeklyTime(context,settings.data.is24HourFormat)
-                                repeat == "MONTHLY" -> timeline.toFormattedMonthlyTime(settings.data.is24HourFormat)
-                                repeat == "YEARLY" -> timeline.toFormattedYearlyTime(settings.data.is24HourFormat)
-                                else -> timeline.toFormattedDateTime(context,settings.data.is24HourFormat)
-                            },
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.alpha(0.6f)
-                        )
+
                     }
                     Text(
-                        description,
+                        when {
+                            isAllDay -> "All Day"
+                            repeat == "DAILY" -> timeline.toFormattedDailyTime(context,settings.data.is24HourFormat)
+                            repeat == "WEEKLY" -> timeline.toFormattedWeeklyTime(context,settings.data.is24HourFormat)
+                            repeat == "MONTHLY" -> timeline.toFormattedMonthlyTime(settings.data.is24HourFormat)
+                            repeat == "YEARLY" -> timeline.toFormattedYearlyTime(settings.data.is24HourFormat)
+                            else -> timeline.toFormattedDateTime(context,settings.data.is24HourFormat)
+                        },
                         style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.alpha(0.6f),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        modifier = Modifier.alpha(0.6f)
                     )
                 }
             }

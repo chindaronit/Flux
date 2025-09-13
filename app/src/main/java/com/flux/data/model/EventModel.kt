@@ -7,11 +7,6 @@ import java.util.UUID
 import kotlinx.serialization.Serializable
 
 @Serializable
-enum class EventStatus {
-    PENDING, COMPLETED
-}
-
-@Serializable
 @Entity
 data class EventModel(
     @PrimaryKey
@@ -30,6 +25,5 @@ data class EventModel(
 data class EventInstanceModel(
     val eventId: String = "",
     val workspaceId: String = "",
-    val instanceDate: Long = LocalDate.now().toEpochDay(),
-    val status: EventStatus = EventStatus.PENDING
+    val instanceDate: Long = LocalDate.now().toEpochDay()
 )

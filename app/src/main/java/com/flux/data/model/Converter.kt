@@ -6,12 +6,6 @@ import com.google.gson.reflect.TypeToken
 
 class Converter {
     @TypeConverter
-    fun fromEventStatus(status: EventStatus): String = status.name
-
-    @TypeConverter
-    fun toEventStatus(value: String): EventStatus = EventStatus.valueOf(value)
-
-    @TypeConverter
     fun fromTodoItemList(items: List<TodoItem>): String {
         return Gson().toJson(items)
     }

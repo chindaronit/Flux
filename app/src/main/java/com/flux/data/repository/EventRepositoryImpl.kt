@@ -19,8 +19,12 @@ class EventRepositoryImpl @Inject constructor(
         return withContext(ioDispatcher) { eventDao.upsertEvent(event) }
     }
 
-    override suspend fun toggleStatus(eventInstance: EventInstanceModel) {
-        return withContext(ioDispatcher) { eventInstanceDao.upsertEventInstance(eventInstance) }
+    override suspend fun upsertEventInstance(eventInstanceModel: EventInstanceModel) {
+        return withContext(ioDispatcher) { eventInstanceDao.upsertEventInstance(eventInstanceModel) }
+    }
+
+    override suspend fun deleteEventInstance(eventInstanceModel: EventInstanceModel) {
+        return withContext(ioDispatcher) { eventInstanceDao.deleteEventInstance(eventInstanceModel) }
     }
 
     override suspend fun loadAllEvents(): List<EventModel> {

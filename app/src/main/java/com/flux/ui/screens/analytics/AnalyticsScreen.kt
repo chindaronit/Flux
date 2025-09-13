@@ -49,7 +49,6 @@ import androidx.compose.ui.unit.sp
 import com.flux.R
 import com.flux.data.model.EventInstanceModel
 import com.flux.data.model.EventModel
-import com.flux.data.model.EventStatus
 import com.flux.data.model.HabitInstanceModel
 import com.flux.data.model.JournalModel
 import com.flux.data.model.WorkspaceModel
@@ -118,6 +117,7 @@ data class WeeklyEventStats(
     val completed: Int,
     val failed: Int
 )
+
 fun calculateWeeklyEventStats(
     events: List<EventModel>,
     instances: List<EventInstanceModel>
@@ -128,7 +128,8 @@ fun calculateWeeklyEventStats(
     val weekStart = today.with(DayOfWeek.MONDAY)
     val weekEnd = today.with(DayOfWeek.SUNDAY)
 
-    val instanceMap = instances.associateBy { it.eventId to LocalDate.ofEpochDay(it.instanceDate) }
+    // Just a lookup set of (eventId, instanceDate)
+    val instanceSet = instances.map { it.eventId to LocalDate.ofEpochDay(it.instanceDate) }.toSet()
 
     var upcoming = 0
     var completed = 0
@@ -154,26 +155,20 @@ fun calculateWeeklyEventStats(
 
             if (!matches) continue
 
-            val instance = instanceMap[event.eventId to date]
+            val isCompleted = (event.eventId to date) in instanceSet
             val instanceDateTime = LocalDateTime.of(date, baseDateTime.toLocalTime())
 
-            val status = instance?.status ?: EventStatus.PENDING
-
-            if (status == EventStatus.COMPLETED) {
-                completed++
-            } else {
-                val eventHasPassed = instanceDateTime.isBefore(now)
-                if (eventHasPassed) {
-                    failed++
-                } else {
-                    upcoming++
-                }
+            when {
+                isCompleted -> completed++
+                instanceDateTime.isBefore(now) -> failed++
+                else -> upcoming++
             }
         }
     }
 
     return WeeklyEventStats(upcoming, completed, failed)
 }
+
 
 @Composable
 fun HabitHeatMap(radius: Int, allHabitInstances: List<HabitInstanceModel>, totalHabits: Int) {
