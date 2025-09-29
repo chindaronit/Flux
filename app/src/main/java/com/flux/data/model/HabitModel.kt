@@ -10,13 +10,18 @@ import kotlinx.serialization.Serializable
 @Entity
 data class HabitModel(
     @PrimaryKey
-    val habitId: String = UUID.randomUUID().toString(),
+    override val id: String = UUID.randomUUID().toString(),
+    override val title: String = "",
+    override val description: String = "",
+    override val recurrence: RecurrenceRule = RecurrenceRule.Week(),
+    override val startDateTime: Long = System.currentTimeMillis(),
+    override val notificationOffset: Long = 0L,
     val workspaceId: String = "",
-    val title: String = "",
-    val description: String = "",
-    val bestStreak: Long = 0L,
-    val startDateTime: Long = System.currentTimeMillis()
-)
+    val bestStreak: Long = 0L
+) : ReminderItem {
+    override val type: ReminderType get() = ReminderType.HABIT
+}
+
 @Serializable
 @Entity(primaryKeys = ["habitId", "instanceDate"])
 data class HabitInstanceModel(

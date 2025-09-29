@@ -18,7 +18,6 @@ import com.flux.ui.events.TaskEvents
 import com.flux.ui.screens.events.EmptyEvents
 import com.flux.ui.screens.events.EventCard
 import com.flux.ui.state.Settings
-import java.time.LocalDate
 import java.time.YearMonth
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -59,6 +58,7 @@ fun LazyListScope.calendarItems(
                 })
         }
     }
+
     if (isLoading) {
         item { Loader() }
     } else if (datedEvents.isEmpty()) {
@@ -67,89 +67,43 @@ fun LazyListScope.calendarItems(
         item { Spacer(Modifier.height(24.dp)) }
 
         val pendingTasks = datedEvents.filter { task ->
-            val instance = allEventInstances.find { it.eventId == task.eventId && it.instanceDate == selectedDate }
+            val instance = allEventInstances.find { it.eventId == task.id && it.instanceDate == selectedDate }
             instance == null
         }
 
         val completedTasks = datedEvents.filter { task ->
-            val instance = allEventInstances.find { it.eventId == task.eventId && it.instanceDate == selectedDate }
+            val instance = allEventInstances.find { it.eventId == task.id && it.instanceDate == selectedDate }
             instance != null
         }
 
         if (pendingTasks.isNotEmpty()) {
             items(pendingTasks) { task ->
-                val instance =
-                    allEventInstances.find { it.eventId == task.eventId && it.instanceDate == selectedDate }
+                val instance = allEventInstances.find { it.eventId == task.id && it.instanceDate == selectedDate }
 
                 EventCard(
                     radius = radius,
-                    isAllDay = task.isAllDay,
                     isPending = instance == null,
                     title = task.title,
-                    timeline = task.startDateTime,
-                    repeat = task.repetition,
-                    settings = settings,
-                    onChangeStatus = {
-                        if(instance == null) {
-                            onTaskEvents(
-                                TaskEvents.UpsertInstance(
-                                    EventInstanceModel(
-                                        eventId = task.eventId,
-                                        workspaceId = workspaceId,
-                                        instanceDate = LocalDate.now().toEpochDay()
-                                    )
-                                )
-                            )
-                        }
-                        else { onTaskEvents(TaskEvents.DeleteInstance(instance)) }
-                    },
-                    onClick = {
-                        navController.navigate(
-                            NavRoutes.EventDetails.withArgs(
-                                workspaceId,
-                                task.eventId
-                            )
-                        )
-                    }
+                    repeat = task.recurrence,
+                    startDateTime = task.startDateTime,
+                    onChangeStatus = { onTaskEvents(TaskEvents.ToggleStatus(instance==null, task.id, workspaceId)) },
+                    onClick = { navController.navigate(NavRoutes.EventDetails.withArgs(workspaceId, task.id)) }
                 )
                 Spacer(Modifier.height(8.dp))
             }
         }
         if (completedTasks.isNotEmpty()) {
             items(completedTasks) { task ->
-                val instance =
-                    allEventInstances.find { it.eventId == task.eventId && it.instanceDate == selectedDate }
+                val instance = allEventInstances.find { it.eventId == task.id && it.instanceDate == selectedDate }
 
                 EventCard(
                     radius = radius,
-                    isAllDay = task.isAllDay,
                     isPending = instance == null,
                     title = task.title,
-                    timeline = task.startDateTime,
-                    repeat = task.repetition,
-                    onChangeStatus = {
-                        if(instance == null) {
-                            onTaskEvents(
-                                TaskEvents.UpsertInstance(
-                                    EventInstanceModel(
-                                        eventId = task.eventId,
-                                        workspaceId = workspaceId,
-                                        instanceDate = LocalDate.now().toEpochDay()
-                                    )
-                                )
-                            )
-                        }
-                        else { onTaskEvents(TaskEvents.DeleteInstance(instance)) }
-                    },
-                    settings = settings,
-                    onClick = {
-                        navController.navigate(
-                            NavRoutes.EventDetails.withArgs(
-                                workspaceId,
-                                task.eventId
-                            )
-                        )
-                    }
+                    repeat = task.recurrence,
+                    startDateTime = task.startDateTime,
+                    onChangeStatus = { onTaskEvents(TaskEvents.ToggleStatus(instance==null, task.id, workspaceId)) },
+                    onClick = { navController.navigate(NavRoutes.EventDetails.withArgs(workspaceId, task.id)) }
                 )
                 Spacer(Modifier.height(8.dp))
             }

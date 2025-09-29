@@ -5,10 +5,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flux.data.model.EventInstanceModel
 import com.flux.data.model.EventModel
+import com.flux.data.model.occursOn
 import com.flux.data.repository.EventRepository
 import com.flux.other.cancelReminder
+import com.flux.other.getNextOccurrence
 import com.flux.other.scheduleReminder
 import com.flux.ui.events.TaskEvents
+import com.flux.ui.screens.events.toFormattedDateTime
 import com.flux.ui.state.EventState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -19,10 +22,8 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import java.time.Instant
 import java.time.LocalDate
 import java.time.YearMonth
-import java.time.ZoneId
 import javax.inject.Inject
 
 @HiltViewModel
@@ -40,24 +41,13 @@ class EventViewModel @Inject constructor(
 
     private suspend fun reduce(event: TaskEvents) {
         when (event) {
-            is TaskEvents.DeleteTask -> deleteEvent(event.taskEvent)
-            is TaskEvents.UpsertTask -> upsertEvent(
-                event.context,
-                event.taskEvent,
-                event.adjustedTime
-            )
+            is TaskEvents.DeleteTask -> deleteEvent(event.taskEvent, event.context)
+            is TaskEvents.UpsertTask -> upsertEvent(event.context, event.taskEvent)
             is TaskEvents.LoadDateTask -> loadDateEvents(event.workspaceId, event.selectedDate)
             is TaskEvents.LoadAllTask -> loadAllEvents(event.workspaceId)
             is TaskEvents.LoadAllInstances -> loadAllEventsInstances(event.workspaceId)
-            is TaskEvents.DeleteAllWorkspaceEvents -> deleteWorkspaceEvents(
-                event.workspaceId,
-                event.context
-            )
-
-            is TaskEvents.ChangeMonth -> safeUpdateState {
-                it.copy(selectedYearMonth = event.newYearMonth)
-            }
-
+            is TaskEvents.DeleteAllWorkspaceEvents -> deleteWorkspaceEvents(event.workspaceId, event.context)
+            is TaskEvents.ChangeMonth -> safeUpdateState { it.copy(selectedYearMonth = event.newYearMonth) }
             is TaskEvents.ChangeDate -> safeUpdateState {
                 val newDate = event.newLocalDate
                 it.copy(
@@ -65,34 +55,49 @@ class EventViewModel @Inject constructor(
                     selectedYearMonth = YearMonth.from(LocalDate.ofEpochDay(newDate))
                 )
             }
-            is TaskEvents.DeleteInstance -> { deleteInstance(event.taskInstance) }
-            is TaskEvents.UpsertInstance -> { upsertInstance(event.taskInstance) }
+            is TaskEvents.ToggleStatus -> { toggleStatus(event.markDone, event.eventId, event.workspaceId) }
         }
     }
 
-
-    private fun deleteInstance(data: EventInstanceModel) {
-        viewModelScope.launch(Dispatchers.IO) { repository.deleteEventInstance(data) }
-    }
-
-    private fun upsertInstance(data: EventInstanceModel) {
-        viewModelScope.launch(Dispatchers.IO) { repository.upsertEventInstance(data) }
-    }
-
-    private fun deleteEvent(data: EventModel) {
-        viewModelScope.launch(Dispatchers.IO) { repository.deleteEvent(data) }
-    }
-
-    private fun upsertEvent(context: Context, data: EventModel, adjustedTime: Long?) {
+    private fun toggleStatus(markDone: Boolean, eventId: String, workspaceId: String) {
+        val today = LocalDate.now().toEpochDay()
+        val data = _state.value.allEventInstances.find{ it.eventId==eventId && it.instanceDate==today}?: EventInstanceModel(eventId, workspaceId, today)
         viewModelScope.launch(Dispatchers.IO) {
+            if(markDone){ repository.upsertEventInstance(data) }
+            else{ repository.deleteEventInstance(data) }
+        }
+    }
+
+    private fun deleteEvent(data: EventModel, context: Context) {
+        viewModelScope.launch(Dispatchers.IO) {
+            cancelReminder(
+                context,
+                data.id,
+                data.type.toString(),
+                data.title,
+                data.description,
+                data.recurrence
+            )
+            repository.deleteEvent(data)
+        }
+    }
+
+    private fun upsertEvent(context: Context, data: EventModel) {
+        viewModelScope.launch(Dispatchers.IO) {
+            cancelReminder(context, data.id, data.type.toString(), data.title, data.description, data.recurrence)
             repository.upsertEvent(data)
-            if (adjustedTime != null) {
+            println("eventViewModel ${data.startDateTime.toFormattedDateTime(context)}")
+            val nextOccurrence = getNextOccurrence(data.recurrence, data.startDateTime)
+            println("eventViewModel NextOccurrence ${nextOccurrence?.toFormattedDateTime(context)}")
+
+            // Only schedule reminder if there's a future occurrence
+            if (nextOccurrence != null && nextOccurrence > System.currentTimeMillis()) {
                 scheduleReminder(
                     context = context,
-                    id = data.eventId,
-                    type = "EVENT",
-                    repeat = data.repetition,
-                    timeInMillis = adjustedTime,
+                    id = data.id,
+                    data.type.toString(),
+                    recurrence = data.recurrence,
+                    timeInMillis = nextOccurrence-data.notificationOffset,
                     title = data.title,
                     description = data.description
                 )
@@ -105,11 +110,11 @@ class EventViewModel @Inject constructor(
             _state.value.allEvent.forEach { event ->
                 cancelReminder(
                     context,
-                    event.eventId,
-                    "EVENT",
+                    event.id,
+                    event.type.toString(),
                     event.title,
                     event.description,
-                    event.repetition
+                    event.recurrence
                 )
             }
             repository.deleteAllWorkspaceEvent(workspaceId)
@@ -121,24 +126,7 @@ class EventViewModel @Inject constructor(
         epochDay: Long
     ): List<EventModel> {
         val date = LocalDate.ofEpochDay(epochDay)
-
-        return events.filter { task ->
-            val taskStartDate = Instant.ofEpochMilli(task.startDateTime)
-                .atZone(ZoneId.systemDefault())
-                .toLocalDate()
-
-            when (task.repetition) {
-                "NONE" -> taskStartDate == date
-                "DAILY" -> !date.isBefore(taskStartDate)
-                "WEEKLY" -> !date.isBefore(taskStartDate) &&
-                        date.dayOfWeek == taskStartDate.dayOfWeek
-                "MONTHLY" -> !date.isBefore(taskStartDate) &&
-                        date.dayOfMonth == taskStartDate.dayOfMonth
-                "YEARLY" -> !date.isBefore(taskStartDate) &&
-                        date.dayOfYear == taskStartDate.dayOfYear
-                else -> false
-            }
-        }
+        return events.filter { it.occursOn(date) }
     }
 
     private suspend fun collectWorkspaceEvents(
@@ -161,13 +149,8 @@ class EventViewModel @Inject constructor(
 
     private suspend fun loadAllEvents(workspaceId: String) {
         safeUpdateState { it.copy(isAllEventsLoading = true) }
-
         collectWorkspaceEvents(workspaceId) { events ->
-            safeUpdateState {
-                it.copy(
-                    isAllEventsLoading = false,
-                    allEvent = events.sortedBy {event-> event.startDateTime })
-            }
+            safeUpdateState { it.copy(isAllEventsLoading = false, allEvent = events) }
         }
     }
 

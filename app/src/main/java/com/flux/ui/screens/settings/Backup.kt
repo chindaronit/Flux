@@ -1,8 +1,10 @@
 package com.flux.ui.screens.settings
 
+import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -18,12 +20,17 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.flux.R
+import com.flux.other.canScheduleReminder
+import com.flux.other.isNotificationPermissionGranted
+import com.flux.other.openAppNotificationSettings
+import com.flux.other.requestExactAlarmPermission
 import com.flux.ui.components.ActionType
 import com.flux.ui.components.BasicScaffold
 import com.flux.ui.components.SettingOption
 import com.flux.ui.components.shapeManager
 import com.flux.ui.viewModel.BackupViewModel
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Backup(
@@ -88,7 +95,27 @@ fun Backup(
                     icon = Icons.Rounded.Restore,
                     radius = shapeManager(radius = radius, isLast = true),
                     actionType = ActionType.CUSTOM,
-                    onCustomClick = { importLauncher.launch(arrayOf("application/json")) }
+                    onCustomClick = {
+                        if (!canScheduleReminder(context)) {
+                            Toast.makeText(
+                                context,
+                                context.getText(R.string.Reminder_Permission),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            requestExactAlarmPermission(context)
+                        }
+                        if (!isNotificationPermissionGranted(context)) {
+                            Toast.makeText(
+                                context,
+                                context.getText(R.string.Notification_Permission),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            openAppNotificationSettings(context)
+                        }
+                        if (canScheduleReminder(context) && isNotificationPermissionGranted(context)) {
+                            importLauncher.launch(arrayOf("application/json"))
+                        }
+                    }
                 )
             }
         }

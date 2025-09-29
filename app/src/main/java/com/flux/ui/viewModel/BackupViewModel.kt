@@ -7,9 +7,8 @@ import androidx.lifecycle.viewModelScope
 import com.flux.data.database.FluxBackup
 import com.flux.data.database.FluxDatabase
 import com.flux.di.IODispatcher
+import com.flux.other.getNextOccurrence
 import com.flux.other.scheduleReminder
-import com.flux.ui.components.getAdjustedTime
-import com.flux.ui.screens.events.getNextValidReminderTime
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -104,16 +103,18 @@ class BackupViewModel @Inject constructor(
 
         // --- Habits ---
         backup.habits.forEach { habit ->
-            if (!db.habitDao.exists(habit.habitId)){
-                scheduleReminder(
-                    context = context,
-                    id = habit.habitId,
-                    type = "HABIT",
-                    repeat = "DAILY",
-                    timeInMillis = getAdjustedTime(habit.startDateTime),
-                    title = habit.title,
-                    description = habit.description
-                )
+            if (!db.habitDao.exists(habit.id)){
+                val nextOccurrence = getNextOccurrence(habit.recurrence, habit.startDateTime-habit.notificationOffset)
+                if(nextOccurrence != null && nextOccurrence > System.currentTimeMillis())
+                    scheduleReminder(
+                        context = context,
+                        id = habit.id,
+                        type = habit.type.toString(),
+                        recurrence = habit.recurrence,
+                        timeInMillis = nextOccurrence,
+                        title = habit.title,
+                        description = habit.description
+                    )
                 db.habitDao.upsertHabit(habit)
             }
         }
@@ -135,16 +136,18 @@ class BackupViewModel @Inject constructor(
 
         // --- Events ---
         backup.events.forEach { event ->
-            if (!db.eventDao.exists(event.eventId)){
-                scheduleReminder(
-                    context = context,
-                    id = event.eventId,
-                    type = "EVENT",
-                    repeat = event.repetition,
-                    timeInMillis = getNextValidReminderTime(event.startDateTime, 0L, event.repetition),
-                    title = event.title,
-                    description = event.description
-                )
+            if (!db.eventDao.exists(event.id)){
+                val nextOccurrence = getNextOccurrence(event.recurrence, event.startDateTime - event.notificationOffset)
+                if(nextOccurrence != null && nextOccurrence > System.currentTimeMillis())
+                    scheduleReminder(
+                        context = context,
+                        id = event.id,
+                        type = event.type.toString(),
+                        recurrence = event.recurrence,
+                        timeInMillis = nextOccurrence,
+                        title = event.title,
+                        description = event.description
+                    )
                 db.eventDao.upsertEvent(event)
             }
         }

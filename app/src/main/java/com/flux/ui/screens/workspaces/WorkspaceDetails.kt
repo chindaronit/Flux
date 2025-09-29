@@ -53,7 +53,6 @@ import com.flux.ui.components.CalendarToolBar
 import com.flux.ui.components.ChangeIconBottomSheet
 import com.flux.ui.components.DeleteAlert
 import com.flux.ui.components.EventToolBar
-import com.flux.ui.components.HabitBottomSheet
 import com.flux.ui.components.HabitToolBar
 import com.flux.ui.components.JournalToolBar
 import com.flux.ui.components.NewWorkspaceBottomSheet
@@ -122,13 +121,11 @@ fun WorkspaceDetails(
     val workspaceId = workspace.workspaceId
     val context = LocalContext.current
     var query by remember { mutableStateOf("") }
-    val selectedSpaceId =
-        rememberSaveable { mutableIntStateOf(if (workspace.selectedSpaces.isEmpty()) -1 else workspace.selectedSpaces.first()) }
+    val selectedSpaceId = rememberSaveable { mutableIntStateOf(if (workspace.selectedSpaces.isEmpty()) -1 else workspace.selectedSpaces.first()) }
     var editWorkspaceDialog by remember { mutableStateOf(false) }
     var editIconSheet by remember { mutableStateOf(false) }
     var showSpacesMenu by remember { mutableStateOf(false) }
     var showDeleteWorkspaceDialog by remember { mutableStateOf(false) }
-    var showHabitDialog by remember { mutableStateOf(false) }
     var showLockDialog by remember { mutableStateOf(false) }
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
@@ -147,7 +144,6 @@ fun WorkspaceDetails(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
     var addSpaceBottomSheet by remember { mutableStateOf(false) }
-
     val spacesList = getSpacesList()
 
     Scaffold(
@@ -254,10 +250,7 @@ fun WorkspaceDetails(
                         ) { showSpacesMenu = false }
 
                         if (spacesList.find { it.id == selectedSpaceId.intValue }?.title == stringResource(R.string.Habits)) {
-                            HabitToolBar(context) {
-                                showHabitDialog = true
-                                scope.launch { sheetState.show() }
-                            }
+                            HabitToolBar(context) { navController.navigate(NavRoutes.NewHabit.withArgs(workspaceId, "")) }
                         }
                         if (spacesList.find { it.id == selectedSpaceId.intValue }?.title == stringResource(R.string.Notes)) {
                             NotesToolBar(
@@ -371,7 +364,6 @@ fun WorkspaceDetails(
                     isAllEventsLoading,
                     allEvents,
                     allEventInstances,
-                    settings,
                     workspaceId,
                     onTaskEvents
                 )
@@ -441,26 +433,6 @@ fun WorkspaceDetails(
             scope.launch { sheetState.hide() }.invokeOnCompletion {
                 editWorkspaceDialog = false
             }
-        }
-    )
-
-    // Habit Bottom Sheet — always composed
-    HabitBottomSheet(
-        settings = settings,
-        isVisible = showHabitDialog,
-        sheetState = sheetState,
-        onDismissRequest = {
-            scope.launch { sheetState.hide() }.invokeOnCompletion { showHabitDialog = false }
-        },
-        onConfirm = { newHabit, adjustedTime ->
-            onHabitEvents(
-                HabitEvents.UpsertHabit(
-                    context,
-                    newHabit.copy(workspaceId = workspaceId),
-                    adjustedTime
-                )
-            )
-            scope.launch { sheetState.hide() }.invokeOnCompletion { showHabitDialog = false }
         }
     )
 

@@ -7,8 +7,10 @@ import com.flux.data.model.HabitInstanceModel
 import com.flux.data.model.HabitModel
 import com.flux.data.repository.HabitRepository
 import com.flux.other.cancelReminder
+import com.flux.other.getNextOccurrence
 import com.flux.other.scheduleReminder
 import com.flux.ui.events.HabitEvents
+import com.flux.ui.screens.events.toFormattedDateTime
 import com.flux.ui.state.HabitState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -39,7 +41,7 @@ class HabitViewModel @Inject constructor(private val repository: HabitRepository
         when (event) {
             is HabitEvents.DeleteHabit -> deleteHabit(event.habit, event.context)
             is HabitEvents.LoadAllHabits -> loadAllHabits(event.workspaceId)
-            is HabitEvents.UpsertHabit -> upsertHabit(event.context, event.habit, event.adjustedTime)
+            is HabitEvents.UpsertHabit -> upsertHabit(event.context, event.habit)
             is HabitEvents.LoadAllInstances -> loadAllInstances(event.workspaceId)
             is HabitEvents.MarkDone -> upsertInstance(event.habitInstance)
             is HabitEvents.MarkUndone -> deleteInstance(event.habitInstance)
@@ -56,11 +58,11 @@ class HabitViewModel @Inject constructor(private val repository: HabitRepository
             _state.value.allHabits.forEach { habit ->
                 cancelReminder(
                     context,
-                    habit.habitId,
-                    "HABIT",
+                    habit.id,
+                    habit.type.toString(),
                     habit.title,
                     habit.description,
-                    "DAILY"
+                    habit.recurrence
                 )
             }
             repository.deleteAllWorkspaceHabit(workspaceId)
@@ -73,25 +75,31 @@ class HabitViewModel @Inject constructor(private val repository: HabitRepository
 
     private fun deleteHabit(data: HabitModel, context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
-            cancelReminder(context, data.habitId, "HABIT", data.title, data.description, "DAILY")
+            cancelReminder(context, data.id, data.type.toString(), data.title, data.description, data.recurrence)
             repository.deleteHabit(data)
         }
     }
 
-    private fun upsertHabit(context: Context, data: HabitModel, adjustedTime: Long) {
+    private fun upsertHabit(context: Context, data: HabitModel) {
         viewModelScope.launch(Dispatchers.IO) {
-            // delete existing habit on update.
-            cancelReminder(context, data.habitId, "HABIT", data.title, data.description, "DAILY")
+            cancelReminder(context, data.id, data.type.toString(), data.title, data.description, data.recurrence)
             repository.upsertHabit(data)
-            scheduleReminder(
-                context = context,
-                id = data.habitId,
-                type = "HABIT",
-                repeat = "DAILY",
-                timeInMillis = adjustedTime,
-                title = data.title,
-                description = data.description
-            )
+            val nextOccurrence = getNextOccurrence(data.recurrence, data.startDateTime)
+            println("habitViewModel ${data.startDateTime.toFormattedDateTime(context)}")
+            println("habitViewModel nextOccurrence ${nextOccurrence?.toFormattedDateTime(context)}")
+
+            // Only schedule reminder if there's a future occurrence
+            if (nextOccurrence != null && nextOccurrence > System.currentTimeMillis()) {
+                scheduleReminder(
+                    context = context,
+                    id = data.id,
+                    data.type.toString(),
+                    recurrence = data.recurrence,
+                    timeInMillis = nextOccurrence,
+                    title = data.title,
+                    description = data.description
+                )
+            }
         }
     }
 

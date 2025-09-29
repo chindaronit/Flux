@@ -3,7 +3,6 @@ package com.flux
 
 import android.os.Build
 import android.os.Bundle
-import androidx.activity.addCallback
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
@@ -45,17 +44,6 @@ class MainActivity : AppCompatActivity() {
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Disable predictive back gesture to prevent conflicts with file pickers
-        onBackPressedDispatcher.addCallback(this) {
-            // Handle back press normally
-            if (supportFragmentManager.backStackEntryCount > 0) {
-                supportFragmentManager.popBackStack()
-            } else {
-                finish()
-            }
-        }
-
         createNotificationChannel(this)
         // Splash screen condition
         val splashScreen = installSplashScreen()

@@ -228,7 +228,7 @@ fun AppNavHost(
                 })
             }
 
-            animatedComposable(route, arguments) { entry ->
+            bottomSlideComposable(route, arguments) { entry ->
                 val habitId = entry.arguments?.getString("habitId") ?: ""
                 val workspaceId = entry.arguments?.getString("workspaceId") ?: ""
 

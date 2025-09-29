@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface EventDao {
-    @Query("SELECT EXISTS(SELECT 1 FROM EventModel WHERE eventId = :id)")
+    @Query("SELECT EXISTS(SELECT 1 FROM EventModel WHERE id = :id)")
     suspend fun exists(id: String): Boolean
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

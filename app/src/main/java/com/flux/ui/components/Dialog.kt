@@ -27,7 +27,6 @@ import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.EditCalendar
 import androidx.compose.material.icons.filled.NewLabel
-import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -47,7 +46,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimeInput
 import androidx.compose.material3.TimePicker
-import androidx.compose.material3.TimePickerState
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
@@ -331,28 +329,31 @@ fun convertMillisToTime(millis: Long, is24Hour: Boolean = false): String {
 fun TimePicker(
     initialTime: Long,
     is24Hour: Boolean = false,
-    onConfirm: (TimePickerState) -> Unit,
+    onConfirm: (Long) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val currentTime = Calendar.getInstance().apply { timeInMillis = initialTime }
-
     val timePickerState = rememberTimePickerState(
         initialHour = currentTime.get(Calendar.HOUR_OF_DAY),
         initialMinute = currentTime.get(Calendar.MINUTE),
         is24Hour = is24Hour,
     )
-
     var showDial by remember { mutableStateOf(true) }
-
-    val toggleIcon = if (showDial) {
-        Icons.Filled.EditCalendar
-    } else {
-        Icons.Filled.AccessTime
-    }
+    val toggleIcon = if (showDial) { Icons.Filled.EditCalendar } else { Icons.Filled.AccessTime }
 
     TimePickerDialog(
-        onDismiss = { onDismiss() },
-        onConfirm = { onConfirm(timePickerState) },
+        onDismiss = onDismiss,
+        onConfirm = {
+            val calendar = Calendar.getInstance().apply {
+                timeInMillis = initialTime
+                set(Calendar.HOUR_OF_DAY, timePickerState.hour)
+                set(Calendar.MINUTE, timePickerState.minute)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }
+            onConfirm(calendar.timeInMillis)
+            onDismiss()
+        },
         toggle = {
             IconButton(onClick = { showDial = !showDial }) {
                 Icon(
@@ -363,17 +364,14 @@ fun TimePicker(
         },
     ) {
         if (showDial) {
-            TimePicker(
-                state = timePickerState,
-            )
+            TimePicker(timePickerState)
         } else {
-            TimeInput(
-                state = timePickerState,
-            )
+            TimeInput(timePickerState)
         }
     }
 }
 
+// Remove the onDismiss() call from TimePickerDialog's onConfirm button
 @Composable
 fun TimePickerDialog(
     title: String = stringResource(R.string.Select_Time),
@@ -418,78 +416,7 @@ fun TimePickerDialog(
                     toggle()
                     Spacer(modifier = Modifier.weight(1f))
                     TextButton(onClick = onDismiss) { Text(stringResource(R.string.Cancel)) }
-                    TextButton(onClick = {
-                        onConfirm()
-                        onDismiss()
-                    }) { Text(stringResource(R.string.Set)) }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun TaskRepetitionDialog(
-    repeatPeriod: String,
-    onChange: (String) -> Unit,
-    onDismissRequest: () -> Unit
-) {
-    val options = listOf(
-        "NONE",
-        "DAILY",
-        "WEEKLY",
-        "MONTHLY",
-        "YEARLY"
-    )
-
-    Dialog(onDismissRequest = onDismissRequest) {
-        Card(Modifier.fillMaxWidth()) {
-            Column(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                CircleWrapper(MaterialTheme.colorScheme.primary) {
-                    Icon(
-                        Icons.Default.Repeat,
-                        contentDescription = "Repeat Icon",
-                        tint = MaterialTheme.colorScheme.onPrimary
-                    )
-                }
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    stringResource(R.string.Repeat_Task),
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold)
-                )
-                Spacer(Modifier.height(16.dp))
-
-                options.forEach { option ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .clickable {
-                                if (repeatPeriod != option) {
-                                    onChange(option)
-                                }
-                                onDismissRequest()
-                            }
-                            .padding(8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(option)
-                        RadioButton(
-                            selected = repeatPeriod == option,
-                            onClick = {
-                                if (repeatPeriod != option) {
-                                    onChange(option)
-                                }
-                                onDismissRequest()
-                            }
-                        )
-                    }
+                    TextButton(onClick = onConfirm) { Text(stringResource(R.string.Set)) }
                 }
             }
         }
@@ -506,10 +433,7 @@ fun EventNotificationDialog(
     val options = listOf(
         0L to stringResource(R.string.On_Time),
         5L to stringResource(R.string.five_minutes_before),
-        10L to stringResource(R.string.ten_minutes_before),
-        15L to stringResource(R.string.fifteen_minutes_before),
-        30L to stringResource(R.string.thirty_minutes_before),
-        60L to stringResource(R.string.one_hour_before)
+        30L to stringResource(R.string.thirty_minutes_before)
     )
 
     // Convert to minutes for comparison
@@ -518,9 +442,7 @@ fun EventNotificationDialog(
     Dialog(onDismissRequest = onDismissRequest) {
         Card(Modifier.fillMaxWidth()) {
             Column(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
+                Modifier.fillMaxWidth().padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 CircleWrapper(MaterialTheme.colorScheme.primary) {
@@ -535,9 +457,7 @@ fun EventNotificationDialog(
                     stringResource(R.string.Add_Notification),
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold)
                 )
-
                 Spacer(Modifier.height(16.dp))
-
                 options.forEach { (minutesBefore, label) ->
                     Row(
                         modifier = Modifier
@@ -650,8 +570,6 @@ fun CustomNotificationDialog(
     )
     var selectedUnit by remember { mutableStateOf(timeUnits[0]) }
     var amountText by remember { mutableStateOf("1") }
-
-
     val amount = amountText.toIntOrNull()?.coerceAtLeast(1) ?: 1
 
     val offsetMillis = when (selectedUnit) {
@@ -662,27 +580,24 @@ fun CustomNotificationDialog(
     }
 
     Dialog(onDismissRequest = onDismissRequest) {
-        Card(
-            Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
+        Card(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp)) {
                 Text(
                     stringResource(R.string.Custom_Notification),
                     style = MaterialTheme.typography.titleLarge
                 )
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(8.dp))
 
                 timeUnits.forEach { unit ->
                     Row(
                         Modifier
                             .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
                             .selectable(
                                 selected = selectedUnit == unit,
                                 onClick = { selectedUnit = unit }
                             )
-                            .padding(8.dp),
+                            .padding(2.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         RadioButton(
@@ -709,7 +624,7 @@ fun CustomNotificationDialog(
                     Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
                 ) {
-                    TextButton(onClick = onDismissRequest) { Text(stringResource(R.string.Custom)) }
+                    TextButton(onClick = onDismissRequest) { Text(stringResource(R.string.Cancel)) }
                     Spacer(Modifier.width(8.dp))
                     Button(onClick = {
                         onConfirm(offsetMillis)

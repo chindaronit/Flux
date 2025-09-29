@@ -56,42 +56,54 @@ val darkSchemes = listOf(
     theme1DarkScheme,
     theme2DarkScheme,
     theme3DarkScheme,
-    theme4DarkScheme
+    theme4DarkScheme,
+    theme5DarkScheme,
+    theme6DarkScheme
 )
 
 val lightSchemes = listOf(
     theme1LightScheme,
     theme2LightScheme,
     theme3LightScheme,
-    theme4LightScheme
+    theme4LightScheme,
+    theme5LightScheme,
+    theme6LightScheme
 )
 
 val mediumContrastLightColorSchemes = listOf(
     theme1MediumContrastLightColorScheme,
     theme2MediumContrastLightColorScheme,
     theme3MediumContrastLightColorScheme,
-    theme4MediumContrastLightColorScheme
+    theme4MediumContrastLightColorScheme,
+    theme5MediumContrastLightColorScheme,
+    theme6MediumContrastLightColorScheme
 )
 
 val mediumContrastDarkColorSchemes = listOf(
     theme1MediumContrastDarkColorScheme,
     theme2MediumContrastDarkColorScheme,
     theme3MediumContrastDarkColorScheme,
-    theme4MediumContrastDarkColorScheme
+    theme4MediumContrastDarkColorScheme,
+    theme5MediumContrastDarkColorScheme,
+    theme6MediumContrastDarkColorScheme
 )
 
 val highContrastLightColorSchemes = listOf(
     theme1HighContrastLightColorScheme,
     theme2HighContrastLightColorScheme,
     theme3HighContrastLightColorScheme,
-    theme4HighContrastLightColorScheme
+    theme4HighContrastLightColorScheme,
+    theme5HighContrastLightColorScheme,
+    theme6HighContrastLightColorScheme
 )
 
 val highContrastDarkColorSchemes = listOf(
     theme1HighContrastDarkColorScheme,
     theme2HighContrastDarkColorScheme,
     theme3HighContrastDarkColorScheme,
-    theme4HighContrastDarkColorScheme
+    theme4HighContrastDarkColorScheme,
+    theme5HighContrastDarkColorScheme,
+    theme6HighContrastDarkColorScheme
 )
 
 @RequiresApi(Build.VERSION_CODES.S)

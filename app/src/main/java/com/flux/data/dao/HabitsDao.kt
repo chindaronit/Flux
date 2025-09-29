@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface HabitsDao {
-    @Query("SELECT EXISTS(SELECT 1 FROM HabitModel WHERE habitId = :habitId)")
+    @Query("SELECT EXISTS(SELECT 1 FROM HabitModel WHERE id = :habitId)")
     suspend fun exists(habitId: String): Boolean
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

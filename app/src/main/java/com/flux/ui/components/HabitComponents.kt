@@ -57,10 +57,12 @@ import androidx.compose.ui.unit.dp
 import com.flux.R
 import com.flux.data.model.HabitInstanceModel
 import com.flux.data.model.HabitModel
+import com.flux.data.model.RecurrenceRule
 import com.flux.ui.events.HabitEvents
 import com.flux.ui.screens.events.IconRadioButton
 import com.flux.ui.screens.events.toFormattedDate
 import com.flux.ui.screens.events.toFormattedTime
+import com.flux.ui.screens.habits.isDateAllowedForHabit
 import com.flux.ui.state.Settings
 import java.time.DayOfWeek
 import java.time.Instant
@@ -152,8 +154,7 @@ fun HabitPreviewCard(
     // Get Monday of this week
     val mondayEpoch = LocalDate.now().with(DayOfWeek.MONDAY).toEpochDay()
     val weekDates = (0L..6L).map { mondayEpoch + it }
-
-    val (currentStreak, _) = calculateStreaks(instances)
+    val (currentStreak, _) = calculateStreaks(habit.recurrence, habit.startDateTime, instances)
 
     Card(
         onClick = { onToggleDone(todayEpoch) },
@@ -226,6 +227,7 @@ fun HabitCalendarCard(
     habitId: String,
     workspaceId: String,
     startDateTime: Long,
+    recurrence: RecurrenceRule,
     habitInstances: List<HabitInstanceModel>,
     onHabitEvents: (HabitEvents) -> Unit
 ) {
@@ -328,16 +330,27 @@ fun HabitCalendarCard(
                     val instance = habitInstances.find { it.instanceDate == epochDay }
                     val isMarked = instance != null
 
-                    val backgroundColor =
-                        if (isMarked) MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
-                        else Color.Transparent
-
-                    val textColor =
-                        if (isMarked) MaterialTheme.colorScheme.onPrimary
-                        else MaterialTheme.colorScheme.onSurface
-
                     val isBeforeStart = date.isBefore(habitStartDate)
-                    val dateAlpha = if (isBeforeStart) 0.2f else 1f
+                    val isAllowedByRecurrence = isDateAllowedForHabit(recurrence, epochDay)
+                    val isClickable = !isBeforeStart && isAllowedByRecurrence
+
+                    val backgroundColor = when {
+                        isMarked -> MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                        isAllowedByRecurrence && !isBeforeStart -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                        else -> Color.Transparent
+                    }
+
+                    val textColor = when {
+                        isMarked -> MaterialTheme.colorScheme.onPrimary
+                        isAllowedByRecurrence && !isBeforeStart -> MaterialTheme.colorScheme.onSurface
+                        else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                    }
+
+                    val dateAlpha = when {
+                        isBeforeStart -> 0.2f
+                        !isAllowedByRecurrence -> 0.4f
+                        else -> 1f
+                    }
 
                     Box(
                         modifier = Modifier
@@ -345,7 +358,7 @@ fun HabitCalendarCard(
                             .clip(RoundedCornerShape(8.dp))
                             .background(backgroundColor)
                             .alpha(dateAlpha)
-                            .clickable(enabled = !isBeforeStart) {
+                            .clickable(enabled = isClickable) {
                                 if (isMarked) {
                                     onHabitEvents(HabitEvents.MarkUndone(instance))
                                 } else {
@@ -365,47 +378,6 @@ fun HabitCalendarCard(
                         Text(date.dayOfMonth.toString(), color = textColor)
                     }
                 }
-            }
-        }
-    }
-}
-
-@Composable
-fun HabitStreakCard(currentStreak: Int, bestStreak: Int, radius: Int) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        onClick = {},
-        shape = shapeManager(radius = radius * 2),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(
-                2.dp
-            )
-        )
-    ) {
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column {
-                Text(
-                    "${stringResource(R.string.Current_Streak)} $currentStreak days",
-                    modifier = Modifier.alpha(0.85f)
-                )
-                Text(
-                    "${stringResource(R.string.Best_Streak)} $bestStreak days",
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-            CircleWrapper(MaterialTheme.colorScheme.primary) {
-                Icon(
-                    Icons.Default.LocalFireDepartment,
-                    null,
-                    modifier = Modifier.size(40.dp),
-                    tint = MaterialTheme.colorScheme.onPrimary
-                )
             }
         }
     }
@@ -530,7 +502,7 @@ fun HabitBarChart(
 ) {
     val maxDaysPerWeek = 7
     val yLabels = (maxDaysPerWeek downTo 1).toList()
-    val primaryColor = MaterialTheme.colorScheme.primary // ← get color in @Composable scope
+    val primaryColor = MaterialTheme.colorScheme.primary
 
     Row(
         modifier = modifier
@@ -618,44 +590,134 @@ fun HabitBarChart(
     }
 }
 
-fun calculateStreaks(instances: List<HabitInstanceModel>): Pair<Int, Int> {
-    if (instances.isEmpty()) return 0 to 0
+@Composable
+fun HabitStreakCard(
+    habit: HabitModel,
+    instances: List<HabitInstanceModel>,
+    radius: Int
+) {
+    val streakData = remember(habit, instances) {
+        calculateStreaks(habit.recurrence, habit.startDateTime, instances)
+    }
 
-    // Collect unique days as epochDays
-    val daysSorted = instances.map { it.instanceDate }.distinct().sorted()
-    val daysSet = daysSorted.toHashSet()
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = {},
+        shape = shapeManager(radius = radius * 2),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
+        )
+    ) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column {
+                Text(
+                    "${stringResource(R.string.Current_Streak)} ${streakData.currentStreak}",
+                    modifier = Modifier.alpha(0.85f)
+                )
+                Text(
+                    "${stringResource(R.string.Best_Streak)} ${streakData.bestStreak}",
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+            CircleWrapper(MaterialTheme.colorScheme.primary) {
+                Icon(
+                    Icons.Default.LocalFireDepartment,
+                    null,
+                    modifier = Modifier.size(40.dp),
+                    tint = MaterialTheme.colorScheme.onPrimary
+                )
+            }
+        }
+    }
+}
 
-    // --- Best streak (max consecutive run) ---
-    var bestStreak = 1
-    var run = 1
-    for (i in 1 until daysSorted.size) {
-        if (daysSorted[i] == daysSorted[i - 1] + 1) {
-            run++
+data class StreakData(
+    val currentStreak: Int,
+    val bestStreak: Int
+)
+
+fun calculateStreaks(
+    recurrence: RecurrenceRule,
+    startDateTime: Long,
+    instances: List<HabitInstanceModel>
+): StreakData {
+    if (instances.isEmpty()) {
+        return StreakData(currentStreak = 0, bestStreak = 0)
+    }
+
+    // Get all expected dates from habit start to today
+    val expectedDates = getExpectedDates(recurrence, startDateTime)
+    val completedDates = instances.map { it.instanceDate }.toSet()
+
+    // Calculate current streak (working backwards from today)
+    val currentStreak = calculateCurrentStreak(expectedDates, completedDates)
+
+    // Calculate best streak (longest consecutive completed sequence)
+    val bestStreak = calculateBestStreak(expectedDates, completedDates)
+
+    return StreakData(currentStreak, bestStreak)
+}
+
+private fun getExpectedDates(recurrence: RecurrenceRule, startDateTime: Long): List<Long> {
+    val today = LocalDate.now()
+    val startDate = Instant.ofEpochMilli(startDateTime).atZone(ZoneId.systemDefault()).toLocalDate()
+    val expectedDates = mutableListOf<Long>()
+
+    var current = startDate
+    while (!current.isAfter(today)) {
+        // Convert to Monday=0, Tuesday=1, ..., Sunday=6 format
+        val dayOfWeek = (current.dayOfWeek.value + 5) % 7
+        if (dayOfWeek in (recurrence as RecurrenceRule.Week).daysOfWeek) {
+            expectedDates.add(current.toEpochDay())
+        }
+        current = current.plusDays(1)
+    }
+
+    return expectedDates.sorted()
+}
+
+private fun calculateCurrentStreak(expectedDates: List<Long>, completedDates: Set<Long>): Int {
+    if (expectedDates.isEmpty()) return 0
+
+    var streak = 0
+    // Work backwards from the most recent expected date
+    for (i in expectedDates.size - 1 downTo 0) {
+        val expectedDate = expectedDates[i]
+        if (expectedDate in completedDates) {
+            streak++
         } else {
-            run = 1
+            // If we hit today and it's expected but not completed, streak is broken
+            val today = LocalDate.now().toEpochDay()
+            if (expectedDate <= today) {
+                break
+            }
+            // If it's a future date, continue checking past dates
         }
-        if (run > bestStreak) bestStreak = run
     }
 
-    val todayEpoch = LocalDate.now().toEpochDay()
-    val anchor = if (daysSet.contains(todayEpoch)) todayEpoch else todayEpoch - 1
+    return streak
+}
 
-    fun countStreak(anchor: Long): Int {
-        var count = 1
-        var d = anchor - 1
-        while (daysSet.contains(d)) {
-            count++
-            d--
+private fun calculateBestStreak(expectedDates: List<Long>, completedDates: Set<Long>): Int {
+    if (expectedDates.isEmpty()) return 0
+
+    var bestStreak = 0
+    var currentStreak = 0
+
+    for (expectedDate in expectedDates) {
+        if (expectedDate in completedDates) {
+            currentStreak++
+            bestStreak = maxOf(bestStreak, currentStreak)
+        } else {
+            currentStreak = 0
         }
-        d = anchor + 1
-        while (daysSet.contains(d)) {
-            count++
-            d++
-        }
-        return count
     }
 
-    val currentStreak = if (daysSet.contains(anchor)) countStreak(anchor) else 0
-
-    return currentStreak to bestStreak
+    return bestStreak
 }

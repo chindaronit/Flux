@@ -172,11 +172,11 @@
     <string name="Edit_Event">ईवेंट संपादित करें</string>
     <string name="All_Day">पूरा दिन</string>
     <string name="Repeat_Task">कार्य दोहराएं</string>
-    <string name="NONE">कोई नहीं</string>
-    <string name="Daily">प्रतिदिन</string>
-    <string name="Weekly">प्रत्येक सप्ताह</string>
-    <string name="Monthly">प्रत्येक माह</string>
-    <string name="Yearly">प्रत्येक वर्ष</string>
+    <string name="Once">एक बार</string>
+    <string name="Day">दिन</string>
+    <string name="Week">सप्ताह</string>
+    <string name="Month">महीना</string>
+    <string name="Year">साल</string>
     <string name="Status_Completed">पूर्ण</string>
     <string name="Status_Pending">लंबित</string>
     <string name="Mark_As_Completed">पूर्ण के रूप में चिन्हित करें</string>

@@ -52,6 +52,7 @@ import com.flux.data.model.EventModel
 import com.flux.data.model.HabitInstanceModel
 import com.flux.data.model.JournalModel
 import com.flux.data.model.WorkspaceModel
+import com.flux.data.model.occursOn
 import com.flux.ui.components.ActionType
 import com.flux.ui.components.SettingOption
 import com.flux.ui.components.shapeManager
@@ -61,7 +62,6 @@ import com.flux.ui.theme.pending
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 
@@ -100,7 +100,7 @@ fun LazyListScope.analyticsItems(
                 item {
                     ChartCirclePie(
                         radius = radius,
-                        weeklyEventStats = calculateWeeklyEventStats(allEvents, allEventInstances)
+                        weeklyEventStats = calculateWeeklyStats(allEvents, allEventInstances)
                     )
                     Spacer(Modifier.height(8.dp))
                 }
@@ -118,51 +118,39 @@ data class WeeklyEventStats(
     val failed: Int
 )
 
-fun calculateWeeklyEventStats(
+fun calculateWeeklyStats(
     events: List<EventModel>,
     instances: List<EventInstanceModel>
 ): WeeklyEventStats {
-    val zoneId = ZoneId.systemDefault()
-    val now = LocalDateTime.now(zoneId)
-    val today = now.toLocalDate()
-    val weekStart = today.with(DayOfWeek.MONDAY)
-    val weekEnd = today.with(DayOfWeek.SUNDAY)
-
-    // Just a lookup set of (eventId, instanceDate)
-    val instanceSet = instances.map { it.eventId to LocalDate.ofEpochDay(it.instanceDate) }.toSet()
+    val today = LocalDate.now()
+    val startOfWeek = today.with(DayOfWeek.MONDAY)
+    val endOfWeek = today.with(DayOfWeek.SUNDAY)
 
     var upcoming = 0
     var completed = 0
     var failed = 0
 
-    fun dateRange(start: LocalDate, endInclusive: LocalDate): Sequence<LocalDate> =
-        generateSequence(start) { it.plusDays(1) }.takeWhile { it <= endInclusive }
+    for (event in events) {
+        var current = startOfWeek
+        while (!current.isAfter(endOfWeek)) {
+            if (event.occursOn(current)) {
+                val instance = instances.find {
+                    it.eventId == event.id && it.instanceDate == current.toEpochDay()
+                }
 
-    events.forEach { event ->
-        val baseDateTime = Instant.ofEpochMilli(event.startDateTime)
-            .atZone(zoneId)
-            .toLocalDateTime()
-
-        for (date in dateRange(weekStart, weekEnd)) {
-            val matches = when (event.repetition) {
-                "DAILY" -> true
-                "WEEKLY" -> baseDateTime.dayOfWeek == date.dayOfWeek
-                "MONTHLY" -> baseDateTime.dayOfMonth == date.dayOfMonth
-                "YEARLY" -> baseDateTime.dayOfYear == date.dayOfYear
-                "NONE" -> baseDateTime.toLocalDate() == date
-                else -> false
+                when {
+                    current.isAfter(today) -> {
+                        upcoming++ // future = upcoming
+                    }
+                    current.isEqual(today) -> {
+                        if (instance != null) completed++ else upcoming++
+                    }
+                    current.isBefore(today) -> {
+                        if (instance != null) completed++ else failed++
+                    }
+                }
             }
-
-            if (!matches) continue
-
-            val isCompleted = (event.eventId to date) in instanceSet
-            val instanceDateTime = LocalDateTime.of(date, baseDateTime.toLocalTime())
-
-            when {
-                isCompleted -> completed++
-                instanceDateTime.isBefore(now) -> failed++
-                else -> upcoming++
-            }
+            current = current.plusDays(1)
         }
     }
 
@@ -219,7 +207,7 @@ fun HabitHeatMap(radius: Int, allHabitInstances: List<HabitInstanceModel>, total
         }.takeIf { it != -1 } ?: 0
     }
 
-    // ✅ Fix: convert today → epochDay for comparison
+
     val todayHabit = allHabitInstances.count { it.instanceDate == today.toEpochDay() }
 
     // Auto-scroll to current month on first composition

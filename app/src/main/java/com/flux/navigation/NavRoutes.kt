@@ -13,6 +13,7 @@ import com.flux.data.model.TodoModel
 import com.flux.ui.screens.auth.AuthScreen
 import com.flux.ui.screens.events.EventDetails
 import com.flux.ui.screens.habits.HabitDetails
+import com.flux.ui.screens.habits.NewHabit
 import com.flux.ui.screens.journal.EditJournal
 import com.flux.ui.screens.notes.EditLabels
 import com.flux.ui.screens.notes.NoteDetails
@@ -46,6 +47,7 @@ sealed class NavRoutes(val route: String) {
 
     // Habits
     data object HabitDetails : NavRoutes("workspace/habit/details")
+    data object NewHabit : NavRoutes("workspace/habit/new")
 
     // Events
     data object EventDetails : NavRoutes("workspace/event/details")
@@ -103,9 +105,15 @@ val HabitScreens =
                 navController,
                 states.settings.data.cornerRadius,
                 workspaceId,
-                states.habitState.allHabits.find { it.habitId == habitId }
-                    ?: HabitModel(workspaceId = workspaceId),
+                states.habitState.allHabits.first { it.id == habitId },
                 states.habitState.allInstances.filter { it.habitId == habitId },
+                viewModel.habitViewModel::onEvent
+            )
+        },
+        NavRoutes.NewHabit.route + "/{workspaceId}" + "/{habitId}" to { navController, habitId, workspaceId, states, viewModel ->
+            NewHabit(
+                navController,
+                states.habitState.allHabits.find { it.id == habitId } ?: HabitModel(workspaceId=workspaceId),
                 states.settings,
                 viewModel.habitViewModel::onEvent
             )
@@ -137,6 +145,7 @@ val JournalScreens =
         }
     )
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 val SettingsScreens =
     mapOf<String, @Composable (navController: NavController, snackbarHostState: SnackbarHostState, states: States, viewModels: ViewModels) -> Unit>(
         NavRoutes.Settings.route to { navController, _, states, viewModels ->
@@ -168,7 +177,7 @@ val EventScreens =
             EventDetails(
                 navController,
                 workspaceId,
-                states.eventState.allEvent.find { it.eventId == eventId }
+                states.eventState.allEvent.find { it.id == eventId }
                     ?: EventModel(workspaceId = workspaceId),
                 states.eventState.allEventInstances.find { it.eventId == eventId && it.instanceDate == LocalDate.now().toEpochDay() } == null,
                 states.settings,

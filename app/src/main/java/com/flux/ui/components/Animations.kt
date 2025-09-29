@@ -13,10 +13,10 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 
 // Common constants
-private const val DEFAULT_FADE_DURATION = 200
-private const val DEFAULT_SCALE_DURATION = 300
-private const val DEFAULT_SLIDE_DURATION = 300
-private const val DEFAULT_INITIAL_SCALE = 0.9f
+private const val DEFAULT_FADE_DURATION = 300
+private const val DEFAULT_SCALE_DURATION = 400
+private const val DEFAULT_SLIDE_DURATION = 400
+private const val DEFAULT_INITIAL_SCALE = 0.8f
 
 // --- Fade + Scale (Default) ---
 fun defaultScreenEnterAnimation(): EnterTransition {

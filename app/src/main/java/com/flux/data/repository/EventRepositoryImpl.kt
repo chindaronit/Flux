@@ -41,7 +41,7 @@ class EventRepositoryImpl @Inject constructor(
 
     override suspend fun deleteEvent(event: EventModel) {
         return withContext(ioDispatcher) {
-            eventInstanceDao.deleteAllEventInstance(event.eventId)
+            eventInstanceDao.deleteAllEventInstance(event.id)
             eventDao.deleteEvent(event)
         }
     }

@@ -12,6 +12,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.Handler
 import android.provider.Settings
 import android.widget.Toast
 import androidx.annotation.RequiresApi
@@ -20,16 +21,24 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import com.flux.R
-import java.util.Calendar
+import com.flux.data.model.RecurrenceRule
+import com.flux.ui.screens.events.toFormattedDateTime
+import kotlinx.serialization.json.Json
 
 class ReminderReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val title = intent.getStringExtra("TITLE") ?: "Reminder"
         val description =
             intent.getStringExtra("DESCRIPTION") ?: "It's time to complete pending things"
-        val id = intent.getStringExtra("ID") ?: "" // UUID string
-        val type = intent.getStringExtra("TYPE") ?: "HABIT"
-        val repeat = intent.getStringExtra("REPEAT") ?: "NONE"
+        val id = intent.getStringExtra("ID") ?: ""
+        val type = intent.getStringExtra("TYPE") ?: "EVENT"
+
+        // Deserialize recurrence rule
+        val recurrenceJson = intent.getStringExtra("RECURRENCE")
+        val recurrence = recurrenceJson?.let {
+            Json.decodeFromString<RecurrenceRule>(it)
+        } ?: RecurrenceRule.Once()
+
         val notificationId = getUniqueRequestCode(type, id)
 
         val notification = NotificationCompat.Builder(context, "notification_channel")
@@ -43,23 +52,18 @@ class ReminderReceiver : BroadcastReceiver() {
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         manager.notify(notificationId, notification)
 
-        if (repeat != "NONE") {
-            val nextTime = Calendar.getInstance()
-            when (repeat) {
-                "DAILY" -> nextTime.add(Calendar.DAY_OF_YEAR, 1)
-                "WEEKLY" -> nextTime.add(Calendar.WEEK_OF_YEAR, 1)
-                "MONTHLY" -> nextTime.add(Calendar.MONTH, 1)
-                "YEARLY" -> nextTime.add(Calendar.YEAR, 1)
-            }
-
+        // Reschedule next occurrence if recurring
+        val nextTime = getNextOccurrence(recurrence, System.currentTimeMillis())
+        println("scheduling for ${nextTime?.toFormattedDateTime(context)}, current: ${System.currentTimeMillis().toFormattedDateTime(context)}")
+        if (nextTime != null) {
             scheduleReminder(
                 context = context,
                 id = id,
                 type = type,
-                repeat = repeat,
-                timeInMillis = nextTime.timeInMillis,
+                recurrence = recurrence,
+                timeInMillis = nextTime,
                 title = title,
-                description = description,
+                description = description
             )
         }
     }
@@ -104,16 +108,17 @@ fun canScheduleReminder(context: Context): Boolean {
 
 fun scheduleReminder(
     context: Context,
-    id: String, // UUID string
+    id: String,
     type: String,
-    repeat: String = "NONE",
+    recurrence: RecurrenceRule,
     timeInMillis: Long,
     title: String,
     description: String
 ) {
     try {
+        println("scheduleReminder ${timeInMillis.toFormattedDateTime(context)}")
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val intent = createReminderIntent(context, id, type, title, description, repeat)
+        val intent = createReminderIntent(context, id, type, title, description, recurrence)
         val requestCode = getUniqueRequestCode(type, id)
 
         val pendingIntent = PendingIntent.getBroadcast(
@@ -126,7 +131,7 @@ fun scheduleReminder(
         alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, timeInMillis, pendingIntent)
     } catch (e: SecurityException) {
         e.printStackTrace()
-        android.os.Handler(context.mainLooper).post {
+        Handler(context.mainLooper).post {
             Toast.makeText(context, context.getString(R.string.Error_Schedule_Alarm_Failed), Toast.LENGTH_LONG).show()
         }
     }
@@ -134,18 +139,18 @@ fun scheduleReminder(
 
 fun createReminderIntent(
     context: Context,
-    id: String, // UUID string
+    id: String,
     type: String,
     title: String,
     description: String,
-    repeat: String
+    recurrence: RecurrenceRule
 ): Intent {
     return Intent(context, ReminderReceiver::class.java).apply {
         putExtra("TITLE", title)
         putExtra("DESCRIPTION", description)
         putExtra("ID", id)
         putExtra("TYPE", type)
-        putExtra("REPEAT", repeat)
+        putExtra("RECURRENCE", Json.encodeToString(recurrence))
     }
 }
 
@@ -155,11 +160,11 @@ fun getUniqueRequestCode(type: String, uuid: String): Int {
 
 fun cancelReminder(
     context: Context,
-    id: String, // UUID string
+    id: String,
     type: String,
     title: String,
     description: String,
-    repeat: String = "NONE"
+    recurrence: RecurrenceRule
 ) {
     try {
         val intent = createReminderIntent(
@@ -168,7 +173,7 @@ fun cancelReminder(
             type = type,
             title = title,
             description = description,
-            repeat = repeat
+            recurrence = recurrence
         )
         val requestCode = getUniqueRequestCode(type, id)
         val pendingIntent = PendingIntent.getBroadcast(

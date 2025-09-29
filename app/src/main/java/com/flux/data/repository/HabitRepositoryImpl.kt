@@ -41,7 +41,7 @@ class HabitRepositoryImpl @Inject constructor(
 
     override suspend fun deleteHabit(habit: HabitModel) {
         return withContext(ioDispatcher) {
-            instanceDao.deleteAllInstances(habit.habitId)
+            instanceDao.deleteAllInstances(habit.id)
             dao.deleteHabit(habit)
         }
     }

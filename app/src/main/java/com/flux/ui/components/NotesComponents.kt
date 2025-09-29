@@ -48,7 +48,6 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -71,6 +70,7 @@ import androidx.compose.ui.unit.sp
 import com.flux.R
 import com.flux.data.model.LabelModel
 import com.flux.data.model.NotesModel
+import com.flux.ui.screens.events.getTextFieldColors
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
@@ -104,14 +104,7 @@ fun NotesInputCard(
             placeholder = { Text(stringResource(R.string.Title)) },
             textStyle = MaterialTheme.typography.titleLarge,
             modifier = Modifier.fillMaxWidth(),
-            colors = TextFieldDefaults.colors(
-                focusedIndicatorColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                unfocusedIndicatorColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-                focusedTextColor = MaterialTheme.colorScheme.primary,
-                focusedPlaceholderColor = MaterialTheme.colorScheme.primary
-            )
+            colors = getTextFieldColors()
         )
 
         RichTextEditor(
@@ -125,9 +118,9 @@ fun NotesInputCard(
                 .weight(1f)
                 .padding(bottom = 12.dp),
             colors = RichTextEditorDefaults.richTextEditorColors(
-                focusedIndicatorColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                unfocusedIndicatorColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp),
                 placeholderColor = MaterialTheme.colorScheme.primary,
             )
         )

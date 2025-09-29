@@ -3,8 +3,27 @@ package com.flux.data.model
 import androidx.room.TypeConverter
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import kotlinx.serialization.json.Json
 
 class Converter {
+    private val json = Json {
+        encodeDefaults = true
+        ignoreUnknownKeys = true
+    }
+
+    @TypeConverter
+    fun fromRecurrence(rule: RecurrenceRule?): String =
+        json.encodeToString(RecurrenceRule.serializer(), rule ?: RecurrenceRule.Once())
+
+    @TypeConverter
+    fun toRecurrence(data: String?): RecurrenceRule =
+        try {
+            if (data.isNullOrBlank()) RecurrenceRule.Once()
+            else json.decodeFromString(RecurrenceRule.serializer(), data)
+        } catch (_: Exception) {
+            RecurrenceRule.Once()
+        }
+
     @TypeConverter
     fun fromTodoItemList(items: List<TodoItem>): String {
         return Gson().toJson(items)
