@@ -16,7 +16,7 @@ data class EventModel(
     override val id: String = UUID.randomUUID().toString(),
     override val title: String = "",
     override val description: String = "",
-    override val recurrence: RecurrenceRule = RecurrenceRule.Once(),
+    override val recurrence: RecurrenceRule = RecurrenceRule.Custom(),
     override val startDateTime: Long = System.currentTimeMillis(),
     override val notificationOffset: Long = 0L,
     val workspaceId: String = ""
@@ -38,35 +38,29 @@ fun EventModel.occursOn(date: LocalDate): Boolean {
         .toLocalDate()
 
     return when (val r = recurrence) {
-        is RecurrenceRule.Once -> r.atDay == date.toEpochDay()
+        is RecurrenceRule.Once -> eventDay == date
 
-        is RecurrenceRule.Day -> {
+        is RecurrenceRule.Custom -> {
             val daysSinceStart = ChronoUnit.DAYS.between(eventDay, date)
             daysSinceStart >= 0 && daysSinceStart % r.everyXDays == 0L
         }
 
-        is RecurrenceRule.Week -> {
-            val dayOfWeek = (date.dayOfWeek.value + 6) % 7 // Monday=0, Sunday=6
+        is RecurrenceRule.Weekly -> {
+            val dayOfWeek = (date.dayOfWeek.value + 6) % 7
             date >= eventDay && r.daysOfWeek.contains(dayOfWeek)
         }
 
-        is RecurrenceRule.Month -> {
-            val day = r.dayOfMonth // 1..31
-            val startMonth = eventDay.withDayOfMonth(1)
-            val currentMonth = date.withDayOfMonth(1)
-
-            val monthsSinceStart = ChronoUnit.MONTHS.between(startMonth, currentMonth)
+        is RecurrenceRule.Monthly -> {
+            if (date < eventDay) return false
             val lastDayOfMonth = date.lengthOfMonth()
-            val dayToCheck = minOf(day, lastDayOfMonth)
-
-            monthsSinceStart >= 0 && date.dayOfMonth == dayToCheck
+            val dayToCheck = minOf(eventDay.dayOfMonth, lastDayOfMonth)
+            date.dayOfMonth == dayToCheck
         }
 
-        is RecurrenceRule.Year -> {
-            val startDate = eventDay
-            date >= startDate &&
-                    date.dayOfMonth == startDate.dayOfMonth &&
-                    date.month == startDate.month
+        is RecurrenceRule.Yearly -> {
+            date >= eventDay &&
+                    date.dayOfMonth == eventDay.dayOfMonth &&
+                    date.month == eventDay.month
         }
     }
 }

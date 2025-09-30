@@ -320,7 +320,6 @@ fun WorkspaceDetails(
             }
             if (spacesList.find { it.id == selectedSpaceId.intValue }?.title == context.getString(R.string.Calendar)) {
                 calendarItems(
-                    navController,
                     radius,
                     isDatedTaskLoading,
                     workspaceId,

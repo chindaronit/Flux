@@ -75,7 +75,7 @@ fun NewHabit(
     // Initialize selectedDays from existing habit's recurrence
     val selectedDays = remember {
         mutableStateListOf<Int>().apply {
-            addAll((habit.recurrence as RecurrenceRule.Week).daysOfWeek)
+            addAll((habit.recurrence as RecurrenceRule.Weekly).daysOfWeek)
         }
     }
     val context = LocalContext.current
@@ -110,7 +110,7 @@ fun NewHabit(
                                     title = newHabitTitle,
                                     description = newHabitDescription,
                                     startDateTime = newHabitTime,
-                                    recurrence = RecurrenceRule.Week(selectedDays.toList())
+                                    recurrence = RecurrenceRule.Weekly(selectedDays.toList())
                                 )
                             ))
                         }

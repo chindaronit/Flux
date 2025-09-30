@@ -69,10 +69,11 @@ fun LazyListScope.eventHomeItems(
 
     // Upcoming (at least one occurrence before end of month, but not today)
     val upcomingEvents = allEvents.filter { event ->
-        (1..ChronoUnit.DAYS.between(today, endOfMonth)).any { offset ->
-            val date = today.plusDays(offset)
-            event.occursOn(date)
-        }
+        !event.occursOn(today) &&
+                (1..ChronoUnit.DAYS.between(today, endOfMonth)).any { offset ->
+                    val date = today.plusDays(offset)
+                    event.occursOn(date)
+                }
     }.distinctBy { it.id }
 
     if (isLoading) {
@@ -141,14 +142,8 @@ fun LazyListScope.eventHomeItems(
                     title = event.title,
                     repeat = event.recurrence,
                     startDateTime = event.startDateTime,
-                    onChangeStatus = {
-
-                    },
-                    onClick = {
-                        navController.navigate(
-                            NavRoutes.EventDetails.withArgs(workspaceId, event.id)
-                        )
-                    }
+                    onChangeStatus = {},
+                    onClick = {}
                 )
                 Spacer(Modifier.height(8.dp))
             }
@@ -226,24 +221,39 @@ fun EventCard(
 
     // Recurrence text
     val recurrenceText = when (repeat) {
-        is RecurrenceRule.Once -> "On $localDate"
-        is RecurrenceRule.Day -> "Every ${repeat.everyXDays} day(s)"
-        is RecurrenceRule.Week -> {
-            val days = listOf("M", "T", "W", "T", "F", "S", "S")
-            "Weekly on "+ repeat.daysOfWeek.joinToString(" ") { days[it] }
+        is RecurrenceRule.Once -> {
+            "Once on ${localDate.format(DateTimeFormatter.ofPattern("MMM dd, yyyy"))}"
         }
-        is RecurrenceRule.Month -> "Monthly On date ${repeat.dayOfMonth}"
-        is RecurrenceRule.Year -> {
-            val yearDate = Instant.ofEpochMilli(startDateTime)
-                .atZone(ZoneId.systemDefault())
-                .toLocalDate()
-            "Yearly On ${yearDate.dayOfMonth} ${yearDate.month.name.lowercase().replaceFirstChar { it.uppercase() }}"
+
+        is RecurrenceRule.Custom -> {
+            if (repeat.everyXDays == 1) "Daily"
+            else "Every ${repeat.everyXDays} day(s)"
+        }
+
+        is RecurrenceRule.Weekly -> {
+            val days = listOf("M", "T", "W", "T", "F", "S", "S")
+            if (repeat.daysOfWeek.size == 7) {
+                "Daily"
+            } else {
+                "Weekly on " + repeat.daysOfWeek.sorted().joinToString(", ") { days[it] }
+            }
+        }
+
+        is RecurrenceRule.Monthly -> {
+            "Monthly on day ${localDate.dayOfMonth}"
+        }
+
+        is RecurrenceRule.Yearly -> {
+            "Yearly on ${localDate.format(DateTimeFormatter.ofPattern("MMM dd"))}"
         }
     }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = containerColor, contentColor = contentColor),
+        colors = CardDefaults.cardColors(
+            containerColor = containerColor,
+            contentColor = contentColor
+        ),
         shape = shapeManager(radius = radius * 2),
         onClick = onClick
     ) {

@@ -32,31 +32,16 @@ import com.flux.ui.viewModel.ViewModels
 import java.time.LocalDate
 
 sealed class NavRoutes(val route: String) {
-    // auth screen
-    data object AuthScreen : NavRoutes("biometric")
-
-    // workspaces
-    data object Workspace : NavRoutes("workspace")
+    data object AuthScreen : NavRoutes("biometric") // auth screen
+    data object Workspace : NavRoutes("workspace") // workspaces
     data object WorkspaceHome : NavRoutes("workspace/details")
-
-    //Labels
-    data object EditLabels : NavRoutes("workspace/labels/edit")
-
-    // Notes
-    data object NoteDetails : NavRoutes("workspace/note/details")
-
-    // Habits
-    data object HabitDetails : NavRoutes("workspace/habit/details")
-    data object NewHabit : NavRoutes("workspace/habit/new")
-
-    // Events
+    data object EditLabels : NavRoutes("workspace/labels/edit") //Labels
+    data object NoteDetails : NavRoutes("workspace/note/details") // Notes
+    data object HabitDetails : NavRoutes("workspace/habit/details") // Habits
+    data object NewHabit : NavRoutes("workspace/habit/new") // Events
     data object EventDetails : NavRoutes("workspace/event/details")
-
-    // TodoList
-    data object TodoDetail : NavRoutes("workspace/todo/details")
-
-    // Journal
-    data object EditJournal : NavRoutes("workspace/journal/edit")
+    data object TodoDetail : NavRoutes("workspace/todo/details") // TodoList
+    data object EditJournal : NavRoutes("workspace/journal/edit") // Journal
 
     // Settings
     data object Settings : NavRoutes("settings")

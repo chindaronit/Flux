@@ -67,8 +67,9 @@ import com.flux.data.model.WorkspaceModel
 import com.flux.data.model.getSpacesList
 import com.flux.other.icons
 import com.flux.other.workspaceIconList
-import java.time.Instant
-import java.time.ZoneId
+import com.flux.ui.screens.events.formatMonthly
+import com.flux.ui.screens.events.formatOnce
+import com.flux.ui.screens.events.formatYearly
 import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -359,10 +360,10 @@ fun SpaceCard(space: Space, isSelected: Boolean, onSelect: () -> Unit, onRemove:
 @Composable
 fun RecurrenceRule.label(): String = when (this) {
     is RecurrenceRule.Once  -> stringResource(R.string.Once)
-    is RecurrenceRule.Day   -> stringResource(R.string.Day)
-    is RecurrenceRule.Week  -> stringResource(R.string.Week)
-    is RecurrenceRule.Month -> stringResource(R.string.Month)
-    is RecurrenceRule.Year  -> stringResource(R.string.Year)
+    is RecurrenceRule.Custom   -> stringResource(R.string.Custom)
+    is RecurrenceRule.Weekly  -> stringResource(R.string.Weekly)
+    is RecurrenceRule.Monthly -> stringResource(R.string.Monthly)
+    is RecurrenceRule.Yearly  -> stringResource(R.string.Yearly)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -381,11 +382,11 @@ fun RecurrenceBottomSheet(
     var tempRule by remember(currentRule) { mutableStateOf(currentRule) }
 
     val options = listOf(
-        RecurrenceRule.Once(),
-        RecurrenceRule.Day(),
-        RecurrenceRule.Week(),
-        RecurrenceRule.Month(),
-        RecurrenceRule.Year()
+        RecurrenceRule.Once,
+        RecurrenceRule.Weekly(),
+        RecurrenceRule.Monthly,
+        RecurrenceRule.Yearly,
+        RecurrenceRule.Custom()
     )
 
     if (showDatePicker) {
@@ -393,22 +394,9 @@ fun RecurrenceBottomSheet(
             if (newDateMillis != null) {
                 val timeOfDay = selectedDateTime % DateUtils.DAY_IN_MILLIS
                 selectedDateTime = newDateMillis + timeOfDay
-
-                // also update tempRule for date-based rules immediately (so tempRule reflects chosen date)
-                val localDate = Instant.ofEpochMilli(selectedDateTime)
-                    .atZone(ZoneId.systemDefault())
-                    .toLocalDate()
-
-                tempRule = when (val r = tempRule) {
-                    is RecurrenceRule.Once -> r.copy(atDay = localDate.toEpochDay())
-                    is RecurrenceRule.Year -> r.copy(date = localDate.toEpochDay())
-                    is RecurrenceRule.Month -> r.copy(dayOfMonth = localDate.dayOfMonth)
-                    else -> r
-                }
             }
         }, onDismiss = { showDatePicker = false })
     }
-
 
     ModalBottomSheet(
         modifier = Modifier.heightIn(min = 300.dp),
@@ -417,181 +405,181 @@ fun RecurrenceBottomSheet(
         containerColor = MaterialTheme.colorScheme.surfaceContainer
     ) {
         LazyColumn(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
-            item {
-                Row(
-                    Modifier.padding(start = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Default.Repeat, null)
-                    Text(
-                        "Repeat",
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold)
-                    )
-                }
-            }
-
-            item {
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.padding(vertical = 8.dp)
-                ) {
-                    items(options.size) { index ->
-                        val option = options[index]
-                        Row(
-                            modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = option::class == tempRule::class,
-                                onClick = { tempRule = option }
-                            )
-                            Text(option.label(), modifier = Modifier.padding(start = 4.dp))
-                        }
-                    }
-                }
-            }
-
-            item {
-                val rule = tempRule
-                when (rule) {
-                    is RecurrenceRule.Once -> {
-                        Row(Modifier.padding(horizontal = 12.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("On ${convertMillisToDate(selectedDateTime)}")
-                            IconButton({ showDatePicker=true }, colors = IconButtonDefaults.iconButtonColors(
-                                containerColor = MaterialTheme.colorScheme.primaryContainer
-                            )) {
-                                Icon(Icons.Default.Edit, null)
-                            }
-                        }
-                    }
-
-                    is RecurrenceRule.Day -> {
-                        OutlinedTextField(
-                            value = rule.everyXDays.toString(),
-                            onValueChange = { new ->
-                                new.toIntOrNull()?.let {
-                                    tempRule = rule.copy(everyXDays = it)
-                                }
-                            },
-                            modifier = Modifier.padding(start = 8.dp),
-                            label = { Text("every n day(s)") },
-                            singleLine = true
+                item {
+                    Row(
+                        Modifier.padding(start = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.Repeat, null)
+                        Text(
+                            "Repeat",
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold)
                         )
                     }
+                }
 
-                    is RecurrenceRule.Week -> {
-                        val weekdays = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
-                        Row (
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp)
-                        ) {
-                            weekdays.forEachIndexed { index, day ->
-                                val isSelected = index in rule.daysOfWeek
-                                Card(
-                                    onClick = {
-                                        val newDays = rule.daysOfWeek.toMutableList()
-                                        if (index in newDays) newDays.remove(index) else newDays.add(index)
-                                        tempRule = rule.copy(daysOfWeek = newDays)
-                                    },
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .padding(horizontal = 2.dp),
-                                    colors = CardDefaults.cardColors(
-                                        containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceColorAtElevation(8.dp),
-                                        contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
-                                    )
-                                ) {
-                                    Text(
-                                        text = day,
-                                        modifier = Modifier
-                                            .padding(6.dp)
-                                            .fillMaxWidth(),
-                                        textAlign = TextAlign.Center
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    is RecurrenceRule.Month -> {
-                        Row(Modifier.padding(horizontal = 12.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("On ${convertMillisToDate(selectedDateTime)}")
-                            IconButton({ showDatePicker=true }, colors = IconButtonDefaults.iconButtonColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(8.dp)
-                            )) {
-                                Icon(Icons.Default.Edit, null)
-                            }
-                        }
-                    }
-
-                    is RecurrenceRule.Year -> {
-                        Row(Modifier.padding(horizontal = 12.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("On ${convertMillisToDate(selectedDateTime)}")
-                            IconButton({ showDatePicker=true }, colors = IconButtonDefaults.iconButtonColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(8.dp)
-                            )) {
-                                Icon(Icons.Default.Edit, null)
+                item {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    ) {
+                        items(options.size) { index ->
+                            val option = options[index]
+                            Row(
+                                modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = option::class == tempRule::class,
+                                    onClick = { tempRule = option }
+                                )
+                                Text(option.label(), modifier = Modifier.padding(start = 4.dp))
                             }
                         }
                     }
                 }
-            }
 
-            // Buttons
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    OutlinedButton(onClick = onDismiss) {
-                        Text(stringResource(R.string.Dismiss))
-                    }
-                    Spacer(Modifier.width(8.dp))
-                    FilledTonalButton(
-                        onClick = {
-                            onRuleChange(tempRule, adjustStartDate(tempRule, selectedDateTime))
-                            onDismiss()
+                item {
+                    val rule = tempRule
+                    when (rule) {
+                        is RecurrenceRule.Once -> {
+                            Row(Modifier.padding(horizontal = 12.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text(formatOnce(selectedDateTime))
+                                IconButton({ showDatePicker=true }, colors = IconButtonDefaults.iconButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                                )) {
+                                    Icon(Icons.Default.Edit, null)
+                                }
+                            }
                         }
+
+                        is RecurrenceRule.Custom -> {
+                            OutlinedTextField(
+                                value = rule.everyXDays.toString(),
+                                onValueChange = { new ->
+                                    new.toIntOrNull()?.let {
+                                        tempRule = rule.copy(everyXDays = it)
+                                    }
+                                },
+                                modifier = Modifier.padding(start = 8.dp),
+                                label = { Text("every n day(s)") },
+                                singleLine = true
+                            )
+                        }
+
+                        is RecurrenceRule.Weekly -> {
+                            val weekdays = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+                            Row (
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp)
+                            ) {
+                                weekdays.forEachIndexed { index, day ->
+                                    val isSelected = index in rule.daysOfWeek
+                                    Card(
+                                        onClick = {
+                                            val newDays = rule.daysOfWeek.toMutableList()
+                                            if (index in newDays) newDays.remove(index) else newDays.add(index)
+                                            tempRule = rule.copy(daysOfWeek = newDays)
+                                        },
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .padding(horizontal = 2.dp),
+                                        colors = CardDefaults.cardColors(
+                                            containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceColorAtElevation(8.dp),
+                                            contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+                                        )
+                                    ) {
+                                        Text(
+                                            text = day,
+                                            modifier = Modifier
+                                                .padding(6.dp)
+                                                .fillMaxWidth(),
+                                            textAlign = TextAlign.Center
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        is RecurrenceRule.Monthly -> {
+                            Row(Modifier.padding(horizontal = 12.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text(formatMonthly(selectedDateTime))
+                                IconButton({ showDatePicker=true }, colors = IconButtonDefaults.iconButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(8.dp)
+                                )) {
+                                    Icon(Icons.Default.Edit, null)
+                                }
+                            }
+                        }
+
+                        is RecurrenceRule.Yearly -> {
+                            Row(Modifier.padding(horizontal = 12.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text(formatYearly(selectedDateTime))
+                                IconButton({ showDatePicker=true }, colors = IconButtonDefaults.iconButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(8.dp)
+                                )) {
+                                    Icon(Icons.Default.Edit, null)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Buttons
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.End,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(stringResource(R.string.Confirm))
+                        OutlinedButton(onClick = onDismiss) {
+                            Text(stringResource(R.string.Dismiss))
+                        }
+                        Spacer(Modifier.width(8.dp))
+                        FilledTonalButton(
+                            onClick = {
+                                onRuleChange(tempRule, adjustStartDate(tempRule, selectedDateTime))
+                                onDismiss()
+                            }
+                        ) {
+                            Text(stringResource(R.string.Confirm))
+                        }
                     }
                 }
             }
         }
     }
-}
 
-fun adjustStartDate(rule: RecurrenceRule, startDateTime: Long): Long {
-    return when (rule) {
-        is RecurrenceRule.Once -> startDateTime
-        is RecurrenceRule.Month -> startDateTime
-        is RecurrenceRule.Year -> startDateTime
-        is RecurrenceRule.Day -> startDateTime
-        is RecurrenceRule.Week -> {
-            val cal = Calendar.getInstance().apply { timeInMillis = startDateTime }
+    fun adjustStartDate(rule: RecurrenceRule, startDateTime: Long): Long {
+        return when (rule) {
+            is RecurrenceRule.Once -> startDateTime
+            is RecurrenceRule.Monthly -> startDateTime
+            is RecurrenceRule.Yearly -> startDateTime
+            is RecurrenceRule.Custom -> startDateTime
+            is RecurrenceRule.Weekly -> {
+                val cal = Calendar.getInstance().apply { timeInMillis = startDateTime }
 
-            // Calendar days: Sunday = 1, Monday = 2, ... Saturday = 7
-            val today = (cal.get(Calendar.DAY_OF_WEEK) + 5) % 7 // shift so Monday=0, Sunday=6
+                // Calendar days: Sunday = 1, Monday = 2, ... Saturday = 7
+                val today = (cal.get(Calendar.DAY_OF_WEEK) + 5) % 7 // shift so Monday=0, Sunday=6
 
-            if (today in rule.daysOfWeek) {
-                startDateTime
-            } else {
-                // find next closest match
-                var offset = 1
-                while (true) {
-                    val nextDay = (today + offset) % 7
-                    if (nextDay in rule.daysOfWeek) {
-                        cal.add(Calendar.DAY_OF_YEAR, offset)
-                        return cal.timeInMillis
+                if (today in rule.daysOfWeek) {
+                    startDateTime
+                } else {
+                    // find next closest match
+                    var offset = 1
+                    while (true) {
+                        val nextDay = (today + offset) % 7
+                        if (nextDay in rule.daysOfWeek) {
+                            cal.add(Calendar.DAY_OF_YEAR, offset)
+                            return cal.timeInMillis
+                        }
+                        offset++
                     }
-                    offset++
                 }
             }
-        }
-    } as Long
-}
+        } as Long
+    }

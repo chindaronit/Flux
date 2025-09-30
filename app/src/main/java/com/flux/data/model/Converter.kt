@@ -13,15 +13,15 @@ class Converter {
 
     @TypeConverter
     fun fromRecurrence(rule: RecurrenceRule?): String =
-        json.encodeToString(RecurrenceRule.serializer(), rule ?: RecurrenceRule.Once())
+        json.encodeToString(RecurrenceRule.serializer(), rule ?: RecurrenceRule.Once)
 
     @TypeConverter
     fun toRecurrence(data: String?): RecurrenceRule =
         try {
-            if (data.isNullOrBlank()) RecurrenceRule.Once()
+            if (data.isNullOrBlank()) RecurrenceRule.Once
             else json.decodeFromString(RecurrenceRule.serializer(), data)
         } catch (_: Exception) {
-            RecurrenceRule.Once()
+            RecurrenceRule.Once
         }
 
     @TypeConverter

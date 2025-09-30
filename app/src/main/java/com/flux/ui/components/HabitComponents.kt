@@ -673,7 +673,7 @@ private fun getExpectedDates(recurrence: RecurrenceRule, startDateTime: Long): L
     while (!current.isAfter(today)) {
         // Convert to Monday=0, Tuesday=1, ..., Sunday=6 format
         val dayOfWeek = (current.dayOfWeek.value + 5) % 7
-        if (dayOfWeek in (recurrence as RecurrenceRule.Week).daysOfWeek) {
+        if (dayOfWeek in (recurrence as RecurrenceRule.Weekly).daysOfWeek) {
             expectedDates.add(current.toEpochDay())
         }
         current = current.plusDays(1)

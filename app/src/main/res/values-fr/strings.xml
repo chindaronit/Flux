@@ -173,10 +173,9 @@
     <string name="All_Day">Toute la journée</string>
     <string name="Repeat_Task">Répéter la tâche</string>
     <string name="Once">Une fois</string>
-    <string name="Day">Jour</string>
-    <string name="Week">Semaine</string>
-    <string name="Month">Mois</string>
-    <string name="Year">An</string>
+    <string name="Weekly">Hebdomadaire</string>
+    <string name="Monthly">Mensuel</string>
+    <string name="Yearly">Annuel</string>
     <string name="Status_Completed">Terminé</string>
     <string name="Status_Pending">En attente</string>
     <string name="Mark_As_Completed">Marquer comme terminé</string>

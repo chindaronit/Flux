@@ -76,18 +76,16 @@ fun LazyListScope.habitsHomeItems(
 // Helper function to check if a date is allowed for the habit's recurrence
 fun isDateAllowedForHabit(recurrence: RecurrenceRule, epochDay: Long): Boolean {
     return when (recurrence) {
-        is RecurrenceRule.Week -> {
+        is RecurrenceRule.Weekly -> {
             // Convert epoch day to LocalDate to get day of week
             val localDate = LocalDate.ofEpochDay(epochDay)
             // Convert to Monday=0, Tuesday=1, ..., Sunday=6 format
             val dayOfWeek = (localDate.dayOfWeek.value + 6) % 7
-            println(dayOfWeek)
-            println(recurrence.daysOfWeek)
             dayOfWeek in recurrence.daysOfWeek
         }
-        is RecurrenceRule.Day -> true
+        is RecurrenceRule.Custom -> true
         is RecurrenceRule.Once -> true
-        is RecurrenceRule.Month -> true
-        is RecurrenceRule.Year -> true
+        is RecurrenceRule.Monthly -> true
+        is RecurrenceRule.Yearly -> true
     }
 }

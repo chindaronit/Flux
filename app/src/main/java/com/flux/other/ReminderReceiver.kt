@@ -37,7 +37,7 @@ class ReminderReceiver : BroadcastReceiver() {
         val recurrenceJson = intent.getStringExtra("RECURRENCE")
         val recurrence = recurrenceJson?.let {
             Json.decodeFromString<RecurrenceRule>(it)
-        } ?: RecurrenceRule.Once()
+        } ?: RecurrenceRule.Once
 
         val notificationId = getUniqueRequestCode(type, id)
 

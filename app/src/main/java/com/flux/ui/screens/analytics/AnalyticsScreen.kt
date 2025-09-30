@@ -62,6 +62,7 @@ import com.flux.ui.theme.pending
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 
@@ -123,6 +124,8 @@ fun calculateWeeklyStats(
     instances: List<EventInstanceModel>
 ): WeeklyEventStats {
     val today = LocalDate.now()
+    val now = LocalDateTime.now()
+
     val startOfWeek = today.with(DayOfWeek.MONDAY)
     val endOfWeek = today.with(DayOfWeek.SUNDAY)
 
@@ -140,12 +143,29 @@ fun calculateWeeklyStats(
 
                 when {
                     current.isAfter(today) -> {
-                        upcoming++ // future = upcoming
+                        // Any day after today → upcoming
+                        upcoming++
                     }
+
                     current.isEqual(today) -> {
-                        if (instance != null) completed++ else upcoming++
+                        val eventDateTime = Instant.ofEpochMilli(event.startDateTime)
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDateTime()
+                            .withYear(current.year)
+                            .withMonth(current.monthValue)
+                            .withDayOfMonth(current.dayOfMonth)
+
+                        if (eventDateTime.isAfter(now)) {
+                            // Later today
+                            if (instance != null) completed++ else upcoming++
+                        } else {
+                            // Earlier today
+                            if (instance != null) completed++ else failed++
+                        }
                     }
+
                     current.isBefore(today) -> {
+                        // Past days
                         if (instance != null) completed++ else failed++
                     }
                 }
@@ -156,7 +176,6 @@ fun calculateWeeklyStats(
 
     return WeeklyEventStats(upcoming, completed, failed)
 }
-
 
 @Composable
 fun HabitHeatMap(radius: Int, allHabitInstances: List<HabitInstanceModel>, totalHabits: Int) {
@@ -170,7 +189,6 @@ fun HabitHeatMap(radius: Int, allHabitInstances: List<HabitInstanceModel>, total
     val totalDays = ChronoUnit.DAYS.between(yearStart, today).toInt() + 1
     val allDates = (0 until totalDays).map { yearStart.plusDays(it.toLong()) }
 
-    // ✅ Convert instanceDate (Long) → LocalDate for grouping
     val habitMap = remember(allHabitInstances) {
         allHabitInstances.groupBy { LocalDate.ofEpochDay(it.instanceDate) }
     }

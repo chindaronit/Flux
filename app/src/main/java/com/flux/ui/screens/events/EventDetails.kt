@@ -59,11 +59,13 @@ import com.flux.ui.components.CustomNotificationDialog
 import com.flux.ui.components.EventNotificationDialog
 import com.flux.ui.components.RecurrenceBottomSheet
 import com.flux.ui.components.TimePicker
-import com.flux.ui.components.convertMillisToDate
 import com.flux.ui.components.convertMillisToTime
 import com.flux.ui.components.label
 import com.flux.ui.events.TaskEvents
 import com.flux.ui.state.Settings
+import java.time.ZoneId
+import java.time.Instant
+import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -198,9 +200,9 @@ fun EventDetails(
 
                     Row(
                         Modifier
-                        .clip(RoundedCornerShape(50))
-                        .clickable { showTimePicker = true }
-                        .padding(horizontal = 6.dp),
+                            .clip(RoundedCornerShape(50))
+                            .clickable { showTimePicker = true }
+                            .padding(horizontal = 6.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp))
                     {
@@ -211,21 +213,47 @@ fun EventDetails(
                         )
                     }
                 }
-                when (currentRecurrenceRule) {
-                    is RecurrenceRule.Once -> { Text("On ${convertMillisToDate(selectedDateTime)}", modifier = Modifier.padding(top = 12.dp, start = 6.dp)) }
-                    is RecurrenceRule.Day -> { Text("every ${(currentRecurrenceRule as RecurrenceRule.Day).everyXDays} day(s)", modifier = Modifier.padding(top = 12.dp, start = 6.dp)) }
-                    is RecurrenceRule.Month -> { Text("On ${convertMillisToDate(selectedDateTime)}", modifier = Modifier.padding(top = 12.dp, start = 6.dp)) }
-                    is RecurrenceRule.Year -> { Text("On ${convertMillisToDate(selectedDateTime)}", modifier = Modifier.padding(top = 12.dp, start = 6.dp)) }
-                    is RecurrenceRule.Week -> {
+                when (val rule = currentRecurrenceRule) {
+                    is RecurrenceRule.Once -> {
+                        Text(
+                            formatOnce(selectedDateTime),
+                            modifier = Modifier.padding(top = 12.dp, start = 6.dp)
+                        )
+                    }
+
+                    is RecurrenceRule.Custom -> {
+                        Text(
+                            formatCustom(rule),
+                            modifier = Modifier.padding(top = 12.dp, start = 6.dp)
+                        )
+                    }
+
+                    is RecurrenceRule.Monthly -> {
+                        Text(
+                            formatMonthly(selectedDateTime),
+                            modifier = Modifier.padding(top = 12.dp, start = 6.dp)
+                        )
+                    }
+
+                    is RecurrenceRule.Yearly -> {
+                        Text(
+                            formatYearly(selectedDateTime),
+                            modifier = Modifier.padding(top = 12.dp, start = 6.dp)
+                        )
+                    }
+
+                    is RecurrenceRule.Weekly -> {
                         val weekdays = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
-                        Row (modifier = Modifier.fillMaxWidth().padding(6.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth().padding(6.dp)) {
                             weekdays.forEachIndexed { index, day ->
-                                val isSelected = index in (currentRecurrenceRule as RecurrenceRule.Week).daysOfWeek
+                                val isSelected = index in rule.daysOfWeek
                                 Card(
                                     onClick = {},
                                     modifier = Modifier.weight(1f).padding(horizontal = 2.dp),
                                     colors = CardDefaults.cardColors(
-                                        containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceColorAtElevation(8.dp),
+                                        containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceColorAtElevation(
+                                            8.dp
+                                        ),
                                         contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
                                     )
                                 ) {
@@ -276,6 +304,33 @@ fun EventDetails(
         currentRecurrenceRule = newRule
         selectedDateTime = newStart
     }
+}
+
+fun formatOnce(selectedDateTime: Long): String {
+    val fullDate = Instant.ofEpochMilli(selectedDateTime)
+        .atZone(ZoneId.systemDefault())
+        .toLocalDate()
+        .format(DateTimeFormatter.ofPattern("dd MMM yyyy"))
+    return "On $fullDate"
+}
+
+fun formatCustom(rule: RecurrenceRule.Custom): String {
+    return "Every ${rule.everyXDays} day(s)"
+}
+
+fun formatMonthly(selectedDateTime: Long): String {
+    val dayOfMonth = Instant.ofEpochMilli(selectedDateTime)
+        .atZone(ZoneId.systemDefault())
+        .dayOfMonth
+    return "On day $dayOfMonth"
+}
+
+fun formatYearly(selectedDateTime: Long): String {
+    val date = Instant.ofEpochMilli(selectedDateTime)
+        .atZone(ZoneId.systemDefault())
+        .toLocalDate()
+        .format(DateTimeFormatter.ofPattern("dd MMM"))
+    return "On $date"
 }
 
 @Composable

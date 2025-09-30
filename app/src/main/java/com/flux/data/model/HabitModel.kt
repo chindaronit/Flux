@@ -13,7 +13,7 @@ data class HabitModel(
     override val id: String = UUID.randomUUID().toString(),
     override val title: String = "",
     override val description: String = "",
-    override val recurrence: RecurrenceRule = RecurrenceRule.Week(),
+    override val recurrence: RecurrenceRule = RecurrenceRule.Weekly(),
     override val startDateTime: Long = System.currentTimeMillis(),
     override val notificationOffset: Long = 0L,
     val workspaceId: String = "",

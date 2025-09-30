@@ -173,10 +173,9 @@
     <string name="All_Day">All Day</string>
     <string name="Repeat_Task">Repeat Task</string>
     <string name="Once">Once</string>
-    <string name="Day">Day</string>
-    <string name="Week">Week</string>
-    <string name="Month">Month</string>
-    <string name="Year">Year</string>
+    <string name="Weekly">Weekly</string>
+    <string name="Monthly">Monthly</string>
+    <string name="Yearly">Yearly</string>
     <string name="Status_Completed">Completed</string>
     <string name="Status_Pending">Pending</string>
     <string name="Mark_As_Completed">Mark as completed</string>

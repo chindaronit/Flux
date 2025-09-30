@@ -7,11 +7,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import com.flux.data.model.EventInstanceModel
 import com.flux.data.model.EventModel
 import com.flux.navigation.Loader
-import com.flux.navigation.NavRoutes
 import com.flux.ui.components.DailyViewCalendar
 import com.flux.ui.components.MonthlyViewCalendar
 import com.flux.ui.events.TaskEvents
@@ -22,7 +20,6 @@ import java.time.YearMonth
 
 @OptIn(ExperimentalMaterial3Api::class)
 fun LazyListScope.calendarItems(
-    navController: NavController,
     radius: Int,
     isLoading: Boolean,
     workspaceId: String,
@@ -86,8 +83,8 @@ fun LazyListScope.calendarItems(
                     title = task.title,
                     repeat = task.recurrence,
                     startDateTime = task.startDateTime,
-                    onChangeStatus = { onTaskEvents(TaskEvents.ToggleStatus(instance==null, task.id, workspaceId)) },
-                    onClick = { navController.navigate(NavRoutes.EventDetails.withArgs(workspaceId, task.id)) }
+                    onChangeStatus = {  },
+                    onClick = {  }
                 )
                 Spacer(Modifier.height(8.dp))
             }
@@ -102,8 +99,8 @@ fun LazyListScope.calendarItems(
                     title = task.title,
                     repeat = task.recurrence,
                     startDateTime = task.startDateTime,
-                    onChangeStatus = { onTaskEvents(TaskEvents.ToggleStatus(instance==null, task.id, workspaceId)) },
-                    onClick = { navController.navigate(NavRoutes.EventDetails.withArgs(workspaceId, task.id)) }
+                    onChangeStatus = {  },
+                    onClick = {  }
                 )
                 Spacer(Modifier.height(8.dp))
             }

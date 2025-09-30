@@ -11,7 +11,6 @@ import com.flux.other.cancelReminder
 import com.flux.other.getNextOccurrence
 import com.flux.other.scheduleReminder
 import com.flux.ui.events.TaskEvents
-import com.flux.ui.screens.events.toFormattedDateTime
 import com.flux.ui.state.EventState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -86,9 +85,7 @@ class EventViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             cancelReminder(context, data.id, data.type.toString(), data.title, data.description, data.recurrence)
             repository.upsertEvent(data)
-            println("eventViewModel ${data.startDateTime.toFormattedDateTime(context)}")
             val nextOccurrence = getNextOccurrence(data.recurrence, data.startDateTime)
-            println("eventViewModel NextOccurrence ${nextOccurrence?.toFormattedDateTime(context)}")
 
             // Only schedule reminder if there's a future occurrence
             if (nextOccurrence != null && nextOccurrence > System.currentTimeMillis()) {
