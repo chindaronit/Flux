@@ -95,7 +95,8 @@ fun NotesInputCard(
             .fillMaxSize()
             .padding(innerPadding)
             .padding(horizontal = 16.dp)
-            .imePadding()
+            .imePadding(),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         TextField(
             value = title,
@@ -106,7 +107,6 @@ fun NotesInputCard(
             modifier = Modifier.fillMaxWidth(),
             colors = getTextFieldColors()
         )
-
         RichTextEditor(
             state = richTextState,
             interactionSource = interactionSource,
@@ -158,9 +158,7 @@ fun NotesInputCard(
 
         if (isFocused.value) {
             RichTextStyleRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
+                modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
                 state = richTextState,
                 isAddImage = false,
             ) {}

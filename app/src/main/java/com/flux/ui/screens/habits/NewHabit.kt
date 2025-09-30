@@ -70,7 +70,15 @@ fun NewHabit(
     var timePickerDialog by remember { mutableStateOf(false) }
     val focusRequesterDesc = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
-    val weekdays = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+    val weekdays = listOf(
+        stringResource(R.string.monday_short),
+        stringResource(R.string.tuesday_short),
+        stringResource(R.string.wednesday_short),
+        stringResource(R.string.thursday_short),
+        stringResource(R.string.friday_short),
+        stringResource(R.string.saturday_short),
+        stringResource(R.string.sunday_short)
+    )
 
     // Initialize selectedDays from existing habit's recurrence
     val selectedDays = remember {
@@ -169,7 +177,7 @@ fun NewHabit(
 
             Row(Modifier.padding(top = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Icon(Icons.Default.Repeat, null)
-                Text("Repeat", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold))
+                Text(stringResource(R.string.Repeat_Task), style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold))
             }
 
             Row(

@@ -394,15 +394,20 @@ fun WorkspaceDetails(
         sheetState = sheetState,
         selectedSpaces = spacesList.filter { workspace.selectedSpaces.contains(it.id) },
         onDismiss = { addSpaceBottomSheet = false },
-        onRemove = {
-            if (workspace.selectedSpaces.size == 1) selectedSpaceId.intValue = -1
-            else selectedSpaceId.intValue = workspace.selectedSpaces.first()
+        onRemove = { spaceId ->
+            val newSelected = workspace.selectedSpaces.firstOrNull { it != spaceId } ?: -1
+            selectedSpaceId.intValue = newSelected
+
             onWorkspaceEvents(
                 WorkspaceEvents.UpsertSpace(
-                    workspace.copy(selectedSpaces = workspace.selectedSpaces.minus(it))
+                    workspace.copy(selectedSpaces = workspace.selectedSpaces.minus(spaceId))
                 )
             )
-            removeSpaceData(workspaceId, it, context, onTaskEvents, onTodoEvents, onHabitEvents, onNotesEvents, onJournalEvents)
+
+            removeSpaceData(
+                workspaceId, spaceId, context, onTaskEvents, onTodoEvents,
+                onHabitEvents, onNotesEvents, onJournalEvents
+            )
         },
         onSelect = {
             if (selectedSpaceId.intValue == -1) selectedSpaceId.intValue = it

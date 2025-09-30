@@ -165,6 +165,14 @@
     <string name="Add_Habit">Add Habit</string>
     <string name="Edit_Habit">Edit Habit</string>
     <string name="completed_habits">Completed %1$d times</string>
+    <string name="monday_short">Mon</string>
+    <string name="tuesday_short">Tue</string>
+    <string name="wednesday_short">Wed</string>
+    <string name="thursday_short">Thu</string>
+    <string name="friday_short">Fri</string>
+    <string name="saturday_short">Sat</string>
+    <string name="sunday_short">Sun</string>
+
 
     <!-- Events -->
     <string name="Events">Events</string>
@@ -172,6 +180,7 @@
     <string name="Edit_Event">Edit Event</string>
     <string name="All_Day">All Day</string>
     <string name="Repeat_Task">Repeat Task</string>
+    <string name="Repeat">Repeat</string>
     <string name="Once">Once</string>
     <string name="Weekly">Weekly</string>
     <string name="Monthly">Monthly</string>
@@ -180,6 +189,13 @@
     <string name="Status_Pending">Pending</string>
     <string name="Mark_As_Completed">Mark as completed</string>
     <string name="Mark_As_Uncompleted">Mark as Uncompleted</string>
+    <string name="recurrence_once">Once on %1$s</string>
+    <string name="recurrence_daily">Daily</string>
+    <string name="recurrence_every_x_days">Every %1$d day(s)</string>
+    <string name="recurrence_weekly_on">Weekly on %1$s</string>
+    <string name="recurrence_monthly_on">Monthly on day %1$d</string>
+    <string name="recurrence_yearly_on">Yearly on %1$s</string>
+    <string name="recurrence_at_time">%1$s at %2$s</string>
 
     <!-- Event Notifications -->
     <string name="On_Time">At the time of event</string>

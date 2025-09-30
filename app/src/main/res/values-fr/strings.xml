@@ -165,6 +165,13 @@
     <string name="Add_Habit">Ajouter une habitude</string>
     <string name="Edit_Habit">Modifier l\'habitude</string>
     <string name="completed_habits">Terminée %1$d fois</string>
+    <string name="monday_short">Lun</string>
+    <string name="tuesday_short">Mar</string>
+    <string name="wednesday_short">Mer</string>
+    <string name="thursday_short">Jeu</string>
+    <string name="friday_short">Ven</string>
+    <string name="saturday_short">Sam</string>
+    <string name="sunday_short">Dim</string>
 
     <!-- Events -->
     <string name="Events">Événements</string>
@@ -172,6 +179,7 @@
     <string name="Edit_Event">Modifier l\'événement</string>
     <string name="All_Day">Toute la journée</string>
     <string name="Repeat_Task">Répéter la tâche</string>
+    <string name="Repeat">Répéter</string>
     <string name="Once">Une fois</string>
     <string name="Weekly">Hebdomadaire</string>
     <string name="Monthly">Mensuel</string>
@@ -180,6 +188,13 @@
     <string name="Status_Pending">En attente</string>
     <string name="Mark_As_Completed">Marquer comme terminé</string>
     <string name="Mark_As_Uncompleted">Marquer comme non terminé</string>
+    <string name="recurrence_once">Une fois le %1$s</string>
+    <string name="recurrence_daily">Quotidien</string>
+    <string name="recurrence_every_x_days">Tous les %1$d jours</string>
+    <string name="recurrence_weekly_on">Hebdomadaire le %1$s</string>
+    <string name="recurrence_monthly_on">Mensuel le jour %1$d</string>
+    <string name="recurrence_yearly_on">Annuel le %1$s</string>
+    <string name="recurrence_at_time">%1$s à %2$s</string>
 
     <!-- Event Notifications -->
     <string name="On_Time">Au moment de l\'événement</string>

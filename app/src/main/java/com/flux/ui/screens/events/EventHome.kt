@@ -29,6 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -220,31 +221,44 @@ fun EventCard(
         .format(Instant.ofEpochMilli(startDateTime).atZone(ZoneId.systemDefault()))
 
     // Recurrence text
+    val context = LocalContext.current
+
+// Recurrence text
     val recurrenceText = when (repeat) {
         is RecurrenceRule.Once -> {
-            "Once on ${localDate.format(DateTimeFormatter.ofPattern("MMM dd, yyyy"))}"
+            context.getString(
+                R.string.recurrence_once,
+                localDate.format(DateTimeFormatter.ofPattern("MMM dd, yyyy"))
+            )
         }
 
         is RecurrenceRule.Custom -> {
-            if (repeat.everyXDays == 1) "Daily"
-            else "Every ${repeat.everyXDays} day(s)"
+            if (repeat.everyXDays == 1) {
+                context.getString(R.string.recurrence_daily)
+            } else {
+                context.getString(R.string.recurrence_every_x_days, repeat.everyXDays)
+            }
         }
 
         is RecurrenceRule.Weekly -> {
-            val days = listOf("M", "T", "W", "T", "F", "S", "S")
+            val days = listOf("M", "T", "W", "T", "F", "S", "S") // (you can also localize these)
             if (repeat.daysOfWeek.size == 7) {
-                "Daily"
+                context.getString(R.string.recurrence_daily)
             } else {
-                "Weekly on " + repeat.daysOfWeek.sorted().joinToString(", ") { days[it] }
+                val daysText = repeat.daysOfWeek.sorted().joinToString(", ") { days[it] }
+                context.getString(R.string.recurrence_weekly_on, daysText)
             }
         }
 
         is RecurrenceRule.Monthly -> {
-            "Monthly on day ${localDate.dayOfMonth}"
+            context.getString(R.string.recurrence_monthly_on, localDate.dayOfMonth)
         }
 
         is RecurrenceRule.Yearly -> {
-            "Yearly on ${localDate.format(DateTimeFormatter.ofPattern("MMM dd"))}"
+            context.getString(
+                R.string.recurrence_yearly_on,
+                localDate.format(DateTimeFormatter.ofPattern("MMM dd"))
+            )
         }
     }
 

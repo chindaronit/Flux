@@ -175,7 +175,7 @@ fun EventDetails(
                     placeholder = { Text(stringResource(R.string.Description)) },
                     textStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraLight),
                     shape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp),
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp, top = 2.dp),
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp, top = 4.dp),
                     colors = getTextFieldColors()
                 )
             }
@@ -243,7 +243,16 @@ fun EventDetails(
                     }
 
                     is RecurrenceRule.Weekly -> {
-                        val weekdays = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+                        val weekdays = listOf(
+                            stringResource(R.string.monday_short),
+                            stringResource(R.string.tuesday_short),
+                            stringResource(R.string.wednesday_short),
+                            stringResource(R.string.thursday_short),
+                            stringResource(R.string.friday_short),
+                            stringResource(R.string.saturday_short),
+                            stringResource(R.string.sunday_short)
+                        )
+
                         Row(modifier = Modifier.fillMaxWidth().padding(6.dp)) {
                             weekdays.forEachIndexed { index, day ->
                                 val isSelected = index in rule.daysOfWeek
@@ -306,31 +315,39 @@ fun EventDetails(
     }
 }
 
+@Composable
 fun formatOnce(selectedDateTime: Long): String {
+    val context = LocalContext.current
     val fullDate = Instant.ofEpochMilli(selectedDateTime)
         .atZone(ZoneId.systemDefault())
         .toLocalDate()
         .format(DateTimeFormatter.ofPattern("dd MMM yyyy"))
-    return "On $fullDate"
+    return context.getString(R.string.recurrence_once, fullDate)
 }
 
+@Composable
 fun formatCustom(rule: RecurrenceRule.Custom): String {
-    return "Every ${rule.everyXDays} day(s)"
+    val context = LocalContext.current
+    return context.getString(R.string.recurrence_every_x_days, rule.everyXDays)
 }
 
+@Composable
 fun formatMonthly(selectedDateTime: Long): String {
+    val context = LocalContext.current
     val dayOfMonth = Instant.ofEpochMilli(selectedDateTime)
         .atZone(ZoneId.systemDefault())
         .dayOfMonth
-    return "On day $dayOfMonth"
+    return context.getString(R.string.recurrence_monthly_on, dayOfMonth)
 }
 
+@Composable
 fun formatYearly(selectedDateTime: Long): String {
+    val context = LocalContext.current
     val date = Instant.ofEpochMilli(selectedDateTime)
         .atZone(ZoneId.systemDefault())
         .toLocalDate()
         .format(DateTimeFormatter.ofPattern("dd MMM"))
-    return "On $date"
+    return context.getString(R.string.recurrence_yearly_on, date)
 }
 
 @Composable

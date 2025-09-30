@@ -165,6 +165,13 @@
     <string name="Add_Habit">आदत जोड़ें</string>
     <string name="Edit_Habit">आदत संपादित करें</string>
     <string name="completed_habits">%1$d बार पूरा किया गया</string>
+    <string name="monday_short">सोम</string>
+    <string name="tuesday_short">मंगल</string>
+    <string name="wednesday_short">बुध</string>
+    <string name="thursday_short">गुरु</string>
+    <string name="friday_short">शुक्र</string>
+    <string name="saturday_short">शनि</string>
+    <string name="sunday_short">रवि</string>
 
     <!-- Events -->
     <string name="Events">इवेंट्स</string>
@@ -172,6 +179,7 @@
     <string name="Edit_Event">ईवेंट संपादित करें</string>
     <string name="All_Day">पूरा दिन</string>
     <string name="Repeat_Task">कार्य दोहराएं</string>
+    <string name="Repeat">दोहराएँ</string>
     <string name="Once">एक बार</string>
     <string name="Weekly">साप्ताहिक</string>
     <string name="Monthly">मासिक</string>
@@ -180,6 +188,13 @@
     <string name="Status_Pending">लंबित</string>
     <string name="Mark_As_Completed">पूर्ण के रूप में चिन्हित करें</string>
     <string name="Mark_As_Uncompleted">अपूर्ण के रूप में चिन्हित करें</string>
+    <string name="recurrence_once">एक बार %1$s को</string>
+    <string name="recurrence_daily">प्रतिदिन</string>
+    <string name="recurrence_every_x_days">हर %1$d दिन</string>
+    <string name="recurrence_weekly_on">साप्ताहिक %1$s को</string>
+    <string name="recurrence_monthly_on">हर महीने की %1$d तारीख़ को</string>
+    <string name="recurrence_yearly_on">हर साल %1$s को</string>
+    <string name="recurrence_at_time">%1$s को %2$s बजे</string>
 
     <!-- Event Notifications -->
     <string name="On_Time">ईवेंट के समय</string>
