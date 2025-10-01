@@ -74,6 +74,7 @@ fun EventDetails(
     workspaceId: String,
     event: EventModel,
     isPending: Boolean,
+    instanceDate: Long,
     settings: Settings,
     onTaskEvents: (TaskEvents) -> Unit
 ) {
@@ -133,7 +134,7 @@ fun EventDetails(
                         enabled = title.isNotBlank(),
                         onClick = {
                             val updatedEvent = event.copy(title = title, description = description, startDateTime = selectedDateTime, notificationOffset = notificationOffset, recurrence = currentRecurrenceRule)
-                            onTaskEvents(TaskEvents.ToggleStatus(!pendingStatus, event.id, workspaceId = workspaceId))
+                            onTaskEvents(TaskEvents.ToggleStatus(!pendingStatus, event.id, workspaceId, instanceDate))
                             onTaskEvents(TaskEvents.UpsertTask(context, updatedEvent))
                             navController.popBackStack()
                         }

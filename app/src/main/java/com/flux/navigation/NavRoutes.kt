@@ -29,7 +29,6 @@ import com.flux.ui.screens.workspaces.WorkSpaces
 import com.flux.ui.screens.workspaces.WorkspaceDetails
 import com.flux.ui.state.States
 import com.flux.ui.viewModel.ViewModels
-import java.time.LocalDate
 
 sealed class NavRoutes(val route: String) {
     data object AuthScreen : NavRoutes("biometric") // auth screen
@@ -52,11 +51,11 @@ sealed class NavRoutes(val route: String) {
     data object Contact : NavRoutes("settings/contact")
     data object Backup : NavRoutes("setting/backup")
 
-    fun withArgs(vararg args: String): String {
+    fun withArgs(vararg args: Any): String {
         return buildString {
             append(route)
             args.forEach { arg ->
-                append("/$arg")
+                append("/${arg}")
             }
         }
     }
@@ -157,14 +156,14 @@ val SettingsScreens =
     )
 
 val EventScreens =
-    mapOf<String, @Composable (navController: NavController, states: States, viewModels: ViewModels, eventId: String, workspaceId: String) -> Unit>(
-        NavRoutes.EventDetails.route + "/{workspaceId}" + "/{eventId}" to { navController, states, viewModels, eventId, workspaceId ->
+    mapOf<String, @Composable (navController: NavController, states: States, viewModels: ViewModels, eventId: String, workspaceId: String, instanceDate: Long) -> Unit>(
+        NavRoutes.EventDetails.route + "/{workspaceId}" + "/{eventId}" + "/{instanceDate}" to { navController, states, viewModels, eventId, workspaceId, instanceDate ->
             EventDetails(
                 navController,
                 workspaceId,
-                states.eventState.allEvent.find { it.id == eventId }
-                    ?: EventModel(workspaceId = workspaceId),
-                states.eventState.allEventInstances.find { it.eventId == eventId && it.instanceDate == LocalDate.now().toEpochDay() } == null,
+                states.eventState.allEvent.find { it.id == eventId } ?: EventModel(workspaceId = workspaceId),
+                states.eventState.allEventInstances.find { it.eventId == eventId && it.instanceDate == instanceDate } == null,
+                instanceDate,
                 states.settings,
                 viewModels.eventViewModel::onEvent
             )

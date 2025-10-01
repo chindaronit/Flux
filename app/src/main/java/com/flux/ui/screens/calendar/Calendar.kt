@@ -7,9 +7,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.flux.data.model.EventInstanceModel
 import com.flux.data.model.EventModel
 import com.flux.navigation.Loader
+import com.flux.navigation.NavRoutes
 import com.flux.ui.components.DailyViewCalendar
 import com.flux.ui.components.MonthlyViewCalendar
 import com.flux.ui.events.TaskEvents
@@ -20,6 +22,7 @@ import java.time.YearMonth
 
 @OptIn(ExperimentalMaterial3Api::class)
 fun LazyListScope.calendarItems(
+    navController: NavController,
     radius: Int,
     isLoading: Boolean,
     workspaceId: String,
@@ -75,32 +78,28 @@ fun LazyListScope.calendarItems(
 
         if (pendingTasks.isNotEmpty()) {
             items(pendingTasks) { task ->
-                val instance = allEventInstances.find { it.eventId == task.id && it.instanceDate == selectedDate }
-
                 EventCard(
                     radius = radius,
-                    isPending = instance == null,
+                    isPending = true,
                     title = task.title,
                     repeat = task.recurrence,
                     startDateTime = task.startDateTime,
-                    onChangeStatus = {  },
-                    onClick = {  }
+                    onChangeStatus = { onTaskEvents(TaskEvents.ToggleStatus(true, task.id, workspaceId, selectedDate)) },
+                    onClick = { navController.navigate(NavRoutes.EventDetails.withArgs(workspaceId, task.id, selectedDate)) }
                 )
                 Spacer(Modifier.height(8.dp))
             }
         }
         if (completedTasks.isNotEmpty()) {
             items(completedTasks) { task ->
-                val instance = allEventInstances.find { it.eventId == task.id && it.instanceDate == selectedDate }
-
                 EventCard(
                     radius = radius,
-                    isPending = instance == null,
+                    isPending = false,
                     title = task.title,
                     repeat = task.recurrence,
                     startDateTime = task.startDateTime,
-                    onChangeStatus = {  },
-                    onClick = {  }
+                    onChangeStatus = { onTaskEvents(TaskEvents.ToggleStatus(false, task.id, workspaceId, selectedDate)) },
+                    onClick = { navController.navigate(NavRoutes.EventDetails.withArgs(workspaceId, task.id, selectedDate)) }
                 )
                 Spacer(Modifier.height(8.dp))
             }

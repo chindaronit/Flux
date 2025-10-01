@@ -54,13 +54,12 @@ class EventViewModel @Inject constructor(
                     selectedYearMonth = YearMonth.from(LocalDate.ofEpochDay(newDate))
                 )
             }
-            is TaskEvents.ToggleStatus -> { toggleStatus(event.markDone, event.eventId, event.workspaceId) }
+            is TaskEvents.ToggleStatus -> { toggleStatus(event.markDone, event.eventId, event.workspaceId, event.date) }
         }
     }
 
-    private fun toggleStatus(markDone: Boolean, eventId: String, workspaceId: String) {
-        val today = LocalDate.now().toEpochDay()
-        val data = _state.value.allEventInstances.find{ it.eventId==eventId && it.instanceDate==today}?: EventInstanceModel(eventId, workspaceId, today)
+    private fun toggleStatus(markDone: Boolean, eventId: String, workspaceId: String, date: Long) {
+        val data = _state.value.allEventInstances.find{ it.eventId==eventId && it.instanceDate==date}?: EventInstanceModel(eventId, workspaceId, date)
         viewModelScope.launch(Dispatchers.IO) {
             if(markDone){ repository.upsertEventInstance(data) }
             else{ repository.deleteEventInstance(data) }

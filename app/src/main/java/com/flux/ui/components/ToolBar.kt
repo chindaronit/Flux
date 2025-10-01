@@ -48,6 +48,7 @@ import com.flux.other.canScheduleReminder
 import com.flux.other.isNotificationPermissionGranted
 import com.flux.other.openAppNotificationSettings
 import com.flux.other.requestExactAlarmPermission
+import java.time.LocalDate
 
 @Composable
 fun SpacesToolBar(
@@ -200,7 +201,7 @@ fun EventToolBar(context: Context, navController: NavController, workspaceId: St
             openAppNotificationSettings(context)
         }
         if (canScheduleReminder(context) && isNotificationPermissionGranted(context)) {
-            navController.navigate(NavRoutes.EventDetails.withArgs(workspaceId, ""))
+            navController.navigate(NavRoutes.EventDetails.withArgs(workspaceId, "", LocalDate.now().toEpochDay()))
         }
     }) { Icon(Icons.Default.Add, null, tint = MaterialTheme.colorScheme.primary) }
 }

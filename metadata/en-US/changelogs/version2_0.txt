@@ -1,0 +1,8 @@
+* Database breaking changes has been done (that can't be migrated), please copy your data to a file uninstall old version and reinstall the new one then paste copied data.
+* option to change icons of work-spaces
+* import/export data
+* more languages support
+* Custom repetition to habits and events
+* UI is more intuitive now.
+* More Customizability: multiple theme palettes
+

@@ -80,18 +80,20 @@ fun LazyListScope.eventHomeItems(
     if (isLoading) {
         item { Loader() }
     } else {
-        if (eventsToday.isEmpty()) {
+        if (eventsToday.isEmpty() && upcomingEvents.isEmpty()) {
             item { EmptyEvents() }
         } else {
             // Section for today
-            item {
-                Text(
-                    text = stringResource(R.string.Today),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
+            if (eventsToday.isNotEmpty()) {
+                item {
+                    Text(
+                        text = stringResource(R.string.Today),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                }
             }
 
             items(eventsToday) { event ->
@@ -110,15 +112,12 @@ fun LazyListScope.eventHomeItems(
                             TaskEvents.ToggleStatus(
                                 instance == null,
                                 event.id,
-                                workspaceId
+                                workspaceId,
+                                today.toEpochDay()
                             )
                         )
                     },
-                    onClick = {
-                        navController.navigate(
-                            NavRoutes.EventDetails.withArgs(workspaceId, event.id)
-                        )
-                    }
+                    onClick = { navController.navigate(NavRoutes.EventDetails.withArgs(workspaceId, event.id, today.toEpochDay())) }
                 )
                 Spacer(Modifier.height(8.dp))
             }
@@ -137,16 +136,47 @@ fun LazyListScope.eventHomeItems(
             }
 
             items(upcomingEvents) { event ->
-                EventCard(
-                    radius = radius,
-                    isPending = true,
-                    title = event.title,
-                    repeat = event.recurrence,
-                    startDateTime = event.startDateTime,
-                    onChangeStatus = {},
-                    onClick = {}
-                )
-                Spacer(Modifier.height(8.dp))
+                // Find the *next occurrence date* after today
+                val nextDate = (1..ChronoUnit.DAYS.between(today, endOfMonth))
+                    .map { today.plusDays(it) }
+                    .firstOrNull { event.occursOn(it) }
+
+                if (nextDate != null) {
+                    val epochDay = nextDate.toEpochDay()
+
+                    // Find if an instance already exists for that date
+                    val instance = allEventInstances.find {
+                        it.eventId == event.id && it.instanceDate == epochDay
+                    }
+
+                    EventCard(
+                        radius = radius,
+                        isPending = instance == null,
+                        title = event.title,
+                        repeat = event.recurrence,
+                        startDateTime = event.startDateTime,
+                        onChangeStatus = {
+                            onTaskEvents(
+                                TaskEvents.ToggleStatus(
+                                    instance == null,
+                                    event.id,
+                                    workspaceId,
+                                    epochDay
+                                )
+                            )
+                        },
+                        onClick = {
+                            navController.navigate(
+                                NavRoutes.EventDetails.withArgs(
+                                    workspaceId,
+                                    event.id,
+                                    epochDay
+                                )
+                            )
+                        }
+                    )
+                    Spacer(Modifier.height(8.dp))
+                }
             }
         }
     }

@@ -318,13 +318,6 @@ fun AppNavHost(
         EventScreens.forEach { (route, screen) ->
             val arguments = mutableListOf<NamedNavArgument>()
 
-            if (route.contains("{eventId}")) {
-                arguments.add(navArgument("eventId") {
-                    type = NavType.StringType
-                    nullable = false
-                })
-            }
-
             if (route.contains("{workspaceId}")) {
                 arguments.add(navArgument("workspaceId") {
                     type = NavType.StringType
@@ -332,33 +325,26 @@ fun AppNavHost(
                 })
             }
 
+            if (route.contains("{eventId}")) {
+                arguments.add(navArgument("eventId") {
+                    type = NavType.StringType
+                    nullable = false
+                })
+            }
+
+            if (route.contains("{instanceDate}")) {
+                arguments.add(navArgument("instanceDate") {
+                    type = NavType.LongType
+                    nullable = false
+                })
+            }
+
             bottomSlideComposable(route, arguments) { entry ->
-                val eventId = entry.arguments?.getString("eventId") ?: ""
                 val workspaceId = entry.arguments?.getString("workspaceId") ?: ""
-                screen(
-                    navController,
-                    States(
-                        notesState,
-                        eventState,
-                        habitState,
-                        todoState,
-                        workspaceState,
-                        journalState,
-                        settings
-                    ),
-                    ViewModels(
-                        notesViewModel,
-                        eventViewModel,
-                        todoViewModel,
-                        habitViewModel,
-                        workspaceViewModel,
-                        journalViewModel,
-                        settingsViewModel,
-                        backupViewModel
-                    ),
-                    eventId,
-                    workspaceId
-                )
+                val eventId = entry.arguments?.getString("eventId") ?: ""
+                val instanceDate = entry.arguments?.getLong("instanceDate") ?: 0L
+
+                screen(navController, States(notesState, eventState, habitState, todoState, workspaceState, journalState, settings), ViewModels(notesViewModel, eventViewModel, todoViewModel, habitViewModel, workspaceViewModel, journalViewModel, settingsViewModel, backupViewModel), eventId, workspaceId, instanceDate)
             }
         }
 
