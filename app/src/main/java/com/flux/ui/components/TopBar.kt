@@ -33,7 +33,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import androidx.core.net.toUri
 import coil.compose.AsyncImage
 import com.flux.data.model.WorkspaceModel
 
@@ -110,7 +109,7 @@ fun WorkspaceTopBar(
     ) {
         // Background image
         AsyncImage(
-            model = workspace.cover.toUri(),
+            model = workspace.cover,
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier.matchParentSize()
