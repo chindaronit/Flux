@@ -685,24 +685,29 @@ private fun getExpectedDates(recurrence: RecurrenceRule, startDateTime: Long): L
 private fun calculateCurrentStreak(expectedDates: List<Long>, completedDates: Set<Long>): Int {
     if (expectedDates.isEmpty()) return 0
 
+    val now = System.currentTimeMillis()
+    val lastPastIndex = expectedDates.indexOfLast { it <= now }
+    if (lastPastIndex == -1) return 0
+
     var streak = 0
-    // Work backwards from the most recent expected date
-    for (i in expectedDates.size - 1 downTo 0) {
-        val expectedDate = expectedDates[i]
-        if (expectedDate in completedDates) {
-            streak++
-        } else {
-            // If we hit today and it's expected but not completed, streak is broken
-            val today = LocalDate.now().toEpochDay()
-            if (expectedDate <= today) {
-                break
-            }
-            // If it's a future date, continue checking past dates
-        }
+    var i = lastPastIndex
+
+    // Case 1: Today expected but not completed → check yesterday instead
+    if (expectedDates[i] !in completedDates) {
+        i-- // move to yesterday
+        // if yesterday also not complete → streak = 0
+        if (i < 0 || expectedDates[i] !in completedDates) return 0
+    }
+
+    // Case 2: Count backwards while dates are completed
+    while (i >= 0 && expectedDates[i] in completedDates) {
+        streak++
+        i--
     }
 
     return streak
 }
+
 
 private fun calculateBestStreak(expectedDates: List<Long>, completedDates: Set<Long>): Int {
     if (expectedDates.isEmpty()) return 0
