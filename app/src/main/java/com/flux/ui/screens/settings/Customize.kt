@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Colorize
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.rounded.FontDownload
 import androidx.compose.material.icons.rounded.RoundedCorner
 import androidx.compose.material.icons.rounded.ViewCompact
 import androidx.compose.material.icons.rounded.ViewCompactAlt
@@ -48,6 +49,7 @@ import androidx.navigation.NavController
 import com.flux.R
 import com.flux.ui.components.ActionType
 import com.flux.ui.components.BasicScaffold
+import com.flux.ui.components.FontDialog
 import com.flux.ui.components.SelectableColorPlatte
 import com.flux.ui.components.SettingOption
 import com.flux.ui.components.shapeManager
@@ -69,6 +71,19 @@ fun Customize(
     )
 
     var showRadiusDialog by remember { mutableStateOf(false) }
+    var showFontDialog by remember { mutableStateOf(false) }
+
+    if (showFontDialog){
+        FontDialog(settings.data.fontNumber, onSelectFont = {
+            onSettingsEvents(SettingEvents.UpdateSettings(
+                settings.data.copy(
+                    fontNumber = it
+                )
+            ))
+        }) {
+            showFontDialog=false
+        }
+    }
 
     if(showRadiusDialog){
         OnRadiusClicked(settings) {
@@ -90,7 +105,7 @@ fun Customize(
         LazyColumn(
             modifier = Modifier
                 .padding(innerPadding)
-                .padding(16.dp, 8.dp, 16.dp)
+                .padding(16.dp, 8.dp, 16.dp, 16.dp)
         ) {
             item {
                 Text(
@@ -311,6 +326,29 @@ fun Customize(
                             )
                         )
                     }
+                )
+            }
+
+            item {
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    "Font",
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp
+                )
+                Spacer(Modifier.height(12.dp))
+
+                SettingOption(
+                    title = "Font",
+                    description = "Change Font",
+                    icon = Icons.Rounded.FontDownload,
+                    radius = shapeManager(
+                        radius = settings.data.cornerRadius,
+                        isBoth = true
+                    ),
+                    actionType = ActionType.CUSTOM,
+                    onCustomClick = { showFontDialog = true }
                 )
             }
 

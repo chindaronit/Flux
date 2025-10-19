@@ -1,6 +1,5 @@
 package com.flux
 
-
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.setContent
@@ -19,7 +18,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flux.navigation.AppNavHost
 import com.flux.navigation.Loader
@@ -40,14 +39,25 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
     private var keepSplashScreen = mutableStateOf(true)
-
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         createNotificationChannel(this)
         // Splash screen condition
         val splashScreen = installSplashScreen()
+
         splashScreen.setKeepOnScreenCondition { keepSplashScreen.value }
+
+        splashScreen.setOnExitAnimationListener { splashScreenView ->
+            val iconView = splashScreenView.iconView
+            iconView.animate()
+                .alpha(0f)
+                .setDuration(300)
+                .withEndAction {
+                    splashScreenView.remove()
+                }
+                .start()
+        }
 
         enableEdgeToEdge()
         setContent {

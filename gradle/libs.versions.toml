@@ -1,6 +1,6 @@
 [versions]
 agp = "8.11.1"
-kotlin = "2.2.20"
+kotlin = "2.2.10"
 ksp = "2.2.10-2.0.2"
 kotlinxSerializationJson = "1.9.0"
 biometric = "1.4.0-alpha04"
@@ -9,11 +9,11 @@ coreKtx = "1.17.0"
 appcompat = "1.7.1"
 lifecycleRuntimeKtx = "2.9.4"
 activityCompose = "1.11.0"
-composeBom = "2025.09.01"
+composeBom = "2025.10.00"
 coreSplashscreen = "1.0.1"
 navigationCompose = "2.9.5"
 richeditorCompose = "1.0.0-rc13"
-room = "2.8.1"
+room = "2.8.2"
 coilCompose = "2.7.0"
 
 # Hilt

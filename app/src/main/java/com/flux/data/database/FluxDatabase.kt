@@ -3,6 +3,8 @@ package com.flux.data.database
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.flux.data.dao.EventDao
 import com.flux.data.dao.EventInstanceDao
 import com.flux.data.dao.HabitInstanceDao
@@ -27,7 +29,7 @@ import com.flux.data.model.WorkspaceModel
 
 @Database(
     entities = [EventModel::class, LabelModel::class, EventInstanceModel::class, SettingsModel::class, NotesModel::class, HabitModel::class, HabitInstanceModel::class, WorkspaceModel::class, TodoModel::class, JournalModel::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(Converter::class)
@@ -42,4 +44,11 @@ abstract class FluxDatabase : RoomDatabase() {
     abstract val journalDao: JournalDao
     abstract val todoDao: TodoDao
     abstract val labelDao: LabelDao
+}
+
+val MIGRATION_1_2 = object : Migration(1, 2) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // Add fontNumber column with default value 0
+        db.execSQL("ALTER TABLE SettingsModel ADD COLUMN fontNumber INTEGER NOT NULL DEFAULT 0")
+    }
 }

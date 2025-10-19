@@ -34,6 +34,7 @@ import com.flux.data.model.NotesModel
 import com.flux.navigation.NavRoutes
 import com.flux.other.EditAction
 import com.flux.ui.components.ActionType
+import com.flux.ui.components.ExportNoteDialog
 import com.flux.ui.components.NoteDetailsTopBar
 import com.flux.ui.components.NotesInputCard
 import com.flux.ui.components.SelectLabelDialog
@@ -64,6 +65,7 @@ fun NoteDetails(
     var title by remember { mutableStateOf(note.title) }
     val richTextState = rememberRichTextState()
     val interactionSource = remember { MutableInteractionSource() }
+    var showShareNotesDialog by remember { mutableStateOf(false) }
 
     // Flag to prevent tracking changes during undo/redo operations
     val isUndoRedoOperation = remember { mutableStateOf(false) }
@@ -215,6 +217,7 @@ fun NoteDetails(
                 },
                 onAddLabel = { showSelectLabels = true },
                 onAboutClicked = { showAboutNotes = true },
+                onExportNotes = { showShareNotesDialog = true },
                 onUndo = ::undo,
                 onRedo = ::redo
             )
@@ -236,6 +239,10 @@ fun NoteDetails(
             },
             onLabelClicked = { showSelectLabels = true }
         )
+    }
+
+    if(showShareNotesDialog){
+        ExportNoteDialog("Note", richTextState) {showShareNotesDialog=false}
     }
 }
 

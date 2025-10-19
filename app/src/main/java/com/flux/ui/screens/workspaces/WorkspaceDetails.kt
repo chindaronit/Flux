@@ -3,6 +3,7 @@ package com.flux.ui.screens.workspaces
 import android.content.Context
 import android.net.Uri
 import android.os.Build
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
@@ -83,6 +84,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.time.YearMonth
 import com.flux.R
+import com.mohamedrejeb.richeditor.model.rememberRichTextState
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -145,6 +147,42 @@ fun WorkspaceDetails(
     val scope = rememberCoroutineScope()
     var addSpaceBottomSheet by remember { mutableStateOf(false) }
     val spacesList = getSpacesList()
+    val richTextState = rememberRichTextState()
+
+    val importNoteLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        uri?.let {
+            try {
+                val contentResolver = context.contentResolver
+                val inputStream = contentResolver.openInputStream(uri)
+                val content = inputStream?.bufferedReader()?.use { it.readText() } ?: ""
+
+                // Get filename (remove extension)
+                val fileName = uri.lastPathSegment
+                    ?.substringAfterLast("/")
+                    ?.substringBeforeLast(".")
+                    ?: "Imported Note"
+
+                richTextState.setMarkdown(content)
+
+                // Create a new note with parsed HTML
+                val newNote = NotesModel(
+                    title = fileName,
+                    description = richTextState.toHtml(),
+                    workspaceId = workspaceId,
+                    lastEdited = System.currentTimeMillis()
+                )
+
+                onNotesEvents(NotesEvents.UpsertNote(newNote))
+                Toast.makeText(context, "Imported Successfully", Toast.LENGTH_SHORT).show()
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Toast.makeText(context, "Failed to import note", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
@@ -258,6 +296,7 @@ fun WorkspaceDetails(
                                 workspaceId,
                                 query, settings.data.isGridView,
                                 onSearch = { query = it },
+                                onImportNote = { importNoteLauncher.launch(arrayOf("text/markdown", "text/plain")) },
                                 onChangeView = {
                                     onSettingEvents(
                                         SettingEvents.UpdateSettings(

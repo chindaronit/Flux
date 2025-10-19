@@ -22,7 +22,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import com.flux.R
 import com.flux.data.model.RecurrenceRule
-import com.flux.ui.screens.events.toFormattedDateTime
 import kotlinx.serialization.json.Json
 
 class ReminderReceiver : BroadcastReceiver() {
@@ -39,10 +38,14 @@ class ReminderReceiver : BroadcastReceiver() {
             Json.decodeFromString<RecurrenceRule>(it)
         } ?: RecurrenceRule.Once
 
+        val icon = when(type) {
+            "EVENTS" -> R.drawable.check_list
+            else -> R.drawable.calendar_check
+        }
         val notificationId = getUniqueRequestCode(type, id)
 
         val notification = NotificationCompat.Builder(context, "notification_channel")
-            .setSmallIcon(R.mipmap.ic_launcher_foreground)
+            .setSmallIcon(icon)
             .setContentTitle(title)
             .setContentText(description)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -54,7 +57,6 @@ class ReminderReceiver : BroadcastReceiver() {
 
         // Reschedule next occurrence if recurring
         val nextTime = getNextOccurrence(recurrence, System.currentTimeMillis())
-        println("scheduling for ${nextTime?.toFormattedDateTime(context)}, current: ${System.currentTimeMillis().toFormattedDateTime(context)}")
         if (nextTime != null) {
             scheduleReminder(
                 context = context,
@@ -116,7 +118,6 @@ fun scheduleReminder(
     description: String
 ) {
     try {
-        println("scheduleReminder ${timeInMillis.toFormattedDateTime(context)}")
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val intent = createReminderIntent(context, id, type, title, description, recurrence)
         val requestCode = getUniqueRequestCode(type, id)

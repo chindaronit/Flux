@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.CalendarViewDay
 import androidx.compose.material.icons.filled.CalendarViewMonth
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Search
@@ -212,6 +213,7 @@ fun NotesToolBar(
     workspaceId: String,
     query: String,
     isGridView: Boolean,
+    onImportNote: () -> Unit,
     onChangeView: () -> Unit,
     onSearch: (String) -> Unit
 ) {
@@ -228,6 +230,9 @@ fun NotesToolBar(
                     else -> Icons.Default.GridView
                 }
                 Icon(icon, null, tint = MaterialTheme.colorScheme.primary)
+            }
+            IconButton(onImportNote) {
+                Icon(Icons.Default.Download, null, tint = MaterialTheme.colorScheme.primary)
             }
             IconButton({
                 navController.navigate(

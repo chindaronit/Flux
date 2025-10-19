@@ -7,7 +7,6 @@ import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.automirrored.outlined.Label
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.KeyboardDoubleArrowRight
-import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.RemoveCircleOutline
@@ -23,6 +22,7 @@ import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.LockOpen
 import androidx.compose.material.icons.outlined.PhotoSizeSelectActual
 import androidx.compose.material.icons.outlined.PushPin
+import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.TaskAlt
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -50,6 +50,7 @@ fun DropdownMenuWithDetails(
     onTogglePinned: () -> Unit,
     onAddLabel: () -> Unit,
     onAboutClicked: () -> Unit,
+    onExportNotes: () -> Unit,
     onDelete: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -88,6 +89,15 @@ fun DropdownMenuWithDetails(
                 onClick = {
                     expanded = false
                     onAddLabel()
+                }
+            )
+            HorizontalDivider()
+            DropdownMenuItem(
+                text = { Text("Export Note") },
+                leadingIcon = { Icon(Icons.Outlined.Share, contentDescription = null) },
+                onClick = {
+                    expanded = false
+                    onExportNotes()
                 }
             )
             HorizontalDivider()
@@ -321,55 +331,6 @@ fun WorkspaceMore(
                     onToggleLock()
                 }
             )
-            DropdownMenuItem(
-                colors = MenuDefaults.itemColors(
-                    leadingIconColor = MaterialTheme.colorScheme.error,
-                    textColor = MaterialTheme.colorScheme.error
-                ),
-                text = { Text(stringResource(R.string.Delete_Workspace)) },
-                leadingIcon = { Icon(Icons.Outlined.Delete, contentDescription = null) },
-                onClick = {
-                    expanded = false
-                    onDelete()
-                }
-            )
-        }
-    }
-}
-
-@Composable
-fun WorkspacePreviewMore(
-    isPinned: Boolean,
-    onDelete: () -> Unit,
-    onTogglePinned: () -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
-
-    Box(modifier = Modifier) {
-        IconButton(onClick = { expanded = true }) {
-            Icon(
-                Icons.Default.MoreHoriz,
-                contentDescription = "More options"
-            )
-        }
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            DropdownMenuItem(
-                text = { Text(if (isPinned) stringResource(R.string.Unpin) else stringResource(R.string.Pin)) },
-                leadingIcon = {
-                    Icon(
-                        if (isPinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
-                        contentDescription = null
-                    )
-                },
-                onClick = {
-                    expanded = false
-                    onTogglePinned()
-                }
-            )
-            HorizontalDivider()
             DropdownMenuItem(
                 colors = MenuDefaults.itemColors(
                     leadingIconColor = MaterialTheme.colorScheme.error,

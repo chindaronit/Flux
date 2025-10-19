@@ -1,9 +1,13 @@
 package com.flux.ui.components
 
+import android.content.Context
+import android.content.Intent
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -26,12 +31,16 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.EditCalendar
+import androidx.compose.material.icons.filled.FilePresent
+import androidx.compose.material.icons.filled.FontDownload
 import androidx.compose.material.icons.filled.NewLabel
+import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -58,6 +67,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -66,8 +76,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.core.content.FileProvider
 import com.flux.R
 import com.flux.data.model.LabelModel
+import com.flux.ui.theme.FONTS
+import com.mohamedrejeb.richeditor.model.RichTextState
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -660,4 +674,156 @@ fun DeleteAlert(
         confirmButton = { TextButton(onClick = { onConfirmation() }) { Text(stringResource(R.string.Confirm)) } },
         dismissButton = { TextButton(onClick = { onDismissRequest() }) { Text(stringResource(R.string.Dismiss)) } }
     )
+}
+
+@Composable
+fun ExportNoteDialog(
+    noteTitle: String,
+    richTextState: RichTextState,
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+    val fileName = noteTitle.trim().replace("\\s+".toRegex(), "_")
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(8.dp),
+            modifier = Modifier.fillMaxWidth().padding(16.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = "Export As",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                // Text Export
+                Card(
+                    onClick = {
+                        val content = richTextState.annotatedString.text
+                        context.shareTextFile(fileName, content)
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.TextFields, null)
+                        Text("Plain Text (.txt)")
+                    }
+                }
+
+                // Markdown Export
+                Card(
+                    onClick = {
+                        val markdownContent = richTextState.toMarkdown()
+                        context.shareMarkdownFile(fileName, markdownContent)
+                        onDismiss()
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.FilePresent, null)
+                        Text("Markdown (.md)")
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun FontDialog(
+    selectedFont: Int,
+    onSelectFont: (Int)->Unit,
+    onDismissRequest: () -> Unit
+){
+    Dialog(onDismissRequest = onDismissRequest) {
+        Card(
+            Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceContainerLow)
+        ) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Icon(Icons.Default.FontDownload, null, modifier = Modifier.size(36.dp))
+                Text("Fonts", style = MaterialTheme.typography.titleLarge)
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    FONTS.forEachIndexed { index, font ->
+                        val containerColor =
+                            if (selectedFont == index) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh
+                        val contentColor =
+                            if (selectedFont == index) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+                        Card(
+                            onClick = {
+                                onSelectFont(index)
+                                onDismissRequest()
+                            },
+                            shape =
+                                if (selectedFont == index) RoundedCornerShape(50)
+                                else RoundedCornerShape(8.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = containerColor,
+                                contentColor = contentColor
+                            )
+                        ) {
+                            Text(font, modifier = Modifier.padding(8.dp))
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+fun Context.shareTextFile(fileName: String, content: String) {
+    try {
+        val file = File(cacheDir, "$fileName.txt")
+        file.writeText(content)
+
+        val uri = FileProvider.getUriForFile(
+            this,
+            "$packageName.fileprovider",
+            file
+        )
+
+        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_STREAM, uri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+
+        startActivity(Intent.createChooser(shareIntent, "Share Text File"))
+    } catch (e: Exception) {
+        e.printStackTrace()
+        Toast.makeText(this, "Failed to share text file", Toast.LENGTH_SHORT).show()
+    }
+}
+
+fun Context.shareMarkdownFile(fileName: String, markdownContent: String) {
+    try {
+        // Create a temporary .md file in cache
+        val file = File(cacheDir, "$fileName.md")
+        file.writeText(markdownContent)
+
+        // Get URI using FileProvider
+        val uri = FileProvider.getUriForFile(
+            this,
+            "$packageName.fileprovider",
+            file
+        )
+
+        // Share intent
+        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/markdown"
+            putExtra(Intent.EXTRA_STREAM, uri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+
+        startActivity(Intent.createChooser(shareIntent, "Share Markdown File"))
+    } catch (e: Exception) {
+        e.printStackTrace()
+        Toast.makeText(this, "Failed to share file", Toast.LENGTH_SHORT).show()
+    }
 }

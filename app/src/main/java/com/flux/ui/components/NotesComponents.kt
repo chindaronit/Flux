@@ -31,6 +31,7 @@ import androidx.compose.material.icons.automirrored.outlined.FormatAlignLeft
 import androidx.compose.material.icons.automirrored.outlined.FormatAlignRight
 import androidx.compose.material.icons.automirrored.outlined.FormatListBulleted
 import androidx.compose.material.icons.filled.AddPhotoAlternate
+import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.FormatStrikethrough
 import androidx.compose.material.icons.filled.Highlight
 import androidx.compose.material.icons.outlined.FormatAlignCenter
@@ -59,9 +60,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.ParagraphStyle
+import androidx.compose.ui.text.PlatformSpanStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -94,9 +97,9 @@ fun NotesInputCard(
         modifier = Modifier
             .fillMaxSize()
             .padding(innerPadding)
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = 12.dp)
             .imePadding(),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+        verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
         TextField(
             value = title,
@@ -158,7 +161,7 @@ fun NotesInputCard(
 
         if (isFocused.value) {
             RichTextStyleRow(
-                modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                modifier = Modifier.fillMaxWidth(),
                 state = richTextState,
                 isAddImage = false,
             ) {}
@@ -174,6 +177,8 @@ fun RichTextStyleRow(
     isAddImage: Boolean = false,
     onAddImageClicked: () -> Unit
 ) {
+    val isCodeSpan = state.isCodeSpan
+
     LazyRow(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
@@ -233,6 +238,25 @@ fun RichTextStyleRow(
                 onClick = { state.toggleSpanStyle(SpanStyle(background = Color.Yellow)) },
                 isSelected = state.currentSpanStyle.background == Color.Yellow,
                 icon = Icons.Default.Highlight,
+            )
+        }
+
+        item {
+            RichTextStyleButton(
+                onClick = {
+                    state.toggleCodeSpan()
+
+                    state.toggleSpanStyle(
+                        SpanStyle(
+                            background = Color(0xCDFFFFFF),
+                            letterSpacing = 0.5.sp,
+                            baselineShift = BaselineShift(0.05f),
+                            platformStyle = PlatformSpanStyle()
+                        )
+                    )
+                },
+                isSelected = isCodeSpan,
+                icon = Icons.Default.Code
             )
         }
 
@@ -335,14 +359,14 @@ fun NotesPreviewCard(
         ) {
             Text(
                 text = note.title,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
                     .alpha(0.9f)
                     .padding(horizontal = 12.dp)
                     .padding(top = 12.dp)
             )
-
 
             Box(
                 modifier = Modifier

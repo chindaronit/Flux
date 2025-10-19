@@ -48,6 +48,7 @@ fun NoteDetailsTopBar(
     onAddLabel: () -> Unit,
     onTogglePinned: () -> Unit,
     onAboutClicked: () -> Unit,
+    onExportNotes: () -> Unit,
     onUndo: () -> Unit,
     onRedo: () -> Unit
 ) {
@@ -84,7 +85,7 @@ fun NoteDetailsTopBar(
                 onDone()
                 onBackPressed()
             }) { Icon(Icons.Outlined.Check, null) }
-            DropdownMenuWithDetails(isPinned, onTogglePinned, onAddLabel, onAboutClicked, onDelete)
+            DropdownMenuWithDetails(isPinned, onTogglePinned, onAddLabel, onAboutClicked, onExportNotes, onDelete)
         }
     )
 }

@@ -97,7 +97,6 @@ import androidx.compose.material.icons.filled.WavingHand
 import androidx.compose.material.icons.filled.Woman
 import androidx.compose.material.icons.filled.Work
 import androidx.compose.material.icons.filled.Workspaces
-import androidx.compose.ui.graphics.vector.ImageVector
 
 data class WorkspaceIcons(
     val title: String,
@@ -179,8 +178,9 @@ val FOOD = WorkspaceIcons(
     icons = listOf(64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79)
 )
 
-val workspaceIconList = listOf<WorkspaceIcons>(DEFAULT, EMOTICON, FOOD, FINANCE, OTHERS)
-val icons = listOf<ImageVector>(
+val workspaceIconList = listOf(DEFAULT, EMOTICON, FOOD, FINANCE, OTHERS)
+
+val icons = listOf(
     // Finance
     Icons.Default.Business,
     Icons.Default.AreaChart,
