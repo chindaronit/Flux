@@ -161,11 +161,14 @@ fun Customize(
             }
 
             item {
+                val isManuallyDarkMode = !(settings.data.isAutomaticTheme || !settings.data.isDarkMode)
+                val supportsDynamicColor = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S // Android 12+
+
                 SettingOption(
                     title = stringResource(R.string.Dark_theme),
                     description = stringResource(R.string.Dark_theme_desc),
                     icon = Icons.Filled.DarkMode,
-                    radius = shapeManager(radius = settings.data.cornerRadius),
+                    radius = shapeManager(radius = settings.data.cornerRadius, isLast = !isManuallyDarkMode && !supportsDynamicColor),
                     actionType = ActionType.RADIOBUTTON,
                     variable = !settings.data.isAutomaticTheme && settings.data.isDarkMode,
                     switchEnabled = {

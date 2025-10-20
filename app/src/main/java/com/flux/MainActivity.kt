@@ -45,19 +45,7 @@ class MainActivity : AppCompatActivity() {
         createNotificationChannel(this)
         // Splash screen condition
         val splashScreen = installSplashScreen()
-
         splashScreen.setKeepOnScreenCondition { keepSplashScreen.value }
-
-        splashScreen.setOnExitAnimationListener { splashScreenView ->
-            val iconView = splashScreenView.iconView
-            iconView.animate()
-                .alpha(0f)
-                .setDuration(300)
-                .withEndAction {
-                    splashScreenView.remove()
-                }
-                .start()
-        }
 
         enableEdgeToEdge()
         setContent {
