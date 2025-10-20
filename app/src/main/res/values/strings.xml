@@ -73,6 +73,16 @@
     <string name="Extreme_Compact_Mode">Extreme Compact Mode</string>
     <string name="Extreme_Compact_Mode_Desc">Tighter the spacing between workspaces</string>
     <string name="Theme_Palette">Theme Palette</string>
+    <string name="Font">Font</string>
+    <string name="Fonts">Font</string>
+    <string name="Share_txt">Share Text File</string>
+    <string name="Share_md">Share Markdown File</string>
+    <string name="Error_Share_txt">Failed to share text file</string>
+    <string name="Error_Share_md">Failed to share .md file</string>
+    <string name="Export_As">Export As</string>
+    <string name="Plain_Text">Plain Text (.txt)</string>
+    <string name="Markdown">Markdown (.md)</string>
+    <string name="Change_Font">Change Font</string>
 
     <!-- Settings - Privacy -->
     <string name="Privacy">Privacy</string>
@@ -148,6 +158,9 @@
     <string name="Add_Label">Add New Label</string>
     <string name="Edit_Label">Edit Label</string>
     <string name="Select_Label">Select Label</string>
+    <string name="Export_Note">Export Note</string>
+    <string name="import_success">Imported Successfully</string>
+    <string name="import_failed">Failed to import note</string>
 
     <!-- To-Do -->
     <string name="To_Do">To-Do</string>
@@ -172,7 +185,6 @@
     <string name="friday_short">Fri</string>
     <string name="saturday_short">Sat</string>
     <string name="sunday_short">Sun</string>
-
 
     <!-- Events -->
     <string name="Events">Events</string>

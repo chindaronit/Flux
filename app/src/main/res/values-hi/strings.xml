@@ -73,6 +73,16 @@
     <string name="Extreme_Compact_Mode">अत्यधिक कॉम्पैक्ट मोड</string>
     <string name="Extreme_Compact_Mode_Desc">वर्कस्पेस के बीच की दूरी और कम करें</string>
     <string name="Theme_Palette">थीम पैलेट</string>
+    <string name="Font">फ़ॉन्ट</string>
+    <string name="Fonts">फ़ॉन्ट्स</string>
+    <string name="Share_txt">टेक्स्ट फ़ाइल साझा करें</string>
+    <string name="Share_md">Markdown फ़ाइल साझा करें</string>
+    <string name="Error_Share_txt">टेक्स्ट फ़ाइल साझा करने में विफल</string>
+    <string name="Error_Share_md">.md फ़ाइल साझा करने में विफल</string>
+    <string name="Export_As">के रूप में निर्यात करें</string>
+    <string name="Plain_Text">साधारण पाठ (.txt)</string>
+    <string name="Markdown">मार्कडाउन (.md)</string>
+    <string name="Change_Font">फ़ॉन्ट बदलें</string>
 
     <!-- Settings - Privacy -->
     <string name="Privacy">गोपनीयता</string>
@@ -148,6 +158,9 @@
     <string name="Add_Label">नया लेबल जोड़ें</string>
     <string name="Edit_Label">लेबल संपादित करें</string>
     <string name="Select_Label">लेबल चुनें</string>
+    <string name="Export_Note">नोट निर्यात करें</string>
+    <string name="import_success">सफलतापूर्वक आयात किया गया</string>
+    <string name="import_failed">नोट आयात करने में विफल</string>
 
     <!-- To-Do -->
     <string name="To_Do">करने के कार्य</string>

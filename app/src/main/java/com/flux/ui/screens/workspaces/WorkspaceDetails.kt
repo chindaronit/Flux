@@ -175,11 +175,11 @@ fun WorkspaceDetails(
                 )
 
                 onNotesEvents(NotesEvents.UpsertNote(newNote))
-                Toast.makeText(context, "Imported Successfully", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.import_success), Toast.LENGTH_SHORT).show()
 
             } catch (e: Exception) {
                 e.printStackTrace()
-                Toast.makeText(context, "Failed to import note", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.import_failed), Toast.LENGTH_SHORT).show()
             }
         }
     }

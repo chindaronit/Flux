@@ -106,7 +106,7 @@ fun EditJournal(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         topBar = {
             CenterAlignedTopAppBar(
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerLow
                 ),
                 title = { Text(selectedDateTime.toFormattedDate()) },

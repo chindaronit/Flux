@@ -1,5 +1,6 @@
 package com.flux.ui.screens.settings
 
+import android.os.Build
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -182,23 +183,27 @@ fun Customize(
 
             item {
                 val isLast = settings.data.isAutomaticTheme || !settings.data.isDarkMode
-                SettingOption(
-                    title = stringResource(R.string.Dynamic_theme),
-                    description = stringResource(R.string.Dynamic_theme_desc),
-                    icon = Icons.Filled.Colorize,
-                    radius = shapeManager(radius = settings.data.cornerRadius, isLast = isLast),
-                    actionType = ActionType.SWITCH,
-                    variable = settings.data.dynamicTheme,
-                    switchEnabled = {
-                        onSettingsEvents(
-                            SettingEvents.UpdateSettings(
-                                settings.data.copy(
-                                    dynamicTheme = it
+                val supportsDynamicColor = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S // Android 12+
+
+                if (supportsDynamicColor) {
+                    SettingOption(
+                        title = stringResource(R.string.Dynamic_theme),
+                        description = stringResource(R.string.Dynamic_theme_desc),
+                        icon = Icons.Filled.Colorize,
+                        radius = shapeManager(radius = settings.data.cornerRadius, isLast = isLast),
+                        actionType = ActionType.SWITCH,
+                        variable = settings.data.dynamicTheme,
+                        switchEnabled = {
+                            onSettingsEvents(
+                                SettingEvents.UpdateSettings(
+                                    settings.data.copy(
+                                        dynamicTheme = it
+                                    )
                                 )
                             )
-                        )
-                    },
-                )
+                        },
+                    )
+                }
             }
 
             item {
@@ -332,7 +337,7 @@ fun Customize(
             item {
                 Spacer(Modifier.height(12.dp))
                 Text(
-                    "Font",
+                    stringResource(R.string.Font),
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 20.sp
@@ -340,8 +345,8 @@ fun Customize(
                 Spacer(Modifier.height(12.dp))
 
                 SettingOption(
-                    title = "Font",
-                    description = "Change Font",
+                    title = stringResource(R.string.Font),
+                    description = stringResource(R.string.Change_Font),
                     icon = Icons.Rounded.FontDownload,
                     radius = shapeManager(
                         radius = settings.data.cornerRadius,

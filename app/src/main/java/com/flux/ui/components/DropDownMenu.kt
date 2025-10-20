@@ -93,7 +93,7 @@ fun DropdownMenuWithDetails(
             )
             HorizontalDivider()
             DropdownMenuItem(
-                text = { Text("Export Note") },
+                text = { Text(stringResource(R.string.Export_Note)) },
                 leadingIcon = { Icon(Icons.Outlined.Share, contentDescription = null) },
                 onClick = {
                     expanded = false

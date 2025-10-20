@@ -73,6 +73,16 @@
     <string name="Extreme_Compact_Mode">Mode ultra compact</string>
     <string name="Extreme_Compact_Mode_Desc">Réduire l\'espacement entre les espaces de travail</string>
     <string name="Theme_Palette">Palette de thème</string>
+    <string name="Font">Police</string>
+    <string name="Fonts">Polices</string>
+    <string name="Share_txt">Partager le fichier texte</string>
+    <string name="Share_md">Partager le fichier Markdown</string>
+    <string name="Error_Share_txt">Échec du partage du fichier texte</string>
+    <string name="Error_Share_md">Échec du partage du fichier .md</string>
+    <string name="Export_As">Exporter en tant que</string>
+    <string name="Plain_Text">Texte brut (.txt)</string>
+    <string name="Markdown">Markdown (.md)</string>
+    <string name="Change_Font">Changer la police</string>
 
     <!-- Settings - Privacy -->
     <string name="Privacy">Confidentialité</string>
@@ -148,6 +158,9 @@
     <string name="Add_Label">Ajouter une étiquette</string>
     <string name="Edit_Label">Modifier l\'étiquette</string>
     <string name="Select_Label">Sélectionner une étiquette</string>
+    <string name="Export_Note">Exporter la note</string>
+    <string name="import_success">Importé avec succès</string>
+    <string name="import_failed">Échec de l\'importation de la note</string>
 
     <!-- To-Do -->
     <string name="To_Do">À faire</string>

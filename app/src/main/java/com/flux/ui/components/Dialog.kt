@@ -693,7 +693,7 @@ fun ExportNoteDialog(
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "Export As",
+                    text = stringResource(R.string.Export_As),
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(bottom = 16.dp)
@@ -709,7 +709,7 @@ fun ExportNoteDialog(
                 ) {
                     Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.TextFields, null)
-                        Text("Plain Text (.txt)")
+                        Text( stringResource(R.string.Plain_Text))
                     }
                 }
 
@@ -724,7 +724,7 @@ fun ExportNoteDialog(
                 ) {
                     Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.FilePresent, null)
-                        Text("Markdown (.md)")
+                        Text( stringResource(R.string.Markdown))
                     }
                 }
             }
@@ -745,7 +745,7 @@ fun FontDialog(
         ) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Icon(Icons.Default.FontDownload, null, modifier = Modifier.size(36.dp))
-                Text("Fonts", style = MaterialTheme.typography.titleLarge)
+                Text(stringResource(R.string.Fonts), style = MaterialTheme.typography.titleLarge)
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -794,10 +794,10 @@ fun Context.shareTextFile(fileName: String, content: String) {
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
 
-        startActivity(Intent.createChooser(shareIntent, "Share Text File"))
+        startActivity(Intent.createChooser(shareIntent, getString(R.string.Share_txt)))
     } catch (e: Exception) {
         e.printStackTrace()
-        Toast.makeText(this, "Failed to share text file", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, getString(R.string.Error_Share_txt), Toast.LENGTH_SHORT).show()
     }
 }
 
@@ -821,9 +821,9 @@ fun Context.shareMarkdownFile(fileName: String, markdownContent: String) {
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
 
-        startActivity(Intent.createChooser(shareIntent, "Share Markdown File"))
+        startActivity(Intent.createChooser(shareIntent, getString(R.string.Share_md)))
     } catch (e: Exception) {
         e.printStackTrace()
-        Toast.makeText(this, "Failed to share file", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, getString(R.string.Error_Share_md), Toast.LENGTH_SHORT).show()
     }
 }
