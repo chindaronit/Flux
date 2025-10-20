@@ -15,7 +15,7 @@ android {
         applicationId = "com.flux"
         minSdk = 29
         targetSdk = 36
-        versionCode = 4
+        versionCode = 5
         versionName = "2.1"
     }
 
@@ -70,6 +70,7 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "assets/dexopt/baseline.prof"
         }
         jniLibs {
             useLegacyPackaging = false
