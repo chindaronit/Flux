@@ -1,0 +1,3 @@
+* More Customizability: custom font options.
+* Different Notification Icon for event, habit.
+* import/export and share notes in markdown/txt file.

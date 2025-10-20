@@ -39,7 +39,7 @@ class ReminderReceiver : BroadcastReceiver() {
         } ?: RecurrenceRule.Once
 
         val icon = when(type) {
-            "EVENTS" -> R.drawable.check_list
+            "EVENT" -> R.drawable.check_list
             else -> R.drawable.calendar_check
         }
         val notificationId = getUniqueRequestCode(type, id)

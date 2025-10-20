@@ -424,8 +424,17 @@ fun MonthlyHabitAnalyticsCard(
     habitInstances: List<HabitInstanceModel>
 ) {
     val today = LocalDate.now()
-    val yearMonth = YearMonth.of(today.year, today.month)
-    val daysInMonth = yearMonth.lengthOfMonth()
+    val currentYearMonth = YearMonth.of(today.year, today.month)
+    val daysInMonth = currentYearMonth.lengthOfMonth()
+
+    // Filter only habits from this month
+    val thisMonthInstances = remember(habitInstances) {
+        habitInstances.filter { instance ->
+            val date = LocalDate.ofEpochDay(instance.instanceDate)
+            val instanceYearMonth = YearMonth.of(date.year, date.month)
+            instanceYearMonth == currentYearMonth
+        }
+    }
 
     // Break month into week ranges (1–7, 8–14, etc.)
     val weekRanges = remember(daysInMonth) {
@@ -440,13 +449,13 @@ fun MonthlyHabitAnalyticsCard(
     }
 
     // Count completed habits per week
-    val weekCounts = remember(habitInstances) {
+    val weekCounts = remember(thisMonthInstances) {
         val counts = MutableList(weekRanges.size) { 0 }
 
-        habitInstances
-            .distinctBy { it.instanceDate } // avoid duplicates
+        thisMonthInstances
+            .distinctBy { it.instanceDate }
             .forEach { instance ->
-                val date = LocalDate.ofEpochDay(instance.instanceDate) // ✅ convert Long -> LocalDate
+                val date = LocalDate.ofEpochDay(instance.instanceDate)
                 val day = date.dayOfMonth
                 weekRanges.forEachIndexed { index, range ->
                     if (day in range) {
