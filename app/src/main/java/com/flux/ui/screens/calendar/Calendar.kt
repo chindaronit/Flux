@@ -24,6 +24,7 @@ import java.time.YearMonth
 fun LazyListScope.calendarItems(
     navController: NavController,
     radius: Int,
+    is24HourFormat: Boolean,
     isLoading: Boolean,
     workspaceId: String,
     selectedMonth: YearMonth,
@@ -80,6 +81,7 @@ fun LazyListScope.calendarItems(
             items(pendingTasks) { task ->
                 EventCard(
                     radius = radius,
+                    is24HourFormat = is24HourFormat,
                     isPending = true,
                     title = task.title,
                     repeat = task.recurrence,
@@ -94,6 +96,7 @@ fun LazyListScope.calendarItems(
             items(completedTasks) { task ->
                 EventCard(
                     radius = radius,
+                    is24HourFormat = is24HourFormat,
                     isPending = false,
                     title = task.title,
                     repeat = task.recurrence,

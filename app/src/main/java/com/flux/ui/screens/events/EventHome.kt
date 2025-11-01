@@ -56,6 +56,7 @@ import java.util.Locale
 fun LazyListScope.eventHomeItems(
     navController: NavController,
     radius: Int,
+    is24HourFormat: Boolean,
     isLoading: Boolean,
     allEvents: List<EventModel>,
     allEventInstances: List<EventInstanceModel>,
@@ -103,6 +104,7 @@ fun LazyListScope.eventHomeItems(
 
                 EventCard(
                     radius = radius,
+                    is24HourFormat = is24HourFormat,
                     isPending = instance == null,
                     title = event.title,
                     repeat = event.recurrence,
@@ -151,6 +153,7 @@ fun LazyListScope.eventHomeItems(
 
                     EventCard(
                         radius = radius,
+                        is24HourFormat = is24HourFormat,
                         isPending = instance == null,
                         title = event.title,
                         repeat = event.recurrence,
@@ -181,7 +184,6 @@ fun LazyListScope.eventHomeItems(
         }
     }
 }
-
 
 @Composable
 fun EmptyEvents() {
@@ -229,6 +231,7 @@ fun IconRadioButton(
 @Composable
 fun EventCard(
     radius: Int,
+    is24HourFormat: Boolean,
     isPending: Boolean,
     title: String,
     repeat: RecurrenceRule,
@@ -243,54 +246,8 @@ fun EventCard(
         if (isPending) MaterialTheme.colorScheme.onSurface
         else MaterialTheme.colorScheme.onPrimaryContainer
 
-    val localDate = Instant.ofEpochMilli(startDateTime)
-        .atZone(ZoneId.systemDefault())
-        .toLocalDate()
-
-    val time = DateTimeFormatter.ofPattern("hh:mm a")
-        .format(Instant.ofEpochMilli(startDateTime).atZone(ZoneId.systemDefault()))
-
-    // Recurrence text
     val context = LocalContext.current
-
-// Recurrence text
-    val recurrenceText = when (repeat) {
-        is RecurrenceRule.Once -> {
-            context.getString(
-                R.string.recurrence_once,
-                localDate.format(DateTimeFormatter.ofPattern("MMM dd, yyyy"))
-            )
-        }
-
-        is RecurrenceRule.Custom -> {
-            if (repeat.everyXDays == 1) {
-                context.getString(R.string.recurrence_daily)
-            } else {
-                context.getString(R.string.recurrence_every_x_days, repeat.everyXDays)
-            }
-        }
-
-        is RecurrenceRule.Weekly -> {
-            val days = listOf("M", "T", "W", "T", "F", "S", "S") // (you can also localize these)
-            if (repeat.daysOfWeek.size == 7) {
-                context.getString(R.string.recurrence_daily)
-            } else {
-                val daysText = repeat.daysOfWeek.sorted().joinToString(", ") { days[it] }
-                context.getString(R.string.recurrence_weekly_on, daysText)
-            }
-        }
-
-        is RecurrenceRule.Monthly -> {
-            context.getString(R.string.recurrence_monthly_on, localDate.dayOfMonth)
-        }
-
-        is RecurrenceRule.Yearly -> {
-            context.getString(
-                R.string.recurrence_yearly_on,
-                localDate.format(DateTimeFormatter.ofPattern("MMM dd"))
-            )
-        }
-    }
+    val time = startDateTime.toFormattedTime(is24HourFormat)
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -325,11 +282,55 @@ fun EventCard(
                     )
                     Spacer(Modifier.width(6.dp))
                     Text(
-                        "$recurrenceText at $time",
+                        "${getRecurrenceText(context, repeat, startDateTime)} at $time",
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
             }
+        }
+    }
+}
+
+fun getRecurrenceText(context: Context, repeat: RecurrenceRule, startDateTime: Long): String {
+    val localDate = Instant.ofEpochMilli(startDateTime)
+        .atZone(ZoneId.systemDefault())
+        .toLocalDate()
+
+    return when (repeat) {
+        is RecurrenceRule.Once -> {
+            context.getString(
+                R.string.recurrence_once,
+                localDate.format(DateTimeFormatter.ofPattern("MMM dd, yyyy"))
+            )
+        }
+
+        is RecurrenceRule.Custom -> {
+            if (repeat.everyXDays == 1) {
+                context.getString(R.string.recurrence_daily)
+            } else {
+                context.getString(R.string.recurrence_every_x_days, repeat.everyXDays)
+            }
+        }
+
+        is RecurrenceRule.Weekly -> {
+            val days = listOf("M", "T", "W", "T", "F", "S", "S")
+            if (repeat.daysOfWeek.size == 7) {
+                context.getString(R.string.recurrence_daily)
+            } else {
+                val daysText = repeat.daysOfWeek.sorted().joinToString(", ") { days[it] }
+                context.getString(R.string.recurrence_weekly_on, daysText)
+            }
+        }
+
+        is RecurrenceRule.Monthly -> {
+            context.getString(R.string.recurrence_monthly_on, localDate.dayOfMonth)
+        }
+
+        is RecurrenceRule.Yearly -> {
+            context.getString(
+                R.string.recurrence_yearly_on,
+                localDate.format(DateTimeFormatter.ofPattern("MMM dd"))
+            )
         }
     }
 }
@@ -344,19 +345,4 @@ fun Long.toFormattedDate(): String {
     val date = Date(this)
     val format = SimpleDateFormat("dd MMMM, yyyy", Locale.getDefault())
     return format.format(date)
-}
-
-fun Long.toFormattedDateTime(context: Context, is24Hour: Boolean = false): String {
-    val timePattern = if (is24Hour) "HH:mm" else "hh:mm a"
-    val datePattern = "dd MMM, yyyy"
-    val atString = context.getString(R.string.at)
-
-    val dateFormatter = SimpleDateFormat(datePattern, Locale.getDefault())
-    val timeFormatter = SimpleDateFormat(timePattern, Locale.getDefault())
-
-    val datePart = dateFormatter.format(Date(this))
-    val timePart = timeFormatter.format(Date(this))
-
-    // we don't put them together before in case atString contains characters SimpleDateFormat could detect
-    return "$datePart $atString $timePart"
 }

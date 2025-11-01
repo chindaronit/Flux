@@ -1,9 +1,15 @@
 package com.flux.ui.screens.settings
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.widget.Toast
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.ChatBubble
+import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material.icons.rounded.Feedback
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
@@ -44,6 +50,43 @@ fun Contact(navController: NavController, radius: Int) {
                         val intent = Intent(
                             Intent.ACTION_VIEW,
                             "https://github.com/chindaronit/Flux/issues".toUri()
+                        )
+                        context.startActivity(intent)
+                    }
+                )
+                Spacer(Modifier.height(16.dp))
+            }
+
+            item {
+                SettingOption(
+                    title = "Email",
+                    description = "Email us for feedback/support.",
+                    icon = Icons.Rounded.Email,
+                    radius = shapeManager(radius = radius, isFirst = true),
+                    actionType = ActionType.LINK,
+                    linkClicked = {
+                        val intent = Intent(Intent.ACTION_SENDTO).apply {
+                            data = "mailto:ronitchinda100@gmail.com".toUri()
+                        }
+                        try {
+                            context.startActivity(intent)
+                        } catch (_: ActivityNotFoundException) {
+                            Toast.makeText(context, "No email app found", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                )
+            }
+            item {
+                SettingOption(
+                    title = "Discord",
+                    description = "Join discord channel",
+                    icon = Icons.Rounded.ChatBubble,
+                    radius = shapeManager(radius = radius, isLast = true),
+                    actionType = ActionType.LINK,
+                    linkClicked = {
+                        val intent = Intent(
+                            Intent.ACTION_VIEW,
+                            "https://discord.gg/aA9zqMEC".toUri()
                         )
                         context.startActivity(intent)
                     }

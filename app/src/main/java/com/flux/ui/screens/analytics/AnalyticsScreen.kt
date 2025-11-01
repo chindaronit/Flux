@@ -50,11 +50,13 @@ import com.flux.R
 import com.flux.data.model.EventInstanceModel
 import com.flux.data.model.EventModel
 import com.flux.data.model.HabitInstanceModel
+import com.flux.data.model.HabitModel
 import com.flux.data.model.JournalModel
 import com.flux.data.model.WorkspaceModel
 import com.flux.data.model.occursOn
 import com.flux.ui.components.ActionType
 import com.flux.ui.components.SettingOption
+import com.flux.ui.components.WeeklyHabitProgressChart
 import com.flux.ui.components.shapeManager
 import com.flux.ui.theme.completed
 import com.flux.ui.theme.failed
@@ -73,6 +75,7 @@ fun LazyListScope.analyticsItems(
     totalHabits: Int,
     totalNotes: Int,
     journalEntries: List<JournalModel>,
+    allHabits: List<HabitModel>,
     allEvents: List<EventModel>,
     allEventInstances: List<EventInstanceModel>
 ) {
@@ -107,7 +110,21 @@ fun LazyListScope.analyticsItems(
                 }
             }
             if (workspace.selectedSpaces.contains(6)){
-                item { HabitHeatMap(radius, allHabitInstances, totalHabits) }
+                item {
+                    HabitHeatMap(radius, allHabitInstances, totalHabits)
+                    Spacer(Modifier.height(8.dp))
+                }
+            }
+            if(workspace.selectedSpaces.contains(6)){
+                item {
+                    WeeklyHabitProgressChart(
+                        radius,
+                        habits = allHabits,
+                        habitInstances = allHabitInstances,
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
+                    Spacer(Modifier.height(8.dp))
+                }
             }
         }
     }
@@ -238,7 +255,7 @@ fun HabitHeatMap(radius: Int, allHabitInstances: List<HabitInstanceModel>, total
     Card(
         onClick = {},
         modifier = Modifier.fillMaxWidth(),
-        shape = shapeManager(radius = radius),
+        shape = shapeManager(radius = radius*2),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(4.dp)
         )

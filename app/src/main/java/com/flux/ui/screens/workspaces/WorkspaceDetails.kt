@@ -120,6 +120,7 @@ fun WorkspaceDetails(
     onSettingEvents: (SettingEvents) -> Unit,
 ) {
     val radius = settings.data.cornerRadius
+    val is24HourFormat = settings.data.is24HourFormat
     val workspaceId = workspace.workspaceId
     val context = LocalContext.current
     var query by remember { mutableStateOf("") }
@@ -313,6 +314,10 @@ fun WorkspaceDetails(
                         }
                         if (spacesList.find { it.id == selectedSpaceId.intValue }?.title == stringResource(R.string.Calendar)) {
                             CalendarToolBar(
+                                navController,
+                                workspaceId,
+                                context,
+                                selectedDate,
                                 settings.data.isCalendarMonthlyView,
                                 onClick = {
                                     onSettingEvents(
@@ -361,6 +366,7 @@ fun WorkspaceDetails(
                 calendarItems(
                     navController,
                     radius,
+                    is24HourFormat,
                     isDatedTaskLoading,
                     workspaceId,
                     selectedYearMonth,
@@ -382,6 +388,7 @@ fun WorkspaceDetails(
                     totalHabits = allHabits.size,
                     totalNotes = allNotes.size,
                     allEntries,
+                    allHabits,
                     allEvents,
                     allEventInstances
                 )
@@ -400,6 +407,7 @@ fun WorkspaceDetails(
                 eventHomeItems(
                     navController,
                     radius,
+                    is24HourFormat,
                     isAllEventsLoading,
                     allEvents,
                     allEventInstances,

@@ -15,3 +15,7 @@
 .externalNativeBuild
 .cxx
 local.properties
+/app/release/output-metadata.json
+/app/release/Flux.apk
+/app/release/baselineProfiles/1/app-release.dm
+/app/release/baselineProfiles/0/app-release.dm

@@ -339,12 +339,20 @@ fun AppNavHost(
                 })
             }
 
+            if (route.contains("{eventDate}")) {
+                arguments.add(navArgument("eventDate") {
+                    type = NavType.LongType
+                    nullable = false
+                })
+            }
+
             bottomSlideComposable(route, arguments) { entry ->
                 val workspaceId = entry.arguments?.getString("workspaceId") ?: ""
                 val eventId = entry.arguments?.getString("eventId") ?: ""
                 val instanceDate = entry.arguments?.getLong("instanceDate") ?: 0L
+                val eventDate = entry.arguments?.getLong("eventDate") ?: 0L
 
-                screen(navController, States(notesState, eventState, habitState, todoState, workspaceState, journalState, settings), ViewModels(notesViewModel, eventViewModel, todoViewModel, habitViewModel, workspaceViewModel, journalViewModel, settingsViewModel, backupViewModel), eventId, workspaceId, instanceDate)
+                screen(navController, States(notesState, eventState, habitState, todoState, workspaceState, journalState, settings), ViewModels(notesViewModel, eventViewModel, todoViewModel, habitViewModel, workspaceViewModel, journalViewModel, settingsViewModel, backupViewModel), eventId, workspaceId, instanceDate, eventDate)
             }
         }
 

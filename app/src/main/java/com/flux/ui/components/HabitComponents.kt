@@ -1,6 +1,6 @@
 package com.flux.ui.components
 
-import androidx.compose.foundation.Canvas
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -25,6 +25,8 @@ import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.EventAvailable
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.Pending
+import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -71,6 +73,15 @@ import java.time.YearMonth
 import java.time.ZoneId
 import java.time.format.TextStyle
 import java.util.Locale
+import kotlin.collections.filter
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.*
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun EmptyHabits() {
@@ -199,7 +210,9 @@ fun HabitPreviewCard(
             }
 
             Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp, vertical = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(2.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -231,6 +244,8 @@ fun HabitCalendarCard(
     habitInstances: List<HabitInstanceModel>,
     onHabitEvents: (HabitEvents) -> Unit
 ) {
+    val context = LocalContext.current
+
     val habitStartMonth =
         Instant.ofEpochMilli(startDateTime).atZone(ZoneId.systemDefault()).toLocalDate()
             .let { YearMonth.of(it.year, it.month) }
@@ -258,7 +273,7 @@ fun HabitCalendarCard(
         onClick = {},
         shape = shapeManager(radius = radius * 2),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
+            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)
         )
     ) {
         Column(Modifier.padding(16.dp)) {
@@ -326,13 +341,14 @@ fun HabitCalendarCard(
                 items(firstDayOfWeek) { Box(modifier = Modifier.size(32.dp)) }
 
                 items(dates) { date ->
+                    val today = LocalDate.now()
                     val epochDay = date.toEpochDay()
                     val instance = habitInstances.find { it.instanceDate == epochDay }
                     val isMarked = instance != null
 
                     val isBeforeStart = date.isBefore(habitStartDate)
+                    val isAfterToday = date.isAfter(today)
                     val isAllowedByRecurrence = isDateAllowedForHabit(recurrence, epochDay)
-                    val isClickable = !isBeforeStart && isAllowedByRecurrence
 
                     val backgroundColor = when {
                         isMarked -> MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
@@ -348,6 +364,7 @@ fun HabitCalendarCard(
 
                     val dateAlpha = when {
                         isBeforeStart -> 0.2f
+                        isAfterToday -> 0.4f
                         !isAllowedByRecurrence -> 0.4f
                         else -> 1f
                     }
@@ -358,19 +375,47 @@ fun HabitCalendarCard(
                             .clip(RoundedCornerShape(8.dp))
                             .background(backgroundColor)
                             .alpha(dateAlpha)
-                            .clickable(enabled = isClickable) {
-                                if (isMarked) {
-                                    onHabitEvents(HabitEvents.MarkUndone(instance))
-                                } else {
-                                    onHabitEvents(
-                                        HabitEvents.MarkDone(
-                                            HabitInstanceModel(
-                                                habitId = habitId,
-                                                workspaceId = workspaceId,
-                                                instanceDate = epochDay
+                            .clickable {
+                                when {
+                                    isAfterToday -> {
+                                        Toast.makeText(
+                                            context,
+                                            "You can’t mark future dates!",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+
+                                    isBeforeStart -> {
+                                        Toast.makeText(
+                                            context,
+                                            "Your habit starts later!",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+
+                                    !isAllowedByRecurrence -> {
+                                        Toast.makeText(
+                                            context,
+                                            "This date isn’t part of your habit schedule.",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+
+                                    else -> {
+                                        if (isMarked) {
+                                            onHabitEvents(HabitEvents.MarkUndone(instance))
+                                        } else {
+                                            onHabitEvents(
+                                                HabitEvents.MarkDone(
+                                                    HabitInstanceModel(
+                                                        habitId = habitId,
+                                                        workspaceId = workspaceId,
+                                                        instanceDate = epochDay
+                                                    )
+                                                )
                                             )
-                                        )
-                                    )
+                                        }
+                                    }
                                 }
                             },
                         contentAlignment = Alignment.Center
@@ -388,17 +433,15 @@ fun HabitStartCard(startDateTime: Long, radius: Int) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         onClick = {},
-        shape = shapeManager(radius = radius * 2),
+        shape = shapeManager(radius = radius, isFirst = true),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(
-                2.dp
-            )
+            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)
         )
     ) {
         Row(
             Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(horizontal = 24.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -413,6 +456,86 @@ fun HabitStartCard(startDateTime: Long, radius: Int) {
                     modifier = Modifier.size(40.dp),
                     tint = MaterialTheme.colorScheme.onPrimary
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun WeeklyHabitAnalyticsCard(
+    radius: Int,
+    habitInstances: List<HabitInstanceModel>
+) {
+    val today = LocalDate.now()
+    val startOfWeek = today.with(DayOfWeek.MONDAY)
+    val endOfWeek = today.with(DayOfWeek.SUNDAY)
+
+    val thisWeekInstances = habitInstances.filter {
+        val date = LocalDate.ofEpochDay(it.instanceDate)
+        date in startOfWeek..endOfWeek
+    }
+    val completedCount = thisWeekInstances.size
+
+    val daysOfWeek = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+    val dayStatus = daysOfWeek.mapIndexed { index, _ ->
+        val date = startOfWeek.plusDays(index.toLong())
+        thisWeekInstances.any { it.instanceDate == date.toEpochDay() }
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = shapeManager(radius = radius * 2),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)
+        ),
+        onClick = {}
+    ) {
+        Column(
+            Modifier
+                .fillMaxSize()
+                .padding(12.dp)
+        ) {
+            Text(
+                text = "This Week",
+                style = MaterialTheme.typography.titleMedium,
+            )
+
+            Text(
+                text = stringResource(R.string.completed_habits, completedCount),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(bottom = 24.dp)
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                daysOfWeek.forEachIndexed { index, day ->
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Card(
+                            shape = RoundedCornerShape(50),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = if(dayStatus[index]) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
+                            )
+                        ) {
+                            Icon(
+                                imageVector = if (dayStatus[index]) Icons.Default.Verified else Icons.Default.Pending,
+                                contentDescription = null,
+                                modifier = Modifier.padding(4.dp)
+                            )
+                        }
+                        Text(
+                            text = day,
+                            style = MaterialTheme.typography.labelLarge,
+                        )
+                    }
+                }
             }
         }
     }
@@ -474,7 +597,7 @@ fun MonthlyHabitAnalyticsCard(
         modifier = Modifier.fillMaxWidth(),
         shape = shapeManager(radius = radius * 2),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
+            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)
         ),
         onClick = {}
     ) {
@@ -499,6 +622,145 @@ fun MonthlyHabitAnalyticsCard(
                 weekCounts = weekCounts,
                 weekLabels = weekRanges.map { "${it.first}-${it.last}" }
             )
+        }
+    }
+}
+
+@Composable
+fun WeeklyHabitProgressChart(
+    radius: Int,
+    habits: List<HabitModel>,
+    habitInstances: List<HabitInstanceModel>,
+    modifier: Modifier = Modifier
+) {
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val primaryAlpha = primaryColor.copy(alpha = 0.4f)
+
+    val today = LocalDate.now()
+    val startOfWeek = today.with(DayOfWeek.MONDAY)
+    val weekDays = (0..6).map { startOfWeek.plusDays(it.toLong()) }
+    val dayLabels = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+
+    // Calculate percentages correctly
+    val percentages = weekDays.map { day ->
+        // Map DayOfWeek to 0=Monday ... 6=Sunday
+        val dayOfWeekIndex = (day.dayOfWeek.value + 6) % 7
+        val scheduled = habits.count { habit ->
+            (habit.recurrence as? RecurrenceRule.Weekly)?.daysOfWeek?.contains(dayOfWeekIndex) == true
+        }
+        val done = habitInstances.count { LocalDate.ofEpochDay(it.instanceDate) == day }
+        if (scheduled > 0) (done.toFloat() / scheduled) * 100 else 0f
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = shapeManager(radius = radius * 2),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)
+        ),
+        onClick = {}
+    ) {
+        Column(modifier = modifier.padding(8.dp)) {
+            Text(
+                "Weekly Habit Completion",
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.primary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 24.dp, top = 8.dp)
+            )
+
+            Canvas(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(6.dp)
+                    .height(200.dp)
+            ) {
+                val leftPadding = 32.dp.toPx()
+                val bottomPadding = 32.dp.toPx()
+                val widthPerPoint = (size.width - leftPadding) / (weekDays.size - 1)
+                val height = size.height - bottomPadding
+
+                // Vertical percentage labels
+                for (i in 0..4) {
+                    val y = height - i * height / 4
+                    drawContext.canvas.nativeCanvas.apply {
+                        drawText(
+                            "${i * 25}%",
+                            leftPadding - 14.dp.toPx(),
+                            y,
+                            android.graphics.Paint().apply {
+                                color = primaryColor.toArgb()
+                                textSize = 12.sp.toPx()
+                                textAlign = android.graphics.Paint.Align.RIGHT
+                            }
+                        )
+                    }
+                }
+
+                // Line path
+                val linePath = Path().apply {
+                    percentages.forEachIndexed { index, percentage ->
+                        val x = leftPadding + index * widthPerPoint
+                        val y = height - (percentage / 100f * height)
+                        if (index == 0) moveTo(x, y) else lineTo(x, y)
+                    }
+                }
+
+                // Shadow under line
+                val shadowPath = Path().apply {
+                    addPath(linePath)
+                    lineTo(leftPadding + (weekDays.size - 1) * widthPerPoint, height)
+                    lineTo(leftPadding, height)
+                    close()
+                }
+
+                drawPath(
+                    path = shadowPath,
+                    brush = Brush.verticalGradient(
+                        colors = listOf(primaryAlpha, primaryColor.copy(alpha = 0f)),
+                        startY = 0f,
+                        endY = height
+                    )
+                )
+
+                // Draw line
+                drawPath(
+                    path = linePath,
+                    color = primaryColor,
+                    style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
+                )
+
+                // Draw dots
+                percentages.forEachIndexed { index, percentage ->
+                    val x = leftPadding + index * widthPerPoint
+                    val y = height - (percentage / 100f * height)
+                    drawCircle(
+                        color = primaryColor,
+                        radius = 6.dp.toPx(),
+                        center = Offset(x, y)
+                    )
+                }
+
+                // Draw day labels
+                dayLabels.forEachIndexed { index, day ->
+                    val x = leftPadding + index * widthPerPoint
+                    val y = height + 24.dp.toPx()
+                    drawContext.canvas.nativeCanvas.apply {
+                        drawText(
+                            day,
+                            x,
+                            y,
+                            android.graphics.Paint().apply {
+                                color = primaryColor.toArgb()
+                                textSize = 12.sp.toPx()
+                                textAlign = android.graphics.Paint.Align.CENTER
+                            }
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -612,15 +874,15 @@ fun HabitStreakCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         onClick = {},
-        shape = shapeManager(radius = radius * 2),
+        shape = shapeManager(radius = radius, isLast = true),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
+            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)
         )
     ) {
         Row(
             Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(horizontal = 24.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {

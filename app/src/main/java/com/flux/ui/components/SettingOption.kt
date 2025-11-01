@@ -154,7 +154,6 @@ fun SingleSettingOption(
     }
 }
 
-
 @Composable
 fun SettingOption(
     radius: RoundedCornerShape? = null,

@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Flux</string>
+
+    <!-- Authentication -->
+    <string name="Auth_with_Biometric">Аутентификация с помощью биометрии</string>
+    <string name="Auth_Error">Ошибка: аутентификация не удалась</string>
+    <string name="Biometric_Title">Биометрическая аутентификация</string>
+    <string name="Biometric_Subtitle">Используйте отпечаток пальца или лицо для аутентификации</string>
+    <string name="Biometric_Cancel">Отмена</string>
+
+    <!-- Common UI Elements -->
+    <string name="Pin">Закрепить</string>
+    <string name="Unpin">Открепить</string>
+    <string name="Pinned">Закреплено</string>
+    <string name="Dismiss">Отклонить</string>
+    <string name="Confirm">Подтвердить</string>
+    <string name="Cancel">Отмена</string>
+    <string name="Set">Установить</string>
+    <string name="Custom">Пользовательский</string>
+    <string name="Today">Сегодня</string>
+    <string name="New">Новый</string>
+    <string name="Others">Другие</string>
+    <string name="Title">Заголовок</string>
+    <string name="Description">Описание</string>
+    <string name="Amount">Сумма</string>
+    <string name="at">в</string>
+    <string name="on">на</string>
+
+    <!-- Dialog Messages -->
+    <string name="deleteDialogTitle">Вы уверены?</string>
+    <string name="deleteDialogText">Это нельзя отменить, все данные будут удалены навсегда.</string>
+    <string name="removeDialogTitle">Удалить пространство?</string>
+    <string name="removeDialogText">Это нельзя отменить, все данные этого пространства будут удалены.</string>
+
+    <!-- Permissions -->
+    <string name="Reminder_Permission">Пожалуйста, включите напоминания</string>
+    <string name="Notification_Permission">Пожалуйста, включите уведомления</string>
+
+    <!-- Settings -->
+    <string name="Settings">Настройки</string>
+
+    <!-- Settings - Customize -->
+    <string name="Customize">Настроить</string>
+    <string name="Customize_desc">Тема • Форма • Контраст</string>
+    <string name="System_theme">Системная тема</string>
+    <string name="System_theme_desc">Автоматически адаптируется к теме устройства</string>
+    <string name="Light_theme">Светлая тема</string>
+    <string name="Light_theme_desc">Переключиться на светлую тему</string>
+    <string name="Dark_theme">Тёмная тема</string>
+    <string name="Dark_theme_desc">Переключиться на тёмную тему</string>
+    <string name="Dynamic_theme">Динамическая тема</string>
+    <string name="Dynamic_theme_desc">Автоматически адаптируется к фону</string>
+    <string name="Amoled_theme">AMOLED-тема</string>
+    <string name="Amoled_theme_desc">Использовать чёрный цвет для фона</string>
+    <string name="Themes">Темы</string>
+    <string name="Shape">Форма • Вид</string>
+    <string name="Radius">Радиус</string>
+    <string name="Radius_desc">Изменить форму</string>
+    <string name="Select_radius">Выбрать радиус</string>
+    <string name="Contrast">Контраст</string>
+    <string name="Low">Низкий</string>
+    <string name="Medium">Средний</string>
+    <string name="High">Высокий</string>
+    <string name="Grid_View">Вид сетки</string>
+    <string name="Grid_View_Desc">Изменить вид заметок на сетку</string>
+    <string name="Monthly_View">Вид на месяц</string>
+    <string name="Monthly_View_Desc">Переключиться на календарь по месяцам</string>
+    <string name="Hour_Format_24">24-часовой формат</string>
+    <string name="Hour_Format_24_Desc">Использовать 24-часовой формат времени</string>
+    <string name="Compact_Mode">Компактный режим</string>
+    <string name="Compact_Mode_Desc">Показывать рабочее пространство в компактном режиме</string>
+    <string name="Extreme_Compact_Mode">Ультракомпактный режим</string>
+    <string name="Extreme_Compact_Mode_Desc">Уменьшить расстояние между рабочими пространствами</string>
+    <string name="Theme_Palette">Палитра тем</string>
+    <string name="Font">Шрифт</string>
+    <string name="Fonts">Шрифты</string>
+    <string name="Share_txt">Поделиться текстовым файлом</string>
+    <string name="Share_md">Поделиться Markdown файлом</string>
+    <string name="Error_Share_txt">Ошибка при отправке текстового файла</string>
+    <string name="Error_Share_md">Ошибка при отправке .md файла</string>
+    <string name="Export_As">Экспортировать как</string>
+    <string name="Plain_Text">Простой текст (.txt)</string>
+    <string name="Markdown">Markdown (.md)</string>
+    <string name="Change_Font">Сменить шрифт</string>
+
+    <!-- Settings - Privacy -->
+    <string name="Privacy">Конфиденциальность</string>
+    <string name="Privacy_desc">Защита экрана • Блокировка приложения</string>
+    <string name="Screen_Protection">Защита экрана</string>
+    <string name="Screen_Protection_Desc">Отключить скриншоты</string>
+    <string name="App_Lock">Блокировка приложения</string>
+    <string name="App_Lock_desc">Аутентификация по отпечатку пальца</string>
+    <string name="Encrypt">Шифровать</string>
+    <string name="Encrypt_Desc">Шифровать данные при резервном копировании</string>
+
+    <!-- Settings - Languages -->
+    <string name="Languages">Языки</string>
+    <string name="Languages_desc">Сменить язык</string>
+    <string name="System_language">Системный язык</string>
+    <string name="System_language_desc">Автоматически адаптируется к языку устройства</string>
+
+    <!-- Settings - Backup -->
+    <string name="Backup">Резервное копирование</string>
+    <string name="Backup_Description">Сохранить данные в файл</string>
+    <string name="Restore">Восстановить</string>
+    <string name="Restore_Description">Восстановить данные из резервной копии</string>
+
+    <!-- Settings - About -->
+    <string name="About">О приложении</string>
+    <string name="About_desc">Версия • Разработчики • Исходный код</string>
+    <string name="Build_type">Тип сборки</string>
+    <string name="Build_version">Версия сборки</string>
+    <string name="Developer">Разработчик</string>
+    <string name="Developer_Name">Ronit Chinda</string>
+    <string name="Source_Code">Исходный код</string>
+    <string name="Github_Repository">Репозиторий GitHub</string>
+
+    <!-- Settings - Contact & Support -->
+    <string name="Contact">Контакт</string>
+    <string name="Contact_desc">Запрос функции • Сообщение об ошибке</string>
+    <string name="Contact_desc2">Сообщить о проблеме на GitHub</string>
+    <string name="Support">Поддержка</string>
+    <string name="Support_desc">Покажи свою поддержку</string>
+
+    <!-- Workspace -->
+    <string name="Home">Главная</string>
+    <string name="Edit_Workspace">Редактировать рабочее пространство</string>
+    <string name="Add_Workspace">Добавить рабочее пространство</string>
+    <string name="Search_Workspaces">Поиск рабочих пространств…</string>
+    <string name="Delete_Workspace">Удалить рабочее пространство</string>
+    <string name="Edit_Details">Редактировать детали</string>
+    <string name="Change_Cover">Изменить обложку</string>
+    <string name="Change_Icon">Изменить иконку</string>
+    <string name="Lock_Workspace">Заблокировать рабочее пространство</string>
+    <string name="Unlock_Workspace">Разблокировать рабочее пространство</string>
+    <string name="Add_Spaces">Добавить пространства</string>
+    <string name="Add_Space">Добавить пространство</string>
+    <string name="Empty_Workspace">Рабочее пространство не найдено</string>
+    <string name="Wrong_Passkey">Неверный пароль</string>
+    <string name="enterPasskey">Введите пароль</string>
+
+    <!-- Space Management -->
+    <string name="Current">Текущее</string>
+    <string name="Available_Spaces">Доступные пространства</string>
+
+    <!-- Notes -->
+    <string name="Notes">Заметки</string>
+    <string name="Search_Notes">Поиск заметок…</string>
+    <string name="Delete_Note">Удалить заметку</string>
+    <string name="Empty_Notes">Заметки не найдены</string>
+    <string name="Last_Edited">Последнее редактирование</string>
+    <string name="Word_Count">Количество слов</string>
+    <string name="Character_Count">Количество символов</string>
+    <string name="Labels">Метки</string>
+    <string name="Empty_Labels">Метки не найдены</string>
+    <string name="Edit_Labels">Редактировать метки</string>
+    <string name="Add_Label">Добавить новую метку</string>
+    <string name="Edit_Label">Редактировать метку</string>
+    <string name="Select_Label">Выбрать метку</string>
+    <string name="Export_Note">Экспортировать заметку</string>
+    <string name="import_success">Импорт успешно выполнен</string>
+    <string name="import_failed">Ошибка при импорте заметки</string>
+
+    <!-- To-Do -->
+    <string name="To_Do">Задачи</string>
+    <string name="Empty_Lists">Списки не найдены</string>
+    <string name="Edit_list">Редактировать список</string>
+    <string name="Add_Item">Добавить новый элемент</string>
+    <string name="more">…ещё</string>
+
+    <!-- Habits -->
+    <string name="Habits">Привычки</string>
+    <string name="Empty_Habits">Привычки не найдены</string>
+    <string name="Started">Начато</string>
+    <string name="Current_Streak">Текущая серия: </string>
+    <string name="Best_Streak">Лучшее: </string>
+    <string name="Add_Habit">Добавить привычку</string>
+    <string name="Edit_Habit">Редактировать привычку</string>
+    <string name="completed_habits">Выполнено %1$d раз</string>
+    <string name="monday_short">Пн</string>
+    <string name="tuesday_short">Вт</string>
+    <string name="wednesday_short">Ср</string>
+    <string name="thursday_short">Чт</string>
+    <string name="friday_short">Пт</string>
+    <string name="saturday_short">Сб</string>
+    <string name="sunday_short">Вс</string>
+
+    <!-- Events -->
+    <string name="Events">События</string>
+    <string name="Empty_Events">События не найдены</string>
+    <string name="Edit_Event">Редактировать событие</string>
+    <string name="All_Day">Весь день</string>
+    <string name="Repeat_Task">Повторяющаяся задача</string>
+    <string name="Repeat">Повтор</string>
+    <string name="Once">Один раз</string>
+    <string name="Weekly">Еженедельно</string>
+    <string name="Monthly">Ежемесячно</string>
+    <string name="Yearly">Ежегодно</string>
+    <string name="Status_Completed">Завершено</string>
+    <string name="Status_Pending">В ожидании</string>
+    <string name="Mark_As_Completed">Отметить как завершённое</string>
+    <string name="Mark_As_Uncompleted">Отметить как незавершённое</string>
+    <string name="recurrence_once">Один раз %1$s</string>
+    <string name="recurrence_daily">Ежедневно</string>
+    <string name="recurrence_every_x_days">Каждые %1$d дней</string>
+    <string name="recurrence_weekly_on">Еженедельно по %1$s</string>
+    <string name="recurrence_monthly_on">Ежемесячно, в день %1$d</string>
+    <string name="recurrence_yearly_on">Ежегодно %1$s</string>
+    <string name="recurrence_at_time">%1$s в %2$s</string>
+
+    <!-- Event Notifications -->
+    <string name="On_Time">Во время события</string>
+    <string name="five_minutes_before">За 5 минут до</string>
+    <string name="ten_minutes_before">За 10 минут до</string>
+    <string name="fifteen_minutes_before">За 15 минут до</string>
+    <string name="thirty_minutes_before">За 30 минут до</string>
+    <string name="one_hour_before">За 1 час до</string>
+    <string name="Custom_Notification">Пользовательское уведомление</string>
+    <string name="Add_Notification">Добавить уведомление</string>
+    <string name="Select_Time">Выбрать время</string>
+
+    <!-- Time Units -->
+    <string name="day">день</string>
+    <string name="days">дни</string>
+    <string name="hour">час</string>
+    <string name="hours">часы</string>
+    <string name="minute">минута</string>
+    <string name="minutes">минуты</string>
+    <string name="before">до</string>
+
+    <!-- Calendar -->
+    <string name="Calendar">Календарь</string>
+
+    <!-- Journal -->
+    <string name="Journal">Журнал</string>
+    <string name="Write_here">Пишите здесь…</string>
+    <string name="Empty_Journal">Записи не найдены</string>
+    <string name="Today_Entry">Запись за сегодня</string>
+
+    <!-- Analytics -->
+    <string name="Analytics">Аналитика</string>
+    <string name="Empty_Analytics">Добавьте пространства, чтобы видеть аналитику здесь</string>
+    <string name="HeatMap">Карта привычек</string>
+    <string name="Completed_Today">Завершено сегодня</string>
+    <string name="This_Week">На этой неделе</string>
+    <string name="This_Month">В этом месяце</string>
+    <string name="Upcoming">Предстоящие</string>
+    <string name="Failed">Провалено</string>
+    <string name="Completed">Завершено</string>
+    <string name="journals_written">%1$d записей в журнале</string>
+    <string name="best_streak">Лучшая серия: %1$d дней</string>
+    <string name="completion_percentage">%1$d%% завершения</string>
+
+    <!-- Error Messages -->
+    <string name="Error_Alarm_Permission_Settings">Не удалось открыть настройки разрешений для будильника</string>
+    <string name="Error_Schedule_Alarm_Failed">Ошибка: не удалось запланировать будильник</string>
+    <string name="Error_Cancel_Alarm_Failed">Ошибка: не удалось отменить будильник</string>
+
+    <!-- Content Descriptions (Accessibility) -->
+    <string name="Add_Spaces_Content_Desc">Добавить пространства</string>
+    <string name="Space_Content_Desc">пространство</string>
+    <string name="Edit_Space_Content_Desc">Редактировать пространство</string>
+
+</resources>

@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Flux</string>
+
+    <!-- Authentication -->
+    <string name="Auth_with_Biometric">Autenticar com biometria</string>
+    <string name="Auth_Error">Erro: falha na autenticação</string>
+    <string name="Biometric_Title">Autenticação biométrica</string>
+    <string name="Biometric_Subtitle">Use sua digital ou rosto para autenticar</string>
+    <string name="Biometric_Cancel">Cancelar</string>
+
+    <!-- Common UI Elements -->
+    <string name="Pin">Fixar</string>
+    <string name="Unpin">Desafixar</string>
+    <string name="Pinned">Fixado</string>
+    <string name="Dismiss">Fechar</string>
+    <string name="Confirm">Confirmar</string>
+    <string name="Cancel">Cancelar</string>
+    <string name="Set">Definir</string>
+    <string name="Custom">Personalizado</string>
+    <string name="Today">Hoje</string>
+    <string name="New">Novo</string>
+    <string name="Others">Outros</string>
+    <string name="Title">Título</string>
+    <string name="Description">Descrição</string>
+    <string name="Amount">Valor</string>
+    <string name="at">às</string>
+    <string name="on">em</string>
+
+    <!-- Dialog Messages -->
+    <string name="deleteDialogTitle">Tem certeza?</string>
+    <string name="deleteDialogText">Isto não pode ser desfeito. Todos os dados serão excluídos permanentemente.</string>
+    <string name="removeDialogTitle">Remover espaço?</string>
+    <string name="removeDialogText">Isto não pode ser desfeito. Todos os dados deste espaço serão excluídos.</string>
+
+    <!-- Permissions -->
+    <string name="Reminder_Permission">Por favor, ative os lembretes</string>
+    <string name="Notification_Permission">Por favor, ative as notificações</string>
+
+    <!-- Settings -->
+    <string name="Settings">Configurações</string>
+
+    <!-- Settings - Customize -->
+    <string name="Customize">Personalizar</string>
+    <string name="Customize_desc">Tema • Forma • Contraste</string>
+    <string name="System_theme">Tema do sistema</string>
+    <string name="System_theme_desc">Adapta-se automaticamente ao tema do dispositivo</string>
+    <string name="Light_theme">Tema claro</string>
+    <string name="Light_theme_desc">Mudar para o tema claro</string>
+    <string name="Dark_theme">Tema escuro</string>
+    <string name="Dark_theme_desc">Mudar para o tema escuro</string>
+    <string name="Dynamic_theme">Tema dinâmico</string>
+    <string name="Dynamic_theme_desc">Adapta-se automaticamente ao plano de fundo</string>
+    <string name="Amoled_theme">Tema AMOLED</string>
+    <string name="Amoled_theme_desc">Usar preto como plano de fundo</string>
+    <string name="Themes">Temas</string>
+    <string name="Shape">Forma • Visualização</string>
+    <string name="Radius">Raio</string>
+    <string name="Radius_desc">Alterar forma</string>
+    <string name="Select_radius">Selecionar raio</string>
+    <string name="Contrast">Contraste</string>
+    <string name="Low">Baixo</string>
+    <string name="Medium">Médio</string>
+    <string name="High">Alto</string>
+    <string name="Grid_View">Visualização em grade</string>
+    <string name="Grid_View_Desc">Alterar a visualização das anotações para grade</string>
+    <string name="Monthly_View">Visualização mensal</string>
+    <string name="Monthly_View_Desc">Alterar para visualização mensal do calendário</string>
+    <string name="Hour_Format_24">Formato de 24 horas</string>
+    <string name="Hour_Format_24_Desc">Usar o formato de hora de 24 horas</string>
+    <string name="Compact_Mode">Modo compacto</string>
+    <string name="Compact_Mode_Desc">Mostrar área de trabalho em modo compacto</string>
+    <string name="Extreme_Compact_Mode">Modo supercompacto</string>
+    <string name="Extreme_Compact_Mode_Desc">Reduz ainda mais o espaçamento entre áreas de trabalho</string>
+    <string name="Theme_Palette">Paleta de temas</string>
+    <string name="Font">Fonte</string>
+    <string name="Fonts">Fonte</string>
+    <string name="Share_txt">Compartilhar arquivo de texto</string>
+    <string name="Share_md">Compartilhar arquivo Markdown</string>
+    <string name="Error_Share_txt">Falha ao compartilhar o arquivo de texto</string>
+    <string name="Error_Share_md">Falha ao compartilhar o arquivo .md</string>
+    <string name="Export_As">Exportar como</string>
+    <string name="Plain_Text">Texto simples (.txt)</string>
+    <string name="Markdown">Markdown (.md)</string>
+    <string name="Change_Font">Alterar fonte</string>
+
+    <!-- Settings - Privacy -->
+    <string name="Privacy">Privacidade</string>
+    <string name="Privacy_desc">Proteção de tela • Bloqueio de app</string>
+    <string name="Screen_Protection">Proteção de tela</string>
+    <string name="Screen_Protection_Desc">Desativar capturas de tela</string>
+    <string name="App_Lock">Bloqueio de app</string>
+    <string name="App_Lock_desc">Autenticação por impressão digital</string>
+    <string name="Encrypt">Criptografar</string>
+    <string name="Encrypt_Desc">Criptografar seus dados no backup</string>
+
+    <!-- Settings - Languages -->
+    <string name="Languages">Idiomas</string>
+    <string name="Languages_desc">Alterar idioma</string>
+    <string name="System_language">Idioma do sistema</string>
+    <string name="System_language_desc">Adapta-se automaticamente ao idioma do dispositivo</string>
+
+    <!-- Settings - Backup -->
+    <string name="Backup">Backup</string>
+    <string name="Backup_Description">Fazer backup dos seus dados em um arquivo</string>
+    <string name="Restore">Restaurar</string>
+    <string name="Restore_Description">Restaurar seus dados a partir de um arquivo de backup</string>
+
+    <!-- Settings - About -->
+    <string name="About">Sobre</string>
+    <string name="About_desc">Versão • Desenvolvedores • Código-fonte</string>
+    <string name="Build_type">Tipo de compilação</string>
+    <string name="Build_version">Versão da compilação</string>
+    <string name="Developer">Desenvolvedor</string>
+    <string name="Developer_Name">Ronit Chinda</string>
+    <string name="Source_Code">Código-fonte</string>
+    <string name="Github_Repository">Repositório no GitHub</string>
+
+    <!-- Settings - Contact & Support -->
+    <string name="Contact">Contato</string>
+    <string name="Contact_desc">Solicitação de recurso • Relatar erro</string>
+    <string name="Contact_desc2">Registrar problema no GitHub</string>
+    <string name="Support">Apoiar</string>
+    <string name="Support_desc">Mostre seu apoio</string>
+
+    <!-- Workspace -->
+    <string name="Home">Início</string>
+    <string name="Edit_Workspace">Editar área de trabalho</string>
+    <string name="Add_Workspace">Adicionar área de trabalho</string>
+    <string name="Search_Workspaces">Pesquisar áreas de trabalho…</string>
+    <string name="Delete_Workspace">Excluir área de trabalho</string>
+    <string name="Edit_Details">Editar detalhes</string>
+    <string name="Change_Cover">Alterar capa</string>
+    <string name="Change_Icon">Alterar ícone</string>
+    <string name="Lock_Workspace">Bloquear área de trabalho</string>
+    <string name="Unlock_Workspace">Desbloquear área de trabalho</string>
+    <string name="Add_Spaces">Adicionar espaços</string>
+    <string name="Add_Space">Adicionar espaço</string>
+    <string name="Empty_Workspace">Nenhuma área de trabalho encontrada</string>
+    <string name="Wrong_Passkey">Chave incorreta</string>
+    <string name="enterPasskey">Digite a chave de acesso</string>
+
+    <!-- Space Management -->
+    <string name="Current">Atual</string>
+    <string name="Available_Spaces">Espaços disponíveis</string>
+
+    <!-- Notes -->
+    <string name="Notes">Notas</string>
+    <string name="Search_Notes">Pesquisar notas…</string>
+    <string name="Delete_Note">Excluir nota</string>
+    <string name="Empty_Notes">Nenhuma nota encontrada</string>
+    <string name="Last_Edited">Última edição</string>
+    <string name="Word_Count">Contagem de palavras</string>
+    <string name="Character_Count">Contagem de caracteres</string>
+    <string name="Labels">Etiquetas</string>
+    <string name="Empty_Labels">Nenhuma etiqueta encontrada</string>
+    <string name="Edit_Labels">Editar etiquetas</string>
+    <string name="Add_Label">Adicionar nova etiqueta</string>
+    <string name="Edit_Label">Editar etiqueta</string>
+    <string name="Select_Label">Selecionar etiqueta</string>
+    <string name="Export_Note">Exportar nota</string>
+    <string name="import_success">Importado com sucesso</string>
+    <string name="import_failed">Falha ao importar nota</string>
+
+    <!-- To-Do -->
+    <string name="To_Do">Tarefas</string>
+    <string name="Empty_Lists">Nenhuma lista encontrada</string>
+    <string name="Edit_list">Editar lista</string>
+    <string name="Add_Item">Adicionar novo item</string>
+    <string name="more">…mais</string>
+
+    <!-- Habits -->
+    <string name="Habits">Hábitos</string>
+    <string name="Empty_Habits">Nenhum hábito encontrado</string>
+    <string name="Started">Iniciado em</string>
+    <string name="Current_Streak">Sequência atual: </string>
+    <string name="Best_Streak">Melhor sequência: </string>
+    <string name="Add_Habit">Adicionar hábito</string>
+    <string name="Edit_Habit">Editar hábito</string>
+    <string name="completed_habits">Concluído %1$d vezes</string>
+    <string name="monday_short">Seg</string>
+    <string name="tuesday_short">Ter</string>
+    <string name="wednesday_short">Qua</string>
+    <string name="thursday_short">Qui</string>
+    <string name="friday_short">Sex</string>
+    <string name="saturday_short">Sáb</string>
+    <string name="sunday_short">Dom</string>
+
+    <!-- Events -->
+    <string name="Events">Eventos</string>
+    <string name="Empty_Events">Nenhum evento encontrado</string>
+    <string name="Edit_Event">Editar evento</string>
+    <string name="All_Day">Dia inteiro</string>
+    <string name="Repeat_Task">Repetir tarefa</string>
+    <string name="Repeat">Repetir</string>
+    <string name="Once">Uma vez</string>
+    <string name="Weekly">Semanalmente</string>
+    <string name="Monthly">Mensalmente</string>
+    <string name="Yearly">Anualmente</string>
+    <string name="Status_Completed">Concluído</string>
+    <string name="Status_Pending">Pendente</string>
+    <string name="Mark_As_Completed">Marcar como concluído</string>
+    <string name="Mark_As_Uncompleted">Marcar como não concluído</string>
+    <string name="recurrence_once">Uma vez em %1$s</string>
+    <string name="recurrence_daily">Diariamente</string>
+    <string name="recurrence_every_x_days">A cada %1$d dia(s)</string>
+    <string name="recurrence_weekly_on">Semanalmente em %1$s</string>
+    <string name="recurrence_monthly_on">Mensalmente no dia %1$d</string>
+    <string name="recurrence_yearly_on">Anualmente em %1$s</string>
+    <string name="recurrence_at_time">%1$s às %2$s</string>
+
+    <!-- Event Notifications -->
+    <string name="On_Time">No horário do evento</string>
+    <string name="five_minutes_before">5 minutos antes</string>
+    <string name="ten_minutes_before">10 minutos antes</string>
+    <string name="fifteen_minutes_before">15 minutos antes</string>
+    <string name="thirty_minutes_before">30 minutos antes</string>
+    <string name="one_hour_before">1 hora antes</string>
+    <string name="Custom_Notification">Notificação personalizada</string>
+    <string name="Add_Notification">Adicionar notificação</string>
+    <string name="Select_Time">Selecionar horário</string>
+
+    <!-- Time Units -->
+    <string name="day">dia</string>
+    <string name="days">dias</string>
+    <string name="hour">hora</string>
+    <string name="hours">horas</string>
+    <string name="minute">minuto</string>
+    <string name="minutes">minutos</string>
+    <string name="before">antes</string>
+
+    <!-- Calendar -->
+    <string name="Calendar">Calendário</string>
+
+    <!-- Journal -->
+    <string name="Journal">Diário</string>
+    <string name="Write_here">Escreva aqui…</string>
+    <string name="Empty_Journal">Nenhuma entrada encontrada</string>
+    <string name="Today_Entry">Entrada de hoje</string>
+
+    <!-- Analytics -->
+    <string name="Analytics">Análises</string>
+    <string name="Empty_Analytics">Adicione espaços para ver as análises aqui</string>
+    <string name="HeatMap">Mapa de calor de hábitos</string>
+    <string name="Completed_Today">Concluído hoje</string>
+    <string name="This_Week">Esta semana</string>
+    <string name="This_Month">Este mês</string>
+    <string name="Upcoming">Próximos</string>
+    <string name="Failed">Falhou</string>
+    <string name="Completed">Concluído</string>
+    <string name="journals_written">%1$d diários escritos</string>
+    <string name="best_streak">Melhor sequência: %1$d dias</string>
+    <string name="completion_percentage">%1$d%% de conclusão</string>
+
+    <!-- Error Messages -->
+    <string name="Error_Alarm_Permission_Settings">Não foi possível abrir as configurações de permissão de alarme</string>
+    <string name="Error_Schedule_Alarm_Failed">Erro: falha ao agendar o alarme</string>
+    <string name="Error_Cancel_Alarm_Failed">Erro: falha ao cancelar o alarme</string>
+
+    <!-- Content Descriptions (Accessibility) -->
+    <string name="Add_Spaces_Content_Desc">Adicionar espaços</string>
+    <string name="Space_Content_Desc">espaço</string>
+    <string name="Edit_Space_Content_Desc">Editar espaço</string>
+
+</resources>

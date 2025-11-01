@@ -50,6 +50,9 @@ import com.flux.other.isNotificationPermissionGranted
 import com.flux.other.openAppNotificationSettings
 import com.flux.other.requestExactAlarmPermission
 import java.time.LocalDate
+import java.time.LocalTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
 
 @Composable
 fun SpacesToolBar(
@@ -144,14 +147,43 @@ fun JournalToolBar(navController: NavController, workspaceId: String) {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU, Build.VERSION_CODES.S)
 @Composable
-fun CalendarToolBar(isMonthlyView: Boolean, onClick: (Boolean) -> Unit) {
-    IconButton({ onClick(!isMonthlyView) }) {
-        Icon(
-            if (isMonthlyView) Icons.Default.CalendarViewDay else Icons.Default.CalendarViewMonth,
-            null,
-            tint = MaterialTheme.colorScheme.primary
-        )
+fun CalendarToolBar(navController: NavController, workspaceId: String, context: Context, selectedDate: Long, isMonthlyView: Boolean, onClick: (Boolean) -> Unit) {
+    Row {
+        IconButton({ onClick(!isMonthlyView) }) {
+            Icon(
+                if (isMonthlyView) Icons.Default.CalendarViewDay else Icons.Default.CalendarViewMonth,
+                null,
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
+        IconButton({
+            if (!canScheduleReminder(context)) {
+                Toast.makeText(
+                    context,
+                    context.getText(R.string.Reminder_Permission),
+                    Toast.LENGTH_SHORT
+                ).show()
+                requestExactAlarmPermission(context)
+            }
+            if (!isNotificationPermissionGranted(context)) {
+                Toast.makeText(
+                    context,
+                    context.getText(R.string.Notification_Permission),
+                    Toast.LENGTH_SHORT
+                ).show()
+                openAppNotificationSettings(context)
+            }
+            if (canScheduleReminder(context) && isNotificationPermissionGranted(context)) {
+                val localDate = LocalDate.ofEpochDay(selectedDate)
+                val currentTime = LocalTime.now()
+                val zonedDateTime = ZonedDateTime.of(localDate, currentTime, ZoneId.systemDefault())
+                val selectedDateMillis = zonedDateTime.toInstant().toEpochMilli()
+
+                navController.navigate(NavRoutes.NewEvent.withArgs(workspaceId, "", selectedDateMillis))
+            }
+        }) { Icon(Icons.Default.Add, null, tint = MaterialTheme.colorScheme.primary) }
     }
 }
 
@@ -202,7 +234,7 @@ fun EventToolBar(context: Context, navController: NavController, workspaceId: St
             openAppNotificationSettings(context)
         }
         if (canScheduleReminder(context) && isNotificationPermissionGranted(context)) {
-            navController.navigate(NavRoutes.EventDetails.withArgs(workspaceId, "", LocalDate.now().toEpochDay()))
+            navController.navigate(NavRoutes.NewEvent.withArgs(workspaceId, "", System.currentTimeMillis()))
         }
     }) { Icon(Icons.Default.Add, null, tint = MaterialTheme.colorScheme.primary) }
 }

@@ -1,7 +1,9 @@
 package com.flux.ui.screens.habits
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -18,6 +20,7 @@ import com.flux.ui.components.HabitScaffold
 import com.flux.ui.components.HabitStartCard
 import com.flux.ui.components.HabitStreakCard
 import com.flux.ui.components.MonthlyHabitAnalyticsCard
+import com.flux.ui.components.WeeklyHabitAnalyticsCard
 import com.flux.ui.events.HabitEvents
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,11 +50,12 @@ fun HabitDetails(
                     .padding(innerPadding)
                     .padding(16.dp)
                     .fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 item { HabitStartCard(habit.startDateTime, radius) }
                 item { HabitStreakCard(habit, habitInstances, radius) }
                 item {
+                    Spacer(Modifier.height(8.dp))
                     HabitCalendarCard(
                         radius,
                         habit.id,
@@ -62,6 +66,7 @@ fun HabitDetails(
                         onHabitEvents
                     )
                 }
+                item { WeeklyHabitAnalyticsCard(radius, habitInstances) }
                 item { MonthlyHabitAnalyticsCard(radius, habitInstances) }
             }
         }

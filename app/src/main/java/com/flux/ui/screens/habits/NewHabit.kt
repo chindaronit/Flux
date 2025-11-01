@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -13,17 +14,21 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AlarmAdd
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Create
+import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Repeat
+import androidx.compose.material.icons.filled.Today
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBarDefaults
@@ -68,6 +73,7 @@ fun NewHabit(
     var newHabitDescription by remember { mutableStateOf(habit.description) }
     var newHabitTime by remember { mutableLongStateOf(habit.startDateTime) }
     var timePickerDialog by remember { mutableStateOf(false) }
+    var neverEnds by remember { mutableStateOf(true) }
     val focusRequesterDesc = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
     val weekdays = listOf(
@@ -166,6 +172,7 @@ fun NewHabit(
                 onValueChange = { newHabitDescription = it },
                 modifier = Modifier
                     .fillMaxWidth()
+                    .padding(bottom = 16.dp)
                     .focusRequester(focusRequesterDesc),
                 placeholder = { Text(stringResource(R.string.Description)) },
                 singleLine = true,
@@ -175,16 +182,45 @@ fun NewHabit(
                 keyboardActions = KeyboardActions(onDone = { keyboardController?.hide() })
             )
 
-            Row(Modifier.padding(top = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Icon(Icons.Default.Repeat, null)
-                Text(stringResource(R.string.Repeat_Task), style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold))
+            HorizontalDivider()
+
+            Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween){
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.AlarmAdd,
+                        contentDescription = "Alarm Icon"
+                    )
+                    Text(
+                        text = "Time",
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Normal)
+                    )
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = newHabitTime.toFormattedTime(settings.data.is24HourFormat),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    FilledTonalIconButton(
+                        onClick = { timePickerDialog = true }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Create,
+                            contentDescription = "Pick Time"
+                        )
+                    }
+                }
             }
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp)
-            ) {
+            HorizontalDivider()
+            Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Repeat, null)
+                Text("Repeat Habit", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Normal))
+            }
+
+            Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
                 weekdays.forEachIndexed { index, day ->
                     val isSelected = selectedDays.contains(index)
                     Card(
@@ -211,34 +247,38 @@ fun NewHabit(
                 }
             }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.AlarmAdd,
-                        contentDescription = "Alarm Icon"
-                    )
-
-                    Text(
-                        text = newHabitTime.toFormattedTime(settings.data.is24HourFormat),
-                        style = MaterialTheme.typography.titleLarge
-                    )
+            HorizontalDivider()
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically){
+                    Icon(Icons.Default.Flag, null)
+                    Text("Never Ends", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Normal))
                 }
 
-                FilledTonalIconButton(
-                    onClick = { timePickerDialog = true }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Create,
-                        contentDescription = "Pick Time"
-                    )
+                Switch(neverEnds, onCheckedChange = { neverEnds=!neverEnds })
+            }
+
+            if(!neverEnds){
+                Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween){
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Today, null, modifier = Modifier.size(24.dp))
+                        Text("Ends on", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Normal))
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = newHabitTime.toFormattedTime(settings.data.is24HourFormat),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        FilledTonalIconButton(
+                            onClick = { timePickerDialog = true }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Create,
+                                contentDescription = "Pick Time"
+                            )
+                        }
+                    }
                 }
+                HorizontalDivider()
             }
 
             if (timePickerDialog) {

@@ -12,6 +12,7 @@ import com.flux.data.model.NotesModel
 import com.flux.data.model.TodoModel
 import com.flux.ui.screens.auth.AuthScreen
 import com.flux.ui.screens.events.EventDetails
+import com.flux.ui.screens.events.NewEvent
 import com.flux.ui.screens.habits.HabitDetails
 import com.flux.ui.screens.habits.NewHabit
 import com.flux.ui.screens.journal.EditJournal
@@ -36,11 +37,12 @@ sealed class NavRoutes(val route: String) {
     data object WorkspaceHome : NavRoutes("workspace/details")
     data object EditLabels : NavRoutes("workspace/labels/edit") //Labels
     data object NoteDetails : NavRoutes("workspace/note/details") // Notes
-    data object HabitDetails : NavRoutes("workspace/habit/details") // Habits
-    data object NewHabit : NavRoutes("workspace/habit/new") // Events
-    data object EventDetails : NavRoutes("workspace/event/details")
+    data object HabitDetails : NavRoutes("workspace/habit/details") // Habit detail
+    data object NewHabit : NavRoutes("workspace/habit/new") // new habit
+    data object EventDetails : NavRoutes("workspace/event/details") //  event detail
     data object TodoDetail : NavRoutes("workspace/todo/details") // TodoList
     data object EditJournal : NavRoutes("workspace/journal/edit") // Journal
+    data object NewEvent : NavRoutes("workspace/event/edit") // new event
 
     // Settings
     data object Settings : NavRoutes("settings")
@@ -156,14 +158,22 @@ val SettingsScreens =
     )
 
 val EventScreens =
-    mapOf<String, @Composable (navController: NavController, states: States, viewModels: ViewModels, eventId: String, workspaceId: String, instanceDate: Long) -> Unit>(
-        NavRoutes.EventDetails.route + "/{workspaceId}" + "/{eventId}" + "/{instanceDate}" to { navController, states, viewModels, eventId, workspaceId, instanceDate ->
+    mapOf<String, @Composable (navController: NavController, states: States, viewModels: ViewModels, eventId: String, workspaceId: String, instanceDate: Long, eventDate: Long) -> Unit>(
+        NavRoutes.EventDetails.route + "/{workspaceId}" + "/{eventId}" + "/{instanceDate}" to { navController, states, viewModels, eventId, workspaceId, instanceDate, _ ->
             EventDetails(
                 navController,
                 workspaceId,
                 states.eventState.allEvent.find { it.id == eventId } ?: EventModel(workspaceId = workspaceId),
                 states.eventState.allEventInstances.find { it.eventId == eventId && it.instanceDate == instanceDate } == null,
                 instanceDate,
+                states.settings,
+                viewModels.eventViewModel::onEvent
+            )
+        },
+        NavRoutes.NewEvent.route + "/{workspaceId}" + "/{eventId}" + "/{eventDate}"  to { navController, states, viewModels, eventId, workspaceId, _, eventDate ->
+            NewEvent(
+                navController,
+                states.eventState.allEvent.find { it.id == eventId } ?: EventModel(workspaceId = workspaceId, startDateTime = eventDate),
                 states.settings,
                 viewModels.eventViewModel::onEvent
             )
