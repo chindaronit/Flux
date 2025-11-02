@@ -2,14 +2,18 @@ package com.flux.ui.screens.habits
 
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.flux.data.model.HabitInstanceModel
 import com.flux.data.model.HabitModel
 import com.flux.data.model.RecurrenceRule
+import com.flux.data.model.isLive
 import com.flux.navigation.Loader
 import com.flux.navigation.NavRoutes
 import com.flux.ui.components.EmptyHabits
@@ -28,12 +32,14 @@ fun LazyListScope.habitsHomeItems(
     settings: Settings,
     onHabitEvents: (HabitEvents) -> Unit
 ) {
+    val currentHabits = allHabits.filter { it.isLive() }
+    val pastHabits = allHabits.filter { !it.isLive() }
 
     when {
         isLoading -> item { Loader() }
         allHabits.isEmpty() -> item { EmptyHabits() }
         else -> {
-            items(allHabits) { habit ->
+            items(currentHabits) { habit ->
                 val habitInstances = allInstances.filter { it.habitId == habit.id }
                 HabitPreviewCard(
                     radius = radius,
@@ -58,6 +64,34 @@ fun LazyListScope.habitsHomeItems(
                             }
                         }
                     },
+                    onAnalyticsClicked = {
+                        navController.navigate(
+                            NavRoutes.HabitDetails.withArgs(
+                                workspaceId,
+                                habit.id
+                            )
+                        )
+                    }
+                )
+                Spacer(Modifier.height(8.dp))
+            }
+            if(pastHabits.isNotEmpty()) {
+                item {
+                    Text(
+                        "Past Habits",
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                }
+            }
+            items(pastHabits) { habit ->
+                val habitInstances = allInstances.filter { it.habitId == habit.id }
+                HabitPreviewCard(
+                    radius = radius,
+                    habit = habit,
+                    instances = habitInstances,
+                    settings = settings,
+                    onToggleDone = {},
                     onAnalyticsClicked = {
                         navController.navigate(
                             NavRoutes.HabitDetails.withArgs(

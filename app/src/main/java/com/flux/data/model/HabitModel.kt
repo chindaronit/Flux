@@ -5,6 +5,8 @@ import androidx.room.PrimaryKey
 import java.time.LocalDate
 import java.util.UUID
 import kotlinx.serialization.Serializable
+import java.time.Instant
+import java.time.ZoneId
 
 @Serializable
 @Entity
@@ -15,6 +17,7 @@ data class HabitModel(
     override val description: String = "",
     override val recurrence: RecurrenceRule = RecurrenceRule.Weekly(),
     override val startDateTime: Long = System.currentTimeMillis(),
+    override val endDateTime: Long = -1L,
     override val notificationOffset: Long = 0L,
     val workspaceId: String = "",
     val bestStreak: Long = 0L
@@ -29,3 +32,9 @@ data class HabitInstanceModel(
     val workspaceId: String = "",
     val instanceDate: Long = LocalDate.now().toEpochDay()
 )
+
+fun HabitModel.isLive(): Boolean {
+    if (endDateTime == -1L) return true
+    val habitEndDate = Instant.ofEpochMilli(endDateTime).atZone(ZoneId.systemDefault()).toLocalDate()
+    return !habitEndDate.isBefore(LocalDate.now())
+}

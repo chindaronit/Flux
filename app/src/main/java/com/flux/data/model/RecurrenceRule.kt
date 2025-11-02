@@ -29,5 +29,6 @@ interface ReminderItem {
     val recurrence: RecurrenceRule
     val type: ReminderType
     val startDateTime: Long
+    val endDateTime: Long
     val notificationOffset: Long
 }

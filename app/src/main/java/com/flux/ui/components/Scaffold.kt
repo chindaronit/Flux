@@ -74,13 +74,15 @@ fun HabitScaffold(
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.padding(end = 3.dp)
                         )
-                        Text(
-                            description,
-                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Light),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.padding(end = 3.dp)
-                        )
+                        if(description.isNotBlank()){
+                            Text(
+                                description,
+                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Light),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.padding(end = 3.dp)
+                            )
+                        }
                     }
                 },
                 navigationIcon = {

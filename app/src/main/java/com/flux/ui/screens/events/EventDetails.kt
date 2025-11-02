@@ -12,7 +12,9 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Pending
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.SportsScore
 import androidx.compose.material.icons.filled.Verified
+import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material.icons.outlined.Pending
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -104,6 +106,16 @@ fun EventDetails(
                             contentDescription = "Edit"
                         )
                     }
+                    IconButton({
+                        navController.popBackStack()
+                        onTaskEvents(TaskEvents.DeleteTask(event, context))
+                    }) {
+                        Icon(
+                            Icons.Outlined.DeleteOutline,
+                            null,
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
                 }
             )
         },
@@ -137,6 +149,20 @@ fun EventDetails(
                     )
                 }
             }
+            if(event.endDateTime!=-1L){
+                item{
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.SportsScore,
+                            contentDescription = null
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            "Ends On ${event.endDateTime.toFormattedDate()}",
+                        )
+                    }
+                }
+            }
 
             item {
                 Row(
@@ -147,6 +173,7 @@ fun EventDetails(
                     Text(getNotificationText(notificationOffset))
                 }
             }
+
             item {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,

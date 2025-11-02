@@ -14,10 +14,10 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AlarmAdd
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Create
-import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.Today
 import androidx.compose.material.icons.outlined.DeleteOutline
+import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -55,11 +55,14 @@ import androidx.navigation.NavController
 import com.flux.R
 import com.flux.data.model.HabitModel
 import com.flux.data.model.RecurrenceRule
+import com.flux.ui.components.DatePickerModal
 import com.flux.ui.components.TimePicker
 import com.flux.ui.events.HabitEvents
 import com.flux.ui.screens.events.getTextFieldColors
+import com.flux.ui.screens.events.toFormattedDate
 import com.flux.ui.screens.events.toFormattedTime
 import com.flux.ui.state.Settings
+import kotlin.math.max
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,8 +75,10 @@ fun NewHabit(
     var newHabitTitle by remember { mutableStateOf(habit.title) }
     var newHabitDescription by remember { mutableStateOf(habit.description) }
     var newHabitTime by remember { mutableLongStateOf(habit.startDateTime) }
+    var habitEndsOn by remember { mutableLongStateOf(habit.endDateTime) }
+    var showDatePicker by remember { mutableStateOf(false) }
     var timePickerDialog by remember { mutableStateOf(false) }
-    var neverEnds by remember { mutableStateOf(true) }
+    var neverEnds by remember { mutableStateOf(habit.endDateTime==-1L) }
     val focusRequesterDesc = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
     val weekdays = listOf(
@@ -124,6 +129,7 @@ fun NewHabit(
                                     title = newHabitTitle,
                                     description = newHabitDescription,
                                     startDateTime = newHabitTime,
+                                    endDateTime = habitEndsOn,
                                     recurrence = RecurrenceRule.Weekly(selectedDays.toList())
                                 )
                             ))
@@ -161,6 +167,7 @@ fun NewHabit(
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = { Text(stringResource(R.string.Title)) },
                 singleLine = true,
+                textStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                 shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
                 colors = getTextFieldColors(),
                 keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
@@ -193,19 +200,11 @@ fun NewHabit(
                         imageVector = Icons.Default.AlarmAdd,
                         contentDescription = "Alarm Icon"
                     )
-                    Text(
-                        text = "Time",
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Normal)
-                    )
+                    Text("Time")
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = newHabitTime.toFormattedTime(settings.data.is24HourFormat),
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                    FilledTonalIconButton(
-                        onClick = { timePickerDialog = true }
-                    ) {
+                    Text(newHabitTime.toFormattedTime(settings.data.is24HourFormat))
+                    FilledTonalIconButton({ timePickerDialog = true }) {
                         Icon(
                             imageVector = Icons.Default.Create,
                             contentDescription = "Pick Time"
@@ -217,7 +216,7 @@ fun NewHabit(
             HorizontalDivider()
             Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.Repeat, null)
-                Text("Repeat Habit", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Normal))
+                Text("Repeat Habit")
             }
 
             Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
@@ -250,27 +249,31 @@ fun NewHabit(
             HorizontalDivider()
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically){
-                    Icon(Icons.Default.Flag, null)
-                    Text("Never Ends", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Normal))
+                    Icon(Icons.Outlined.Flag, null)
+                    Text("Never Ends")
                 }
 
-                Switch(neverEnds, onCheckedChange = { neverEnds=!neverEnds })
+                Switch(neverEnds, onCheckedChange = {
+                    if(neverEnds){
+                        neverEnds=false
+                        habitEndsOn=max(newHabitTime, System.currentTimeMillis())
+                    }
+                    else{
+                        neverEnds=true
+                        habitEndsOn=-1L
+                    }
+                })
             }
 
             if(!neverEnds){
                 Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween){
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.Today, null, modifier = Modifier.size(24.dp))
-                        Text("Ends on", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Normal))
+                        Text("Ends on")
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = newHabitTime.toFormattedTime(settings.data.is24HourFormat),
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                        FilledTonalIconButton(
-                            onClick = { timePickerDialog = true }
-                        ) {
+                        Text(habitEndsOn.toFormattedDate())
+                        FilledTonalIconButton({ showDatePicker = true }) {
                             Icon(
                                 imageVector = Icons.Default.Create,
                                 contentDescription = "Pick Time"
@@ -285,8 +288,14 @@ fun NewHabit(
                 TimePicker(
                     initialTime = newHabitTime,
                     is24Hour = settings.data.is24HourFormat,
-                    onConfirm = { newHabitTime = it }
+                    onConfirm = { newHabitTime=it }
                 ) { timePickerDialog = false }
+            }
+
+            if(showDatePicker){
+                DatePickerModal(onDateSelected = { if(it!=null) habitEndsOn=it }){
+                    showDatePicker=false
+                }
             }
         }
     }

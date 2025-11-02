@@ -16,6 +16,7 @@ import com.flux.data.model.HabitInstanceModel
 import com.flux.data.model.HabitModel
 import com.flux.navigation.NavRoutes
 import com.flux.ui.components.HabitCalendarCard
+import com.flux.ui.components.HabitEndCard
 import com.flux.ui.components.HabitScaffold
 import com.flux.ui.components.HabitStartCard
 import com.flux.ui.components.HabitStreakCard
@@ -53,6 +54,7 @@ fun HabitDetails(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 item { HabitStartCard(habit.startDateTime, radius) }
+                if(habit.endDateTime!=-1L){ item { HabitEndCard(habit.endDateTime, radius) } }
                 item { HabitStreakCard(habit, habitInstances, radius) }
                 item {
                     Spacer(Modifier.height(8.dp))
@@ -61,6 +63,7 @@ fun HabitDetails(
                         habit.id,
                         workspaceId,
                         habit.startDateTime,
+                        habit.endDateTime,
                         habit.recurrence,
                         habitInstances,
                         onHabitEvents

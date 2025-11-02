@@ -23,7 +23,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBackIos
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.EventAvailable
-import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Pending
 import androidx.compose.material.icons.filled.Verified
@@ -76,6 +75,8 @@ import java.util.Locale
 import kotlin.collections.filter
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.outlined.Flag
+import androidx.compose.material.icons.outlined.SportsScore
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -240,6 +241,7 @@ fun HabitCalendarCard(
     habitId: String,
     workspaceId: String,
     startDateTime: Long,
+    endDateTime: Long,
     recurrence: RecurrenceRule,
     habitInstances: List<HabitInstanceModel>,
     onHabitEvents: (HabitEvents) -> Unit
@@ -262,9 +264,12 @@ fun HabitCalendarCard(
     val dates = (1..daysInMonth).map { currentMonth.atDay(it) }
 
     val daysOfWeek = listOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
-
+    val today = LocalDate.now()
     val habitStartDate =
         Instant.ofEpochMilli(startDateTime).atZone(ZoneId.systemDefault()).toLocalDate()
+    val habitEndDate = if (endDateTime == -1L) null else Instant.ofEpochMilli(endDateTime)
+        .atZone(ZoneId.systemDefault())
+        .toLocalDate()
 
     Card(
         modifier = Modifier
@@ -285,34 +290,36 @@ fun HabitCalendarCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                IconButton(
-                    onClick = { if (canGoBack) currentMonth = currentMonth.minusMonths(1) },
-                    enabled = canGoBack
-                ) {
-                    Icon(
-                        Icons.AutoMirrored.Default.ArrowBackIos,
-                        contentDescription = "Previous Month",
-                        modifier = Modifier
-                            .alpha(if (canGoBack) 0.8f else 0.3f)
-                            .size(16.dp)
-                    )
-                }
                 Text(
                     text = currentMonth.month.getDisplayName(TextStyle.FULL, Locale.getDefault()) +
                             " ${currentMonth.year}",
                     style = MaterialTheme.typography.titleMedium
                 )
-                IconButton(
-                    onClick = { if (canGoForward) currentMonth = currentMonth.plusMonths(1) },
-                    enabled = canGoForward
-                ) {
-                    Icon(
-                        Icons.AutoMirrored.Default.ArrowForwardIos,
-                        contentDescription = "Next Month",
-                        modifier = Modifier
-                            .alpha(if (canGoForward) 0.8f else 0.3f)
-                            .size(16.dp)
-                    )
+                Row {
+                    IconButton(
+                        onClick = { if (canGoBack) currentMonth = currentMonth.minusMonths(1) },
+                        enabled = canGoBack
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Default.ArrowBackIos,
+                            contentDescription = "Previous Month",
+                            modifier = Modifier
+                                .alpha(if (canGoBack) 0.8f else 0.3f)
+                                .size(16.dp)
+                        )
+                    }
+                    IconButton(
+                        onClick = { if (canGoForward) currentMonth = currentMonth.plusMonths(1) },
+                        enabled = canGoForward
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Default.ArrowForwardIos,
+                            contentDescription = "Next Month",
+                            modifier = Modifier
+                                .alpha(if (canGoForward) 0.8f else 0.3f)
+                                .size(16.dp)
+                        )
+                    }
                 }
             }
 
@@ -341,30 +348,29 @@ fun HabitCalendarCard(
                 items(firstDayOfWeek) { Box(modifier = Modifier.size(32.dp)) }
 
                 items(dates) { date ->
-                    val today = LocalDate.now()
                     val epochDay = date.toEpochDay()
                     val instance = habitInstances.find { it.instanceDate == epochDay }
                     val isMarked = instance != null
-
                     val isBeforeStart = date.isBefore(habitStartDate)
                     val isAfterToday = date.isAfter(today)
+                    val isAfterEnd = endDateTime != -1L && date.isAfter(habitEndDate)
                     val isAllowedByRecurrence = isDateAllowedForHabit(recurrence, epochDay)
 
                     val backgroundColor = when {
                         isMarked -> MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
-                        isAllowedByRecurrence && !isBeforeStart -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                        isAllowedByRecurrence && !isBeforeStart && !isAfterEnd -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
                         else -> Color.Transparent
                     }
 
                     val textColor = when {
                         isMarked -> MaterialTheme.colorScheme.onPrimary
-                        isAllowedByRecurrence && !isBeforeStart -> MaterialTheme.colorScheme.onSurface
+                        isAllowedByRecurrence && !isBeforeStart && !isAfterEnd -> MaterialTheme.colorScheme.onSurface
                         else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
                     }
 
                     val dateAlpha = when {
                         isBeforeStart -> 0.2f
-                        isAfterToday -> 0.4f
+                        isAfterToday || isAfterEnd -> 0.4f
                         !isAllowedByRecurrence -> 0.4f
                         else -> 1f
                     }
@@ -377,44 +383,13 @@ fun HabitCalendarCard(
                             .alpha(dateAlpha)
                             .clickable {
                                 when {
-                                    isAfterToday -> {
-                                        Toast.makeText(
-                                            context,
-                                            "You can’t mark future dates!",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                    }
-
-                                    isBeforeStart -> {
-                                        Toast.makeText(
-                                            context,
-                                            "Your habit starts later!",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                    }
-
-                                    !isAllowedByRecurrence -> {
-                                        Toast.makeText(
-                                            context,
-                                            "This date isn’t part of your habit schedule.",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                    }
-
+                                    isAfterEnd -> Toast.makeText(context, "This habit has already ended!", Toast.LENGTH_SHORT).show()
+                                    isAfterToday -> Toast.makeText(context, "You can’t mark future dates!", Toast.LENGTH_SHORT).show()
+                                    isBeforeStart -> Toast.makeText(context, "Your habit starts later!", Toast.LENGTH_SHORT).show()
+                                    !isAllowedByRecurrence -> Toast.makeText(context, "This date isn’t part of your habit schedule.", Toast.LENGTH_SHORT).show()
                                     else -> {
-                                        if (isMarked) {
-                                            onHabitEvents(HabitEvents.MarkUndone(instance))
-                                        } else {
-                                            onHabitEvents(
-                                                HabitEvents.MarkDone(
-                                                    HabitInstanceModel(
-                                                        habitId = habitId,
-                                                        workspaceId = workspaceId,
-                                                        instanceDate = epochDay
-                                                    )
-                                                )
-                                            )
-                                        }
+                                        if (isMarked) onHabitEvents(HabitEvents.MarkUndone(instance))
+                                        else onHabitEvents(HabitEvents.MarkDone(HabitInstanceModel(habitId = habitId, workspaceId = workspaceId, instanceDate = epochDay)))
                                     }
                                 }
                             },
@@ -423,6 +398,7 @@ fun HabitCalendarCard(
                         Text(date.dayOfMonth.toString(), color = textColor)
                     }
                 }
+
             }
         }
     }
@@ -451,7 +427,40 @@ fun HabitStartCard(startDateTime: Long, radius: Int) {
             }
             CircleWrapper(MaterialTheme.colorScheme.primary) {
                 Icon(
-                    Icons.Default.Flag,
+                    Icons.Outlined.Flag,
+                    null,
+                    modifier = Modifier.size(40.dp),
+                    tint = MaterialTheme.colorScheme.onPrimary
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun HabitEndCard(endDateTime: Long, radius: Int) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = {},
+        shape = shapeManager(radius = radius),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)
+        )
+    ) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column {
+                Text("Ends On", modifier = Modifier.alpha(0.85f))
+                Text(endDateTime.toFormattedDate(), fontWeight = FontWeight.SemiBold)
+            }
+            CircleWrapper(MaterialTheme.colorScheme.primary) {
+                Icon(
+                    Icons.Outlined.SportsScore,
                     null,
                     modifier = Modifier.size(40.dp),
                     tint = MaterialTheme.colorScheme.onPrimary

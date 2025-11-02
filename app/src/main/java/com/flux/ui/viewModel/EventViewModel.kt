@@ -84,6 +84,8 @@ class EventViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             cancelReminder(context, data.id, data.type.toString(), data.title, data.description, data.recurrence)
             repository.upsertEvent(data)
+            val updatedEvents = state.value.allEvent.map { e -> if (e.id == data.id) data else e }
+            safeUpdateState { it.copy(allEvent = updatedEvents) }
             val nextOccurrence = getNextOccurrence(data.recurrence, data.startDateTime)
 
             // Only schedule reminder if there's a future occurrence

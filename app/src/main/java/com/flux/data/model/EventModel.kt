@@ -18,6 +18,7 @@ data class EventModel(
     override val description: String = "",
     override val recurrence: RecurrenceRule = RecurrenceRule.Custom(),
     override val startDateTime: Long = System.currentTimeMillis(),
+    override val endDateTime: Long = -1L,
     override val notificationOffset: Long = 0L,
     val workspaceId: String = ""
 ) : ReminderItem {
@@ -33,34 +34,42 @@ data class EventInstanceModel(
 )
 
 fun EventModel.occursOn(date: LocalDate): Boolean {
-    val eventDay = Instant.ofEpochMilli(startDateTime)
+    val eventStart = Instant.ofEpochMilli(startDateTime)
         .atZone(ZoneId.systemDefault())
         .toLocalDate()
 
+    // If endDateTime is set and the event ended before this date → skip it
+    if (endDateTime > 0) {
+        val eventEnd = Instant.ofEpochMilli(endDateTime)
+            .atZone(ZoneId.systemDefault())
+            .toLocalDate()
+        if (date.isAfter(eventEnd)) return false
+    }
+
     return when (val r = recurrence) {
-        is RecurrenceRule.Once -> eventDay == date
+        is RecurrenceRule.Once -> eventStart == date
 
         is RecurrenceRule.Custom -> {
-            val daysSinceStart = ChronoUnit.DAYS.between(eventDay, date)
+            val daysSinceStart = ChronoUnit.DAYS.between(eventStart, date)
             daysSinceStart >= 0 && daysSinceStart % r.everyXDays == 0L
         }
 
         is RecurrenceRule.Weekly -> {
             val dayOfWeek = (date.dayOfWeek.value + 6) % 7
-            date >= eventDay && r.daysOfWeek.contains(dayOfWeek)
+            date >= eventStart && r.daysOfWeek.contains(dayOfWeek)
         }
 
         is RecurrenceRule.Monthly -> {
-            if (date < eventDay) return false
+            if (date < eventStart) return false
             val lastDayOfMonth = date.lengthOfMonth()
-            val dayToCheck = minOf(eventDay.dayOfMonth, lastDayOfMonth)
+            val dayToCheck = minOf(eventStart.dayOfMonth, lastDayOfMonth)
             date.dayOfMonth == dayToCheck
         }
 
         is RecurrenceRule.Yearly -> {
-            date >= eventDay &&
-                    date.dayOfMonth == eventDay.dayOfMonth &&
-                    date.month == eventDay.month
+            date >= eventStart &&
+                    date.dayOfMonth == eventStart.dayOfMonth &&
+                    date.month == eventStart.month
         }
     }
 }

@@ -49,6 +49,7 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -73,7 +74,6 @@ import androidx.compose.ui.unit.sp
 import com.flux.R
 import com.flux.data.model.LabelModel
 import com.flux.data.model.NotesModel
-import com.flux.ui.screens.events.getTextFieldColors
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
@@ -97,39 +97,42 @@ fun NotesInputCard(
         modifier = Modifier
             .fillMaxSize()
             .padding(innerPadding)
-            .padding(horizontal = 12.dp)
             .imePadding(),
-        verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
         TextField(
             value = title,
             onValueChange = onTitleChange,
-            shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
             placeholder = { Text(stringResource(R.string.Title)) },
             textStyle = MaterialTheme.typography.titleLarge,
             modifier = Modifier.fillMaxWidth(),
-            colors = getTextFieldColors()
+            colors = TextFieldDefaults.colors(
+                focusedIndicatorColor = MaterialTheme.colorScheme.primary.copy(0.2f),
+                unfocusedIndicatorColor = MaterialTheme.colorScheme.primary.copy(0.2f),
+                unfocusedContainerColor = Color.Transparent,
+                focusedContainerColor = Color.Transparent,
+                focusedTextColor = MaterialTheme.colorScheme.primary,
+                focusedPlaceholderColor = MaterialTheme.colorScheme.primary
+            )
         )
         RichTextEditor(
             state = richTextState,
             interactionSource = interactionSource,
             placeholder = { Text(stringResource(R.string.Description)) },
             textStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraLight),
-            shape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
-                .padding(bottom = 12.dp),
+                .padding(bottom = 6.dp),
             colors = RichTextEditorDefaults.richTextEditorColors(
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent,
-                containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp),
+                containerColor = Color.Transparent,
                 placeholderColor = MaterialTheme.colorScheme.primary,
             )
         )
 
         if (allLabels.isNotEmpty()) {
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            LazyRow(modifier = Modifier.padding(start = 12.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 items(allLabels) { label ->
                     Box(
                         modifier = Modifier
