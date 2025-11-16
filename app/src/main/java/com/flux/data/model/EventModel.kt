@@ -20,7 +20,7 @@ data class EventModel(
     override val startDateTime: Long = System.currentTimeMillis(),
     override val endDateTime: Long = -1L,
     override val notificationOffset: Long = 0L,
-    val workspaceId: String = ""
+    override val workspaceId: String = ""
 ) : ReminderItem {
     override val type: ReminderType get() = ReminderType.EVENT
 }

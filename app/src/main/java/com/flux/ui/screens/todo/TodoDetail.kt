@@ -28,7 +28,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
@@ -50,8 +50,8 @@ fun TodoDetail(
     workspaceId: String,
     onTodoEvents: (TodoEvents) -> Unit
 ) {
-    var title by remember { mutableStateOf(list.title) }
-    val itemList = remember { list.items.toMutableStateList() }
+    var title by rememberSaveable { mutableStateOf(list.title) }
+    val itemList = rememberSaveable { list.items.toMutableStateList() }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,

@@ -114,6 +114,7 @@ class BackupViewModel @Inject constructor(
                         timeInMillis = nextOccurrence,
                         title = habit.title,
                         description = habit.description,
+                        workspaceId = habit.workspaceId,
                         endTimeInMillis = habit.endDateTime
                     )
                 db.habitDao.upsertHabit(habit)
@@ -148,6 +149,7 @@ class BackupViewModel @Inject constructor(
                         timeInMillis = nextOccurrence,
                         title = event.title,
                         description = event.description,
+                        workspaceId = event.workspaceId,
                         endTimeInMillis = event.endDateTime
                     )
                 db.eventDao.upsertEvent(event)

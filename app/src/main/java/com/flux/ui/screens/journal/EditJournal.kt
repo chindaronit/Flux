@@ -36,7 +36,9 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -57,6 +59,7 @@ import com.flux.ui.screens.workspaces.copyToInternalStorage
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
 import com.mohamedrejeb.richeditor.ui.material3.RichTextEditorDefaults
+import kotlinx.coroutines.flow.distinctUntilChanged
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -74,9 +77,10 @@ fun EditJournal(
     val context = LocalContext.current
     val richTextState = rememberRichTextState()
     val interactionSource = remember { MutableInteractionSource() }
-    val pickedImages = remember { mutableStateListOf<String>().apply { addAll(journal.images) } }
-    var showDatePicker by remember { mutableStateOf(false) }
-    var selectedDateTime by remember { mutableLongStateOf(journal.dateTime) }
+    val lastHtml = rememberSaveable(journal.journalId) { mutableStateOf(journal.text) }
+    val pickedImages = rememberSaveable { mutableStateListOf<String>().apply { addAll(journal.images) } }
+    var showDatePicker by rememberSaveable { mutableStateOf(false) }
+    var selectedDateTime by rememberSaveable { mutableLongStateOf(journal.dateTime) }
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
@@ -92,6 +96,20 @@ fun EditJournal(
         }
     )
 
+    LaunchedEffect(journal.journalId) {
+        if (richTextState.annotatedString.isBlank()) {
+            richTextState.setHtml(lastHtml.value)
+        }
+    }
+
+    LaunchedEffect(richTextState) {
+        snapshotFlow { richTextState.toHtml() }
+            .distinctUntilChanged()
+            .collect { html ->
+                lastHtml.value = html
+            }
+    }
+
     if (showDatePicker) {
         DatePickerModal(onDateSelected = { newDateMillis ->
             if (newDateMillis != null) {
@@ -99,8 +117,6 @@ fun EditJournal(
             }
         }, onDismiss = { showDatePicker = false })
     }
-
-    LaunchedEffect(journal.journalId) { richTextState.setHtml(journal.text) }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,

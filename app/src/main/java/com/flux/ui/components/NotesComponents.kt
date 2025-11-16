@@ -1,5 +1,8 @@
 package com.flux.ui.components
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -74,6 +77,7 @@ import androidx.compose.ui.unit.sp
 import com.flux.R
 import com.flux.data.model.LabelModel
 import com.flux.data.model.NotesModel
+import com.flux.ui.screens.journal.Carousel
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
@@ -84,14 +88,25 @@ import com.mohamedrejeb.richeditor.ui.material3.RichTextEditorDefaults
 @Composable
 fun NotesInputCard(
     innerPadding: PaddingValues,
+    images: List<String>,
     title: String,
     allLabels: List<LabelModel>,
     richTextState: RichTextState,
     interactionSource: MutableInteractionSource,
     onLabelClicked: () -> Unit,
     onTitleChange: (String) -> Unit,
+    onSelectImage: (Uri) -> Unit,
+    onRemoveImage: (String) -> Unit
 ) {
     val isFocused = interactionSource.collectIsFocusedAsState()
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = { uri: Uri? ->
+            uri?.let {
+                onSelectImage(uri)
+            }
+        }
+    )
 
     Column(
         modifier = Modifier
@@ -99,6 +114,7 @@ fun NotesInputCard(
             .padding(innerPadding)
             .imePadding(),
     ) {
+        Carousel(images) { onRemoveImage(it) }
         TextField(
             value = title,
             onValueChange = onTitleChange,
@@ -166,8 +182,10 @@ fun NotesInputCard(
             RichTextStyleRow(
                 modifier = Modifier.fillMaxWidth(),
                 state = richTextState,
-                isAddImage = false,
-            ) {}
+                isAddImage = true,
+            ) {
+                imagePickerLauncher.launch("image/*")
+            }
         }
     }
 }

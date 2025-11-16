@@ -39,6 +39,7 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -75,13 +76,13 @@ fun NewHabit(
     settings: Settings,
     onHabitEvents: (HabitEvents) -> Unit
 ){
-    var newHabitTitle by remember { mutableStateOf(habit.title) }
-    var newHabitDescription by remember { mutableStateOf(habit.description) }
-    var newHabitTime by remember { mutableLongStateOf(habit.startDateTime) }
-    var habitEndsOn by remember { mutableLongStateOf(habit.endDateTime) }
+    var newHabitTitle by rememberSaveable { mutableStateOf(habit.title) }
+    var newHabitDescription by rememberSaveable { mutableStateOf(habit.description) }
+    var newHabitTime by rememberSaveable { mutableLongStateOf(habit.startDateTime) }
+    var habitEndsOn by rememberSaveable { mutableLongStateOf(habit.endDateTime) }
     var showDatePicker by remember { mutableStateOf(false) }
     var timePickerDialog by remember { mutableStateOf(false) }
-    var neverEnds by remember { mutableStateOf(habit.endDateTime==-1L) }
+    var neverEnds by rememberSaveable { mutableStateOf(habit.endDateTime==-1L) }
     val focusRequesterDesc = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
     val weekdays = listOf(

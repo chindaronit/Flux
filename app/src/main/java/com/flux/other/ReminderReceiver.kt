@@ -21,15 +21,38 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import com.flux.R
+import com.flux.data.model.EventInstanceModel
+import com.flux.data.model.HabitInstanceModel
 import com.flux.data.model.RecurrenceRule
+import dagger.hilt.android.EntryPointAccessors
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 
 class ReminderReceiver : BroadcastReceiver() {
+
+    companion object {
+        const val ACTION_MARK_DONE = "flux.action.MARK_DONE"
+    }
+
     override fun onReceive(context: Context, intent: Intent) {
+
+        if (intent.action == ACTION_MARK_DONE) {
+            val id = intent.getStringExtra("ID") ?: return
+            val type = intent.getStringExtra("TYPE") ?: return
+            val workspaceId = intent.getStringExtra("WORKSPACE_ID") ?: return
+
+            markDone(context, type, id, workspaceId)
+            return
+        }
+
         val title = intent.getStringExtra("TITLE") ?: "Reminder"
         val description =
             intent.getStringExtra("DESCRIPTION") ?: "It's time to complete pending things"
         val id = intent.getStringExtra("ID") ?: ""
+        val workspaceId = intent.getStringExtra("WORKSPACE_ID") ?: ""
         val type = intent.getStringExtra("TYPE") ?: "EVENT"
         val endTimeInMillis = intent.getLongExtra("ENDTIME", -1L)
 
@@ -45,12 +68,27 @@ class ReminderReceiver : BroadcastReceiver() {
         }
         val notificationId = getUniqueRequestCode(type, id)
 
+        val doneIntent = Intent(context, ReminderReceiver::class.java).apply {
+            action = ACTION_MARK_DONE
+            putExtra("ID", id)
+            putExtra("TYPE", type)
+            putExtra("WORKSPACE_ID", workspaceId)
+        }
+
+        val donePendingIntent = PendingIntent.getBroadcast(
+            context,
+            notificationId,
+            doneIntent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
         val notification = NotificationCompat.Builder(context, "notification_channel")
             .setSmallIcon(icon)
             .setContentTitle(title)
             .setContentText(description)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
+            .addAction(R.drawable.check_list, "Done", donePendingIntent)
             .build()
 
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -69,11 +107,52 @@ class ReminderReceiver : BroadcastReceiver() {
                 timeInMillis = nextTime,
                 title = title,
                 description = description,
+                workspaceId = workspaceId,
                 endTimeInMillis = endTimeInMillis
             )
         }
     }
 }
+
+private fun markDone(context: Context, type: String, id: String, workspaceId: String) {
+    CoroutineScope(Dispatchers.IO).launch {
+        try {
+            val entryPoint = EntryPointAccessors.fromApplication(
+                context,
+                ReceiverEntryPoint::class.java
+            )
+
+            when (type) {
+                "EVENT" -> entryPoint.eventRepository().upsertEventInstance(eventInstanceModel =
+                    EventInstanceModel(
+                        eventId = id,
+                        workspaceId = workspaceId,
+                    )
+                )
+                else -> entryPoint.habitRepository().upsertHabitInstance(habitInstance =
+                    HabitInstanceModel(
+                        habitId = id,
+                        workspaceId = workspaceId,
+                    )
+                )
+            }
+
+            withContext(Dispatchers.Main) {
+                Toast.makeText(context, "Done!", Toast.LENGTH_SHORT).show()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            withContext(Dispatchers.Main) {
+                Toast.makeText(context, "Failed to mark done", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    // Cancel the notification immediately
+    val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    manager.cancel(getUniqueRequestCode(type, id))
+}
+
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 fun createNotificationChannel(context: Context) {
@@ -119,12 +198,13 @@ fun scheduleReminder(
     recurrence: RecurrenceRule,
     timeInMillis: Long,
     endTimeInMillis: Long,
+    workspaceId: String,
     title: String,
     description: String
 ) {
     try {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val intent = createReminderIntent(context, id, type, title, description, endTimeInMillis, recurrence)
+        val intent = createReminderIntent(context, id, type, title, description, workspaceId, endTimeInMillis, recurrence)
         val requestCode = getUniqueRequestCode(type, id)
 
         val pendingIntent = PendingIntent.getBroadcast(
@@ -149,6 +229,7 @@ fun createReminderIntent(
     type: String,
     title: String,
     description: String,
+    workspaceId: String,
     endTimeInMillis: Long,
     recurrence: RecurrenceRule
 ): Intent {
@@ -159,6 +240,7 @@ fun createReminderIntent(
         putExtra("TYPE", type)
         putExtra("RECURRENCE", Json.encodeToString(recurrence))
         putExtra("ENDTIME", endTimeInMillis)
+        putExtra("WORKSPACE_ID", workspaceId)
     }
 }
 
@@ -172,6 +254,7 @@ fun cancelReminder(
     type: String,
     title: String,
     description: String,
+    workspaceId: String,
     endTimeInMillis: Long,
     recurrence: RecurrenceRule
 ) {
@@ -183,6 +266,7 @@ fun cancelReminder(
             title = title,
             description = description,
             recurrence = recurrence,
+            workspaceId = workspaceId,
             endTimeInMillis = endTimeInMillis
         )
         val requestCode = getUniqueRequestCode(type, id)

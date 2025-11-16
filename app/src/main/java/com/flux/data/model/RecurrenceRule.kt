@@ -30,5 +30,6 @@ interface ReminderItem {
     val type: ReminderType
     val startDateTime: Long
     val endDateTime: Long
+    val workspaceId: String
     val notificationOffset: Long
 }

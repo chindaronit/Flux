@@ -39,6 +39,7 @@ class BootReceiver : BroadcastReceiver() {
                             timeInMillis = nextTime-reminder.notificationOffset,
                             title = reminder.title,
                             description = reminder.description,
+                            workspaceId = reminder.workspaceId,
                             endTimeInMillis = reminder.endDateTime
                         )
                     }
@@ -53,7 +54,7 @@ class BootReceiver : BroadcastReceiver() {
     private suspend fun getStoredReminders(context: Context): List<ReminderItem> {
         val entryPoint = EntryPointAccessors.fromApplication(
             context,
-            BootReceiverEntryPoint::class.java
+            ReceiverEntryPoint::class.java
         )
         val habitRepository = entryPoint.habitRepository()
         val eventRepository = entryPoint.eventRepository()
@@ -67,7 +68,7 @@ class BootReceiver : BroadcastReceiver() {
 
 @EntryPoint
 @InstallIn(SingletonComponent::class)
-interface BootReceiverEntryPoint {
+interface ReceiverEntryPoint {
     fun habitRepository(): HabitRepository
     fun eventRepository(): EventRepository
 }

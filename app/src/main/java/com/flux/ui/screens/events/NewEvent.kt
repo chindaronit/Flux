@@ -41,6 +41,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -74,18 +75,18 @@ fun NewEvent(
     onTaskEvents: (TaskEvents) -> Unit
 ) {
     val context = LocalContext.current
-    var title by remember { mutableStateOf(event.title) }
-    var description by remember { mutableStateOf(event.description) }
+    var title by rememberSaveable { mutableStateOf(event.title) }
+    var description by rememberSaveable { mutableStateOf(event.description) }
     var showTimePicker by remember { mutableStateOf(false) }
     var showCustomNotificationDialog by remember { mutableStateOf(false) }
     var showRepetitionSheet by remember { mutableStateOf(false) }
     var showNotificationDialog by remember { mutableStateOf(false) }
-    var notificationOffset by remember { mutableLongStateOf(event.notificationOffset) }
-    var selectedDateTime by remember { mutableLongStateOf(event.startDateTime) }
+    var notificationOffset by rememberSaveable { mutableLongStateOf(event.notificationOffset) }
+    var selectedDateTime by rememberSaveable { mutableLongStateOf(event.startDateTime) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var currentRecurrenceRule by remember { mutableStateOf(event.recurrence) }
-    var eventEndsOn by remember { mutableLongStateOf(event.endDateTime) }
-    var neverEnds by remember { mutableStateOf(event.endDateTime==-1L) }
+    var eventEndsOn by rememberSaveable { mutableLongStateOf(event.endDateTime) }
+    var neverEnds by rememberSaveable { mutableStateOf(event.endDateTime==-1L) }
     var showDatePicker by remember { mutableStateOf(false) }
 
     if (showCustomNotificationDialog) {

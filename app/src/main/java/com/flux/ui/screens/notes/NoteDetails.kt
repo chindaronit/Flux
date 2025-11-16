@@ -25,6 +25,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -42,6 +43,7 @@ import com.flux.ui.components.SettingOption
 import com.flux.ui.components.convertMillisToDate
 import com.flux.ui.components.shapeManager
 import com.flux.ui.events.NotesEvents
+import com.flux.ui.screens.workspaces.copyToInternalStorage
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import kotlinx.coroutines.delay
@@ -58,27 +60,28 @@ fun NoteDetails(
     allLabels: List<LabelModel>,
     onNotesEvents: (NotesEvents) -> Unit
 ) {
+    val context = LocalContext.current
     var isPinned by rememberSaveable(note.notesId) { mutableStateOf(note.isPinned) }
     val actionHistory = remember { mutableStateListOf<EditAction>() }
     val redoHistory = remember { mutableStateListOf<EditAction>() }
-    val lastHtml = remember { mutableStateOf(note.description) }
-    var title by remember { mutableStateOf(note.title) }
+    var title by rememberSaveable(note.notesId) { mutableStateOf(note.title) }
+    val lastHtml = rememberSaveable(note.notesId) { mutableStateOf(note.description) }
     val richTextState = rememberRichTextState()
     val interactionSource = remember { MutableInteractionSource() }
     var showShareNotesDialog by remember { mutableStateOf(false) }
+    val pickedImages = rememberSaveable { mutableStateListOf<String>().apply { addAll(note.images) } }
 
     // Flag to prevent tracking changes during undo/redo operations
     val isUndoRedoOperation = remember { mutableStateOf(false) }
 
     // Track the last known title for proper undo/redo
-    val lastTitle = remember { mutableStateOf(note.title) }
+    val lastTitle = rememberSaveable { mutableStateOf(note.title) }
 
-    // Only run once to set initial HTML and title
     LaunchedEffect(note.notesId) {
-        richTextState.setHtml(note.description)
-        lastHtml.value = note.description
-        title = note.title
-        lastTitle.value = note.title
+        // only push into editor if it's empty
+        if (richTextState.annotatedString.isBlank()) {
+            richTextState.setHtml(lastHtml.value)
+        }
     }
 
     // Track changes in description and update undo history
@@ -98,14 +101,14 @@ fun NoteDetails(
             }
     }
 
-    val noteLabels = remember {
+    val noteLabels = rememberSaveable {
         mutableStateListOf<LabelModel>().apply {
             addAll(allLabels.filter { note.labels.contains(it.labelId) })
         }
     }
 
-    var showSelectLabels by remember { mutableStateOf(false) }
-    var showAboutNotes by remember { mutableStateOf(false) }
+    var showSelectLabels by rememberSaveable { mutableStateOf(false) }
+    var showAboutNotes by rememberSaveable { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
 
@@ -195,7 +198,8 @@ fun NoteDetails(
                     description = richTextState.toHtml(),
                     isPinned = isPinned,
                     lastEdited = System.currentTimeMillis(),
-                    labels = noteLabels.map { it.labelId }
+                    labels = noteLabels.map { it.labelId },
+                    images = pickedImages.toList()
                 )
             )
         )
@@ -225,6 +229,7 @@ fun NoteDetails(
     ) { innerPadding ->
         NotesInputCard(
             innerPadding = innerPadding,
+            images = pickedImages,
             title = title,
             allLabels = noteLabels,
             richTextState = richTextState,
@@ -237,7 +242,9 @@ fun NoteDetails(
                     redoHistory.clear()
                 }
             },
-            onLabelClicked = { showSelectLabels = true }
+            onLabelClicked = { showSelectLabels = true },
+            onSelectImage = { pickedImages.add(copyToInternalStorage(context, it).toString())},
+            onRemoveImage = { pickedImages.remove(it) }
         )
     }
 

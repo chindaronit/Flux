@@ -74,6 +74,7 @@ class EventViewModel @Inject constructor(
                 data.type.toString(),
                 data.title,
                 data.description,
+                data.workspaceId,
                 data.endDateTime,
                 data.recurrence
             )
@@ -83,7 +84,7 @@ class EventViewModel @Inject constructor(
 
     private fun upsertEvent(context: Context, data: EventModel) {
         viewModelScope.launch(Dispatchers.IO) {
-            cancelReminder(context, data.id, data.type.toString(), data.title, data.description, data.endDateTime, data.recurrence)
+            cancelReminder(context, data.id, data.type.toString(), data.title, data.description, data.workspaceId, data.endDateTime, data.recurrence)
             repository.upsertEvent(data)
             val updatedEvents = state.value.allEvent.map { e -> if (e.id == data.id) data else e }
             safeUpdateState { it.copy(allEvent = updatedEvents) }
@@ -99,6 +100,7 @@ class EventViewModel @Inject constructor(
                     timeInMillis = nextOccurrence-data.notificationOffset,
                     title = data.title,
                     description = data.description,
+                    workspaceId = data.workspaceId,
                     endTimeInMillis = data.endDateTime
                 )
             }
@@ -114,6 +116,7 @@ class EventViewModel @Inject constructor(
                     event.type.toString(),
                     event.title,
                     event.description,
+                    event.workspaceId,
                     event.endDateTime,
                     event.recurrence
                 )
