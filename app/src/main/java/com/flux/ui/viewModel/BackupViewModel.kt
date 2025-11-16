@@ -113,7 +113,8 @@ class BackupViewModel @Inject constructor(
                         recurrence = habit.recurrence,
                         timeInMillis = nextOccurrence,
                         title = habit.title,
-                        description = habit.description
+                        description = habit.description,
+                        endTimeInMillis = habit.endDateTime
                     )
                 db.habitDao.upsertHabit(habit)
             }
@@ -146,7 +147,8 @@ class BackupViewModel @Inject constructor(
                         recurrence = event.recurrence,
                         timeInMillis = nextOccurrence,
                         title = event.title,
-                        description = event.description
+                        description = event.description,
+                        endTimeInMillis = event.endDateTime
                     )
                 db.eventDao.upsertEvent(event)
             }

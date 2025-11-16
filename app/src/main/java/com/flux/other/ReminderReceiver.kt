@@ -31,6 +31,7 @@ class ReminderReceiver : BroadcastReceiver() {
             intent.getStringExtra("DESCRIPTION") ?: "It's time to complete pending things"
         val id = intent.getStringExtra("ID") ?: ""
         val type = intent.getStringExtra("TYPE") ?: "EVENT"
+        val endTimeInMillis = intent.getLongExtra("ENDTIME", -1L)
 
         // Deserialize recurrence rule
         val recurrenceJson = intent.getStringExtra("RECURRENCE")
@@ -55,9 +56,11 @@ class ReminderReceiver : BroadcastReceiver() {
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         manager.notify(notificationId, notification)
 
-        // Reschedule next occurrence if recurring
         val nextTime = getNextOccurrence(recurrence, System.currentTimeMillis())
-        if (nextTime != null) {
+        val shouldReschedule = nextTime != null &&
+                (endTimeInMillis == -1L || nextTime <= endTimeInMillis)
+
+        if (shouldReschedule) {
             scheduleReminder(
                 context = context,
                 id = id,
@@ -65,7 +68,8 @@ class ReminderReceiver : BroadcastReceiver() {
                 recurrence = recurrence,
                 timeInMillis = nextTime,
                 title = title,
-                description = description
+                description = description,
+                endTimeInMillis = endTimeInMillis
             )
         }
     }
@@ -114,12 +118,13 @@ fun scheduleReminder(
     type: String,
     recurrence: RecurrenceRule,
     timeInMillis: Long,
+    endTimeInMillis: Long,
     title: String,
     description: String
 ) {
     try {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val intent = createReminderIntent(context, id, type, title, description, recurrence)
+        val intent = createReminderIntent(context, id, type, title, description, endTimeInMillis, recurrence)
         val requestCode = getUniqueRequestCode(type, id)
 
         val pendingIntent = PendingIntent.getBroadcast(
@@ -144,6 +149,7 @@ fun createReminderIntent(
     type: String,
     title: String,
     description: String,
+    endTimeInMillis: Long,
     recurrence: RecurrenceRule
 ): Intent {
     return Intent(context, ReminderReceiver::class.java).apply {
@@ -152,6 +158,7 @@ fun createReminderIntent(
         putExtra("ID", id)
         putExtra("TYPE", type)
         putExtra("RECURRENCE", Json.encodeToString(recurrence))
+        putExtra("ENDTIME", endTimeInMillis)
     }
 }
 
@@ -165,6 +172,7 @@ fun cancelReminder(
     type: String,
     title: String,
     description: String,
+    endTimeInMillis: Long,
     recurrence: RecurrenceRule
 ) {
     try {
@@ -174,7 +182,8 @@ fun cancelReminder(
             type = type,
             title = title,
             description = description,
-            recurrence = recurrence
+            recurrence = recurrence,
+            endTimeInMillis = endTimeInMillis
         )
         val requestCode = getUniqueRequestCode(type, id)
         val pendingIntent = PendingIntent.getBroadcast(

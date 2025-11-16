@@ -62,6 +62,9 @@ import com.flux.ui.screens.events.getTextFieldColors
 import com.flux.ui.screens.events.toFormattedDate
 import com.flux.ui.screens.events.toFormattedTime
 import com.flux.ui.state.Settings
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.ZoneId
 import kotlin.math.max
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -293,7 +296,15 @@ fun NewHabit(
             }
 
             if(showDatePicker){
-                DatePickerModal(onDateSelected = { if(it!=null) habitEndsOn=it }){
+                DatePickerModal(onDateSelected = {
+                    if(it!=null)
+                        habitEndsOn = LocalDate
+                            .ofEpochDay(it / 86_400_000)
+                            .atTime(LocalTime.MAX) // 23:59:59.999
+                            .atZone(ZoneId.systemDefault())
+                            .toInstant()
+                            .toEpochMilli()
+                }){
                     showDatePicker=false
                 }
             }

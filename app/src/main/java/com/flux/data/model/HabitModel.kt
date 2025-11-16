@@ -5,8 +5,6 @@ import androidx.room.PrimaryKey
 import java.time.LocalDate
 import java.util.UUID
 import kotlinx.serialization.Serializable
-import java.time.Instant
-import java.time.ZoneId
 
 @Serializable
 @Entity
@@ -35,6 +33,5 @@ data class HabitInstanceModel(
 
 fun HabitModel.isLive(): Boolean {
     if (endDateTime == -1L) return true
-    val habitEndDate = Instant.ofEpochMilli(endDateTime).atZone(ZoneId.systemDefault()).toLocalDate()
-    return !habitEndDate.isBefore(LocalDate.now())
+    return endDateTime > System.currentTimeMillis()
 }

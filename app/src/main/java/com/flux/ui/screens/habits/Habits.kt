@@ -64,14 +64,7 @@ fun LazyListScope.habitsHomeItems(
                             }
                         }
                     },
-                    onAnalyticsClicked = {
-                        navController.navigate(
-                            NavRoutes.HabitDetails.withArgs(
-                                workspaceId,
-                                habit.id
-                            )
-                        )
-                    }
+                    onAnalyticsClicked = { navController.navigate(NavRoutes.HabitDetails.withArgs(workspaceId, habit.id)) }
                 )
                 Spacer(Modifier.height(8.dp))
             }

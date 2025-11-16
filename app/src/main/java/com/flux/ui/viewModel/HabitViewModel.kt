@@ -61,6 +61,7 @@ class HabitViewModel @Inject constructor(private val repository: HabitRepository
                     habit.type.toString(),
                     habit.title,
                     habit.description,
+                    habit.endDateTime,
                     habit.recurrence
                 )
             }
@@ -74,14 +75,14 @@ class HabitViewModel @Inject constructor(private val repository: HabitRepository
 
     private fun deleteHabit(data: HabitModel, context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
-            cancelReminder(context, data.id, data.type.toString(), data.title, data.description, data.recurrence)
+            cancelReminder(context, data.id, data.type.toString(), data.title, data.description, data.endDateTime, data.recurrence)
             repository.deleteHabit(data)
         }
     }
 
     private fun upsertHabit(context: Context, data: HabitModel) {
         viewModelScope.launch(Dispatchers.IO) {
-            cancelReminder(context, data.id, data.type.toString(), data.title, data.description, data.recurrence)
+            cancelReminder(context, data.id, data.type.toString(), data.title, data.description, data.endDateTime, data.recurrence)
             repository.upsertHabit(data)
             val nextOccurrence = getNextOccurrence(data.recurrence, data.startDateTime)
 
@@ -94,7 +95,8 @@ class HabitViewModel @Inject constructor(private val repository: HabitRepository
                     recurrence = data.recurrence,
                     timeInMillis = nextOccurrence,
                     title = data.title,
-                    description = data.description
+                    description = data.description,
+                    endTimeInMillis = data.endDateTime
                 )
             }
         }

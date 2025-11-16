@@ -267,9 +267,11 @@ fun HabitCalendarCard(
     val today = LocalDate.now()
     val habitStartDate =
         Instant.ofEpochMilli(startDateTime).atZone(ZoneId.systemDefault()).toLocalDate()
-    val habitEndDate = if (endDateTime == -1L) null else Instant.ofEpochMilli(endDateTime)
+    val habitEndEpochDay = if (endDateTime == -1L) null
+    else Instant.ofEpochMilli(endDateTime)
         .atZone(ZoneId.systemDefault())
         .toLocalDate()
+        .toEpochDay()
 
     Card(
         modifier = Modifier
@@ -351,9 +353,9 @@ fun HabitCalendarCard(
                     val epochDay = date.toEpochDay()
                     val instance = habitInstances.find { it.instanceDate == epochDay }
                     val isMarked = instance != null
-                    val isBeforeStart = date.isBefore(habitStartDate)
-                    val isAfterToday = date.isAfter(today)
-                    val isAfterEnd = endDateTime != -1L && date.isAfter(habitEndDate)
+                    val isBeforeStart = epochDay < habitStartDate.toEpochDay()
+                    val isAfterToday = epochDay > today.toEpochDay()
+                    val isAfterEnd = habitEndEpochDay != null && epochDay > habitEndEpochDay
                     val isAllowedByRecurrence = isDateAllowedForHabit(recurrence, epochDay)
 
                     val backgroundColor = when {

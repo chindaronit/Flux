@@ -26,8 +26,11 @@ class BootReceiver : BroadcastReceiver() {
 
                 // Reschedule each reminder at its next occurrence
                 reminders.forEach { reminder ->
-                    val nextTime = getNextOccurrence(reminder.recurrence, reminder.startDateTime)
-                    if (nextTime != null) {
+                    val nextTime = getNextOccurrence(reminder.recurrence, System.currentTimeMillis())
+                    val shouldReschedule = nextTime != null &&
+                            (reminder.endDateTime == -1L || nextTime <= reminder.endDateTime)
+
+                    if (shouldReschedule) {
                         scheduleReminder(
                             context = context,
                             id = reminder.id,
@@ -35,7 +38,8 @@ class BootReceiver : BroadcastReceiver() {
                             recurrence = reminder.recurrence,
                             timeInMillis = nextTime-reminder.notificationOffset,
                             title = reminder.title,
-                            description = reminder.description
+                            description = reminder.description,
+                            endTimeInMillis = reminder.endDateTime
                         )
                     }
                 }
