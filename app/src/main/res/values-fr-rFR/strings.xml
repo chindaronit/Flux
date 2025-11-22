@@ -186,6 +186,21 @@
     <string name="saturday_short">Sam</string>
     <string name="sunday_short">Dim</string>
 
+    <string name="past_habits">Habitudes passées</string>
+    <string name="time">Heure</string>
+    <string name="repeat">Répéter</string>
+    <string name="never_ends">Ne se termine jamais</string>
+    <string name="ends_on">Se termine le</string>
+    <string name="mark_completed">Marquer comme terminé</string>
+    <string name="mark_pending">Marquer comme en attente</string>
+    <string name="ends_on_date">Se termine le %1$s</string>
+    <string name="weekly_habit_completion">Achèvement hebdomadaire des habitudes</string>
+    <string name="habit_already_ended">Cette habitude est déjà terminée!</string>
+    <string name="cannot_mark_future_dates">Vous ne pouvez pas marquer des dates futures!</string>
+    <string name="habit_starts_later">Votre habitude commence plus tard!</string>
+    <string name="date_not_in_schedule">Cette date ne fait pas partie de votre planning d’habitudes.</string>
+
+
     <!-- Events -->
     <string name="Events">Événements</string>
     <string name="Empty_Events">Aucun événement trouvé</string>

@@ -204,7 +204,7 @@ fun NewHabit(
                         imageVector = Icons.Default.AlarmAdd,
                         contentDescription = "Alarm Icon"
                     )
-                    Text("Time")
+                    Text(stringResource(R.string.time))
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(newHabitTime.toFormattedTime(settings.data.is24HourFormat))
@@ -220,7 +220,7 @@ fun NewHabit(
             HorizontalDivider()
             Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.Repeat, null)
-                Text("Repeat Habit")
+                Text(stringResource(R.string.repeat))
             }
 
             Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
@@ -254,7 +254,7 @@ fun NewHabit(
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically){
                     Icon(Icons.Outlined.Flag, null)
-                    Text("Never Ends")
+                    Text(stringResource(R.string.never_ends))
                 }
 
                 Switch(neverEnds, onCheckedChange = {
@@ -273,7 +273,7 @@ fun NewHabit(
                 Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween){
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.Today, null, modifier = Modifier.size(24.dp))
-                        Text("Ends on")
+                        Text(stringResource(R.string.ends_on))
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(habitEndsOn.toFormattedDate())
@@ -301,7 +301,7 @@ fun NewHabit(
                     if(it!=null)
                         habitEndsOn = LocalDate
                             .ofEpochDay(it / 86_400_000)
-                            .atTime(LocalTime.MAX) // 23:59:59.999
+                            .atTime(LocalTime.MAX)
                             .atZone(ZoneId.systemDefault())
                             .toInstant()
                             .toEpochMilli()

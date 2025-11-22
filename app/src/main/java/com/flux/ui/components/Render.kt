@@ -16,27 +16,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-//@Composable
-//fun RenderImage(
-//    modifier: Modifier=Modifier,
-//    image: Any?,
-//    tint: Color?=null
-//) {
-//    Box(
-//        modifier = modifier
-//            .size(150.dp)
-//            .clip(CircleShape),
-//        contentAlignment = Alignment.Center
-//    ) {
-//        AsyncImage(
-//            model = image,
-//            contentDescription = null,
-//            modifier = Modifier.fillMaxSize(),
-//            contentScale = ContentScale.Crop,
-//            colorFilter = if (tint!=null) ColorFilter.tint(tint) else null
-//        )
-//    }
-//}
 
 @Composable
 fun RenderRadio(

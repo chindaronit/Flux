@@ -186,6 +186,21 @@
     <string name="saturday_short">Sa</string>
     <string name="sunday_short">So</string>
 
+    <string name="past_habits">Vergangene Gewohnheiten</string>
+    <string name="time">Zeit</string>
+    <string name="repeat">Wiederholen</string>
+    <string name="never_ends">Endet nie</string>
+    <string name="ends_on">Endet am</string>
+    <string name="mark_completed">Als erledigt markieren</string>
+    <string name="mark_pending">Als ausstehend markieren</string>
+    <string name="ends_on_date">Endet am %1$s</string>
+    <string name="weekly_habit_completion">Wöchentliche Gewohnheitsauswertung</string>
+    <string name="habit_already_ended">Diese Gewohnheit ist bereits beendet!</string>
+    <string name="cannot_mark_future_dates">Zukünftige Daten können nicht markiert werden!</string>
+    <string name="habit_starts_later">Diese Gewohnheit beginnt später!</string>
+    <string name="date_not_in_schedule">Dieses Datum ist nicht Teil Ihres Gewohnheitsplans.</string>
+
+
     <!-- Events -->
     <string name="Events">Ereignisse</string>
     <string name="Empty_Events">Keine Ereignisse gefunden</string>

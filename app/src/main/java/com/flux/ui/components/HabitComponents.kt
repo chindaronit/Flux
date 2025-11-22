@@ -263,7 +263,16 @@ fun HabitCalendarCard(
     val firstDayOfWeek = currentMonth.atDay(1).dayOfWeek.value % 7
     val dates = (1..daysInMonth).map { currentMonth.atDay(it) }
 
-    val daysOfWeek = listOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
+    val daysOfWeek = listOf(
+        stringResource(R.string.sunday_short),
+        stringResource(R.string.monday_short),
+        stringResource(R.string.tuesday_short),
+        stringResource(R.string.wednesday_short),
+        stringResource(R.string.thursday_short),
+        stringResource(R.string.friday_short),
+        stringResource(R.string.saturday_short)
+
+    )
     val today = LocalDate.now()
     val habitStartDate =
         Instant.ofEpochMilli(startDateTime).atZone(ZoneId.systemDefault()).toLocalDate()
@@ -286,9 +295,7 @@ fun HabitCalendarCard(
         Column(Modifier.padding(16.dp)) {
             // Month navigation
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(4.dp),
+                modifier = Modifier.fillMaxWidth().padding(4.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -385,13 +392,41 @@ fun HabitCalendarCard(
                             .alpha(dateAlpha)
                             .clickable {
                                 when {
-                                    isAfterEnd -> Toast.makeText(context, "This habit has already ended!", Toast.LENGTH_SHORT).show()
-                                    isAfterToday -> Toast.makeText(context, "You can’t mark future dates!", Toast.LENGTH_SHORT).show()
-                                    isBeforeStart -> Toast.makeText(context, "Your habit starts later!", Toast.LENGTH_SHORT).show()
-                                    !isAllowedByRecurrence -> Toast.makeText(context, "This date isn’t part of your habit schedule.", Toast.LENGTH_SHORT).show()
+                                    isAfterEnd -> Toast.makeText(
+                                        context,
+                                        context.getString(R.string.habit_already_ended),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+
+                                    isAfterToday -> Toast.makeText(
+                                        context,
+                                        context.getString(R.string.cannot_mark_future_dates),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+
+                                    isBeforeStart -> Toast.makeText(
+                                        context,
+                                        context.getString(R.string.habit_starts_later),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+
+                                    !isAllowedByRecurrence -> Toast.makeText(
+                                        context,
+                                        context.getString(R.string.date_not_in_schedule),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+
                                     else -> {
                                         if (isMarked) onHabitEvents(HabitEvents.MarkUndone(instance))
-                                        else onHabitEvents(HabitEvents.MarkDone(HabitInstanceModel(habitId = habitId, workspaceId = workspaceId, instanceDate = epochDay)))
+                                        else onHabitEvents(
+                                            HabitEvents.MarkDone(
+                                                HabitInstanceModel(
+                                                    habitId = habitId,
+                                                    workspaceId = workspaceId,
+                                                    instanceDate = epochDay
+                                                )
+                                            )
+                                        )
                                     }
                                 }
                             },
@@ -457,7 +492,7 @@ fun HabitEndCard(endDateTime: Long, radius: Int) {
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Column {
-                Text("Ends On", modifier = Modifier.alpha(0.85f))
+                Text(stringResource(R.string.ends_on), modifier = Modifier.alpha(0.85f))
                 Text(endDateTime.toFormattedDate(), fontWeight = FontWeight.SemiBold)
             }
             CircleWrapper(MaterialTheme.colorScheme.primary) {
@@ -487,7 +522,15 @@ fun WeeklyHabitAnalyticsCard(
     }
     val completedCount = thisWeekInstances.size
 
-    val daysOfWeek = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+    val daysOfWeek = listOf(
+        stringResource(R.string.monday_short),
+        stringResource(R.string.tuesday_short),
+        stringResource(R.string.wednesday_short),
+        stringResource(R.string.thursday_short),
+        stringResource(R.string.friday_short),
+        stringResource(R.string.saturday_short),
+        stringResource(R.string.sunday_short)
+    )
     val dayStatus = daysOfWeek.mapIndexed { index, _ ->
         val date = startOfWeek.plusDays(index.toLong())
         thisWeekInstances.any { it.instanceDate == date.toEpochDay() }
@@ -501,13 +544,9 @@ fun WeeklyHabitAnalyticsCard(
         ),
         onClick = {}
     ) {
-        Column(
-            Modifier
-                .fillMaxSize()
-                .padding(12.dp)
-        ) {
+        Column(Modifier.fillMaxSize().padding(12.dp)) {
             Text(
-                text = "This Week",
+                text = stringResource(R.string.This_Week),
                 style = MaterialTheme.typography.titleMedium,
             )
 
@@ -650,7 +689,15 @@ fun WeeklyHabitProgressChart(
     val today = LocalDate.now()
     val startOfWeek = today.with(DayOfWeek.MONDAY)
     val weekDays = (0..6).map { startOfWeek.plusDays(it.toLong()) }
-    val dayLabels = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+    val dayLabels = listOf(
+        stringResource(R.string.monday_short),
+        stringResource(R.string.tuesday_short),
+        stringResource(R.string.wednesday_short),
+        stringResource(R.string.thursday_short),
+        stringResource(R.string.friday_short),
+        stringResource(R.string.saturday_short),
+        stringResource(R.string.sunday_short)
+    )
 
     // Calculate percentages correctly
     val percentages = weekDays.map { day ->
@@ -673,7 +720,7 @@ fun WeeklyHabitProgressChart(
     ) {
         Column(modifier = modifier.padding(8.dp)) {
             Text(
-                "Weekly Habit Completion",
+                stringResource(R.string.weekly_habit_completion),
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.primary,
                 textAlign = TextAlign.Center,
@@ -891,9 +938,7 @@ fun HabitStreakCard(
         )
     ) {
         Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 12.dp),
+            Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {

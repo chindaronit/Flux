@@ -78,9 +78,7 @@ fun EventDetails(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         topBar = {
             TopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-                ),
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
                 title = {
                     Text(
                         text = title,
@@ -90,17 +88,12 @@ fun EventDetails(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Default.ArrowBack,
-                            contentDescription = "Back"
-                        )
+                    IconButton({ navController.popBackStack() }) {
+                        Icon(Icons.AutoMirrored.Default.ArrowBack,"Back")
                     }
                 },
                 actions = {
-                    IconButton(onClick = {
-                        navController.navigate(NavRoutes.NewEvent.withArgs(workspaceId, event.id, event.startDateTime))
-                    }) {
+                    IconButton({ navController.navigate(NavRoutes.NewEvent.withArgs(workspaceId, event.id, event.startDateTime)) }) {
                         Icon(
                             imageVector = Icons.Default.Edit,
                             contentDescription = "Edit"
@@ -125,7 +118,11 @@ fun EventDetails(
                     pendingStatus=!pendingStatus
                     onTaskEvents(TaskEvents.ToggleStatus(!pendingStatus, event.id, workspaceId, instanceDate)) },
                 icon = { Icon( if(pendingStatus) Icons.Filled.Verified else Icons.Default.Pending, null) },
-                text = { Text(text = if(pendingStatus) "Mark completed" else "Mark Pending", fontWeight = FontWeight.SemiBold) },
+                text = { Text(text = stringResource(
+                        if (pendingStatus) R.string.mark_completed else R.string.mark_pending
+                    ),
+                    fontWeight = FontWeight.SemiBold
+                ) },
             )
         }
     ) { innerPadding ->
@@ -139,27 +136,17 @@ fun EventDetails(
             if(description.isNotBlank()) item { Text(description, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Normal)) }
             item{
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.Refresh,
-                        contentDescription = null
-                    )
+                    Icon(Icons.Default.Refresh, null)
                     Spacer(Modifier.width(6.dp))
-                    Text(
-                        "${getRecurrenceText(context, currentRecurrenceRule, event.startDateTime)} at $time",
-                    )
+                    Text("${getRecurrenceText(context, currentRecurrenceRule, event.startDateTime)} at $time",)
                 }
             }
             if(event.endDateTime!=-1L){
                 item{
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.SportsScore,
-                            contentDescription = null
-                        )
+                        Icon(Icons.Default.SportsScore, null)
                         Spacer(Modifier.width(6.dp))
-                        Text(
-                            "Ends On ${event.endDateTime.toFormattedDate()}",
-                        )
+                        Text(stringResource(R.string.ends_on_date, event.endDateTime.toFormattedDate()))
                     }
                 }
             }

@@ -186,6 +186,21 @@
     <string name="saturday_short">शनि</string>
     <string name="sunday_short">रवि</string>
 
+    <string name="past_habits">पिछली आदतें</string>
+    <string name="time">समय</string>
+    <string name="repeat">दोहराएं</string>
+    <string name="never_ends">कभी समाप्त नहीं होता</string>
+    <string name="ends_on">समाप्त होता है</string>
+    <string name="mark_completed">पूर्ण चिह्नित करें</string>
+    <string name="mark_pending">अपूर्ण चिह्नित करें</string>
+    <string name="ends_on_date">%1$s को समाप्त होता है</string>
+    <string name="weekly_habit_completion">साप्ताहिक आदत पूर्णता</string>
+    <string name="habit_already_ended">यह आदत पहले ही समाप्त हो चुकी है!</string>
+    <string name="cannot_mark_future_dates">आप भविष्य की तिथियों को चिह्नित नहीं कर सकते!</string>
+    <string name="habit_starts_later">आपकी आदत बाद में शुरू होती है!</string>
+    <string name="date_not_in_schedule">यह तिथि आपकी आदत अनुसूची का हिस्सा नहीं है।</string>
+
+
     <!-- Events -->
     <string name="Events">इवेंट्स</string>
     <string name="Empty_Events">कोई ईवेंट नहीं मिला</string>

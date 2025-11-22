@@ -1,0 +1,7 @@
+* Image Support in Notes.
+* Mark status of Event/Habits through Notification.
+* Added end date for events/habits.
+* Some UI changes in Edit Event.
+* Added more analytics components for habits.
+* Added support to many other languages (German, Russian, Portuguese (Brazil), Spanish).
+* Bug fixes of staggered List in notes, state disappearing in rotation.

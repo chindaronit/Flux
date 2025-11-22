@@ -186,6 +186,21 @@
     <string name="saturday_short">Sat</string>
     <string name="sunday_short">Sun</string>
 
+    <string name="past_habits">Past Habits</string>
+    <string name="time">Time</string>
+    <string name="repeat">Repeat</string>
+    <string name="never_ends">Never Ends</string>
+    <string name="ends_on">Ends On</string>
+    <string name="mark_completed">Mark completed</string>
+    <string name="mark_pending">Mark Pending</string>
+    <string name="ends_on_date">Ends On %1$s</string>
+    <string name="weekly_habit_completion">Weekly Habit Completion</string>
+    <string name="habit_already_ended">This habit has already ended!</string>
+    <string name="cannot_mark_future_dates">You can’t mark future dates!</string>
+    <string name="habit_starts_later">Your habit starts later!</string>
+    <string name="date_not_in_schedule">This date isn’t part of your habit schedule.</string>
+
+
     <!-- Events -->
     <string name="Events">Events</string>
     <string name="Empty_Events">No Events Found</string>

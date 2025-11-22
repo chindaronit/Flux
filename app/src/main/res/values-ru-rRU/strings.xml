@@ -186,6 +186,20 @@
     <string name="saturday_short">Сб</string>
     <string name="sunday_short">Вс</string>
 
+    <string name="past_habits">Прошлые привычки</string>
+    <string name="time">Время</string>
+    <string name="repeat">Повтор</string>
+    <string name="never_ends">Никогда не заканчивается</string>
+    <string name="ends_on">Заканчивается</string>
+    <string name="mark_completed">Отметить как выполнено</string>
+    <string name="mark_pending">Отметить как ожидающее</string>
+    <string name="ends_on_date">Заканчивается %1$s</string>
+    <string name="weekly_habit_completion">Еженедельное выполнение привычек</string>
+    <string name="habit_already_ended">Эта привычка уже завершена!</string>
+    <string name="cannot_mark_future_dates">Нельзя отмечать будущие даты!</string>
+    <string name="habit_starts_later">Ваша привычка начинается позже!</string>
+    <string name="date_not_in_schedule">Эта дата не входит в расписание вашей привычки.</string>
+
     <!-- Events -->
     <string name="Events">События</string>
     <string name="Empty_Events">События не найдены</string>

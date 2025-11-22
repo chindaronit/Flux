@@ -277,7 +277,7 @@ fun NewEvent(
                 Row(Modifier.fillMaxWidth().padding(vertical = 8.dp, horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically){
                         Icon(Icons.Outlined.Flag, null)
-                        Text("Never Ends")
+                        Text(stringResource(R.string.never_ends))
                     }
 
                     Switch(neverEnds, onCheckedChange = {
@@ -296,7 +296,7 @@ fun NewEvent(
                     Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween){
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.Today, null, modifier = Modifier.size(24.dp))
-                            Text("Ends on")
+                            Text(stringResource(R.string.ends_on))
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                             Text(eventEndsOn.toFormattedDate())

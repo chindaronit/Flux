@@ -186,6 +186,21 @@
     <string name="saturday_short">Sáb</string>
     <string name="sunday_short">Dom</string>
 
+    <string name="past_habits">Hábitos pasados</string>
+    <string name="time">Hora</string>
+    <string name="repeat">Repetir</string>
+    <string name="never_ends">Nunca termina</string>
+    <string name="ends_on">Termina el</string>
+    <string name="mark_completed">Marcar como completado</string>
+    <string name="mark_pending">Marcar como pendiente</string>
+    <string name="ends_on_date">Termina el %1$s</string>
+    <string name="weekly_habit_completion">Finalización semanal del hábito</string>
+    <string name="habit_already_ended">¡Este hábito ya ha terminado!</string>
+    <string name="cannot_mark_future_dates">¡No puedes marcar fechas futuras!</string>
+    <string name="habit_starts_later">¡Tu hábito comienza más tarde!</string>
+    <string name="date_not_in_schedule">Esta fecha no forma parte de tu horario de hábitos.</string>
+
+
     <!-- Events -->
     <string name="Events">Eventos</string>
     <string name="Empty_Events">No se encontraron eventos</string>

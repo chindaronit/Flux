@@ -8,8 +8,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.flux.R
 import com.flux.data.model.HabitInstanceModel
 import com.flux.data.model.HabitModel
 import com.flux.data.model.RecurrenceRule
@@ -71,7 +73,7 @@ fun LazyListScope.habitsHomeItems(
             if(pastHabits.isNotEmpty()) {
                 item {
                     Text(
-                        "Past Habits",
+                        stringResource(R.string.past_habits),
                         style = MaterialTheme.typography.titleLarge,
                         modifier = Modifier.padding(vertical = 8.dp)
                     )
