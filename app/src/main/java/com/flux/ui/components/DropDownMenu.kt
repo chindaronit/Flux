@@ -12,7 +12,6 @@ import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.RemoveCircleOutline
 import androidx.compose.material.icons.outlined.Analytics
 import androidx.compose.material.icons.outlined.AutoStories
-import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Event
@@ -171,8 +170,8 @@ fun SpacesMenu(
         }
         if (selectedSpaces.contains(4)) {
             DropdownMenuItem(
-                text = { Text(stringResource(R.string.Calendar)) },
-                leadingIcon = { Icon(Icons.Outlined.CalendarMonth, contentDescription = null) },
+                text = { Text(stringResource(R.string.Journal)) },
+                leadingIcon = { Icon(Icons.Outlined.AutoStories, contentDescription = null) },
                 onClick = {
                     onConfirm(4)
                     onDismiss()
@@ -181,8 +180,8 @@ fun SpacesMenu(
         }
         if (selectedSpaces.contains(5)) {
             DropdownMenuItem(
-                text = { Text(stringResource(R.string.Journal)) },
-                leadingIcon = { Icon(Icons.Outlined.AutoStories, contentDescription = null) },
+                text = { Text(stringResource(R.string.Habits)) },
+                leadingIcon = { Icon(Icons.Outlined.EventAvailable, contentDescription = null) },
                 onClick = {
                     onConfirm(5)
                     onDismiss()
@@ -191,20 +190,10 @@ fun SpacesMenu(
         }
         if (selectedSpaces.contains(6)) {
             DropdownMenuItem(
-                text = { Text(stringResource(R.string.Habits)) },
-                leadingIcon = { Icon(Icons.Outlined.EventAvailable, contentDescription = null) },
-                onClick = {
-                    onConfirm(6)
-                    onDismiss()
-                }
-            )
-        }
-        if (selectedSpaces.contains(7)) {
-            DropdownMenuItem(
                 text = { Text(stringResource(R.string.Analytics)) },
                 leadingIcon = { Icon(Icons.Outlined.Analytics, contentDescription = null) },
                 onClick = {
-                    onConfirm(7)
+                    onConfirm(6)
                     onDismiss()
                 }
             )

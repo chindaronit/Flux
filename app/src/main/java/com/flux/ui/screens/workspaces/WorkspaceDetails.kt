@@ -50,7 +50,6 @@ import com.flux.data.model.getSpacesList
 import com.flux.navigation.NavRoutes
 import com.flux.other.icons
 import com.flux.ui.components.AddNewSpacesBottomSheet
-import com.flux.ui.components.CalendarToolBar
 import com.flux.ui.components.ChangeIconBottomSheet
 import com.flux.ui.components.DeleteAlert
 import com.flux.ui.components.EventToolBar
@@ -72,7 +71,6 @@ import com.flux.ui.events.TaskEvents
 import com.flux.ui.events.TodoEvents
 import com.flux.ui.events.WorkspaceEvents
 import com.flux.ui.screens.analytics.analyticsItems
-import com.flux.ui.screens.calendar.calendarItems
 import com.flux.ui.screens.events.eventHomeItems
 import com.flux.ui.screens.habits.habitsHomeItems
 import com.flux.ui.screens.journal.journalHomeItems
@@ -94,7 +92,6 @@ fun WorkspaceDetails(
     allLabels: List<LabelModel>,
     settings: Settings,
     isNotesLoading: Boolean,
-    isAllEventsLoading: Boolean,
     isDatedTaskLoading: Boolean,
     isTodoLoading: Boolean,
     isJournalEntriesLoading: Boolean,
@@ -312,8 +309,8 @@ fun WorkspaceDetails(
                         if (spacesList.find { it.id == selectedSpaceId.intValue }?.title == stringResource(R.string.To_Do)) {
                             TodoToolBar(navController, workspaceId)
                         }
-                        if (spacesList.find { it.id == selectedSpaceId.intValue }?.title == stringResource(R.string.Calendar)) {
-                            CalendarToolBar(
+                        if (spacesList.find { it.id == selectedSpaceId.intValue }?.title == stringResource(R.string.Events)) {
+                            EventToolBar(
                                 navController,
                                 workspaceId,
                                 context,
@@ -329,9 +326,6 @@ fun WorkspaceDetails(
                                     )
                                 }
                             )
-                        }
-                        if (spacesList.find { it.id == selectedSpaceId.intValue }?.title == stringResource(R.string.Events)) {
-                            EventToolBar(context, navController, workspaceId)
                         }
                     }
                 }
@@ -360,21 +354,6 @@ fun WorkspaceDetails(
                     isNotesLoading,
                     allNotes,
                     onNotesEvents
-                )
-            }
-            if (spacesList.find { it.id == selectedSpaceId.intValue }?.title == context.getString(R.string.Calendar)) {
-                calendarItems(
-                    navController,
-                    radius,
-                    is24HourFormat,
-                    isDatedTaskLoading,
-                    workspaceId,
-                    selectedYearMonth,
-                    selectedDate,
-                    settings,
-                    datedEvents,
-                    allEventInstances,
-                    onTaskEvents
                 )
             }
             if (spacesList.find { it.id == selectedSpaceId.intValue }?.title == context.getString(R.string.Journal)) {
@@ -408,10 +387,13 @@ fun WorkspaceDetails(
                     navController,
                     radius,
                     is24HourFormat,
-                    isAllEventsLoading,
-                    allEvents,
-                    allEventInstances,
+                    isDatedTaskLoading,
                     workspaceId,
+                    selectedYearMonth,
+                    selectedDate,
+                    settings,
+                    datedEvents,
+                    allEventInstances,
                     onTaskEvents
                 )
             }

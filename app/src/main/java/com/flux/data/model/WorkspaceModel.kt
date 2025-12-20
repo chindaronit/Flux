@@ -4,7 +4,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.AutoStories
-import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.EventAvailable
 import androidx.compose.material.icons.filled.TaskAlt
@@ -44,9 +43,8 @@ fun getSpacesList(): List<Space> {
         Space(1, stringResource(R.string.Notes), Icons.AutoMirrored.Default.Notes),
         Space(2, stringResource(R.string.To_Do), Icons.Default.TaskAlt),
         Space(3, stringResource(R.string.Events), Icons.Default.Event),
-        Space(4, stringResource(R.string.Calendar), Icons.Default.CalendarMonth),
-        Space(5, stringResource(R.string.Journal), Icons.Default.AutoStories),
-        Space(6, stringResource(R.string.Habits), Icons.Default.EventAvailable),
-        Space(7, stringResource(R.string.Analytics), Icons.Default.Analytics)
+        Space(4, stringResource(R.string.Journal), Icons.Default.AutoStories),
+        Space(5, stringResource(R.string.Habits), Icons.Default.EventAvailable),
+        Space(6, stringResource(R.string.Analytics), Icons.Default.Analytics)
     )
 }

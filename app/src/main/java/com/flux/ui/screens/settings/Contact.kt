@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.rounded.ChatBubble
 import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material.icons.rounded.Feedback
@@ -41,10 +42,27 @@ fun Contact(navController: NavController, radius: Int) {
         ) {
             item {
                 SettingOption(
-                    title = stringResource(R.string.Contact_desc),
+                    title = "Feature Request/Suggestion",
+                    description = "Give your ideas on github discussion.",
+                    icon = Icons.Default.Lightbulb,
+                    radius = shapeManager(radius = radius, isFirst = true),
+                    actionType = ActionType.LINK,
+                    linkClicked = {
+                        val intent = Intent(
+                            Intent.ACTION_VIEW,
+                            "https://github.com/chindaronit/Flux/discussions/61".toUri()
+                        )
+                        context.startActivity(intent)
+                    }
+                )
+            }
+
+            item {
+                SettingOption(
+                    title = "Bug Report",
                     description = stringResource(R.string.Contact_desc2),
                     icon = Icons.Rounded.Feedback,
-                    radius = shapeManager(radius = radius, isBoth = true),
+                    radius = shapeManager(radius = radius, isLast = true),
                     actionType = ActionType.LINK,
                     linkClicked = {
                         val intent = Intent(

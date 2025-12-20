@@ -31,24 +31,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.flux.R
 import com.flux.data.model.EventInstanceModel
 import com.flux.data.model.EventModel
 import com.flux.data.model.RecurrenceRule
-import com.flux.data.model.occursOn
 import com.flux.navigation.Loader
 import com.flux.navigation.NavRoutes
+import com.flux.ui.components.DailyViewCalendar
+import com.flux.ui.components.MonthlyViewCalendar
 import com.flux.ui.components.shapeManager
 import com.flux.ui.events.TaskEvents
+import com.flux.ui.state.Settings
 import java.text.SimpleDateFormat
 import java.time.Instant
-import java.time.LocalDate
+import java.time.YearMonth
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
 import java.util.Date
 import java.util.Locale
 
@@ -58,128 +58,85 @@ fun LazyListScope.eventHomeItems(
     radius: Int,
     is24HourFormat: Boolean,
     isLoading: Boolean,
-    allEvents: List<EventModel>,
-    allEventInstances: List<EventInstanceModel>,
     workspaceId: String,
+    selectedMonth: YearMonth,
+    selectedDate: Long,
+    settings: Settings,
+    datedEvents: List<EventModel>,
+    allEventInstances: List<EventInstanceModel>,
     onTaskEvents: (TaskEvents) -> Unit
 ) {
-    val today = LocalDate.now()
-    val endOfMonth = today.withDayOfMonth(today.lengthOfMonth())
+    val isMonthlyView = settings.data.isCalendarMonthlyView
 
-    // Today’s events
-    val eventsToday = allEvents.filter { it.occursOn(today) }
-
-    // Upcoming (at least one occurrence before end of month, but not today)
-    val upcomingEvents = allEvents.filter { event ->
-        !event.occursOn(today) &&
-                (1..ChronoUnit.DAYS.between(today, endOfMonth)).any { offset ->
-                    val date = today.plusDays(offset)
-                    event.occursOn(date)
-                }
-    }.distinctBy { it.id }
+    if (isMonthlyView) {
+        item {
+            MonthlyViewCalendar(
+                selectedMonth, selectedDate,
+                onMonthChange = {
+                    onTaskEvents(TaskEvents.ChangeMonth(it))
+                },
+                onDateChange = {
+                    onTaskEvents(TaskEvents.LoadDateTask(workspaceId, it))
+                    onTaskEvents(TaskEvents.ChangeDate(it))
+                })
+        }
+    } else {
+        item {
+            DailyViewCalendar(
+                selectedMonth,
+                selectedDate,
+                onDateChange = {
+                    onTaskEvents(TaskEvents.LoadDateTask(workspaceId, it))
+                    onTaskEvents(TaskEvents.ChangeDate(it))
+                })
+        }
+    }
 
     if (isLoading) {
         item { Loader() }
+    } else if (datedEvents.isEmpty()) {
+        item { EmptyEvents() }
     } else {
-        if (eventsToday.isEmpty() && upcomingEvents.isEmpty()) {
-            item { EmptyEvents() }
-        } else {
-            // Section for today
-            if (eventsToday.isNotEmpty()) {
-                item {
-                    Text(
-                        text = stringResource(R.string.Today),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
-                }
-            }
+        item { Spacer(Modifier.height(24.dp)) }
 
-            items(eventsToday) { event ->
-                val instance = allEventInstances.find {
-                    it.eventId == event.id && it.instanceDate == today.toEpochDay()
-                }
+        val pendingTasks = datedEvents.filter { task ->
+            val instance = allEventInstances.find { it.eventId == task.id && it.instanceDate == selectedDate }
+            instance == null
+        }
 
+        val completedTasks = datedEvents.filter { task ->
+            val instance = allEventInstances.find { it.eventId == task.id && it.instanceDate == selectedDate }
+            instance != null
+        }
+
+        if (pendingTasks.isNotEmpty()) {
+            items(pendingTasks) { task ->
                 EventCard(
                     radius = radius,
                     is24HourFormat = is24HourFormat,
-                    isPending = instance == null,
-                    title = event.title,
-                    repeat = event.recurrence,
-                    startDateTime = event.startDateTime,
-                    onChangeStatus = {
-                        onTaskEvents(
-                            TaskEvents.ToggleStatus(
-                                instance == null,
-                                event.id,
-                                workspaceId,
-                                today.toEpochDay()
-                            )
-                        )
-                    },
-                    onClick = { navController.navigate(NavRoutes.EventDetails.withArgs(workspaceId, event.id, today.toEpochDay())) }
+                    isPending = true,
+                    title = task.title,
+                    repeat = task.recurrence,
+                    startDateTime = task.startDateTime,
+                    onChangeStatus = { onTaskEvents(TaskEvents.ToggleStatus(true, task.id, workspaceId, selectedDate)) },
+                    onClick = { navController.navigate(NavRoutes.EventDetails.withArgs(workspaceId, task.id, selectedDate)) }
                 )
                 Spacer(Modifier.height(8.dp))
             }
         }
-
-        // Section for upcoming
-        if (upcomingEvents.isNotEmpty()) {
-            item {
-                Text(
-                    text = stringResource(R.string.Upcoming),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(vertical = 8.dp)
+        if (completedTasks.isNotEmpty()) {
+            items(completedTasks) { task ->
+                EventCard(
+                    radius = radius,
+                    is24HourFormat = is24HourFormat,
+                    isPending = false,
+                    title = task.title,
+                    repeat = task.recurrence,
+                    startDateTime = task.startDateTime,
+                    onChangeStatus = { onTaskEvents(TaskEvents.ToggleStatus(false, task.id, workspaceId, selectedDate)) },
+                    onClick = { navController.navigate(NavRoutes.EventDetails.withArgs(workspaceId, task.id, selectedDate)) }
                 )
-            }
-
-            items(upcomingEvents) { event ->
-                // Find the *next occurrence date* after today
-                val nextDate = (1..ChronoUnit.DAYS.between(today, endOfMonth))
-                    .map { today.plusDays(it) }
-                    .firstOrNull { event.occursOn(it) }
-
-                if (nextDate != null) {
-                    val epochDay = nextDate.toEpochDay()
-
-                    // Find if an instance already exists for that date
-                    val instance = allEventInstances.find {
-                        it.eventId == event.id && it.instanceDate == epochDay
-                    }
-
-                    EventCard(
-                        radius = radius,
-                        is24HourFormat = is24HourFormat,
-                        isPending = instance == null,
-                        title = event.title,
-                        repeat = event.recurrence,
-                        startDateTime = event.startDateTime,
-                        onChangeStatus = {
-                            onTaskEvents(
-                                TaskEvents.ToggleStatus(
-                                    instance == null,
-                                    event.id,
-                                    workspaceId,
-                                    epochDay
-                                )
-                            )
-                        },
-                        onClick = {
-                            navController.navigate(
-                                NavRoutes.EventDetails.withArgs(
-                                    workspaceId,
-                                    event.id,
-                                    epochDay
-                                )
-                            )
-                        }
-                    )
-                    Spacer(Modifier.height(8.dp))
-                }
+                Spacer(Modifier.height(8.dp))
             }
         }
     }

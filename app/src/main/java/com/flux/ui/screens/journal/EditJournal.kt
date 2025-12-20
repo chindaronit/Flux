@@ -3,6 +3,9 @@ package com.flux.ui.screens.journal
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,10 +16,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -47,8 +53,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
 import com.flux.R
 import com.flux.data.model.JournalModel
 import com.flux.ui.components.DatePickerModal
@@ -71,9 +80,7 @@ fun EditJournal(
     journal: JournalModel,
     onJournalEvents: (JournalEvents) -> Unit
 ) {
-    val isToday =
-        LocalDate.now() == Instant.ofEpochMilli(journal.dateTime).atZone(ZoneId.systemDefault())
-            .toLocalDate()
+    val isToday = LocalDate.now() == Instant.ofEpochMilli(journal.dateTime).atZone(ZoneId.systemDefault()).toLocalDate()
     val context = LocalContext.current
     val richTextState = rememberRichTextState()
     val interactionSource = remember { MutableInteractionSource() }
@@ -81,6 +88,7 @@ fun EditJournal(
     val pickedImages = rememberSaveable { mutableStateListOf<String>().apply { addAll(journal.images) } }
     var showDatePicker by rememberSaveable { mutableStateOf(false) }
     var selectedDateTime by rememberSaveable { mutableLongStateOf(journal.dateTime) }
+    var previewImage by remember { mutableStateOf<String?>(null) }
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
@@ -116,6 +124,49 @@ fun EditJournal(
                 selectedDateTime = newDateMillis
             }
         }, onDismiss = { showDatePicker = false })
+    }
+
+    if (previewImage != null) {
+        Dialog(
+            onDismissRequest = { previewImage = null },
+            properties = DialogProperties(
+                usePlatformDefaultWidth = false
+            )
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.95f))
+            ) {
+
+                Image(
+                    painter = rememberAsyncImagePainter(previewImage),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(24.dp),
+                    contentScale = ContentScale.Fit
+                )
+
+                IconButton(
+                    onClick = { previewImage = null },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(16.dp)
+                        .size(48.dp)
+                        .background(
+                            color = Color.Black.copy(alpha = 0.6f),
+                            shape = CircleShape
+                        )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close",
+                        tint = Color.White
+                    )
+                }
+            }
+        }
     }
 
     Scaffold(
@@ -169,8 +220,7 @@ fun EditJournal(
                 .padding(innerPadding)
                 .imePadding()
         ) {
-            Carousel(pickedImages) { pickedImages.remove(it) }
-
+            Carousel(pickedImages, {pickedImages.remove(it)}) { previewImage=it }
             RichTextEditor(
                 state = richTextState,
                 interactionSource = interactionSource,
@@ -203,7 +253,7 @@ fun EditJournal(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Carousel(items: List<String>, onItemRemoved: (String) -> Unit) {
+fun Carousel(items: List<String>, onItemRemoved: (String) -> Unit, onClick: (String)->Unit) {
     if (items.isNotEmpty()) {
         HorizontalMultiBrowseCarousel(
             state = rememberCarouselState { items.count() },
@@ -219,6 +269,7 @@ fun Carousel(items: List<String>, onItemRemoved: (String) -> Unit) {
             Box(
                 modifier = Modifier
                     .height(160.dp)
+                    .clickable{onClick(item)}
                     .maskClip(MaterialTheme.shapes.extraLarge)
             ) {
                 AsyncImage(

@@ -204,7 +204,6 @@ val WorkspaceScreens =
                 states.notesState.allLabels.filter { it.workspaceId == workspaceId },
                 states.settings,
                 states.notesState.isNotesLoading,
-                states.eventState.isAllEventsLoading,
                 states.eventState.isDatedEventLoading,
                 states.todoState.isLoading,
                 states.journalState.isLoading,

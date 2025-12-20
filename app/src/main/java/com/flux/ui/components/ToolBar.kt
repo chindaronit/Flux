@@ -149,7 +149,7 @@ fun JournalToolBar(navController: NavController, workspaceId: String) {
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU, Build.VERSION_CODES.S)
 @Composable
-fun CalendarToolBar(navController: NavController, workspaceId: String, context: Context, selectedDate: Long, isMonthlyView: Boolean, onClick: (Boolean) -> Unit) {
+fun EventToolBar(navController: NavController, workspaceId: String, context: Context, selectedDate: Long, isMonthlyView: Boolean, onClick: (Boolean) -> Unit) {
     Row {
         IconButton({ onClick(!isMonthlyView) }) {
             Icon(
@@ -209,32 +209,6 @@ fun HabitToolBar(context: Context, onAddClick: () -> Unit) {
         }
         if (canScheduleReminder(context) && isNotificationPermissionGranted(context)) {
             onAddClick()
-        }
-    }) { Icon(Icons.Default.Add, null, tint = MaterialTheme.colorScheme.primary) }
-}
-
-@RequiresApi(Build.VERSION_CODES.TIRAMISU, Build.VERSION_CODES.S)
-@Composable
-fun EventToolBar(context: Context, navController: NavController, workspaceId: String) {
-    IconButton({
-        if (!canScheduleReminder(context)) {
-            Toast.makeText(
-                context,
-                context.getText(R.string.Reminder_Permission),
-                Toast.LENGTH_SHORT
-            ).show()
-            requestExactAlarmPermission(context)
-        }
-        if (!isNotificationPermissionGranted(context)) {
-            Toast.makeText(
-                context,
-                context.getText(R.string.Notification_Permission),
-                Toast.LENGTH_SHORT
-            ).show()
-            openAppNotificationSettings(context)
-        }
-        if (canScheduleReminder(context) && isNotificationPermissionGranted(context)) {
-            navController.navigate(NavRoutes.NewEvent.withArgs(workspaceId, "", System.currentTimeMillis()))
         }
     }) { Icon(Icons.Default.Add, null, tint = MaterialTheme.colorScheme.primary) }
 }
