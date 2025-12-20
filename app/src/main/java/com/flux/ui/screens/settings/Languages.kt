@@ -167,6 +167,12 @@ private fun getLanguageInfo(languageCode: String): LanguageInfo {
             iconRes = R.drawable.portuguese
         )
 
+        "nl" -> LanguageInfo(
+            displayName = "Nederlands",
+            description = "Zet de taal naar Nederlands",
+            iconRes = R.drawable.dutch
+        )
+
         else -> LanguageInfo(
             displayName = locale.displayName,
             description = "Change language to ${locale.displayName}",
