@@ -57,6 +57,7 @@ import com.flux.R
 import com.flux.data.model.HabitModel
 import com.flux.data.model.RecurrenceRule
 import com.flux.ui.components.DatePickerModal
+import com.flux.ui.components.DeleteAlert
 import com.flux.ui.components.TimePicker
 import com.flux.ui.events.HabitEvents
 import com.flux.ui.screens.events.getTextFieldColors
@@ -76,6 +77,7 @@ fun NewHabit(
     settings: Settings,
     onHabitEvents: (HabitEvents) -> Unit
 ){
+    val context = LocalContext.current
     var newHabitTitle by rememberSaveable { mutableStateOf(habit.title) }
     var newHabitDescription by rememberSaveable { mutableStateOf(habit.description) }
     var newHabitTime by rememberSaveable { mutableLongStateOf(habit.startDateTime) }
@@ -94,6 +96,17 @@ fun NewHabit(
         stringResource(R.string.saturday_short),
         stringResource(R.string.sunday_short)
     )
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    if(showDeleteDialog){
+        DeleteAlert({
+            showDeleteDialog=false
+        }, {
+            onHabitEvents(HabitEvents.DeleteHabit(habit, context))
+            navController.popBackStack()
+            showDeleteDialog=false
+        })
+    }
 
     // Initialize selectedDays from existing habit's recurrence
     val selectedDays = remember {
@@ -101,7 +114,6 @@ fun NewHabit(
             addAll((habit.recurrence as RecurrenceRule.Weekly).daysOfWeek)
         }
     }
-    val context = LocalContext.current
 
     // Determine if this is creating a new habit or editing existing
     val isNewHabit = habit.title.isEmpty()
@@ -143,10 +155,7 @@ fun NewHabit(
                     }
 
                     if (!isNewHabit) {
-                        IconButton({
-                            navController.popBackStack()
-                            onHabitEvents(HabitEvents.DeleteHabit(habit, context))
-                        }) {
+                        IconButton({ showDeleteDialog=true }) {
                             Icon(
                                 Icons.Outlined.DeleteOutline,
                                 null,

@@ -28,6 +28,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
@@ -40,6 +41,7 @@ import androidx.navigation.NavController
 import com.flux.R
 import com.flux.data.model.TodoItem
 import com.flux.data.model.TodoModel
+import com.flux.ui.components.DeleteAlert
 import com.flux.ui.events.TodoEvents
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -52,6 +54,17 @@ fun TodoDetail(
 ) {
     var title by rememberSaveable { mutableStateOf(list.title) }
     val itemList = rememberSaveable { list.items.toMutableStateList() }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    if(showDeleteDialog){
+        DeleteAlert({
+            showDeleteDialog=false
+        }, {
+            onTodoEvents(TodoEvents.DeleteList(list))
+            navController.popBackStack()
+            showDeleteDialog=false
+        })
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
@@ -82,10 +95,7 @@ fun TodoDetail(
                                 )
                             )
                         }) { Icon(Icons.Default.Check, null) }
-                    IconButton({
-                        navController.popBackStack()
-                        onTodoEvents(TodoEvents.DeleteList(list))
-                    }) {
+                    IconButton({ showDeleteDialog=true }) {
                         Icon(
                             Icons.Default.DeleteOutline,
                             null,

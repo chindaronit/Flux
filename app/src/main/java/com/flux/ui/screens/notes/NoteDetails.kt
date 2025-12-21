@@ -35,6 +35,7 @@ import com.flux.data.model.NotesModel
 import com.flux.navigation.NavRoutes
 import com.flux.other.EditAction
 import com.flux.ui.components.ActionType
+import com.flux.ui.components.DeleteAlert
 import com.flux.ui.components.ExportNoteDialog
 import com.flux.ui.components.NoteDetailsTopBar
 import com.flux.ui.components.NotesInputCard
@@ -70,6 +71,7 @@ fun NoteDetails(
     val interactionSource = remember { MutableInteractionSource() }
     var showShareNotesDialog by remember { mutableStateOf(false) }
     val pickedImages = rememberSaveable { mutableStateListOf<String>().apply { addAll(note.images) } }
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     // Flag to prevent tracking changes during undo/redo operations
     val isUndoRedoOperation = remember { mutableStateOf(false) }
@@ -124,6 +126,16 @@ fun NoteDetails(
             }
         }
     )
+
+    if(showDeleteDialog){
+        DeleteAlert(onConfirmation = {
+            onNotesEvents(NotesEvents.DeleteNote(note))
+            navController.popBackStack()
+            showDeleteDialog=false
+        }, onDismissRequest = {
+            showDeleteDialog=false
+        })
+    }
 
     if (showSelectLabels) {
         SelectLabelDialog(
@@ -215,10 +227,7 @@ fun NoteDetails(
                 onBackPressed = { navController.popBackStack() },
                 onDone = { onSaveNote() },
                 onTogglePinned = { isPinned = !isPinned },
-                onDelete = {
-                    onNotesEvents(NotesEvents.DeleteNote(note))
-                    navController.popBackStack()
-                },
+                onDelete = { showDeleteDialog=true },
                 onAddLabel = { showSelectLabels = true },
                 onAboutClicked = { showAboutNotes = true },
                 onExportNotes = { showShareNotesDialog = true },

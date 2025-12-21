@@ -146,6 +146,7 @@ fun WorkspaceDetails(
     var addSpaceBottomSheet by remember { mutableStateOf(false) }
     val spacesList = getSpacesList()
     val richTextState = rememberRichTextState()
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     val importNoteLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
@@ -180,6 +181,16 @@ fun WorkspaceDetails(
                 Toast.makeText(context, context.getString(R.string.import_failed), Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    if(showDeleteDialog){
+        DeleteAlert(onConfirmation = {
+            onNotesEvents(NotesEvents.DeleteNotes(allNotes.filter { selectedNotes.contains(it.notesId) }))
+            onNotesEvents(NotesEvents.ClearSelection)
+            showDeleteDialog=false
+        }, onDismissRequest = {
+            showDeleteDialog=false
+        })
     }
 
     Scaffold(
@@ -249,13 +260,7 @@ fun WorkspaceDetails(
                                 )
                             }))
                         },
-                        onDeleteClick = {
-                            onNotesEvents(NotesEvents.DeleteNotes(allNotes.filter {
-                                selectedNotes.contains(
-                                    it.notesId
-                                )
-                            }))
-                        },
+                        onDeleteClick = { showDeleteDialog = true },
                         onSelectAllClick = {
                             if (allNotes.size == selectedNotes.size) {
                                 onNotesEvents(NotesEvents.ClearSelection)

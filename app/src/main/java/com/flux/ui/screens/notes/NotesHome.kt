@@ -85,8 +85,7 @@ fun LazyListScope.notesHomeItems(
                                     radius = radius,
                                     isSelected = selectedNotes.contains(note.notesId),
                                     note = note,
-                                    labels = allLabels.filter { note.labels.contains(it.labelId) }
-                                        .map { it.value },
+                                    labels = allLabels.filter { note.labels.contains(it.labelId) }.map { it.value },
                                     onClick = {
                                         navController.navigate(
                                             NavRoutes.NoteDetails.withArgs(

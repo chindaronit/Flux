@@ -44,6 +44,7 @@ import com.flux.R
 import com.flux.data.model.TodoModel
 import com.flux.navigation.Loader
 import com.flux.navigation.NavRoutes
+import com.flux.ui.components.DeleteAlert
 import com.flux.ui.components.shapeManager
 import com.flux.ui.events.TodoEvents
 
@@ -56,11 +57,25 @@ fun LazyListScope.todoHomeItems(
     isLoading: Boolean,
     onTodoEvents: (TodoEvents) -> Unit
 ) {
+
+
     if (isLoading) item { Loader() }
     else if (allList.isEmpty()) item { EmptyTodoList() }
     else {
         item {
             var expanded by remember { mutableStateOf("") }
+            var showDeleteDialog by remember { mutableStateOf(false) }
+            var selectedItem by remember { mutableStateOf<TodoModel?>(null) }
+
+            if(showDeleteDialog){
+                DeleteAlert(onConfirmation = {
+                    onTodoEvents(TodoEvents.DeleteList(selectedItem!!))
+                    selectedItem=null
+                    showDeleteDialog=false
+                }, onDismissRequest = {
+                    showDeleteDialog=false
+                })
+            }
 
             ElevatedCard(
                 modifier = Modifier.padding(top = 8.dp),
@@ -88,19 +103,14 @@ fun LazyListScope.todoHomeItems(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Row(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(end = 3.dp),
+                                modifier = Modifier.weight(1f).padding(end = 3.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 IconButton(onClick = {
                                     expanded = if (expanded != item.id) item.id else ""
                                 }) {
-                                    Icon(
-                                        if (expanded == item.id) Icons.Default.KeyboardArrowDown else Icons.AutoMirrored.Default.KeyboardArrowRight,
-                                        null
-                                    )
+                                    Icon(if (expanded == item.id) Icons.Default.KeyboardArrowDown else Icons.AutoMirrored.Default.KeyboardArrowRight, null)
                                 }
                                 Text(
                                     item.title,
@@ -109,7 +119,10 @@ fun LazyListScope.todoHomeItems(
                                     maxLines = 1
                                 )
                             }
-                            IconButton(onClick = { onTodoEvents(TodoEvents.DeleteList(item)) }) {
+                            IconButton(onClick = {
+                                selectedItem=item
+                                showDeleteDialog=true
+                            }) {
                                 Icon(
                                     Icons.Default.Remove,
                                     null,

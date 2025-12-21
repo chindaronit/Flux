@@ -61,6 +61,7 @@ import coil.compose.rememberAsyncImagePainter
 import com.flux.R
 import com.flux.data.model.JournalModel
 import com.flux.ui.components.DatePickerModal
+import com.flux.ui.components.DeleteAlert
 import com.flux.ui.components.RichTextStyleRow
 import com.flux.ui.events.JournalEvents
 import com.flux.ui.screens.events.toFormattedDate
@@ -89,6 +90,17 @@ fun EditJournal(
     var showDatePicker by rememberSaveable { mutableStateOf(false) }
     var selectedDateTime by rememberSaveable { mutableLongStateOf(journal.dateTime) }
     var previewImage by remember { mutableStateOf<String?>(null) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    if(showDeleteDialog){
+        DeleteAlert({
+            showDeleteDialog=false
+        }, {
+            onJournalEvents(JournalEvents.DeleteEntry(journal))
+            navController.popBackStack()
+            showDeleteDialog=false
+        })
+    }
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
@@ -173,16 +185,11 @@ fun EditJournal(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         topBar = {
             CenterAlignedTopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-                ),
+                colors = TopAppBarDefaults.topAppBarColors(MaterialTheme.colorScheme.surfaceContainerLow),
                 title = { Text(selectedDateTime.toFormattedDate()) },
                 navigationIcon = {
                     IconButton({ navController.popBackStack() }) {
-                        Icon(
-                            Icons.AutoMirrored.Default.ArrowBack,
-                            null
-                        )
+                        Icon(Icons.AutoMirrored.Default.ArrowBack, null)
                     }
                 },
                 actions = {
@@ -200,10 +207,7 @@ fun EditJournal(
                     }) {
                         Icon(Icons.Default.Check, null)
                     }
-                    IconButton({
-                        navController.popBackStack()
-                        onJournalEvents(JournalEvents.DeleteEntry(journal))
-                    }) {
+                    IconButton({ showDeleteDialog=true }) {
                         Icon(
                             Icons.Default.DeleteOutline,
                             null,

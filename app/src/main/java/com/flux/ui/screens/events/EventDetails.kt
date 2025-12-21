@@ -49,6 +49,7 @@ import com.flux.R
 import com.flux.data.model.EventModel
 import com.flux.data.model.RecurrenceRule
 import com.flux.navigation.NavRoutes
+import com.flux.ui.components.DeleteAlert
 import com.flux.ui.events.TaskEvents
 import com.flux.ui.state.Settings
 import java.time.ZoneId
@@ -73,6 +74,17 @@ fun EventDetails(
     var currentRecurrenceRule by remember { mutableStateOf(event.recurrence) }
     val context = LocalContext.current
     val time = event.startDateTime.toFormattedTime(settings.data.is24HourFormat)
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    if(showDeleteDialog){
+        DeleteAlert({
+            showDeleteDialog=false
+        }, {
+            onTaskEvents(TaskEvents.DeleteTask(event, context))
+            navController.popBackStack()
+            showDeleteDialog=false
+        })
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
@@ -99,10 +111,7 @@ fun EventDetails(
                             contentDescription = "Edit"
                         )
                     }
-                    IconButton({
-                        navController.popBackStack()
-                        onTaskEvents(TaskEvents.DeleteTask(event, context))
-                    }) {
+                    IconButton({ showDeleteDialog=true }) {
                         Icon(
                             Icons.Outlined.DeleteOutline,
                             null,
@@ -138,7 +147,7 @@ fun EventDetails(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Refresh, null)
                     Spacer(Modifier.width(6.dp))
-                    Text("${getRecurrenceText(context, currentRecurrenceRule, event.startDateTime)} at $time",)
+                    Text("${getRecurrenceText(context, currentRecurrenceRule, event.startDateTime)} at $time")
                 }
             }
             if(event.endDateTime!=-1L){

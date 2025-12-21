@@ -189,7 +189,6 @@ internal fun SelectedBar(
             IconButton(onSelectAllClick) { Icon(if(isAllSelected) Icons.Default.Deselect else Icons.Default.SelectAll, null, tint = MaterialTheme.colorScheme.primary) }
             if(showDeleteOption) IconButton({
                 onDeleteClick()
-                onCloseClick()
             } ) { Icon(Icons.Default.Delete, null, tint = MaterialTheme.colorScheme.primary) }
         }
     }

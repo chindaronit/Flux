@@ -25,6 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -86,11 +87,7 @@ fun WorkspaceSearchBar(
                     onSettingsClicked = onSettingsClicked
                 )
             },
-            colors = SearchBarDefaults.colors(
-                containerColor = if (expanded) MaterialTheme.colorScheme.surfaceContainerLow else MaterialTheme.colorScheme.surfaceColorAtElevation(
-                    6.dp
-                )
-            ),
+            colors = SearchBarDefaults.colors(MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)),
             expanded = expanded,
             onExpandedChange = { },
         ) {}
@@ -113,13 +110,14 @@ fun WorkspaceSearchInputField(
         expanded = false,
         onExpandedChange = { },
         placeholder = { Text(stringResource(R.string.Search_Workspaces)) },
-        leadingIcon = { Icon(Icons.Rounded.Search, "Search") },
+        leadingIcon = { Icon(Icons.Rounded.Search, "Search", tint = MaterialTheme.colorScheme.primary) },
         trailingIcon = {
             Row {
                 if (query.isNotBlank()) CloseButton(onSearchClosed)
                 SettingsButton(onSettingsClicked)
             }
-        }
+        },
+        colors = TextFieldDefaults.colors(unfocusedContainerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp), focusedContainerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp))
     )
 }
 
