@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.SubdirectoryArrowRight
 import androidx.compose.material3.ButtonDefaults
@@ -35,7 +36,6 @@ import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.flux.R
@@ -55,6 +55,7 @@ fun TodoDetail(
     var title by rememberSaveable { mutableStateOf(list.title) }
     val itemList = rememberSaveable { list.items.toMutableStateList() }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var isEditing by remember { mutableStateOf(false) }
 
     if(showDeleteDialog){
         DeleteAlert({
@@ -71,7 +72,7 @@ fun TodoDetail(
         topBar = {
             CenterAlignedTopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(MaterialTheme.colorScheme.surfaceContainerLow),
-                title = { Text(stringResource(R.string.Edit_list)) },
+                title = { Text(if(isEditing) stringResource(R.string.Edit_list) else list.title) },
                 navigationIcon = {
                     IconButton({ navController.popBackStack() }) {
                         Icon(
@@ -81,56 +82,58 @@ fun TodoDetail(
                     }
                 },
                 actions = {
-                    IconButton(
-                        enabled = title.isNotBlank(),
-                        onClick = {
-                            navController.popBackStack()
-                            onTodoEvents(
-                                TodoEvents.UpsertList(
-                                    list.copy(
-                                        title = title,
-                                        items = itemList.toList(),
-                                        workspaceId = workspaceId
-                                    )
-                                )
+                    if(isEditing){
+                        IconButton(
+                            enabled = title.isNotBlank(),
+                            onClick = {
+                                onTodoEvents(TodoEvents.UpsertList(list.copy(title = title, items = itemList.toList(), workspaceId = workspaceId)))
+                                isEditing=false
+                            }) { Icon(Icons.Default.Check, null) }
+                        IconButton({ showDeleteDialog=true }) {
+                            Icon(
+                                Icons.Default.DeleteOutline,
+                                null,
+                                tint = MaterialTheme.colorScheme.error
                             )
-                        }) { Icon(Icons.Default.Check, null) }
-                    IconButton({ showDeleteDialog=true }) {
-                        Icon(
-                            Icons.Default.DeleteOutline,
-                            null,
-                            tint = MaterialTheme.colorScheme.error
-                        )
+                        }
+                    }
+                    else{
+                        IconButton({ isEditing=true }) {
+                            Icon(
+                                Icons.Default.Edit,
+                                null,
+                            )
+                        }
                     }
                 }
             )
         },
     ) { innerPadding ->
         LazyColumn(Modifier.padding(innerPadding)) {
-            item {
-                TextField(
-                    value = title,
-                    singleLine = true,
-                    onValueChange = { title = it },
-                    placeholder = { Text(stringResource(R.string.Title)) },
-                    textStyle = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = TextFieldDefaults.colors(
-                        focusedIndicatorColor = MaterialTheme.colorScheme.surfaceContainer,
-                        unfocusedIndicatorColor = MaterialTheme.colorScheme.surfaceContainer,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                        focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                        focusedTextColor = MaterialTheme.colorScheme.primary,
-                        focusedPlaceholderColor = MaterialTheme.colorScheme.primary
+            if (isEditing){
+                item {
+                    TextField(
+                        value = title,
+                        singleLine = true,
+                        onValueChange = { title = it },
+                        placeholder = { Text(stringResource(R.string.Title)) },
+                        textStyle = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = TextFieldDefaults.colors(
+                            focusedIndicatorColor = MaterialTheme.colorScheme.surfaceContainer,
+                            unfocusedIndicatorColor = MaterialTheme.colorScheme.surfaceContainer,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                            focusedTextColor = MaterialTheme.colorScheme.primary,
+                            focusedPlaceholderColor = MaterialTheme.colorScheme.primary
+                        )
                     )
-                )
+                }
             }
 
             items(itemList) { item ->
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
@@ -139,9 +142,11 @@ fun TodoDetail(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Checkbox(item.isChecked, onCheckedChange = { checked ->
-                            val index = itemList.indexOf(item)
-                            if (index != -1) {
-                                itemList[index] = item.copy(isChecked = checked)
+                            if(isEditing){
+                                val index = itemList.indexOf(item)
+                                if (index != -1) {
+                                    itemList[index] = item.copy(isChecked = checked)
+                                }
                             }
                         })
                         TextField(
@@ -153,10 +158,8 @@ fun TodoDetail(
                                     itemList[index] = item.copy(value = newText)
                                 }
                             },
+                            readOnly = !isEditing,
                             placeholder = { Text(stringResource(R.string.Title)) },
-                            textStyle = MaterialTheme.typography.titleMedium.copy(
-                                textDecoration = if (item.isChecked) TextDecoration.LineThrough else TextDecoration.None
-                            ),
                             colors = TextFieldDefaults.colors(
                                 focusedIndicatorColor = MaterialTheme.colorScheme.surfaceContainerLow,
                                 unfocusedIndicatorColor = MaterialTheme.colorScheme.surfaceContainerLow,
@@ -167,31 +170,34 @@ fun TodoDetail(
                             )
                         )
                     }
-                    IconButton({ itemList.remove(item) }) {
-                        Icon(
-                            Icons.Default.Remove,
-                            null,
-                            tint = MaterialTheme.colorScheme.error
-                        )
+                    if(isEditing){
+                        IconButton({ itemList.remove(item) }) {
+                            Icon(
+                                Icons.Default.Remove,
+                                null,
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
                     }
                 }
             }
-
-            item {
-                TextButton(
-                    onClick = { itemList.add(TodoItem()) },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                        contentColor = MaterialTheme.colorScheme.onSurface
-                    ),
-                    modifier = Modifier.padding(start = 8.dp)
-                ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
+            if (isEditing){
+                item {
+                    TextButton(
+                        onClick = { itemList.add(TodoItem()) },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                            contentColor = MaterialTheme.colorScheme.onSurface
+                        ),
+                        modifier = Modifier.padding(start = 8.dp)
                     ) {
-                        Icon(Icons.Default.SubdirectoryArrowRight, null)
-                        Text(stringResource(R.string.Add_Item))
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.SubdirectoryArrowRight, null)
+                            Text(stringResource(R.string.Add_Item))
+                        }
                     }
                 }
             }
