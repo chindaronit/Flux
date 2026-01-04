@@ -1,5 +1,6 @@
 package com.flux.ui.viewModel
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flux.data.model.SettingsModel
@@ -46,7 +47,10 @@ class SettingsViewModel @Inject constructor(
         updateState { it.copy(isLoading = true) }
         viewModelScope.launch {
             repository.loadSettings().collect { data ->
-                if (data != null) updateState { it.copy(isLoading = false, data = data) }
+                if (data != null){
+                    println(data)
+                    updateState { it.copy(isLoading = false, data = data) }
+                }
                 else updateState { it.copy(isLoading = false) }
             }
         }
@@ -54,5 +58,15 @@ class SettingsViewModel @Inject constructor(
 
     private fun updateSettings(data: SettingsModel) {
         viewModelScope.launch(Dispatchers.IO) { repository.upsertSettings(data) }
+    }
+
+    suspend fun isStorageReady(): Boolean {
+        return repository.hasValidStorageRoot()
+    }
+
+    fun saveRootUri(uri: Uri) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.saveStorageRoot(uri)
+        }
     }
 }

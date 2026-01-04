@@ -20,5 +20,6 @@ data class SettingsModel(
     val workspaceGridColumns: Int = 1,
     val is24HourFormat: Boolean = false,
     val themeNumber: Int = 0,
-    val fontNumber: Int =0
+    val fontNumber: Int = 0,
+    val storageRootUri: String? = null
 )

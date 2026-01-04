@@ -90,6 +90,8 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.biometric)
+    implementation(libs.androidx.browser)
+    implementation(libs.androidx.documentfile)
 
     // Hilt
     ksp(libs.hilt.android.compiler)
@@ -106,7 +108,20 @@ dependencies {
 
     // Gson
     implementation(libs.gson)
+    implementation(libs.kotlinx.serialization.json)
 
     implementation(libs.richeditor.compose)
-    implementation(libs.kotlinx.serialization.json)
+
+
+    // CommonMark, for markdown rendering and parsing
+    implementation(libs.commonmark.ext.autolink)
+    implementation(libs.commonmark.ext.footnotes)
+    implementation(libs.commonmark.ext.ins)
+    implementation(libs.commonmark.ext.task.list.items)
+    implementation(libs.commonmark.ext.gfm.strikethrough)
+    implementation(libs.commonmark.ext.gfm.tables)
+    implementation(libs.commonmark.ext.heading.anchor)
+    implementation(libs.commonmark.ext.image.attributes)
+    implementation(libs.commonmark.ext.yaml.front.matter)
+    implementation(libs.commonmark)
 }

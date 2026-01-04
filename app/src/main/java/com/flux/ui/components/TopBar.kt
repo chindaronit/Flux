@@ -1,21 +1,25 @@
 package com.flux.ui.components
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.Redo
-import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Deselect
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PushPin
+import androidx.compose.material.icons.filled.RemoveRedEye
 import androidx.compose.material.icons.filled.SelectAll
-import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -26,10 +30,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
@@ -39,54 +44,50 @@ import com.flux.data.model.WorkspaceModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NoteDetailsTopBar(
-    canUndo: Boolean,
-    canRedo: Boolean,
     isPinned: Boolean,
+    isReadView: Boolean,
     onBackPressed: () -> Unit,
-    onDone: () -> Unit,
+    onReadClick: () -> Unit,
+    onEditClick: ()->Unit,
     onDelete: () -> Unit,
     onAddLabel: () -> Unit,
     onTogglePinned: () -> Unit,
     onAboutClicked: () -> Unit,
-    onExportNotes: () -> Unit,
-    onUndo: () -> Unit,
-    onRedo: () -> Unit
+    onShareNote: () -> Unit,
+    onSaveNote: () -> Unit,
+    onPrintNote: () -> Unit,
 ) {
     CenterAlignedTopAppBar(
         title = {
             Row {
-                IconButton(onClick = { if (canUndo) onUndo() }) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.Undo,
-                        null,
-                        modifier = Modifier.alpha(if (canUndo) 1f else 0.5f)
-                    )
+                Box(
+                    modifier = Modifier
+                        .background(
+                            if(!isReadView) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp),
+                            RoundedCornerShape(bottomStart = 32.dp, topStart = 32.dp)
+                        )
+                        .clip(RoundedCornerShape(bottomStart = 32.dp, topStart = 32.dp))
+                        .clickable { onEditClick() }
+                        .padding(8.dp)
+                ) {
+                    Icon(Icons.Default.Edit, null, tint= if(!isReadView) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary)
                 }
-                IconButton(onClick = { if (canRedo) onRedo() }) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.Redo,
-                        null,
-                        modifier = Modifier.alpha(if (canRedo) 1f else 0.5f)
-                    )
-                }
+                Spacer(Modifier.width(1.dp))
+                Box(
+                    modifier = Modifier
+                        .background(
+                            if(isReadView) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp),
+                            RoundedCornerShape(bottomEnd = 32.dp, topEnd = 32.dp)
+                        )
+                        .clip(RoundedCornerShape(bottomEnd = 32.dp, topEnd = 32.dp))
+                        .clickable { onReadClick() }
+                        .padding(8.dp)
+                ) { Icon(Icons.Default.RemoveRedEye, null, tint=if(isReadView) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary) }
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-        navigationIcon = {
-            IconButton(onClick = onBackPressed) {
-                Icon(
-                    Icons.AutoMirrored.Default.ArrowBack,
-                    null
-                )
-            }
-        },
-        actions = {
-            IconButton(onClick = {
-                onDone()
-                onBackPressed()
-            }) { Icon(Icons.Outlined.Check, null) }
-            DropdownMenuWithDetails(isPinned, onTogglePinned, onAddLabel, onAboutClicked, onExportNotes, onDelete)
-        }
+        navigationIcon = { IconButton(onClick = onBackPressed) { Icon(Icons.AutoMirrored.Default.ArrowBack, null) } },
+        actions = { DropdownMenuWithDetails(isPinned, onTogglePinned, onAddLabel, onAboutClicked, onShareNote, onSaveNote, onPrintNote, onDelete) }
     )
 }
 
@@ -162,9 +163,7 @@ internal fun SelectedBar(
     onCloseClick: () -> Unit
 ) {
     Row(
-        Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
+        Modifier.fillMaxWidth().padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {

@@ -1,8 +1,5 @@
 package com.flux.ui.components
 
-import android.content.Context
-import android.content.Intent
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -19,23 +16,31 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Label
+import androidx.compose.material.icons.automirrored.outlined.FormatListBulleted
 import androidx.compose.material.icons.automirrored.outlined.LabelImportant
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.EditCalendar
 import androidx.compose.material.icons.filled.FilePresent
 import androidx.compose.material.icons.filled.FontDownload
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.NewLabel
 import androidx.compose.material.icons.filled.TextFields
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.FormatListNumbered
 import androidx.compose.material.icons.outlined.NotificationsActive
+import androidx.compose.material.icons.outlined.RemoveCircleOutline
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -45,11 +50,15 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -58,6 +67,7 @@ import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -67,7 +77,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -76,12 +85,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import androidx.core.content.FileProvider
 import com.flux.R
 import com.flux.data.model.LabelModel
+import com.flux.other.ExportType
 import com.flux.ui.theme.FONTS
-import com.mohamedrejeb.richeditor.model.RichTextState
-import java.io.File
+import kotlinx.serialization.Serializable
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -325,11 +333,6 @@ fun DatePickerModal(
     ) {
         DatePicker(state = datePickerState)
     }
-}
-
-fun convertMillisToDate(millis: Long): String {
-    val formatter = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
-    return formatter.format(Date(millis))
 }
 
 fun convertMillisToTime(millis: Long, is24Hour: Boolean = false): String {
@@ -677,14 +680,11 @@ fun DeleteAlert(
 }
 
 @Composable
-fun ExportNoteDialog(
-    noteTitle: String,
-    richTextState: RichTextState,
+fun ShareNoteDialog(
+    isSharing: Boolean,
+    onConfirm: (ExportType) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val context = LocalContext.current
-    val fileName = noteTitle.trim().replace("\\s+".toRegex(), "_")
-
     Dialog(onDismissRequest = onDismiss) {
         Card(
             shape = RoundedCornerShape(16.dp),
@@ -693,7 +693,7 @@ fun ExportNoteDialog(
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = stringResource(R.string.Export_As),
+                    text = if(isSharing) "Share as" else stringResource(R.string.Export_As),
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(bottom = 16.dp)
@@ -701,10 +701,7 @@ fun ExportNoteDialog(
 
                 // Text Export
                 Card(
-                    onClick = {
-                        val content = richTextState.annotatedString.text
-                        context.shareTextFile(fileName, content)
-                    },
+                    onClick = { onConfirm(ExportType.TXT) },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -715,16 +712,34 @@ fun ExportNoteDialog(
 
                 // Markdown Export
                 Card(
-                    onClick = {
-                        val markdownContent = richTextState.toMarkdown()
-                        context.shareMarkdownFile(fileName, markdownContent)
-                        onDismiss()
-                    },
+                    onClick = { onConfirm(ExportType.MARKDOWN) },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.FilePresent, null)
                         Text( stringResource(R.string.Markdown))
+                    }
+                }
+
+                // Image Export
+                Card(
+                    onClick = { onConfirm(ExportType.IMAGE) },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Image, null)
+                        Text( "Image")
+                    }
+                }
+
+                // HTML Export
+                Card(
+                    onClick = { onConfirm(ExportType.HTML) },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Code, null)
+                        Text( "HTML")
                     }
                 }
             }
@@ -777,53 +792,355 @@ fun FontDialog(
     }
 }
 
-fun Context.shareTextFile(fileName: String, content: String) {
-    try {
-        val file = File(cacheDir, "$fileName.txt")
-        file.writeText(content)
+@Composable
+fun LinkDialog(
+    onDismissRequest: () -> Unit,
+    onConfirm: (name: String, uri: String) -> Unit
+) {
 
-        val uri = FileProvider.getUriForFile(
-            this,
-            "$packageName.fileprovider",
-            file
-        )
+    var name by remember { mutableStateOf("") }
+    var link by remember { mutableStateOf("") }
 
-        val shareIntent = Intent(Intent.ACTION_SEND).apply {
-            type = "text/plain"
-            putExtra(Intent.EXTRA_STREAM, uri)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    val linkError by remember {
+        derivedStateOf {
+            if (link.isNotEmpty()) {
+                // Email is considered erroneous until it completely matches EMAIL_ADDRESS.
+                !android.util.Patterns.WEB_URL.matcher(link).matches()
+            } else {
+                false
+            }
         }
-
-        startActivity(Intent.createChooser(shareIntent, getString(R.string.Share_txt)))
-    } catch (e: Exception) {
-        e.printStackTrace()
-        Toast.makeText(this, getString(R.string.Error_Share_txt), Toast.LENGTH_SHORT).show()
     }
+
+    AlertDialog(
+        title = { Text("Link") },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Name") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = link,
+                    onValueChange = { link = it },
+                    singleLine = true,
+                    isError = linkError,
+                    label = { Text("Url") },
+                    placeholder = { Text("https://www.google.com") },
+                    supportingText = { if (linkError) { Text(text = "Incorrect Text") } },
+                    keyboardOptions = KeyboardOptions(
+                        autoCorrectEnabled = true,
+                        keyboardType = KeyboardType.Uri,
+                        imeAction = ImeAction.Done
+                    )
+                )
+            }
+        },
+        onDismissRequest = onDismissRequest,
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (!linkError) {
+                        name = name.trim()
+                        link = link.trim()
+                        if (!link.startsWith("http://") && !link.startsWith("https://")
+                            && link.startsWith("www.")
+                        ) {
+                            link = "https://$link"
+                        }
+                        onConfirm(name, link)
+                        onDismissRequest()
+                    }
+                }
+            ) {
+                Text(stringResource(id = android.R.string.ok))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismissRequest) {
+                Text(text = stringResource(id = android.R.string.cancel))
+            }
+        }
+    )
 }
 
-fun Context.shareMarkdownFile(fileName: String, markdownContent: String) {
-    try {
-        // Create a temporary .md file in cache
-        val file = File(cacheDir, "$fileName.md")
-        file.writeText(markdownContent)
+@Composable
+fun TableDialog(
+    onDismissRequest: () -> Unit,
+    onConfirm: (row: Int, column: Int) -> Unit
+) {
 
-        // Get URI using FileProvider
-        val uri = FileProvider.getUriForFile(
-            this,
-            "$packageName.fileprovider",
-            file
-        )
+    var row by remember { mutableStateOf("") }
+    var column by remember { mutableStateOf("") }
 
-        // Share intent
-        val shareIntent = Intent(Intent.ACTION_SEND).apply {
-            type = "text/markdown"
-            putExtra(Intent.EXTRA_STREAM, uri)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
+    var rowError by remember { mutableStateOf(false) }
+    var columnError by remember { mutableStateOf(false) }
 
-        startActivity(Intent.createChooser(shareIntent, getString(R.string.Share_md)))
-    } catch (e: Exception) {
-        e.printStackTrace()
-        Toast.makeText(this, getString(R.string.Error_Share_md), Toast.LENGTH_SHORT).show()
+    AlertDialog(
+        title = { Text("Table") },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = row,
+                    onValueChange = {
+                        row = if (it.length > 3) it.substring(0, 3) else it
+                        rowError = !row.all { char -> char.isDigit() }
+                    },
+                    isError = rowError,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.NumberPassword,
+                        imeAction = ImeAction.Next
+                    ),
+                    singleLine = true,
+                    label = { Text("Row") })
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = column,
+                    onValueChange = {
+                        column = if (it.length > 3) it.substring(0, 3) else it
+                        columnError = !column.all { char -> char.isDigit() }
+                    },
+                    isError = columnError,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.NumberPassword,
+                        imeAction = ImeAction.Done
+                    ),
+                    singleLine = true,
+                    label = { Text("Column") }
+                )
+            }
+        },
+        onDismissRequest = onDismissRequest,
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (row.isBlank()) { rowError = true }
+                    if (column.isBlank()) { columnError = true }
+                    if (!rowError && !columnError) {
+                        row = row.trim()
+                        column = column.trim()
+                        onConfirm(row.toInt(), column.toInt())
+                        onDismissRequest()
+                    }
+                }
+            ) {
+                Text(stringResource(id = android.R.string.ok))
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismissRequest) { Text(text = stringResource(id = android.R.string.cancel)) } }
+    )
+}
+
+@Composable
+fun ListDialog(
+    onDismissRequest: () -> Unit,
+    onConfirm: (list: List<String>) -> Unit
+) {
+
+    val list = remember { mutableStateListOf("") }
+    var ordered by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        title = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("List")
+
+                SingleChoiceSegmentedButtonRow {
+                    SegmentedButton(
+                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                        onClick = {
+                            ordered = false
+                        },
+                        selected = !ordered
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Outlined.FormatListBulleted,
+                                contentDescription = "Unordered"
+                            )
+                        }
+                    }
+                    SegmentedButton(
+                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                        onClick = {
+                            ordered = true
+                        },
+                        selected = ordered
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.FormatListNumbered,
+                                contentDescription = "Ordered"
+                            )
+                        }
+                    }
+                }
+
+                FilledTonalIconButton(onClick = {
+                    list.add("")
+                }) {
+                    Icon(
+                        imageVector = Icons.Outlined.Add,
+                        contentDescription = "Add list item"
+                    )
+                }
+            }
+        },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+
+                list.forEachIndexed { index, str ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OutlinedTextField(
+                            modifier = Modifier.weight(1f),
+                            value = str,
+                            onValueChange = {
+                                list[index] = it
+                            },
+                            prefix = { Text(text = if (ordered) "${(index + 1)}. " else "- ") },
+                            singleLine = true
+                        )
+
+                        IconButton(onClick = { list.removeAt(index) }) {
+                            Icon(
+                                Icons.Outlined.RemoveCircleOutline,
+                                contentDescription = "Remove list item"
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        onDismissRequest = onDismissRequest,
+        confirmButton = {
+            Button(
+                onClick = {
+                    val result = list.mapIndexed { index, it -> if (ordered) "$index. $it" else "- $it" }
+                    onConfirm(result)
+                    onDismissRequest()
+                }
+            ) { Text(stringResource(id = android.R.string.ok)) }
+        },
+        dismissButton = { TextButton(onClick = onDismissRequest) { Text(text = stringResource(id = android.R.string.cancel)) } }
+    )
+}
+
+@Serializable
+data class TaskItem(
+    var task: String = "",
+    var checked: Boolean = false
+)
+
+@Composable
+fun TaskDialog(
+    onDismissRequest: () -> Unit,
+    onConfirm: (taskList: List<TaskItem>) -> Unit
+) {
+
+    val taskList = remember {
+        mutableStateListOf(TaskItem("", false))
     }
+
+    AlertDialog(
+        title = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Task")
+
+                FilledTonalIconButton(onClick = {
+                    taskList.add(TaskItem("", false))
+                }) {
+                    Icon(
+                        imageVector = Icons.Outlined.Add,
+                        contentDescription = "Add Task"
+                    )
+                }
+            }
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+
+                taskList.forEachIndexed { index, taskState ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+
+                        Checkbox(
+                            checked = taskState.checked,
+                            onCheckedChange = {
+                                taskList[index] = taskList[index].copy(checked = it)
+                            }
+                        )
+
+                        OutlinedTextField(
+                            modifier = Modifier.weight(1f),
+                            value = taskState.task,
+                            onValueChange = {
+                                taskList[index] = taskList[index].copy(task = it)
+                            },
+                            singleLine = true
+                        )
+
+                        IconButton(onClick = { taskList.removeAt(index) }) {
+                            Icon(
+                                Icons.Outlined.RemoveCircleOutline,
+                                contentDescription = "Remove Task"
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        onDismissRequest = onDismissRequest,
+        confirmButton = {
+            Button(
+                onClick = {
+                    onConfirm(taskList)
+                    onDismissRequest()
+                }
+            ) {
+                Text(stringResource(id = android.R.string.ok))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismissRequest) {
+                Text(text = stringResource(id = android.R.string.cancel))
+            }
+        }
+    )
 }

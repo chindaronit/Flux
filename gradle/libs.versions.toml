@@ -3,22 +3,27 @@ agp = "8.11.1"
 kotlin = "2.2.10"
 ksp = "2.2.10-2.0.2"
 kotlinxSerializationJson = "1.9.0"
-biometric = "1.4.0-alpha04"
+biometric = "1.4.0-alpha05"
 gson = "2.13.2"
 coreKtx = "1.17.0"
 appcompat = "1.7.1"
-lifecycleRuntimeKtx = "2.9.4"
-activityCompose = "1.11.0"
-composeBom = "2025.10.00"
-coreSplashscreen = "1.0.1"
-navigationCompose = "2.9.5"
+lifecycleRuntimeKtx = "2.10.0"
+activityCompose = "1.12.2"
+composeBom = "2025.12.01"
+coreSplashscreen = "1.2.0"
+navigationCompose = "2.9.6"
 richeditorCompose = "1.0.0-rc13"
-room = "2.8.2"
+room = "2.8.4"
 coilCompose = "2.7.0"
+
+# Common Mark
+commonmark = "0.27.0"
 
 # Hilt
 hilt = "2.57.2"
 hiltNavigationCompose = "1.3.0"
+browser = "1.9.0"
+documentfile = "1.1.0"
 
 [libraries]
 androidx-biometric = { module = "androidx.biometric:biometric", version.ref = "biometric" }
@@ -47,6 +52,20 @@ hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", ve
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 richeditor-compose = { module = "com.mohamedrejeb.richeditor:richeditor-compose", version.ref = "richeditorCompose" }
+
+# Commonmark for markdown
+commonmark = { group = "org.commonmark", name = "commonmark", version.ref = "commonmark" }
+commonmark-ext-gfm-strikethrough = { group = "org.commonmark", name = "commonmark-ext-gfm-strikethrough", version.ref = "commonmark" }
+commonmark-ext-autolink = { group = "org.commonmark", name = "commonmark-ext-autolink", version.ref = "commonmark" }
+commonmark-ext-footnotes = { group = "org.commonmark", name = "commonmark-ext-footnotes", version.ref = "commonmark" }
+commonmark-ext-ins = { group = "org.commonmark", name = "commonmark-ext-ins", version.ref = "commonmark" }
+commonmark-ext-gfm-tables = { group = "org.commonmark", name = "commonmark-ext-gfm-tables", version.ref = "commonmark" }
+commonmark-ext-image-attributes = { group = "org.commonmark", name = "commonmark-ext-image-attributes", version.ref = "commonmark" }
+commonmark-ext-task-list-items = { group = "org.commonmark", name = "commonmark-ext-task-list-items", version.ref = "commonmark" }
+commonmark-ext-heading-anchor = { group = "org.commonmark", name = "commonmark-ext-heading-anchor", version.ref = "commonmark" }
+commonmark-ext-yaml-front-matter = { group = "org.commonmark", name = "commonmark-ext-yaml-front-matter", version.ref = "commonmark" }
+androidx-browser = { group = "androidx.browser", name = "browser", version.ref = "browser" }
+androidx-documentfile = { group = "androidx.documentfile", name = "documentfile", version.ref = "documentfile" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

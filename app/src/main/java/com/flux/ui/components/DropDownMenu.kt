@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.RemoveCircleOutline
 import androidx.compose.material.icons.outlined.Analytics
 import androidx.compose.material.icons.outlined.AutoStories
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Event
 import androidx.compose.material.icons.outlined.EventAvailable
@@ -20,6 +21,7 @@ import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.LockOpen
 import androidx.compose.material.icons.outlined.PhotoSizeSelectActual
+import androidx.compose.material.icons.outlined.Print
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.TaskAlt
@@ -49,7 +51,9 @@ fun DropdownMenuWithDetails(
     onTogglePinned: () -> Unit,
     onAddLabel: () -> Unit,
     onAboutClicked: () -> Unit,
-    onExportNotes: () -> Unit,
+    onShareNote: () -> Unit,
+    onSaveNote: () -> Unit,
+    onPrintNote: () -> Unit,
     onDelete: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -92,11 +96,29 @@ fun DropdownMenuWithDetails(
             )
             HorizontalDivider()
             DropdownMenuItem(
-                text = { Text(stringResource(R.string.Export_Note)) },
+                text = { Text("Share Note") },
                 leadingIcon = { Icon(Icons.Outlined.Share, contentDescription = null) },
                 onClick = {
                     expanded = false
-                    onExportNotes()
+                    onShareNote()
+                }
+            )
+            HorizontalDivider()
+            DropdownMenuItem(
+                text = { Text("Save Note") },
+                leadingIcon = { Icon(Icons.Outlined.Download, contentDescription = null) },
+                onClick = {
+                    expanded = false
+                    onSaveNote()
+                }
+            )
+            HorizontalDivider()
+            DropdownMenuItem(
+                text = { Text("Print Note") },
+                leadingIcon = { Icon(Icons.Outlined.Print, contentDescription = null) },
+                onClick = {
+                    expanded = false
+                    onPrintNote()
                 }
             )
             HorizontalDivider()
