@@ -13,6 +13,7 @@ import android.print.PrintManager
 import android.view.View
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
 import androidx.core.content.FileProvider
 import androidx.documentfile.provider.DocumentFile
@@ -25,6 +26,13 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import androidx.core.graphics.createBitmap
+import com.yangdai.opennote.presentation.util.extension.highlight.HighlightExtension
+import org.commonmark.ext.front.matter.YamlFrontMatterExtension
+import org.commonmark.ext.gfm.strikethrough.StrikethroughExtension
+import org.commonmark.ext.gfm.tables.TablesExtension
+import org.commonmark.ext.ins.InsExtension
+import org.commonmark.parser.IncludeSourceSpans
+import org.commonmark.parser.Parser
 
 fun Int.toHexColor(): String {
     return String.format("#%06X", 0xFFFFFF and this)
@@ -301,3 +309,22 @@ private fun createWebPrintJob(
         printAttributes
     )
 }
+
+@Stable
+data class HeaderNode(
+    val title: String,
+    val level: Int,
+    val range: IntRange,
+    val children: MutableList<HeaderNode> = mutableListOf()
+)
+
+val PARSER: Parser =
+    Parser.builder().extensions(
+        listOf(
+            StrikethroughExtension.create(),
+            InsExtension.create(),
+            HighlightExtension.create(),
+            TablesExtension.create(),
+            YamlFrontMatterExtension.create()
+        )
+    ).includeSourceSpans(IncludeSourceSpans.BLOCKS_AND_INLINES).build()

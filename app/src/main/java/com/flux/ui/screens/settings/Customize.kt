@@ -19,8 +19,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Colorize
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.FormatListNumbered
 import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.RemoveRedEye
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Spellcheck
 import androidx.compose.material.icons.rounded.FontDownload
 import androidx.compose.material.icons.rounded.RoundedCorner
 import androidx.compose.material.icons.rounded.ViewCompact
@@ -310,6 +313,66 @@ fun Customize(
                                 )
                             )
                         }
+                    }
+                )
+            }
+
+            item {
+                SettingOption(
+                    title = "Default Editor View",
+                    description = "Keep editor in read view when opened",
+                    icon = Icons.Filled.RemoveRedEye,
+                    radius = shapeManager(radius = settings.data.cornerRadius),
+                    actionType = ActionType.SWITCH,
+                    variable = settings.data.startWithReadView,
+                    switchEnabled = {
+                        onSettingsEvents(
+                            SettingEvents.UpdateSettings(
+                                settings.data.copy(
+                                    startWithReadView = it
+                                )
+                            )
+                        )
+                    }
+                )
+            }
+
+            item {
+                SettingOption(
+                    title = "Show Line Numbers",
+                    description = "Show line numbers in the editor",
+                    icon = Icons.Filled.FormatListNumbered,
+                    radius = shapeManager(radius = settings.data.cornerRadius),
+                    actionType = ActionType.SWITCH,
+                    variable = settings.data.isLineNumbersVisible,
+                    switchEnabled = {
+                        onSettingsEvents(
+                            SettingEvents.UpdateSettings(
+                                settings.data.copy(
+                                    isLineNumbersVisible = it
+                                )
+                            )
+                        )
+                    }
+                )
+            }
+
+            item {
+                SettingOption(
+                    title = "Markdown Lint",
+                    description = "Markdown format and syntax will be checked",
+                    icon = Icons.Filled.Spellcheck,
+                    radius = shapeManager(radius = settings.data.cornerRadius),
+                    actionType = ActionType.SWITCH,
+                    variable = settings.data.isLintValid,
+                    switchEnabled = {
+                        onSettingsEvents(
+                            SettingEvents.UpdateSettings(
+                                settings.data.copy(
+                                    isLintValid = it
+                                )
+                            )
+                        )
                     }
                 )
             }

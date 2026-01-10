@@ -94,7 +94,7 @@ fun LazyListScope.analyticsItems(
                     Spacer(Modifier.height(8.dp))
                 }
             }
-            if (workspace.selectedSpaces.contains(5)) {
+            if (workspace.selectedSpaces.contains(4)) {
                 item {
                     JournalAnalytics(radius, journalEntries)
                     Spacer(Modifier.height(8.dp))
@@ -109,13 +109,13 @@ fun LazyListScope.analyticsItems(
                     Spacer(Modifier.height(8.dp))
                 }
             }
-            if (workspace.selectedSpaces.contains(6)){
+            if (workspace.selectedSpaces.contains(5)){
                 item {
                     HabitHeatMap(radius, allHabitInstances, totalHabits)
                     Spacer(Modifier.height(8.dp))
                 }
             }
-            if(workspace.selectedSpaces.contains(6)){
+            if(workspace.selectedSpaces.contains(5)){
                 item {
                     WeeklyHabitProgressChart(
                         radius,

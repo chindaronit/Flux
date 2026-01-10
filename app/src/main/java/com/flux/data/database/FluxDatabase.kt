@@ -30,7 +30,7 @@ import kotlinx.serialization.json.Json
 
 @Database(
     entities = [EventModel::class, LabelModel::class, EventInstanceModel::class, SettingsModel::class, NotesModel::class, HabitModel::class, HabitInstanceModel::class, WorkspaceModel::class, TodoModel::class, JournalModel::class],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 @TypeConverters(Converter::class)
@@ -136,5 +136,30 @@ val MIGRATION_4_5 = object : Migration(4, 5) {
     override fun migrate(db: SupportSQLiteDatabase) {
         // Add storageRootUri column with default value null
         db.execSQL("ALTER TABLE SettingsModel ADD COLUMN storageRootUri TEXT")
+    }
+}
+
+val MIGRATION_5_6 = object : Migration(5, 6) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            ALTER TABLE SettingsModel
+            ADD COLUMN startWithReadView INTEGER NOT NULL DEFAULT 0
+            """.trimIndent()
+        )
+
+        db.execSQL(
+            """
+            ALTER TABLE SettingsModel
+            ADD COLUMN isLineNumbersVisible INTEGER NOT NULL DEFAULT 0
+            """.trimIndent()
+        )
+
+        db.execSQL(
+            """
+            ALTER TABLE SettingsModel
+            ADD COLUMN isLintValid INTEGER NOT NULL DEFAULT 0
+            """.trimIndent()
+        )
     }
 }

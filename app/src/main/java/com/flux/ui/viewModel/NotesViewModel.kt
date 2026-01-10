@@ -13,6 +13,8 @@ import com.flux.data.repository.NoteRepository
 import com.flux.data.repository.SettingsRepository
 import com.flux.other.Constants
 import com.flux.other.ExportType
+import com.flux.other.HeaderNode
+import com.flux.other.PARSER
 import com.flux.other.convertHtmlToBitmap
 import com.flux.other.getFileExtension
 import com.flux.other.getFileName
@@ -21,6 +23,8 @@ import com.flux.other.hasFileWithName
 import com.flux.ui.events.NotesEvents
 import com.flux.ui.screens.notes.add
 import com.flux.ui.state.NotesState
+import com.flux.ui.state.TextState
+import com.yangdai.opennote.presentation.util.extension.highlight.HighlightExtension
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -43,6 +47,8 @@ import org.commonmark.ext.heading.anchor.HeadingAnchorExtension
 import org.commonmark.ext.image.attributes.ImageAttributesExtension
 import org.commonmark.ext.ins.InsExtension
 import org.commonmark.ext.task.list.items.TaskListItemsExtension
+import org.commonmark.node.AbstractVisitor
+import org.commonmark.node.Heading
 import org.commonmark.parser.Parser
 import org.commonmark.renderer.html.HtmlRenderer
 import java.io.OutputStreamWriter
@@ -65,6 +71,7 @@ class NotesViewModel @Inject constructor(
         TablesExtension.create(),
         AutolinkExtension.create(),
         FootnotesExtension.create(),
+        HighlightExtension.create(),
         HeadingAnchorExtension.create(),
         InsExtension.create(),
         ImageAttributesExtension.create(),
@@ -74,6 +81,7 @@ class NotesViewModel @Inject constructor(
     )
     private var parser: Parser = Parser.builder().extensions(extensions).build()
     private var renderer: HtmlRenderer = HtmlRenderer.builder().extensions(extensions).build()
+    private var lastOutlineContentHash: Int? = null
 
     fun renderMarkdown(markdown: String): String {
         return renderer.render(parser.parse(markdown))
@@ -231,7 +239,53 @@ class NotesViewModel @Inject constructor(
                     )
                 }
             }
+
+            is NotesEvents.CalculateOutline -> {
+                val hash = event.content.hashCode()
+                if (hash == lastOutlineContentHash) return
+
+                viewModelScope.launch(Dispatchers.IO) {
+                    val outline = buildOutline(event.content)
+                    lastOutlineContentHash = hash
+                    updateState { it.copy(outline = outline) }
+                }
+            }
+
+            is NotesEvents.CalculateTextState -> {
+                viewModelScope.launch(Dispatchers.IO) {
+                    updateState { it.copy(textState = TextState.fromText(event.content)) }
+                }
+            }
         }
+    }
+
+    fun buildOutline(markdown: CharSequence): HeaderNode {
+        val document = PARSER.parse(markdown.toString())
+        val root = HeaderNode("", 0, IntRange.EMPTY)
+        val headerStack = mutableListOf(root)
+
+        document.accept(object : AbstractVisitor() {
+            override fun visit(heading: Heading) {
+                val span = heading.sourceSpans.firstOrNull() ?: return
+                val range = span.inputIndex until (span.inputIndex + span.length)
+
+                val title = markdown
+                    .substring(range)
+                    .trimStart('#')
+                    .trim()
+
+                val node = HeaderNode(title, heading.level, range)
+
+                while (headerStack.last().level >= heading.level) {
+                    headerStack.removeAt(headerStack.lastIndex)
+                }
+
+                headerStack.last().children.add(node)
+                headerStack.add(node)
+            }
+        })
+
+        return root
     }
 
     private suspend fun exportNoteToStorage(

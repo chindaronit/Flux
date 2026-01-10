@@ -204,6 +204,11 @@ fun SelectLabelDialog(
     )
 }
 
+fun convertMillisToDate(millis: Long): String {
+    val formatter = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+    return formatter.format(Date(millis))
+}
+
 @Composable
 fun LabelCheckBoxList(
     checkedLabel: List<LabelModel>,

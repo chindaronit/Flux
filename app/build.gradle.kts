@@ -124,4 +124,6 @@ dependencies {
     implementation(libs.commonmark.ext.image.attributes)
     implementation(libs.commonmark.ext.yaml.front.matter)
     implementation(libs.commonmark)
+    implementation("com.vladsch.flexmark:flexmark-html2md-converter:0.64.8")
+
 }

@@ -19,7 +19,10 @@ import androidx.compose.material.icons.filled.Deselect
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.RemoveRedEye
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.material.icons.filled.SelectAll
+import androidx.compose.material.icons.filled.Summarize
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -45,12 +48,15 @@ import com.flux.data.model.WorkspaceModel
 @Composable
 fun NoteDetailsTopBar(
     isPinned: Boolean,
+    isSearching: Boolean,
     isReadView: Boolean,
     onBackPressed: () -> Unit,
+    onOutlineClicked: () -> Unit,
     onReadClick: () -> Unit,
     onEditClick: ()->Unit,
     onDelete: () -> Unit,
     onAddLabel: () -> Unit,
+    onSearchClick: () -> Unit,
     onTogglePinned: () -> Unit,
     onAboutClicked: () -> Unit,
     onShareNote: () -> Unit,
@@ -87,7 +93,10 @@ fun NoteDetailsTopBar(
         },
         colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
         navigationIcon = { IconButton(onClick = onBackPressed) { Icon(Icons.AutoMirrored.Default.ArrowBack, null) } },
-        actions = { DropdownMenuWithDetails(isPinned, onTogglePinned, onAddLabel, onAboutClicked, onShareNote, onSaveNote, onPrintNote, onDelete) }
+        actions = {
+            IconButton({onSearchClick()}) { Icon(if(isSearching) Icons.Default.SearchOff else Icons.Default.Search, null) }
+            IconButton({onOutlineClicked()}) { Icon(Icons.Default.Summarize, null) }
+            DropdownMenuWithDetails(isPinned, onTogglePinned, onAddLabel, onAboutClicked, onShareNote, onSaveNote, onPrintNote, onDelete) }
     )
 }
 

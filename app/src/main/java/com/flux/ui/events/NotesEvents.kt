@@ -24,6 +24,8 @@ sealed class NotesEvents {
     data class ImportImages(val context: Context, val uriList: List<Uri>, val contentState: TextFieldState): NotesEvents()
     data class ImportVideo(val context: Context, val uri: Uri, val contentState: TextFieldState): NotesEvents()
     data class ExportNote(val context: Context, val type: ExportType, val noteTitle: String, val noteDescription: String, val webView: WebView?): NotesEvents()
+    data class CalculateOutline(val content: CharSequence): NotesEvents()
+    data class CalculateTextState(val content: CharSequence): NotesEvents()
     data object ClearSelection : NotesEvents()
     data object SelectAllNotes : NotesEvents()
 }

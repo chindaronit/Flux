@@ -75,7 +75,13 @@ val NotesScreens =
         NavRoutes.NoteDetails.route + "/{workspaceId}" + "/{notesId}" to { navController, notesId, workspaceId, states, viewModel ->
             NoteDetails(
                 navController,
+                states.notesState.outline,
+                states.notesState.textState,
                 workspaceId,
+                states.settings.data.isDarkMode,
+                states.settings.data.isLintValid,
+                states.settings.data.isLineNumbersVisible,
+                states.settings.data.startWithReadView,
                 states.notesState.allNotes.find { it.notesId == notesId }
                     ?: NotesModel(workspaceId = workspaceId),
                 states.settings.data.storageRootUri,

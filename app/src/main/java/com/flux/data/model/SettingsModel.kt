@@ -21,5 +21,8 @@ data class SettingsModel(
     val is24HourFormat: Boolean = false,
     val themeNumber: Int = 0,
     val fontNumber: Int = 0,
+    val isLintValid: Boolean = false,
+    val isLineNumbersVisible: Boolean = false,
+    val startWithReadView: Boolean = false,
     val storageRootUri: String? = null
 )

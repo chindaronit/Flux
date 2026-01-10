@@ -1,6 +1,7 @@
 package com.flux.ui.components
 
 import android.text.format.DateUtils
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -19,14 +21,24 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowRight
+import androidx.compose.material.icons.automirrored.filled.FormatAlignLeft
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Abc
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.FormatQuote
+import androidx.compose.material.icons.filled.Numbers
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Repeat
+import androidx.compose.material.icons.outlined.UnfoldLess
+import androidx.compose.material.icons.outlined.UnfoldMore
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -41,11 +53,13 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -65,6 +79,7 @@ import com.flux.data.model.RecurrenceRule
 import com.flux.data.model.Space
 import com.flux.data.model.WorkspaceModel
 import com.flux.data.model.getSpacesList
+import com.flux.other.HeaderNode
 import com.flux.other.icons
 import com.flux.other.workspaceIconList
 import com.flux.ui.screens.events.formatMonthly
@@ -270,7 +285,9 @@ fun AddNewSpacesBottomSheet(
             sheetState = sheetState,
             containerColor = MaterialTheme.colorScheme.surfaceContainer
         ) {
-            LazyColumn(Modifier.fillMaxWidth().padding(vertical=16.dp)) {
+            LazyColumn(Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp)) {
                 if (selectedSpaces.isNotEmpty()) {
                     item {
                         Text(
@@ -404,7 +421,9 @@ fun RecurrenceBottomSheet(
         sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.surfaceContainer
     ) {
-        LazyColumn(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
+        LazyColumn(modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)) {
                 item {
                     Row(
                         Modifier.padding(start = 8.dp),
@@ -444,7 +463,9 @@ fun RecurrenceBottomSheet(
                     val rule = tempRule
                     when (rule) {
                         is RecurrenceRule.Once -> {
-                            Row(Modifier.padding(horizontal = 12.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                            Row(Modifier
+                                .padding(horizontal = 12.dp)
+                                .fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                 Text(formatOnce(selectedDateTime))
                                 IconButton({ showDatePicker=true }, colors = IconButtonDefaults.iconButtonColors(
                                     containerColor = MaterialTheme.colorScheme.primaryContainer
@@ -504,7 +525,9 @@ fun RecurrenceBottomSheet(
                         }
 
                         is RecurrenceRule.Monthly -> {
-                            Row(Modifier.padding(horizontal = 12.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                            Row(Modifier
+                                .padding(horizontal = 12.dp)
+                                .fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                 Text(formatMonthly(selectedDateTime))
                                 IconButton({ showDatePicker=true }, colors = IconButtonDefaults.iconButtonColors(
                                     containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(8.dp)
@@ -515,7 +538,9 @@ fun RecurrenceBottomSheet(
                         }
 
                         is RecurrenceRule.Yearly -> {
-                            Row(Modifier.padding(horizontal = 12.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                            Row(Modifier
+                                .padding(horizontal = 12.dp)
+                                .fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                 Text(formatYearly(selectedDateTime))
                                 IconButton({ showDatePicker=true }, colors = IconButtonDefaults.iconButtonColors(
                                     containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(8.dp)
@@ -583,3 +608,211 @@ fun RecurrenceBottomSheet(
             }
         } as Long
     }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun OutlineBottomSheet(
+    isVisible: Boolean,
+    outline: HeaderNode,
+    sheetState: SheetState,
+    onHeaderClick: (IntRange) -> Unit,
+    onDismiss: () -> Unit
+) {
+
+    var isAllExpanded by rememberSaveable { mutableStateOf(true) }
+
+    if (isVisible) {
+        ModalBottomSheet(
+            onDismissRequest = { onDismiss() },
+            sheetState = sheetState,
+            containerColor = MaterialTheme.colorScheme.surfaceContainer
+        ) {
+            LazyColumn(Modifier.fillMaxWidth().heightIn(300.dp)) {
+                item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Outline",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontWeight = FontWeight.Bold
+                            )
+
+                            IconButton(
+                                onClick = { isAllExpanded = !isAllExpanded }
+                            ) {
+                                Icon(
+                                    imageVector = if (isAllExpanded) Icons.Outlined.UnfoldLess
+                                    else Icons.Outlined.UnfoldMore,
+                                    contentDescription = "fold",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                    HorizontalDivider()
+                }
+                items(outline.children) { header ->
+                    HeaderItem(
+                        header = header,
+                        depth = 0,
+                        onHeaderClick = onHeaderClick,
+                        parentExpanded = isAllExpanded
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun HeaderItem(
+    header: HeaderNode,
+    depth: Int,
+    parentExpanded: Boolean,
+    onHeaderClick: (IntRange) -> Unit
+) {
+    var expanded by rememberSaveable { mutableStateOf(true) }
+
+    LaunchedEffect(parentExpanded) { expanded = parentExpanded }
+    Row(
+        modifier = Modifier
+            .padding(start = (depth * 8).dp)
+            .fillMaxWidth()
+            .heightIn(min = 32.dp)
+            .clickable {
+                onHeaderClick(header.range)
+            },
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (header.children.isNotEmpty()) {
+            IconButton(
+                modifier = Modifier.size(32.dp),
+                onClick = {
+                    if (header.children.isNotEmpty()) {
+                        expanded = !expanded
+                    }
+                }
+            ) {
+                Icon(
+                    imageVector = if (expanded) Icons.Default.ArrowDropDown
+                    else Icons.AutoMirrored.Filled.ArrowRight,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    contentDescription = null
+                )
+            }
+        } else {
+            Spacer(modifier = Modifier.width(32.dp))
+        }
+
+        Text(
+            text = header.title,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyLarge
+        )
+    }
+
+    if (expanded) {
+        header.children.forEach { child ->
+            HeaderItem(
+                header = child,
+                depth = depth + 1,
+                onHeaderClick = onHeaderClick,
+                parentExpanded = parentExpanded
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun NotesInfoBottomSheet(
+    words: Int,
+    lines: Int,
+    wordsWithoutPunctuations: Int,
+    paragraph: Int,
+    characters: Int,
+    lastEdited: String,
+    isVisible: Boolean,
+    sheetState: SheetState,
+    onDismiss: () -> Unit
+) {
+    if (isVisible) {
+        ModalBottomSheet(
+            onDismissRequest = onDismiss,
+            sheetState = sheetState,
+            containerColor = MaterialTheme.colorScheme.surfaceContainer
+        ) {
+            LazyColumn(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                item {
+                    SettingOption(
+                        radius = shapeManager(isFirst = true, radius = 32),
+                        icon = Icons.Default.Edit,
+                        title = stringResource(R.string.Last_Edited),
+                        description = lastEdited,
+                        actionType = ActionType.None
+                    )
+                }
+
+                item {
+                    SettingOption(
+                        radius = shapeManager(radius = 32),
+                        icon = Icons.Default.Numbers,
+                        title = stringResource(R.string.Word_Count),
+                        description = words.toString(),
+                        actionType = ActionType.None
+                    )
+                }
+
+                item {
+                    SettingOption(
+                        radius = shapeManager(radius = 32),
+                        icon = Icons.Default.FormatQuote,
+                        title = "Words excluding punctuations",
+                        description = wordsWithoutPunctuations.toString(),
+                        actionType = ActionType.None
+                    )
+                }
+
+                item {
+                    SettingOption(
+                        radius = shapeManager(radius = 32),
+                        icon = Icons.Default.Abc,
+                        title = stringResource(R.string.Character_Count),
+                        description = characters.toString(),
+                        actionType = ActionType.None
+                    )
+                }
+
+                item {
+                    SettingOption(
+                        radius = shapeManager(radius = 32),
+                        icon = Icons.AutoMirrored.Filled.List,
+                        title = "Lines",
+                        description = lines.toString(),
+                        actionType = ActionType.None
+                    )
+                }
+
+                item {
+                    SettingOption(
+                        radius = shapeManager(radius = 32, isLast = true),
+                        icon = Icons.AutoMirrored.Filled.FormatAlignLeft,
+                        title = "Paragraph",
+                        description = paragraph.toString(),
+                        actionType = ActionType.None
+                    )
+                }
+            }
+        }
+    }
+}
