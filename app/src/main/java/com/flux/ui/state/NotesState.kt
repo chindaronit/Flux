@@ -7,6 +7,7 @@ import com.flux.other.HeaderNode
 data class NotesState(
     val isNotesLoading: Boolean = true,
     val isLabelsLoading: Boolean = true,
+    val workspaceId: String? = null,
     val aboutNote: TextState = TextState(),
     val outline: HeaderNode = HeaderNode("", 0, IntRange.EMPTY),
     val textState: TextState = TextState(),

@@ -23,6 +23,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -100,8 +101,10 @@ fun WorkspaceDetails(
     allEvents: List<EventModel>,
     allNotes: List<NotesModel>,
     selectedNotes: List<String>,
-    selectedYearMonth: YearMonth,
-    selectedDate: Long,
+    eventSelectedYearMonth: YearMonth,
+    eventSelectedDate: Long,
+    journalSelectedYearMonth: YearMonth,
+    journalSelectedDate: Long,
     datedEvents: List<EventModel>,
     allHabits: List<HabitModel>,
     allLists: List<TodoModel>,
@@ -114,11 +117,19 @@ fun WorkspaceDetails(
     onHabitEvents: (HabitEvents) -> Unit,
     onTodoEvents: (TodoEvents) -> Unit,
     onJournalEvents: (JournalEvents) -> Unit,
-    onSettingEvents: (SettingEvents) -> Unit,
+    onSettingEvents: (SettingEvents) -> Unit
 ) {
+    val workspaceId = workspace.workspaceId
+    LaunchedEffect(workspaceId) {
+        onNotesEvents(NotesEvents.EnterWorkspace(workspaceId))
+        onJournalEvents(JournalEvents.EnterWorkspace(workspaceId))
+        onTodoEvents(TodoEvents.EnterWorkspace(workspaceId))
+        onTaskEvents(TaskEvents.EnterWorkspace(workspaceId))
+        onHabitEvents(HabitEvents.EnterWorkspace(workspaceId))
+    }
+
     val radius = settings.data.cornerRadius
     val is24HourFormat = settings.data.is24HourFormat
-    val workspaceId = workspace.workspaceId
     val context = LocalContext.current
     var query by remember { mutableStateOf("") }
     val selectedSpaceId = rememberSaveable { mutableIntStateOf(if (workspace.selectedSpaces.isEmpty()) -1 else workspace.selectedSpaces.first()) }
@@ -181,16 +192,6 @@ fun WorkspaceDetails(
                 Toast.makeText(context, context.getString(R.string.import_failed), Toast.LENGTH_SHORT).show()
             }
         }
-    }
-
-    if(showDeleteDialog){
-        DeleteAlert(onConfirmation = {
-            onNotesEvents(NotesEvents.DeleteNotes(allNotes.filter { selectedNotes.contains(it.notesId) }))
-            onNotesEvents(NotesEvents.ClearSelection)
-            showDeleteDialog=false
-        }, onDismissRequest = {
-            showDeleteDialog=false
-        })
     }
 
     Scaffold(
@@ -309,7 +310,9 @@ fun WorkspaceDetails(
                                 })
                         }
                         if (spacesList.find { it.id == selectedSpaceId.intValue }?.title == stringResource(R.string.Journal)) {
-                            JournalToolBar(navController, workspaceId)
+                            JournalToolBar(navController, workspaceId, journalSelectedDate,settings.data.isCalendarMonthlyView) {
+                                onSettingEvents(SettingEvents.UpdateSettings(settings.data.copy(isCalendarMonthlyView = it)))
+                            }
                         }
                         if (spacesList.find { it.id == selectedSpaceId.intValue }?.title == stringResource(R.string.To_Do)) {
                             TodoToolBar(navController, workspaceId)
@@ -319,7 +322,7 @@ fun WorkspaceDetails(
                                 navController,
                                 workspaceId,
                                 context,
-                                selectedDate,
+                                eventSelectedDate,
                                 settings.data.isCalendarMonthlyView,
                                 onClick = {
                                     onSettingEvents(
@@ -362,7 +365,15 @@ fun WorkspaceDetails(
                 )
             }
             if (spacesList.find { it.id == selectedSpaceId.intValue }?.title == context.getString(R.string.Journal)) {
-                journalHomeItems(navController, isJournalEntriesLoading, workspaceId, allEntries)
+                journalHomeItems(
+                    navController,
+                    settings,
+                    journalSelectedYearMonth,
+                    journalSelectedDate,
+                    isJournalEntriesLoading,
+                    workspaceId,
+                    allEntries,
+                    onJournalEvents)
             }
             if (spacesList.find { it.id == selectedSpaceId.intValue }?.title == context.getString(R.string.Analytics)) {
                 analyticsItems(
@@ -394,8 +405,8 @@ fun WorkspaceDetails(
                     is24HourFormat,
                     isDatedTaskLoading,
                     workspaceId,
-                    selectedYearMonth,
-                    selectedDate,
+                    eventSelectedYearMonth,
+                    eventSelectedDate,
                     settings,
                     datedEvents,
                     allEventInstances,
@@ -489,6 +500,16 @@ fun WorkspaceDetails(
             }
         }
     )
+
+    if(showDeleteDialog){
+        DeleteAlert(onConfirmation = {
+            onNotesEvents(NotesEvents.DeleteNotes(allNotes.filter { selectedNotes.contains(it.notesId) }))
+            onNotesEvents(NotesEvents.ClearSelection)
+            showDeleteDialog=false
+        }, onDismissRequest = {
+            showDeleteDialog=false
+        })
+    }
 }
 
 fun copyToInternalStorage(context: Context, uri: Uri): String? {

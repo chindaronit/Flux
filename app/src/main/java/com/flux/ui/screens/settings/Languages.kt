@@ -15,11 +15,20 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,8 +40,8 @@ import androidx.compose.ui.unit.dp
 import androidx.core.os.LocaleListCompat
 import androidx.navigation.NavController
 import com.flux.R
-import com.flux.ui.components.BasicScaffold
 import com.flux.ui.components.CircleWrapper
+import com.flux.ui.components.GeneralSearchBar
 import com.flux.ui.components.MaterialText
 import com.flux.ui.components.RenderRadio
 import com.flux.ui.components.shapeManager
@@ -48,10 +57,20 @@ fun Languages(navController: NavController, settings: Settings) {
     val context = LocalContext.current
     val supportedLanguages = getSupportedLanguages(context)
     val currentLocale = AppCompatDelegate.getApplicationLocales()
+    var query by rememberSaveable { mutableStateOf("") }
 
-    BasicScaffold(
-        title = stringResource(R.string.Languages),
-        onBackClicked = { navController.popBackStack() }
+    Scaffold(
+        topBar = {
+            GeneralSearchBar(
+                leadingIcon = Icons.AutoMirrored.Filled.ArrowBack,
+                trailingIcon = Icons.Default.Language,
+                textFieldState = TextFieldState(query),
+                onSearch = { query = it },
+                onLeadingIconClicked = { navController.popBackStack() },
+                onTrailingIconClicked = {  },
+                onCloseClicked = { query = "" }
+            )
+        }
     ) { innerPadding ->
         LazyColumn(
             Modifier
@@ -69,24 +88,25 @@ fun Languages(navController: NavController, settings: Settings) {
                 )
             }
 
-            itemsIndexed(supportedLanguages.toList()) { index, (displayName, languageCode) ->
-                val languageInfo =
-                    getLanguageInfo(languageCode)
+            val filteredLanguages = supportedLanguages
+                .toList()
+                .filter { it.first.contains(query, ignoreCase = true) }
+
+            itemsIndexed(filteredLanguages) { index, (displayName, languageCode) ->
+                val languageInfo = getLanguageInfo(languageCode)
 
                 LanguageItem(
                     title = displayName,
                     isSelected = !currentLocale.isEmpty && currentLocale[0]?.language == languageCode,
                     shape = shapeManager(
                         radius = settings.data.cornerRadius,
-                        isLast = index == supportedLanguages.size - 1
+                        isLast = index == filteredLanguages.lastIndex
                     ),
                     icon = languageInfo.iconRes,
                     description = languageInfo.description,
                     onRadioClicked = {
                         AppCompatDelegate.setApplicationLocales(
-                            LocaleListCompat.forLanguageTags(
-                                languageCode
-                            )
+                            LocaleListCompat.forLanguageTags(languageCode)
                         )
                     }
                 )

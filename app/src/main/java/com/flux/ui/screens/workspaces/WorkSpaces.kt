@@ -12,6 +12,8 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -42,16 +44,10 @@ import com.flux.ui.components.NewWorkspaceBottomSheet
 import com.flux.ui.components.SelectedBar
 import com.flux.ui.components.SetPasskeyDialog
 import com.flux.ui.components.WorkspaceCard
-import com.flux.ui.components.WorkspaceSearchBar
-import com.flux.ui.events.HabitEvents
-import com.flux.ui.events.JournalEvents
-import com.flux.ui.events.NotesEvents
-import com.flux.ui.events.TaskEvents
-import com.flux.ui.events.TodoEvents
 import com.flux.ui.events.WorkspaceEvents
 import kotlinx.coroutines.launch
 import com.flux.R
-import java.time.LocalDate
+import com.flux.ui.components.GeneralSearchBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,12 +57,7 @@ fun WorkSpaces(
     gridColumns: Int,
     radius: Int,
     allSpaces: List<WorkspaceModel>,
-    onNotesEvents: (NotesEvents) -> Unit,
-    onTaskEvents: (TaskEvents) -> Unit,
-    onHabitEvents: (HabitEvents) -> Unit,
-    onTodoEvents: (TodoEvents) -> Unit,
     onWorkSpaceEvents: (WorkspaceEvents) -> Unit,
-    onJournalEvents: (JournalEvents) -> Unit
 ) {
     var query by rememberSaveable { mutableStateOf("") }
     var addWorkspace by remember { mutableStateOf(false) }
@@ -79,15 +70,6 @@ fun WorkSpaces(
     lockedWorkspace?.let { it ->
         SetPasskeyDialog(onConfirmRequest = { passkey ->
             if (it.passKey == passkey) {
-                onNotesEvents(NotesEvents.LoadAllNotes(it.workspaceId))
-                onNotesEvents(NotesEvents.LoadAllLabels(it.workspaceId))
-                onTaskEvents(TaskEvents.LoadAllInstances(it.workspaceId))
-                onTaskEvents(TaskEvents.LoadAllTask(it.workspaceId))
-                onTaskEvents(TaskEvents.LoadDateTask(it.workspaceId, LocalDate.now().toEpochDay()))
-                onHabitEvents(HabitEvents.LoadAllHabits(it.workspaceId))
-                onHabitEvents(HabitEvents.LoadAllInstances(it.workspaceId))
-                onTodoEvents(TodoEvents.LoadAllLists(it.workspaceId))
-                onJournalEvents(JournalEvents.LoadJournalEntries(it.workspaceId))
                 navController.navigate(NavRoutes.WorkspaceHome.withArgs(it.workspaceId))
             } else {
                 Toast.makeText(context, context.getString(R.string.Wrong_Passkey), Toast.LENGTH_SHORT).show()
@@ -99,15 +81,6 @@ fun WorkSpaces(
         if (space.passKey.isNotBlank()) {
             lockedWorkspace = space
         } else {
-            onNotesEvents(NotesEvents.LoadAllNotes(space.workspaceId))
-            onNotesEvents(NotesEvents.LoadAllLabels(space.workspaceId))
-            onTaskEvents(TaskEvents.LoadAllInstances(space.workspaceId))
-            onTaskEvents(TaskEvents.LoadAllTask(space.workspaceId))
-            onTaskEvents(TaskEvents.LoadDateTask(space.workspaceId, LocalDate.now().toEpochDay()))
-            onHabitEvents(HabitEvents.LoadAllHabits(space.workspaceId))
-            onHabitEvents(HabitEvents.LoadAllInstances(space.workspaceId))
-            onTodoEvents(TodoEvents.LoadAllLists(space.workspaceId))
-            onJournalEvents(JournalEvents.LoadJournalEntries(space.workspaceId))
             navController.navigate(NavRoutes.WorkspaceHome.withArgs(space.workspaceId))
         }
     }
@@ -116,10 +89,13 @@ fun WorkSpaces(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         topBar = {
             if (selectedWorkspace.isEmpty()) {
-                WorkspaceSearchBar(
+                GeneralSearchBar(
+                    leadingIcon = Icons.Default.Search,
+                    trailingIcon = Icons.Default.Settings,
                     textFieldState = TextFieldState(query),
                     onSearch = { query = it },
-                    onSettingsClicked = { navController.navigate(NavRoutes.Settings.route) },
+                    onLeadingIconClicked = {  },
+                    onTrailingIconClicked = { navController.navigate(NavRoutes.Settings.route) },
                     onCloseClicked = { query = "" }
                 )
             } else{
@@ -150,9 +126,7 @@ fun WorkSpaces(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
-        if (allSpaces.isEmpty()) {
-            EmptySpaces()
-        } else {
+        if (allSpaces.isEmpty()) { EmptySpaces() } else {
             val spacing = when (gridColumns) {
                 1 -> 6.dp
                 2 -> 4.dp

@@ -26,11 +26,13 @@ import com.flux.data.model.NotesModel
 import com.flux.data.model.SettingsModel
 import com.flux.data.model.TodoModel
 import com.flux.data.model.WorkspaceModel
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import kotlinx.serialization.json.Json
 
 @Database(
     entities = [EventModel::class, LabelModel::class, EventInstanceModel::class, SettingsModel::class, NotesModel::class, HabitModel::class, HabitInstanceModel::class, WorkspaceModel::class, TodoModel::class, JournalModel::class],
-    version = 6,
+    version = 8,
     exportSchema = false
 )
 @TypeConverters(Converter::class)
@@ -127,8 +129,6 @@ val MIGRATION_3_4 = object : Migration(3, 4) {
 
         db.execSQL("DROP TABLE WorkspaceModel")
         db.execSQL("ALTER TABLE WorkspaceModel_new RENAME TO WorkspaceModel")
-
-
     }
 }
 
@@ -161,5 +161,143 @@ val MIGRATION_5_6 = object : Migration(5, 6) {
             ADD COLUMN isLintValid INTEGER NOT NULL DEFAULT 0
             """.trimIndent()
         )
+    }
+}
+
+val MIGRATION_6_7 = object : Migration(6, 7) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // Migration to add 'id' field to TodoItem objects within the items JSON array
+        // Since TodoItem is stored as JSON in the 'items' column of TodoModel,
+        // we need to parse, update, and re-save the JSON data
+
+        val cursor = db.query("SELECT id, items FROM TodoModel")
+        val gson = Gson()
+
+        while (cursor.moveToNext()) {
+            val todoId = cursor.getString(0)
+            val itemsJson = cursor.getString(1)
+
+            try {
+                // Define a temporary class to represent old TodoItem without id
+                data class OldTodoItem(
+                    val value: String,
+                    val isChecked: Boolean
+                )
+
+                // Define new TodoItem with id field
+                data class NewTodoItem(
+                    val id: String,
+                    val value: String,
+                    val isChecked: Boolean
+                )
+
+                // Parse old format
+                val oldItemsType = object : TypeToken<List<OldTodoItem>>() {}.type
+                val oldItems: List<OldTodoItem> = try {
+                    gson.fromJson(itemsJson, oldItemsType)
+                } catch (_: Exception) {
+                    // If it already has the new format, skip
+                    continue
+                }
+
+                // Convert to new format with generated IDs
+                val newItems = oldItems.map { oldItem ->
+                    NewTodoItem(
+                        id = java.util.UUID.randomUUID().toString(),
+                        value = oldItem.value,
+                        isChecked = oldItem.isChecked
+                    )
+                }
+
+                // Serialize back to JSON
+                val newItemsJson = gson.toJson(newItems)
+
+                // Update the database
+                db.execSQL(
+                    "UPDATE TodoModel SET items = ? WHERE id = ?",
+                    arrayOf(newItemsJson, todoId)
+                )
+            } catch (e: Exception) {
+                // If migration fails for this record, log or skip
+                // The TypeConverter will handle it at runtime as fallback
+                e.printStackTrace()
+            }
+        }
+
+        cursor.close()
+    }
+}
+
+val MIGRATION_7_8 = object : Migration(7, 8) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+
+        // 1. Create new table without `images`
+        db.execSQL("""
+            CREATE TABLE journalmodel_new (
+                journalId TEXT NOT NULL,
+                workspaceId TEXT NOT NULL,
+                text TEXT NOT NULL,
+                dateTime INTEGER NOT NULL,
+                PRIMARY KEY(journalId)
+            )
+        """.trimIndent())
+
+        // 2. Copy data (ignore `images`)
+        db.execSQL("""
+            INSERT INTO journalmodel_new (journalId, workspaceId, text, dateTime)
+            SELECT journalId, workspaceId, text, dateTime
+            FROM JournalModel
+        """.trimIndent())
+
+        // 3. Drop old table
+        db.execSQL("DROP TABLE JournalModel")
+
+        // 4. Rename new table
+        db.execSQL("ALTER TABLE journalmodel_new RENAME TO JournalModel")
+
+        db.execSQL(
+            """
+            CREATE TABLE NotesModel_new (
+                notesId TEXT NOT NULL,
+                workspaceId TEXT NOT NULL,
+                title TEXT NOT NULL,
+                description TEXT NOT NULL,
+                isPinned INTEGER NOT NULL,
+                labels TEXT NOT NULL,
+                lastEdited INTEGER NOT NULL,
+                PRIMARY KEY(notesId)
+            )
+            """.trimIndent()
+        )
+
+        // 2. Copy data (skip `images`)
+        db.execSQL(
+            """
+            INSERT INTO NotesModel_new (
+                notesId,
+                workspaceId,
+                title,
+                description,
+                isPinned,
+                labels,
+                lastEdited
+            )
+            SELECT
+                notesId,
+                workspaceId,
+                title,
+                description,
+                isPinned,
+                labels,
+                lastEdited
+            FROM NotesModel
+            """.trimIndent()
+        )
+
+        // 3. Drop old table
+        db.execSQL("DROP TABLE NotesModel")
+
+        // 4. Rename new table
+        db.execSQL("ALTER TABLE NotesModel_new RENAME TO NotesModel")
     }
 }

@@ -189,37 +189,33 @@ fun EventDetails(
 
 @Composable
 fun formatOnce(selectedDateTime: Long): String {
-    val context = LocalContext.current
     val fullDate = Instant.ofEpochMilli(selectedDateTime)
         .atZone(ZoneId.systemDefault())
         .toLocalDate()
         .format(DateTimeFormatter.ofPattern("dd MMM yyyy"))
-    return context.getString(R.string.recurrence_once, fullDate)
+    return stringResource(R.string.recurrence_once, fullDate)
 }
 
 @Composable
 fun formatCustom(rule: RecurrenceRule.Custom): String {
-    val context = LocalContext.current
-    return context.getString(R.string.recurrence_every_x_days, rule.everyXDays)
+    return stringResource(R.string.recurrence_every_x_days, rule.everyXDays)
 }
 
 @Composable
 fun formatMonthly(selectedDateTime: Long): String {
-    val context = LocalContext.current
     val dayOfMonth = Instant.ofEpochMilli(selectedDateTime)
         .atZone(ZoneId.systemDefault())
         .dayOfMonth
-    return context.getString(R.string.recurrence_monthly_on, dayOfMonth)
+    return stringResource(R.string.recurrence_monthly_on, dayOfMonth)
 }
 
 @Composable
 fun formatYearly(selectedDateTime: Long): String {
-    val context = LocalContext.current
     val date = Instant.ofEpochMilli(selectedDateTime)
         .atZone(ZoneId.systemDefault())
         .toLocalDate()
         .format(DateTimeFormatter.ofPattern("dd MMM"))
-    return context.getString(R.string.recurrence_yearly_on, date)
+    return stringResource(R.string.recurrence_yearly_on, date)
 }
 
 @Composable

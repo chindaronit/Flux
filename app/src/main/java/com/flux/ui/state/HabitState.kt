@@ -5,6 +5,7 @@ import com.flux.data.model.HabitModel
 
 data class HabitState(
     val isLoading: Boolean = true,
+    val workspaceId: String? = null,
     val allHabits: List<HabitModel> = emptyList(),
     val allInstances: List<HabitInstanceModel> = emptyList()
 )

@@ -108,7 +108,7 @@ fun MarkdownEditorRow(
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(horizontal = 36.dp, vertical = 2.dp)
+            .padding(horizontal = 16.dp, vertical = 4.dp)
             .navigationBarsPadding()
             .height(48.dp)
             .border(BorderStroke(0.5.dp, MaterialTheme.colorScheme.primary), shape = RoundedCornerShape(50))

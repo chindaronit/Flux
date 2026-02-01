@@ -36,11 +36,11 @@ import androidx.compose.material.icons.filled.FilePresent
 import androidx.compose.material.icons.filled.FontDownload
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.NewLabel
+import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.SubdirectoryArrowRight
 import androidx.compose.material.icons.filled.TextFields
-import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.FormatListNumbered
 import androidx.compose.material.icons.outlined.NotificationsActive
-import androidx.compose.material.icons.outlined.RemoveCircleOutline
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -50,9 +50,9 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
@@ -62,10 +62,13 @@ import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TimeInput
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
+import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -217,10 +220,7 @@ fun LabelCheckBoxList(
     onUnChecked: (LabelModel) -> Unit,
     onAddLabel: () -> Unit
 ) {
-
-    LazyColumn(
-        modifier = Modifier.heightIn(max = 250.dp)
-    ) {
+    LazyColumn(modifier = Modifier.heightIn(max = 250.dp)) {
         item {
             Card(
                 Modifier
@@ -685,7 +685,7 @@ fun DeleteAlert(
 }
 
 @Composable
-fun ShareNoteDialog(
+fun ShareDialog(
     isSharing: Boolean,
     onConfirm: (ExportType) -> Unit,
     onDismiss: () -> Unit
@@ -696,7 +696,7 @@ fun ShareNoteDialog(
             elevation = CardDefaults.cardElevation(8.dp),
             modifier = Modifier.fillMaxWidth().padding(16.dp)
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
                     text = if(isSharing) "Share as" else stringResource(R.string.Export_As),
                     style = MaterialTheme.typography.titleLarge,
@@ -705,49 +705,41 @@ fun ShareNoteDialog(
                 )
 
                 // Text Export
-                Card(
-                    onClick = { onConfirm(ExportType.TXT) },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.TextFields, null)
-                        Text( stringResource(R.string.Plain_Text))
-                    }
-                }
+                ExportCard(Icons.Default.TextFields, stringResource(R.string.Plain_Text)) { onConfirm(ExportType.TXT) }
 
-                // Markdown Export
-                Card(
-                    onClick = { onConfirm(ExportType.MARKDOWN) },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.FilePresent, null)
-                        Text( stringResource(R.string.Markdown))
-                    }
-                }
+                // Markdown
+                ExportCard(Icons.Default.FilePresent, stringResource(R.string.Markdown)) { onConfirm(ExportType.MARKDOWN) }
 
-                // Image Export
-                Card(
-                    onClick = { onConfirm(ExportType.IMAGE) },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Image, null)
-                        Text( "Image")
-                    }
-                }
+                // Image
+                ExportCard(Icons.Default.Image, "Image") { onConfirm(ExportType.IMAGE) }
 
                 // HTML Export
-                Card(
-                    onClick = { onConfirm(ExportType.HTML) },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Code, null)
-                        Text( "HTML")
-                    }
-                }
+                ExportCard(Icons.Default.Code, "HTML") { onConfirm(ExportType.HTML) }
             }
+        }
+    }
+}
+
+@Composable
+fun ExportCard(icon: ImageVector, title: String, onClick: () -> Unit){
+    Card(
+        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(50)),
+        shape = RoundedCornerShape(50),
+        onClick = { onClick() },
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp),
+            contentColor = MaterialTheme.colorScheme.primary
+        )
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconButton(
+                onClick = onClick,
+                colors = IconButtonDefaults.iconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
+            ) { Icon(icon, null) }
+            Text( title)
         }
     }
 }
@@ -963,9 +955,7 @@ fun ListDialog(
                 SingleChoiceSegmentedButtonRow {
                     SegmentedButton(
                         shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
-                        onClick = {
-                            ordered = false
-                        },
+                        onClick = { ordered = false },
                         selected = !ordered
                     ) {
                         Row(
@@ -980,9 +970,7 @@ fun ListDialog(
                     }
                     SegmentedButton(
                         shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
-                        onClick = {
-                            ordered = true
-                        },
+                        onClick = { ordered = true },
                         selected = ordered
                     ) {
                         Row(
@@ -996,46 +984,48 @@ fun ListDialog(
                         }
                     }
                 }
-
-                FilledTonalIconButton(onClick = {
-                    list.add("")
-                }) {
-                    Icon(
-                        imageVector = Icons.Outlined.Add,
-                        contentDescription = "Add list item"
-                    )
-                }
             }
         },
         text = {
-            Column(
-                modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-
+            Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
                 list.forEachIndexed { index, str ->
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 8.dp),
+                        modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        OutlinedTextField(
+                        TextField(
                             modifier = Modifier.weight(1f),
                             value = str,
-                            onValueChange = {
-                                list[index] = it
-                            },
-                            prefix = { Text(text = if (ordered) "${(index + 1)}. " else "- ") },
-                            singleLine = true
+                            singleLine = true,
+                            onValueChange = { list[index] = it },
+                            placeholder = { Text("Item Value") },
+                            prefix = { Text(text = if (ordered) "${(index + 1)}. " else "• ") },
+                            colors = TextFieldDefaults.colors(
+                                focusedIndicatorColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                unfocusedIndicatorColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                focusedTextColor = MaterialTheme.colorScheme.primary,
+                                focusedPlaceholderColor = MaterialTheme.colorScheme.primary
+                            )
                         )
 
                         IconButton(onClick = { list.removeAt(index) }) {
                             Icon(
-                                Icons.Outlined.RemoveCircleOutline,
-                                contentDescription = "Remove list item"
+                                Icons.Filled.Remove,
+                                contentDescription = "Remove Task"
                             )
                         }
+                    }
+                }
+
+                TextButton(onClick = { list.add("") }) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.SubdirectoryArrowRight, null)
+                        Text(stringResource(R.string.Add_Item))
                     }
                 }
             }
@@ -1065,68 +1055,54 @@ fun TaskDialog(
     onDismissRequest: () -> Unit,
     onConfirm: (taskList: List<TaskItem>) -> Unit
 ) {
-
-    val taskList = remember {
-        mutableStateListOf(TaskItem("", false))
-    }
+    val taskList = remember { mutableStateListOf(TaskItem("", false)) }
 
     AlertDialog(
-        title = {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Task")
-
-                FilledTonalIconButton(onClick = {
-                    taskList.add(TaskItem("", false))
-                }) {
-                    Icon(
-                        imageVector = Icons.Outlined.Add,
-                        contentDescription = "Add Task"
-                    )
-                }
-            }
-        },
+        title = { Text("Task") },
         text = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState()),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-
+            Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
                 taskList.forEachIndexed { index, taskState ->
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 8.dp),
+                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-
                         Checkbox(
                             checked = taskState.checked,
-                            onCheckedChange = {
-                                taskList[index] = taskList[index].copy(checked = it)
-                            }
+                            onCheckedChange = { taskList[index] = taskList[index].copy(checked = it) }
                         )
 
-                        OutlinedTextField(
+                        TextField(
                             modifier = Modifier.weight(1f),
                             value = taskState.task,
-                            onValueChange = {
-                                taskList[index] = taskList[index].copy(task = it)
-                            },
-                            singleLine = true
+                            singleLine = true,
+                            onValueChange = { taskList[index] = taskList[index].copy(task = it) },
+                            placeholder = { Text(stringResource(R.string.Title)) },
+                            colors = TextFieldDefaults.colors(
+                                focusedIndicatorColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                unfocusedIndicatorColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                focusedTextColor = MaterialTheme.colorScheme.primary,
+                                focusedPlaceholderColor = MaterialTheme.colorScheme.primary
+                            )
                         )
 
                         IconButton(onClick = { taskList.removeAt(index) }) {
                             Icon(
-                                Icons.Outlined.RemoveCircleOutline,
+                                Icons.Filled.Remove,
                                 contentDescription = "Remove Task"
                             )
                         }
+                    }
+                }
+
+                TextButton(onClick = { taskList.add(TaskItem("", false)) }) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.SubdirectoryArrowRight, null)
+                        Text(stringResource(R.string.Add_Item))
                     }
                 }
             }

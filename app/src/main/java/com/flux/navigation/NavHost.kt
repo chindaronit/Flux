@@ -132,13 +132,22 @@ fun AppNavHost(
                 })
             }
 
+            if (route.contains("{journalDateTime}")) {
+                arguments.add(navArgument("journalDateTime") {
+                    type = NavType.LongType
+                    nullable = false
+                })
+            }
+
             bottomSlideComposable(route, arguments) { entry ->
                 val journalId = entry.arguments?.getString("journalId") ?: ""
                 val workspaceId = entry.arguments?.getString("workspaceId") ?: ""
+                val journalDateTime = entry.arguments?.getLong("journalDateTime") ?: 0L
 
                 screen(
                     navController,
                     journalId,
+                    journalDateTime,
                     workspaceId,
                     States(
                         notesState,

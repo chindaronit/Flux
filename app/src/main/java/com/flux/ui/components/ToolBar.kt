@@ -141,9 +141,55 @@ fun TodoToolBar(navController: NavController, workspaceId: String) {
 }
 
 @Composable
-fun JournalToolBar(navController: NavController, workspaceId: String) {
-    IconButton({ navController.navigate(NavRoutes.EditJournal.withArgs(workspaceId, "")) }) {
-        Icon(Icons.Default.Add, null, tint = MaterialTheme.colorScheme.primary)
+fun JournalToolBar(
+    navController: NavController,
+    workspaceId: String,
+    selectedDate: Long,
+    isMonthlyView: Boolean,
+    onChangeView: (Boolean) -> Unit
+) {
+    val selectedLocalDate = remember(selectedDate) { LocalDate.ofEpochDay(selectedDate) }
+    val isToday = selectedLocalDate == LocalDate.now()
+    val navigationTimeMillis = remember(selectedDate) {
+        if (isToday) { System.currentTimeMillis()
+        } else {
+            // other day → start of that day
+            selectedLocalDate
+                .atStartOfDay(ZoneId.systemDefault())
+                .toInstant()
+                .toEpochMilli()
+        }
+    }
+
+    Row {
+        IconButton(onClick = { onChangeView(!isMonthlyView) }) {
+            Icon(
+                if (isMonthlyView)
+                    Icons.Default.CalendarViewDay
+                else
+                    Icons.Default.CalendarViewMonth,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
+
+        IconButton(
+            onClick = {
+                navController.navigate(
+                    NavRoutes.EditJournal.withArgs(
+                        workspaceId,
+                        "",
+                        navigationTimeMillis
+                    )
+                )
+            }
+        ) {
+            Icon(
+                Icons.Default.Add,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
     }
 }
 

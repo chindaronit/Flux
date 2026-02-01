@@ -14,7 +14,6 @@ data class NotesModel(
     val title: String = "",
     val description: String = "",
     val isPinned: Boolean = false,
-    val images: List<String> = emptyList(),
     val labels: List<String> = emptyList(),
     val lastEdited: Long = System.currentTimeMillis()
 )

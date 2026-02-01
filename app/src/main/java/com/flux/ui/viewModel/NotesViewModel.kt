@@ -32,7 +32,11 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -79,6 +83,7 @@ class NotesViewModel @Inject constructor(
         TaskListItemsExtension.create(),
         YamlFrontMatterExtension.create()
     )
+
     private var parser: Parser = Parser.builder().extensions(extensions).build()
     private var renderer: HtmlRenderer = HtmlRenderer.builder().extensions(extensions).build()
     private var lastOutlineContentHash: Int? = null
@@ -95,6 +100,33 @@ class NotesViewModel @Inject constructor(
         mutex.withLock { _state.value = reducer(_state.value) }
     }
 
+    init {
+        viewModelScope.launch {
+            state
+                .map { it.workspaceId }
+                .distinctUntilChanged()
+                .filterNotNull()
+                .flatMapLatest { workspaceId ->
+                    combine(
+                        repository.loadAllNotes(workspaceId),
+                        repository.loadAllLabels(workspaceId)
+                    ) { notes, labels ->
+                        notes.sortedByDescending { it.lastEdited } to labels
+                    }
+                }
+                .collect { (notes, labels) ->
+                    updateState {
+                        it.copy(
+                            isNotesLoading = false,
+                            isLabelsLoading = false,
+                            allNotes = notes,
+                            allLabels = labels
+                        )
+                    }
+                }
+        }
+    }
+
     private suspend fun reduce(event: NotesEvents) {
         when (event) {
             is NotesEvents.UpsertNote -> updateNotes(event.data)
@@ -103,23 +135,11 @@ class NotesViewModel @Inject constructor(
             is NotesEvents.DeleteNote -> deleteNote(event.data)
             is NotesEvents.DeleteLabel -> deleteLabel(event.data)
             is NotesEvents.UpsertLabel -> upsertLabel(event.data)
-            is NotesEvents.LoadAllNotes -> loadAllNotes(event.workspaceId)
-            is NotesEvents.LoadAllLabels -> loadAllLabels(event.workspaceId)
             is NotesEvents.DeleteAllWorkspaceNotes -> deleteWorkspaceNotes(event.workspaceId)
-            is NotesEvents.ClearSelection -> {
-                updateState { it.copy(selectedNotes = emptyList()) }
-            }
-            is NotesEvents.SelectNotes -> {
-                updateState { it.copy(selectedNotes = it.selectedNotes.plus(event.noteId)) }
-            }
-
-            is NotesEvents.UnSelectNotes -> {
-                updateState { it.copy(selectedNotes = it.selectedNotes.minus(event.noteId)) }
-            }
-
-            is NotesEvents.SelectAllNotes -> {
-                updateState { it.copy(selectedNotes = it.allNotes.map { note -> note.notesId }) }
-            }
+            is NotesEvents.ClearSelection -> { updateState { it.copy(selectedNotes = emptyList()) } }
+            is NotesEvents.SelectNotes -> { updateState { it.copy(selectedNotes = it.selectedNotes.plus(event.noteId)) } }
+            is NotesEvents.UnSelectNotes -> { updateState { it.copy(selectedNotes = it.selectedNotes.minus(event.noteId)) } }
+            is NotesEvents.SelectAllNotes -> { updateState { it.copy(selectedNotes = it.allNotes.map { note -> note.notesId }) } }
 
             is NotesEvents.ImportImages -> {
                 val context = event.context
@@ -256,6 +276,8 @@ class NotesViewModel @Inject constructor(
                     updateState { it.copy(textState = TextState.fromText(event.content)) }
                 }
             }
+
+            is NotesEvents.EnterWorkspace -> { updateState { if (it.workspaceId == event.workspaceId) { it } else { it.copy(workspaceId = event.workspaceId, isNotesLoading = true, isLabelsLoading = true) }} }
         }
     }
 
@@ -388,27 +410,9 @@ class NotesViewModel @Inject constructor(
         }
     }
 
-    private suspend fun loadAllNotes(workspaceId: String) {
-        updateState { it.copy(isNotesLoading = true) }
-
-        repository.loadAllNotes(workspaceId)
-            .distinctUntilChanged()
-            .collect { data ->
-                val sortedData = data.sortedByDescending { it.lastEdited }
-                updateState { it.copy(isNotesLoading = false, allNotes = sortedData) }
-            }
-    }
-
-    private suspend fun loadAllLabels(workspaceId: String) {
-        updateState { it.copy(isLabelsLoading = true) }
-        repository.loadAllLabels(workspaceId)
-            .collect { data -> updateState { it.copy(isLabelsLoading = false, allLabels = data) } }
-    }
-
     private fun updateNotes(data: NotesModel) {
         val isNewNote = state.value.allNotes.none { it.notesId == data.notesId }
-        val isBlankNote = data.title.trim()
-            .isBlank() && data.description.trim() == "<br>" && data.labels.isEmpty()
+        val isBlankNote = data.title.trim().isBlank() && data.labels.isEmpty() && data.description.trim().isBlank()
         if (isNewNote && isBlankNote) return
 
         viewModelScope.launch(Dispatchers.IO) { repository.upsertNote(data) }

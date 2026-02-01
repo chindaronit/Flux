@@ -102,6 +102,60 @@ fun NoteDetailsTopBar(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+fun JournalDetailsTopBar(
+    isSearching: Boolean,
+    isReadView: Boolean,
+    onBackPressed: () -> Unit,
+    onOutlineClicked: () -> Unit,
+    onReadClick: () -> Unit,
+    onEditClick: ()->Unit,
+    onDelete: () -> Unit,
+    onSearchClick: () -> Unit,
+    onAboutClicked: () -> Unit,
+    onShareNote: () -> Unit,
+    onSaveNote: () -> Unit,
+    onPrintNote: () -> Unit,
+) {
+    CenterAlignedTopAppBar(
+        title = {
+            Row {
+                Box(
+                    modifier = Modifier
+                        .background(
+                            if(!isReadView) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp),
+                            RoundedCornerShape(bottomStart = 32.dp, topStart = 32.dp)
+                        )
+                        .clip(RoundedCornerShape(bottomStart = 32.dp, topStart = 32.dp))
+                        .clickable { onEditClick() }
+                        .padding(8.dp)
+                ) {
+                    Icon(Icons.Default.Edit, null, tint= if(!isReadView) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary)
+                }
+                Spacer(Modifier.width(1.dp))
+                Box(
+                    modifier = Modifier
+                        .background(
+                            if(isReadView) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp),
+                            RoundedCornerShape(bottomEnd = 32.dp, topEnd = 32.dp)
+                        )
+                        .clip(RoundedCornerShape(bottomEnd = 32.dp, topEnd = 32.dp))
+                        .clickable { onReadClick() }
+                        .padding(8.dp)
+                ) { Icon(Icons.Default.RemoveRedEye, null, tint=if(isReadView) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary) }
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+        navigationIcon = { IconButton(onClick = onBackPressed) { Icon(Icons.AutoMirrored.Default.ArrowBack, null) } },
+        actions = {
+            IconButton({onSearchClick()}) { Icon(if(isSearching) Icons.Default.SearchOff else Icons.Default.Search, null) }
+            IconButton({onOutlineClicked()}) { Icon(Icons.Default.Summarize, null) }
+            JournalDropdownMenu(onAboutClicked, onShareNote, onSaveNote, onPrintNote, onDelete) }
+    )
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
 fun WorkspaceTopBar(
     workspace: WorkspaceModel,
     onBackPressed: () -> Unit,

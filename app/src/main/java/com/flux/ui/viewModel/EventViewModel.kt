@@ -14,55 +14,126 @@ import com.flux.ui.events.TaskEvents
 import com.flux.ui.state.EventState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import java.time.LocalDate
 import java.time.YearMonth
 import javax.inject.Inject
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class EventViewModel @Inject constructor(
-    val repository: EventRepository
+    private val repository: EventRepository
 ) : ViewModel() {
-    private val mutex = Mutex()
-    private val _state: MutableStateFlow<EventState> = MutableStateFlow(EventState())
+
+    private val _state = MutableStateFlow(EventState())
     val state: StateFlow<EventState> = _state.asStateFlow()
 
-    fun onEvent(event: TaskEvents) { viewModelScope.launch { reduce(event = event) } }
-    private suspend fun safeUpdateState(reducer: (EventState) -> EventState) {
-        mutex.withLock { _state.value = reducer(_state.value) }
+    fun onEvent(event: TaskEvents) {
+        viewModelScope.launch { reduce(event) }
     }
 
-    private suspend fun reduce(event: TaskEvents) {
-        when (event) {
-            is TaskEvents.DeleteTask -> deleteEvent(event.taskEvent, event.context)
-            is TaskEvents.UpsertTask -> upsertEvent(event.context, event.taskEvent)
-            is TaskEvents.LoadDateTask -> loadDateEvents(event.workspaceId, event.selectedDate)
-            is TaskEvents.LoadAllTask -> loadAllEvents(event.workspaceId)
-            is TaskEvents.LoadAllInstances -> loadAllEventsInstances(event.workspaceId)
-            is TaskEvents.DeleteAllWorkspaceEvents -> deleteWorkspaceEvents(event.workspaceId, event.context)
-            is TaskEvents.ChangeMonth -> safeUpdateState { it.copy(selectedYearMonth = event.newYearMonth) }
-            is TaskEvents.ChangeDate -> safeUpdateState {
-                val newDate = event.newLocalDate
-                it.copy(
-                    selectedDate = newDate,
-                    selectedYearMonth = YearMonth.from(LocalDate.ofEpochDay(newDate))
-                )
-            }
-            is TaskEvents.ToggleStatus -> { toggleStatus(event.markDone, event.eventId, event.workspaceId, event.date) }
+    private fun updateState(reducer: (EventState) -> EventState) {
+        _state.update(reducer)
+    }
+
+    init {
+        viewModelScope.launch {
+            state
+                .map { it.workspaceId }
+                .distinctUntilChanged()
+                .filterNotNull()
+                .flatMapLatest { workspaceId: String ->
+                    combine(
+                        repository.loadAllWorkspaceEvents(workspaceId),
+                        repository.loadAllEventInstances(workspaceId)
+                    ) { events: List<EventModel>, instances: List<EventInstanceModel> ->
+                        Pair(events, instances)
+                    }
+                }
+                .combine(
+                    state.map { it.selectedDate }.distinctUntilChanged()
+                ) { eventsAndInstances: Pair<List<EventModel>, List<EventInstanceModel>>, selectedDate: Long ->
+                    val (allEvents, allInstances) = eventsAndInstances
+                    val datedEvents = filterByDate(allEvents, selectedDate)
+
+                    Triple(allEvents, datedEvents, allInstances)
+                }
+                .collect { (allEvents, datedEvents, allInstances) ->
+                    updateState {
+                        it.copy(
+                            isAllEventsLoading = false,
+                            isDatedEventLoading = false,
+                            allEvent = allEvents,
+                            datedEvents = datedEvents,
+                            allEventInstances = allInstances
+                        )
+                    }
+                }
         }
     }
 
-    private fun toggleStatus(markDone: Boolean, eventId: String, workspaceId: String, date: Long) {
-        val data = _state.value.allEventInstances.find{ it.eventId==eventId && it.instanceDate==date}?: EventInstanceModel(eventId, workspaceId, date)
+    private fun reduce(event: TaskEvents) {
+        when (event) {
+            is TaskEvents.EnterWorkspace -> {
+                updateState {
+                    if (it.workspaceId == event.workspaceId) { it } else {
+                        it.copy(
+                            workspaceId = event.workspaceId,
+                            isAllEventsLoading = true,
+                            isDatedEventLoading = true
+                        )
+                    }
+                }
+            }
+            is TaskEvents.ChangeMonth -> updateState { it.copy(selectedYearMonth = event.newYearMonth) }
+            is TaskEvents.ChangeDate -> {
+                val newDate = event.newLocalDate
+                updateState {
+                    it.copy(
+                        selectedDate = newDate,
+                        selectedYearMonth = YearMonth.from(
+                            LocalDate.ofEpochDay(newDate)
+                        )
+                    )
+                }
+            }
+            is TaskEvents.UpsertTask -> upsertEvent(event.context, event.taskEvent)
+            is TaskEvents.DeleteTask -> deleteEvent(event.taskEvent, event.context)
+            is TaskEvents.ToggleStatus ->
+                toggleStatus(
+                    event.markDone,
+                    event.eventId,
+                    event.workspaceId,
+                    event.date
+                )
+            is TaskEvents.DeleteAllWorkspaceEvents -> deleteWorkspaceEvents(event.workspaceId, event.context)
+        }
+    }
+
+    private fun toggleStatus(
+        markDone: Boolean,
+        eventId: String,
+        workspaceId: String,
+        date: Long
+    ) {
+        val instance =
+            state.value.allEventInstances.find {
+                it.eventId == eventId && it.instanceDate == date
+            } ?: EventInstanceModel(eventId, workspaceId, date)
+
         viewModelScope.launch(Dispatchers.IO) {
-            if(markDone){ repository.upsertEventInstance(data) }
-            else{ repository.deleteEventInstance(data) }
+            if (markDone) repository.upsertEventInstance(instance)
+            else repository.deleteEventInstance(instance)
         }
     }
 
@@ -84,20 +155,27 @@ class EventViewModel @Inject constructor(
 
     private fun upsertEvent(context: Context, data: EventModel) {
         viewModelScope.launch(Dispatchers.IO) {
-            cancelReminder(context, data.id, data.type.toString(), data.title, data.description, data.workspaceId, data.endDateTime, data.recurrence)
-            repository.upsertEvent(data)
-            val updatedEvents = state.value.allEvent.map { e -> if (e.id == data.id) data else e }
-            safeUpdateState { it.copy(allEvent = updatedEvents) }
-            val nextOccurrence = getNextOccurrence(data.recurrence, data.startDateTime)
+            cancelReminder(
+                context,
+                data.id,
+                data.type.toString(),
+                data.title,
+                data.description,
+                data.workspaceId,
+                data.endDateTime,
+                data.recurrence
+            )
 
-            // Only schedule reminder if there's a future occurrence
-            if (nextOccurrence != null && nextOccurrence > System.currentTimeMillis()) {
+            repository.upsertEvent(data)
+
+            val next = getNextOccurrence(data.recurrence, data.startDateTime)
+            if (next != null && next > System.currentTimeMillis()) {
                 scheduleReminder(
                     context = context,
                     id = data.id,
                     data.type.toString(),
                     recurrence = data.recurrence,
-                    timeInMillis = nextOccurrence-data.notificationOffset,
+                    timeInMillis = next - data.notificationOffset,
                     title = data.title,
                     description = data.description,
                     workspaceId = data.workspaceId,
@@ -109,7 +187,7 @@ class EventViewModel @Inject constructor(
 
     private fun deleteWorkspaceEvents(workspaceId: String, context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
-            _state.value.allEvent.forEach { event ->
+            state.value.allEvent.forEach { event ->
                 cancelReminder(
                     context,
                     event.id,
@@ -125,50 +203,11 @@ class EventViewModel @Inject constructor(
         }
     }
 
-    private fun filterEventsByDate(
-        events: List<EventModel>,
+    private fun filterByDate(
+        entries: List<EventModel>,
         epochDay: Long
     ): List<EventModel> {
         val date = LocalDate.ofEpochDay(epochDay)
-        return events.filter { it.occursOn(date) }
-    }
-
-    private suspend fun collectWorkspaceEvents(
-        workspaceId: String,
-        onEvents: suspend (List<EventModel>) -> Unit
-    ) {
-        repository.loadAllWorkspaceEvents(workspaceId)
-            .distinctUntilChanged()
-            .collect { events -> onEvents(events) }
-    }
-
-    private suspend fun loadDateEvents(workspaceId: String, date: Long) {
-        safeUpdateState { it.copy(isDatedEventLoading = true) }
-
-        collectWorkspaceEvents(workspaceId) { events ->
-            val filtered = filterEventsByDate(events, date)
-            safeUpdateState { it.copy(isDatedEventLoading = false, datedEvents = filtered) }
-        }
-    }
-
-    private suspend fun loadAllEvents(workspaceId: String) {
-        safeUpdateState { it.copy(isAllEventsLoading = true) }
-        collectWorkspaceEvents(workspaceId) { events ->
-            safeUpdateState { it.copy(isAllEventsLoading = false, allEvent = events) }
-        }
-    }
-
-    private suspend fun loadAllEventsInstances(workspaceId: String) {
-        safeUpdateState { it.copy(isDatedEventLoading = true) }
-        repository.loadAllEventInstances(workspaceId)
-            .distinctUntilChanged()
-            .collect { data ->
-                safeUpdateState {
-                    it.copy(
-                        isDatedEventLoading = false,
-                        allEventInstances = data
-                    )
-                }
-            }
+        return entries.filter { it.occursOn(date) }
     }
 }

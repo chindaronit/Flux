@@ -10,8 +10,7 @@ import com.flux.other.ExportType
 
 sealed class NotesEvents {
     data class DeleteAllWorkspaceNotes(val workspaceId: String) : NotesEvents()
-    data class LoadAllNotes(val workspaceId: String) : NotesEvents()
-    data class LoadAllLabels(val workspaceId: String) : NotesEvents()
+    data class EnterWorkspace(val workspaceId: String) : NotesEvents()
     data class DeleteNote(val data: NotesModel) : NotesEvents()
     data class DeleteNotes(val data: List<NotesModel>) : NotesEvents()
     data class TogglePinMultiple(val data: List<NotesModel>) : NotesEvents()

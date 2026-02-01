@@ -1,95 +1,109 @@
 package com.flux.ui.screens.journal
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoStories
-import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.Typography
+import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import coil.compose.AsyncImage
 import com.flux.R
 import com.flux.data.model.JournalModel
 import com.flux.navigation.Loader
 import com.flux.navigation.NavRoutes
-import com.mohamedrejeb.richeditor.model.rememberRichTextState
-import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
-import com.mohamedrejeb.richeditor.ui.material3.RichTextEditorDefaults
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.time.format.TextStyle
-import java.util.Locale
+import com.flux.ui.components.DailyViewCalendar
+import com.flux.ui.components.MonthlyViewCalendar
+import com.flux.ui.state.Settings
+import java.time.YearMonth
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.ColorProducer
+import androidx.compose.ui.text.style.TextOverflow
+import com.flux.other.parseMarkdownContent
+import com.flux.ui.components.TimelineBody
+import com.flux.ui.components.convertMillisToTime
+import com.flux.ui.components.shapeManager
+import com.flux.ui.events.JournalEvents
 
 @OptIn(ExperimentalMaterial3Api::class)
 fun LazyListScope.journalHomeItems(
     navController: NavController,
+    settings: Settings,
+    selectedMonth: YearMonth,
+    selectedDate: Long,
     isLoading: Boolean,
     workspaceId: String,
-    allEntries: List<JournalModel>
+    allEntries: List<JournalModel>,
+    onJournalEvents: (JournalEvents) -> Unit
 ) {
-    // Grouping entries by Month and Year
-    val grouped =
-        allEntries.groupBy {
-            val date =
-                Instant.ofEpochMilli(it.dateTime).atZone(ZoneId.systemDefault()).toLocalDate()
-            Pair(date.month, date.year)
+    val isMonthlyView = settings.data.isCalendarMonthlyView
+    val radius  = settings.data.cornerRadius
+
+    if (isMonthlyView) {
+        item {
+            MonthlyViewCalendar(
+                selectedMonth, selectedDate,
+                onMonthChange = {
+                    onJournalEvents(JournalEvents.ChangeMonth(it))
+                },
+                onDateChange = {
+                    onJournalEvents(JournalEvents.ChangeDate(it))
+                })
         }
+    } else {
+        item {
+            DailyViewCalendar(
+                selectedMonth,
+                selectedDate,
+                onDateChange = {
+                    onJournalEvents(JournalEvents.ChangeDate(it))
+                })
+        }
+    }
 
     when {
         isLoading -> item { Loader() }
         allEntries.isEmpty() -> item { EmptyJournal() }
         else -> {
-            grouped.forEach { (monthYear, entries) ->
-                val monthName = monthYear.first.getDisplayName(TextStyle.FULL, Locale.getDefault())
-                val year = monthYear.second
-                val headerKey = "header-${monthYear.first}-${monthYear.second}"
-
-                item(key = headerKey) {
-                    Text(
-                        text = "$monthName, $year",
-                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.SemiBold),
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-
-                itemsIndexed(entries, key = { _, entry -> entry.journalId }) { index, entry ->
-                    JournalPreview(entry, index == entries.lastIndex) {
-                        navController.navigate(
-                            NavRoutes.EditJournal.withArgs(
-                                workspaceId,
-                                entry.journalId
+            itemsIndexed(allEntries) { index, entry ->
+                Column(Modifier.padding(top = 16.dp)) {
+                    JournalCardHeader(convertMillisToTime(entry.dateTime))
+                    Row(modifier = Modifier.height(IntrinsicSize.Min)) {
+                        TimelineBody(isLast = false)
+                        JournalPreview(radius, entry.text) {
+                            navController.navigate(
+                                NavRoutes.EditJournal.withArgs(
+                                    workspaceId,
+                                    entry.journalId,
+                                    0L
+                                )
                             )
-                        )
+                        }
                     }
                 }
             }
@@ -97,101 +111,61 @@ fun LazyListScope.journalHomeItems(
     }
 }
 
+@Composable
+private fun JournalCardHeader(
+    formattedTimestamp: String,
+    colorScheme: ColorScheme = MaterialTheme.colorScheme,
+    typography: Typography = MaterialTheme.typography
+) {
+    Box(modifier = Modifier
+        .wrapContentWidth()
+        .padding(bottom = 8.dp, top = 4.dp, start = 4.dp)) {
+        Canvas(
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .size(8.dp)
+        ) {
+            drawCircle(
+                color = colorScheme.onSurface,
+                radius = size.minDimension / 2
+            )
+        }
+
+        BasicText(
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .padding(start = 16.dp),
+            text = formattedTimestamp,
+            style = typography.bodyMedium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            color = ColorProducer { colorScheme.onSurfaceVariant }
+        )
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun JournalPreview(journalEntry: JournalModel, isLast: Boolean = false, onClick: () -> Unit) {
-    val dateTime =
-        Instant.ofEpochMilli(journalEntry.dateTime).atZone(ZoneId.systemDefault()).toLocalDateTime()
-    val dayOfWeek = dateTime.dayOfWeek.name.take(3)
-    val dayOfMonth = dateTime.dayOfMonth.toString()
-    val timeFormatted = dateTime.format(DateTimeFormatter.ofPattern("h:mm a"))
-    val richTextState = rememberRichTextState()
-    val scrollState = rememberScrollState()
-
-    LaunchedEffect(journalEntry.text) {
-        richTextState.setHtml(journalEntry.text)
-        scrollState.scrollTo(0)
-    }
-
-    Column(
-        Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .clickable { onClick() }) {
-        Row(
-            Modifier
-                .padding(vertical = 8.dp)
-                .padding(end = 2.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(
-                Modifier.padding(start = 8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    dayOfWeek,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-                )
-                Text(
-                    dayOfMonth,
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-                )
-            }
-
-            Row(
-                Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Column(Modifier.weight(1f)) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(max = 100.dp)
-                            .verticalScroll(scrollState)
-                    ) {
-                        RichTextEditor(
-                            state = richTextState,
-                            enabled = false,
-                            modifier = Modifier.fillMaxWidth(),
-                            textStyle = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.ExtraLight),
-                            colors = RichTextEditorDefaults.richTextEditorColors(
-                                disabledIndicatorColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                                disabledTextColor = MaterialTheme.colorScheme.onSurface
-                            )
-                        )
-                    }
-                    Row(
-                        Modifier.padding(start = 16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Icon(Icons.Default.Edit, null, modifier = Modifier.size(12.dp))
-                        Text(
-                            timeFormatted,
-                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.ExtraLight),
-                            modifier = Modifier.alpha(0.8f)
-                        )
-                    }
-                }
-
-                if (journalEntry.images.isNotEmpty()) {
-                    AsyncImage(
-                        model = journalEntry.images.first(),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(75.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .align(Alignment.CenterVertically),
-                        contentScale = ContentScale.Crop
-                    )
-                }
-            }
-        }
-        if (!isLast) {
-            HorizontalDivider()
-        } else Spacer(Modifier.height(8.dp))
+fun JournalPreview(
+    radius: Int,
+    content: String,
+    onClick: () -> Unit
+) {
+    Card(
+        colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)),
+        modifier = Modifier.clip(shapeManager(isBoth = true, radius = radius / 2)).fillMaxWidth(),
+        shape = shapeManager(isBoth = true, radius = radius / 2),
+        onClick = onClick
+    ) {
+        Text(
+            text = parseMarkdownContent(content),
+            style = MaterialTheme.typography.bodyMedium,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier
+                .alpha(0.9f)
+                .padding(12.dp)
+                .heightIn(max = 300.dp, min = 50.dp)
+        )
     }
 }
 

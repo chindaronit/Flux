@@ -1,7 +1,5 @@
 package com.flux.ui.screens.notes
 
-import android.content.ClipData
-import android.net.Uri
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -10,11 +8,6 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.content.MediaType
-import androidx.compose.foundation.content.ReceiveContentListener
-import androidx.compose.foundation.content.consume
-import androidx.compose.foundation.content.contentReceiver
-import androidx.compose.foundation.content.hasMediaType
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -65,41 +58,10 @@ fun StandardTextField(
     isLintActive: Boolean,
     headerRange: IntRange?,
     findAndReplaceState: FindAndReplaceState,
-    onFindAndReplaceUpdate: (FindAndReplaceState) -> Unit,
-    onImageReceived: (List<Uri>) -> Unit
+    onFindAndReplaceUpdate: (FindAndReplaceState) -> Unit
 ) {
 
     var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
-
-    val receiveContentListener = remember {
-        ReceiveContentListener { transferableContent ->
-            when {
-                transferableContent.hasMediaType(MediaType.Text) -> {
-                    transferableContent.consume { item: ClipData.Item ->
-                        val hasText = item.text.isNotEmpty()
-                        if (hasText) {
-                            state.edit { addInNewLine(item.text.toString()) }
-                        }
-                        hasText
-                    }
-                }
-
-                transferableContent.hasMediaType(MediaType.Image) -> {
-                    val receivedImages = mutableListOf<Uri>()
-                    transferableContent.consume { item: ClipData.Item ->
-                        item.uri.let {
-                            receivedImages.add(it)
-                        }
-                        true
-                    }.also {
-                        onImageReceived(receivedImages)
-                    }
-                }
-
-                else -> transferableContent
-            }
-        }
-    }
 
     val infiniteTransition = rememberInfiniteTransition(label = "wavy-line")
     val phase by infiniteTransition.animateFloat(
@@ -150,10 +112,7 @@ fun StandardTextField(
 
             BasicTextField(
                 // The contentReceiver modifier is used to receive text content from the clipboard or drag-and-drop operations.
-                modifier = Modifier
-                    .padding(start = if (showLineNumbers) 4.dp else 16.dp, end = 16.dp)
-                    .fillMaxSize()
-                    .contentReceiver(receiveContentListener),
+                modifier = Modifier.padding(start = if (showLineNumbers) 4.dp else 16.dp, end = 16.dp).fillMaxSize(),
                 scrollState = scrollState,
                 readOnly = readMode,
                 state = state,

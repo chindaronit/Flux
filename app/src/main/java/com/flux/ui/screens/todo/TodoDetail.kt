@@ -55,7 +55,7 @@ fun TodoDetail(
     var title by rememberSaveable { mutableStateOf(list.title) }
     val itemList = rememberSaveable { list.items.toMutableStateList() }
     var showDeleteDialog by remember { mutableStateOf(false) }
-    var isEditing by remember { mutableStateOf(false) }
+    var isEditing by remember { mutableStateOf(list.title.isBlank() && list.items.isEmpty()) }
 
     if(showDeleteDialog){
         DeleteAlert({
@@ -72,7 +72,7 @@ fun TodoDetail(
         topBar = {
             CenterAlignedTopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(MaterialTheme.colorScheme.surfaceContainerLow),
-                title = { Text(if(isEditing) stringResource(R.string.Edit_list) else list.title) },
+                title = { Text(if(isEditing) stringResource(R.string.Edit_list) else title) },
                 navigationIcon = {
                     IconButton({ navController.popBackStack() }) {
                         Icon(

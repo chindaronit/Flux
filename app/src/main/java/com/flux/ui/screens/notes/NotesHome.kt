@@ -48,10 +48,9 @@ fun LazyListScope.notesHomeItems(
 
     when {
         isLoading -> item { Loader() }
-        else ->
-            if (pinnedNotes.isEmpty() && unPinnedNotes.isEmpty()) {
-                item { EmptyNotes() }
-            } else {
+        else -> {
+            if (pinnedNotes.isEmpty() && unPinnedNotes.isEmpty()) { item { EmptyNotes() } }
+            else {
                 if (pinnedNotes.isNotEmpty()) {
                     item {
                         Text(
@@ -66,7 +65,8 @@ fun LazyListScope.notesHomeItems(
                 item {
                     val columns = if (isGridView) 2 else 1
                     val rowCount = ceil(pinnedNotes.size / columns.toFloat()).toInt()
-                    val gridHeight = rowCount * 300.dp + if(pinnedNotes.isNotEmpty()) 200.dp else 0.dp
+                    val gridHeight =
+                        rowCount * 300.dp + if (pinnedNotes.isNotEmpty()) 200.dp else 0.dp
 
                     Box(
                         Modifier
@@ -85,7 +85,8 @@ fun LazyListScope.notesHomeItems(
                                     radius = radius,
                                     isSelected = selectedNotes.contains(note.notesId),
                                     note = note,
-                                    labels = allLabels.filter { note.labels.contains(it.labelId) }.map { it.value },
+                                    labels = allLabels.filter { note.labels.contains(it.labelId) }
+                                        .map { it.value },
                                     onClick = {
                                         navController.navigate(
                                             NavRoutes.NoteDetails.withArgs(
@@ -124,11 +125,7 @@ fun LazyListScope.notesHomeItems(
                     val rowCount = ceil(unPinnedNotes.size / columns.toFloat()).toInt()
                     val gridHeight = rowCount * 300.dp + 200.dp
 
-                    Box(
-                        Modifier
-                            .fillMaxWidth()
-                            .height(gridHeight)
-                    ) {
+                    Box(Modifier.fillMaxWidth().height(gridHeight)) {
                         LazyVerticalStaggeredGrid(
                             columns = StaggeredGridCells.Fixed(columns),
                             userScrollEnabled = false,
@@ -141,8 +138,7 @@ fun LazyListScope.notesHomeItems(
                                     radius = radius,
                                     isSelected = selectedNotes.contains(note.notesId),
                                     note = note,
-                                    labels = allLabels.filter { note.labels.contains(it.labelId) }
-                                        .map { it.value },
+                                    labels = allLabels.filter { note.labels.contains(it.labelId) }.map { it.value },
                                     onClick = {
                                         navController.navigate(
                                             NavRoutes.NoteDetails.withArgs(
@@ -165,5 +161,6 @@ fun LazyListScope.notesHomeItems(
                     }
                 }
             }
+        }
     }
 }

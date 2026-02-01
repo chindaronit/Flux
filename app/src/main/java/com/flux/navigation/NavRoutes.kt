@@ -22,6 +22,7 @@ import com.flux.ui.screens.settings.About
 import com.flux.ui.screens.settings.Backup
 import com.flux.ui.screens.settings.Contact
 import com.flux.ui.screens.settings.Customize
+import com.flux.ui.screens.settings.Editor
 import com.flux.ui.screens.settings.Languages
 import com.flux.ui.screens.settings.Privacy
 import com.flux.ui.screens.settings.Settings
@@ -52,6 +53,7 @@ sealed class NavRoutes(val route: String) {
     data object About : NavRoutes("settings/about")
     data object Contact : NavRoutes("settings/contact")
     data object Backup : NavRoutes("setting/backup")
+    data object Editor : NavRoutes("setting/editor")
 
     fun withArgs(vararg args: Any): String {
         return buildString {
@@ -129,12 +131,20 @@ val TodoScreens =
     )
 
 val JournalScreens =
-    mapOf<String, @Composable (navController: NavController, journalId: String, workspaceId: String, states: States, viewModels: ViewModels) -> Unit>(
-        NavRoutes.EditJournal.route + "/{workspaceId}" + "/{journalId}" to { navController, journalId, workspaceId, states, viewModel ->
+    mapOf<String, @Composable (navController: NavController, journalId: String, journalDateTime: Long, workspaceId: String, states: States, viewModels: ViewModels) -> Unit>(
+        NavRoutes.EditJournal.route + "/{workspaceId}" + "/{journalId}" + "/{journalDateTime}" to { navController, journalId, journalDateTime, workspaceId, states, viewModel ->
             EditJournal(
                 navController,
-                states.journalState.allEntries.find { it.journalId == journalId } ?:
-                JournalModel(workspaceId = workspaceId),
+                states.journalState.allEntries.find { it.journalId == journalId } ?: JournalModel(workspaceId = workspaceId, dateTime = journalDateTime),
+                states.journalState.outline,
+                states.journalState.textState,
+                states.settings.data.isDarkMode,
+                states.settings.data.isLintValid,
+                states.settings.data.isLineNumbersVisible,
+                states.settings.data.startWithReadView,
+                states.settings.data.storageRootUri,
+                viewModel.journalViewModel,
+                viewModel.settingsViewModel,
                 viewModel.journalViewModel::onEvent
             )
         }
@@ -163,6 +173,9 @@ val SettingsScreens =
         },
         NavRoutes.Backup.route to { navController, _, states, viewModels ->
             Backup(navController, states.settings.data.cornerRadius, viewModels.backupViewModel)
+        },
+        NavRoutes.Editor.route to { navController, _, states, viewModels ->
+            Editor(navController, states.settings, viewModels.settingsViewModel::onEvent)
         }
     )
 
@@ -199,12 +212,7 @@ val WorkspaceScreens =
                 states.settings.data.workspaceGridColumns,
                 states.settings.data.cornerRadius,
                 states.workspaceState.allSpaces,
-                viewModels.notesViewModel::onEvent,
-                viewModels.eventViewModel::onEvent,
-                viewModels.habitViewModel::onEvent,
-                viewModels.todoViewModel::onEvent,
-                viewModels.workspaceViewModel::onEvent,
-                viewModels.journalViewModel::onEvent
+                viewModels.workspaceViewModel::onEvent
             )
         },
         NavRoutes.WorkspaceHome.route + "/{workspaceId}" to { navController, snackbarHostState, states, viewModels, workspaceId ->
@@ -223,6 +231,8 @@ val WorkspaceScreens =
                 states.notesState.selectedNotes,
                 states.eventState.selectedYearMonth,
                 states.eventState.selectedDate,
+                states.journalState.selectedYearMonth,
+                states.journalState.selectedDate,
                 states.eventState.datedEvents,
                 states.habitState.allHabits,
                 states.todoState.allLists,

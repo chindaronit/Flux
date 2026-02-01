@@ -13,15 +13,21 @@ import com.flux.ui.events.HabitEvents
 import com.flux.ui.state.HabitState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class HabitViewModel @Inject constructor(private val repository: HabitRepository) : ViewModel() {
     private val _state: MutableStateFlow<HabitState> = MutableStateFlow(HabitState())
@@ -39,12 +45,37 @@ class HabitViewModel @Inject constructor(private val repository: HabitRepository
     private suspend fun reduce(event: HabitEvents) {
         when (event) {
             is HabitEvents.DeleteHabit -> deleteHabit(event.habit, event.context)
-            is HabitEvents.LoadAllHabits -> loadAllHabits(event.workspaceId)
+            is HabitEvents.EnterWorkspace -> { updateState { if (it.workspaceId == event.workspaceId) { it } else { it.copy(workspaceId = event.workspaceId, isLoading = true) }} }
             is HabitEvents.UpsertHabit -> upsertHabit(event.context, event.habit)
-            is HabitEvents.LoadAllInstances -> loadAllInstances(event.workspaceId)
             is HabitEvents.MarkDone -> upsertInstance(event.habitInstance)
             is HabitEvents.MarkUndone -> deleteInstance(event.habitInstance)
             is HabitEvents.DeleteAllWorkspaceHabits -> deleteWorkspaceHabits(event.workspaceId, event.context)
+        }
+    }
+
+    init {
+        viewModelScope.launch {
+            state
+                .map { it.workspaceId }
+                .distinctUntilChanged()
+                .filterNotNull()
+                .flatMapLatest { workspaceId ->
+                    combine(
+                        repository.loadAllHabitsOfWorkspace(workspaceId),
+                        repository.loadAllHabitInstance(workspaceId)
+                    ) { habits, instances ->
+                        habits.sortedBy { it.startDateTime } to instances
+                    }
+                }
+                .collect { (habits, instances) ->
+                    updateState {
+                        it.copy(
+                            isLoading = false,
+                            allHabits = habits,
+                            allInstances = instances
+                        )
+                    }
+                }
         }
     }
 
@@ -102,21 +133,5 @@ class HabitViewModel @Inject constructor(private val repository: HabitRepository
                 )
             }
         }
-    }
-
-    private suspend fun loadAllInstances(workspaceId: String) {
-        updateState { it.copy(isLoading = true) }
-        repository.loadAllHabitInstance(workspaceId).distinctUntilChanged()
-            .collect { data -> updateState { it.copy(isLoading = false, allInstances = data) } }
-    }
-
-    private suspend fun loadAllHabits(workspaceId: String) {
-        updateState { it.copy(isLoading = true) }
-        repository.loadAllHabitsOfWorkspace(workspaceId)
-            .distinctUntilChanged()
-            .collect { data ->
-                val sortedData = data.sortedBy { it.startDateTime }
-                updateState { it.copy(isLoading = false, allHabits = sortedData) }
-            }
     }
 }

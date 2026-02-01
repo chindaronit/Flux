@@ -13,214 +13,30 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Label
 import androidx.compose.material.icons.automirrored.filled.LabelImportant
 import androidx.compose.material.icons.automirrored.filled.Notes
-import androidx.compose.material.icons.automirrored.outlined.FormatAlignLeft
-import androidx.compose.material.icons.automirrored.outlined.FormatAlignRight
-import androidx.compose.material.icons.automirrored.outlined.FormatListBulleted
-import androidx.compose.material.icons.filled.AddPhotoAlternate
-import androidx.compose.material.icons.filled.Code
-import androidx.compose.material.icons.filled.FormatStrikethrough
-import androidx.compose.material.icons.filled.Highlight
-import androidx.compose.material.icons.outlined.FormatAlignCenter
-import androidx.compose.material.icons.outlined.FormatBold
-import androidx.compose.material.icons.outlined.FormatItalic
-import androidx.compose.material.icons.outlined.FormatListNumbered
-import androidx.compose.material.icons.outlined.FormatSize
-import androidx.compose.material.icons.outlined.FormatUnderlined
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.ParagraphStyle
-import androidx.compose.ui.text.PlatformSpanStyle
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.BaselineShift
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.flux.R
 import com.flux.data.model.NotesModel
-import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
-import com.mohamedrejeb.richeditor.model.RichTextState
-import com.mohamedrejeb.richeditor.model.rememberRichTextState
-import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
-import com.mohamedrejeb.richeditor.ui.material3.RichTextEditorDefaults
-
-@OptIn(ExperimentalRichTextApi::class)
-@Composable
-fun RichTextStyleRow(
-    modifier: Modifier = Modifier,
-    state: RichTextState,
-    isAddImage: Boolean = false,
-    onAddImageClicked: () -> Unit
-) {
-    val isCodeSpan = state.isCodeSpan
-
-    LazyRow(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
-    ) {
-        if (isAddImage) {
-            item {
-                RichTextStyleButton(
-                    onClick = onAddImageClicked,
-                    isSelected = false,
-                    icon = Icons.Default.AddPhotoAlternate
-                )
-            }
-        }
-
-        item {
-            RichTextStyleButton(
-                onClick = { state.toggleSpanStyle(SpanStyle(fontWeight = FontWeight.Bold)) },
-                isSelected = state.currentSpanStyle.fontWeight == FontWeight.Bold,
-                icon = Icons.Outlined.FormatBold
-            )
-        }
-
-        item {
-            RichTextStyleButton(
-                onClick = { state.toggleSpanStyle(SpanStyle(fontStyle = FontStyle.Italic)) },
-                isSelected = state.currentSpanStyle.fontStyle == FontStyle.Italic,
-                icon = Icons.Outlined.FormatItalic
-            )
-        }
-
-        item {
-            RichTextStyleButton(
-                onClick = { state.toggleSpanStyle(SpanStyle(textDecoration = TextDecoration.Underline)) },
-                isSelected = state.currentSpanStyle.textDecoration?.contains(TextDecoration.Underline) == true,
-                icon = Icons.Outlined.FormatUnderlined
-            )
-        }
-
-        item {
-            RichTextStyleButton(
-                onClick = { state.toggleSpanStyle(SpanStyle(textDecoration = TextDecoration.LineThrough)) },
-                isSelected = state.currentSpanStyle.textDecoration?.contains(TextDecoration.LineThrough) == true,
-                icon = Icons.Default.FormatStrikethrough
-            )
-        }
-
-        item {
-            RichTextStyleButton(
-                onClick = { state.toggleSpanStyle(SpanStyle(fontSize = 28.sp)) },
-                isSelected = state.currentSpanStyle.fontSize == 28.sp,
-                icon = Icons.Outlined.FormatSize
-            )
-        }
-
-        item {
-            RichTextStyleButton(
-                onClick = { state.toggleSpanStyle(SpanStyle(background = Color.Yellow)) },
-                isSelected = state.currentSpanStyle.background == Color.Yellow,
-                icon = Icons.Default.Highlight,
-            )
-        }
-
-        item {
-            RichTextStyleButton(
-                onClick = {
-                    state.toggleCodeSpan()
-
-                    state.toggleSpanStyle(
-                        SpanStyle(
-                            background = Color(0xCDFFFFFF),
-                            letterSpacing = 0.5.sp,
-                            baselineShift = BaselineShift(0.05f),
-                            platformStyle = PlatformSpanStyle()
-                        )
-                    )
-                },
-                isSelected = isCodeSpan,
-                icon = Icons.Default.Code
-            )
-        }
-
-        item {
-            RichTextStyleButton(
-                onClick = { state.addParagraphStyle(ParagraphStyle(textAlign = TextAlign.Left)) },
-                isSelected = state.currentParagraphStyle.textAlign == TextAlign.Left,
-                icon = Icons.AutoMirrored.Outlined.FormatAlignLeft
-            )
-        }
-
-        item {
-            RichTextStyleButton(
-                onClick = { state.addParagraphStyle(ParagraphStyle(textAlign = TextAlign.Center)) },
-                isSelected = state.currentParagraphStyle.textAlign == TextAlign.Center,
-                icon = Icons.Outlined.FormatAlignCenter
-            )
-        }
-
-        item {
-            RichTextStyleButton(
-                onClick = { state.addParagraphStyle(ParagraphStyle(textAlign = TextAlign.Right)) },
-                isSelected = state.currentParagraphStyle.textAlign == TextAlign.Right,
-                icon = Icons.AutoMirrored.Outlined.FormatAlignRight
-            )
-        }
-
-        item {
-            RichTextStyleButton(
-                onClick = { state.toggleUnorderedList() },
-                isSelected = state.isUnorderedList,
-                icon = Icons.AutoMirrored.Outlined.FormatListBulleted,
-            )
-        }
-
-        item {
-            RichTextStyleButton(
-                onClick = { state.toggleOrderedList() },
-                isSelected = state.isOrderedList,
-                icon = Icons.Outlined.FormatListNumbered,
-            )
-        }
-    }
-}
-
-@Composable
-fun RichTextStyleButton(
-    onClick: () -> Unit,
-    icon: ImageVector,
-    isSelected: Boolean = false,
-) {
-    IconButton(
-        onClick = onClick,
-        colors = IconButtonDefaults.iconButtonColors(
-            containerColor = if (isSelected) {
-                MaterialTheme.colorScheme.onSurface.copy(0.1f)
-            } else {
-                MaterialTheme.colorScheme.surfaceContainerLow
-            },
-        )
-    ) { Icon(icon, icon.name) }
-}
+import com.flux.other.parseMarkdownContent
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -233,14 +49,6 @@ fun NotesPreviewCard(
     onClick: (String) -> Unit,
     onLongPressed: () -> Unit
 ) {
-    val richTextState = rememberRichTextState()
-    val scrollState = rememberScrollState()
-
-    LaunchedEffect(note.description) {
-        richTextState.setHtml(note.description)
-        scrollState.scrollTo(0)
-    }
-
     Card(
         colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)),
         modifier = modifier
@@ -262,32 +70,23 @@ fun NotesPreviewCard(
             Text(
                 text = note.title,
                 style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
-                    .alpha(0.9f)
+                    .alpha(0.75f)
                     .padding(horizontal = 12.dp)
                     .padding(top = 12.dp)
             )
 
-            Box(
+            Text(
+                text = parseMarkdownContent(note.description),
+                style = MaterialTheme.typography.bodyMedium,
+                overflow = TextOverflow.Ellipsis,
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .alpha(0.9f)
+                    .padding(horizontal = 12.dp)
                     .heightIn(max = 300.dp)
-                    .verticalScroll(scrollState)
-            ) {
-                RichTextEditor(
-                    state = richTextState,
-                    enabled = false,
-                    modifier = Modifier.fillMaxWidth(),
-                    textStyle = MaterialTheme.typography.bodyMedium,
-                    colors = RichTextEditorDefaults.richTextEditorColors(
-                        disabledIndicatorColor = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp),
-                        containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp),
-                        disabledTextColor = MaterialTheme.colorScheme.onSurface
-                    )
-                )
-            }
+            )
 
             val maxVisibleLabels = 2
             val visibleLabels = labels.take(maxVisibleLabels)

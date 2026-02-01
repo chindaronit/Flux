@@ -96,7 +96,7 @@ fun DropdownMenuWithDetails(
             )
             HorizontalDivider()
             DropdownMenuItem(
-                text = { Text("Share Note") },
+                text = { Text("Share") },
                 leadingIcon = { Icon(Icons.Outlined.Share, contentDescription = null) },
                 onClick = {
                     expanded = false
@@ -105,7 +105,7 @@ fun DropdownMenuWithDetails(
             )
             HorizontalDivider()
             DropdownMenuItem(
-                text = { Text("Save Note") },
+                text = { Text("Save") },
                 leadingIcon = { Icon(Icons.Outlined.Download, contentDescription = null) },
                 onClick = {
                     expanded = false
@@ -114,7 +114,7 @@ fun DropdownMenuWithDetails(
             )
             HorizontalDivider()
             DropdownMenuItem(
-                text = { Text("Print Note") },
+                text = { Text("Print") },
                 leadingIcon = { Icon(Icons.Outlined.Print, contentDescription = null) },
                 onClick = {
                     expanded = false
@@ -136,7 +136,80 @@ fun DropdownMenuWithDetails(
                     textColor = MaterialTheme.colorScheme.error,
                     leadingIconColor = MaterialTheme.colorScheme.error
                 ),
-                text = { Text(stringResource(R.string.Delete_Note)) },
+                text = { Text("Delete") },
+                leadingIcon = { Icon(Icons.Outlined.Delete, contentDescription = null) },
+                onClick = {
+                    expanded = false
+                    onDelete()
+                }
+            )
+        }
+    }
+}
+
+@Composable
+fun JournalDropdownMenu(
+    onAboutClicked: () -> Unit,
+    onShareNote: () -> Unit,
+    onSaveNote: () -> Unit,
+    onPrintNote: () -> Unit,
+    onDelete: () -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Box(modifier = Modifier) {
+        IconButton(onClick = { expanded = !expanded }) {
+            Icon(
+                Icons.Default.MoreVert,
+                contentDescription = "More options"
+            )
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            DropdownMenuItem(
+                text = { Text("Share") },
+                leadingIcon = { Icon(Icons.Outlined.Share, contentDescription = null) },
+                onClick = {
+                    expanded = false
+                    onShareNote()
+                }
+            )
+            HorizontalDivider()
+            DropdownMenuItem(
+                text = { Text("Save") },
+                leadingIcon = { Icon(Icons.Outlined.Download, contentDescription = null) },
+                onClick = {
+                    expanded = false
+                    onSaveNote()
+                }
+            )
+            HorizontalDivider()
+            DropdownMenuItem(
+                text = { Text("Print") },
+                leadingIcon = { Icon(Icons.Outlined.Print, contentDescription = null) },
+                onClick = {
+                    expanded = false
+                    onPrintNote()
+                }
+            )
+            HorizontalDivider()
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.About)) },
+                leadingIcon = { Icon(Icons.Outlined.Info, contentDescription = null) },
+                onClick = {
+                    expanded = false
+                    onAboutClicked()
+                }
+            )
+            HorizontalDivider()
+            DropdownMenuItem(
+                colors = MenuDefaults.itemColors(
+                    textColor = MaterialTheme.colorScheme.error,
+                    leadingIconColor = MaterialTheme.colorScheme.error
+                ),
+                text = { Text("Delete") },
                 leadingIcon = { Icon(Icons.Outlined.Delete, contentDescription = null) },
                 onClick = {
                     expanded = false

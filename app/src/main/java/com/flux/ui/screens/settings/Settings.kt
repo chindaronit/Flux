@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ContactSupport
 import androidx.compose.material.icons.filled.Coffee
 import androidx.compose.material.icons.rounded.Backup
+import androidx.compose.material.icons.rounded.EditNote
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.Palette
@@ -60,12 +61,12 @@ fun Settings(
 
             item {
                 SettingCategory(
-                    title = stringResource(R.string.Privacy),
-                    subTitle = stringResource(R.string.Privacy_desc),
-                    icon = Icons.Rounded.PrivacyTip,
+                    title = stringResource(R.string.Customize),
+                    subTitle = stringResource(R.string.Customize_desc),
+                    icon = Icons.Rounded.Palette,
                     shape = shapeManager(radius = settings.data.cornerRadius, isFirst = true),
                     action = {
-                        navController.navigate(NavRoutes.Privacy.route) {
+                        navController.navigate(NavRoutes.Customize.route) {
                             launchSingleTop = true
                             restoreState = true
                         }
@@ -74,25 +75,12 @@ fun Settings(
 
             item {
                 SettingCategory(
-                    isLast = true,
-                    title = stringResource(R.string.Backup),
-                    subTitle = stringResource(R.string.Backup_Description),
-                    icon = Icons.Rounded.Backup,
-                    shape = shapeManager(radius = settings.data.cornerRadius, isLast = true),
+                    title = "Editor",
+                    subTitle = "Default View • Default Editing Mode",
+                    icon = Icons.Rounded.EditNote,
+                    shape = shapeManager(radius = settings.data.cornerRadius),
                     action = {
-                        navController.navigate(NavRoutes.Backup.route)
-                    }
-                )
-            }
-
-            item {
-                SettingCategory(
-                    title = stringResource(R.string.Customize),
-                    subTitle = stringResource(R.string.Customize_desc),
-                    icon = Icons.Rounded.Palette,
-                    shape = shapeManager(radius = settings.data.cornerRadius, isFirst = true),
-                    action = {
-                        navController.navigate(NavRoutes.Customize.route) {
+                        navController.navigate(NavRoutes.Editor.route) {
                             launchSingleTop = true
                             restoreState = true
                         }
@@ -117,10 +105,36 @@ fun Settings(
 
             item {
                 SettingCategory(
+                    title = stringResource(R.string.Privacy),
+                    subTitle = stringResource(R.string.Privacy_desc),
+                    icon = Icons.Rounded.PrivacyTip,
+                    shape = shapeManager(radius = settings.data.cornerRadius, isFirst = true),
+                    action = {
+                        navController.navigate(NavRoutes.Privacy.route) {
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    })
+            }
+
+            item {
+                SettingCategory(
+                    title = stringResource(R.string.Backup),
+                    subTitle = stringResource(R.string.Backup_Description),
+                    icon = Icons.Rounded.Backup,
+                    shape = shapeManager(radius = settings.data.cornerRadius),
+                    action = {
+                        navController.navigate(NavRoutes.Backup.route)
+                    }
+                )
+            }
+
+            item {
+                SettingCategory(
                     title = stringResource(R.string.About),
                     subTitle = stringResource(R.string.About_desc),
                     icon = Icons.Rounded.Info,
-                    shape = shapeManager(radius = settings.data.cornerRadius, isFirst = true),
+                    shape = shapeManager(radius = settings.data.cornerRadius),
                     action = {
                         navController.navigate(NavRoutes.About.route) {
                             launchSingleTop = true

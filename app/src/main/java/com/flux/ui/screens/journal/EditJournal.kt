@@ -1,96 +1,322 @@
 package com.flux.ui.screens.journal
 
+import android.app.Activity
 import android.net.Uri
+import android.webkit.WebView
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Box
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.DeleteOutline
-import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.carousel.HorizontalMultiBrowseCarousel
-import androidx.compose.material3.carousel.rememberCarouselState
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.util.fastJoinToString
 import androidx.navigation.NavController
-import coil.compose.AsyncImage
-import coil.compose.rememberAsyncImagePainter
-import com.flux.R
 import com.flux.data.model.JournalModel
-import com.flux.ui.components.DatePickerModal
+import com.flux.other.Constants
+import com.flux.other.HeaderNode
+import com.flux.other.ensureStorageRoot
+import com.flux.other.printPdf
+import com.flux.other.shareJournal
 import com.flux.ui.components.DeleteAlert
-import com.flux.ui.components.RichTextStyleRow
+import com.flux.ui.components.JournalDetailsTopBar
+import com.flux.ui.components.LinkDialog
+import com.flux.ui.components.ListDialog
+import com.flux.ui.components.MarkdownEditorRow
+import com.flux.ui.components.NotesInfoBottomSheet
+import com.flux.ui.components.OutlineBottomSheet
+import com.flux.ui.components.ShareDialog
+import com.flux.ui.components.TableDialog
+import com.flux.ui.components.TaskDialog
+import com.flux.ui.components.TaskItem
+import com.flux.ui.components.convertMillisToDate
+import com.flux.ui.components.convertMillisToTime
 import com.flux.ui.events.JournalEvents
-import com.flux.ui.screens.events.toFormattedDate
-import com.flux.ui.screens.workspaces.copyToInternalStorage
-import com.mohamedrejeb.richeditor.model.rememberRichTextState
-import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
-import com.mohamedrejeb.richeditor.ui.material3.RichTextEditorDefaults
-import kotlinx.coroutines.flow.distinctUntilChanged
+import com.flux.ui.screens.notes.FindAndReplaceField
+import com.flux.ui.screens.notes.FindAndReplaceState
+import com.flux.ui.screens.notes.ReadView
+import com.flux.ui.screens.notes.StandardTextField
+import com.flux.ui.screens.notes.onMarkdownKeyPressed
+import com.flux.ui.state.TextState
+import com.flux.ui.viewModel.JournalViewModel
+import com.flux.ui.viewModel.SettingsViewModel
+import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun EditJournal(
     navController: NavController,
     journal: JournalModel,
+    outline: HeaderNode,
+    aboutJournal: TextState,
+    isDarkMode: Boolean,
+    isLintValid: Boolean,
+    isLineNumbersVisible: Boolean,
+    startWithReadView: Boolean,
+    rootUri: String?,
+    journalViewModel: JournalViewModel,
+    settingsViewModel: SettingsViewModel,
     onJournalEvents: (JournalEvents) -> Unit
 ) {
     val isToday = LocalDate.now() == Instant.ofEpochMilli(journal.dateTime).atZone(ZoneId.systemDefault()).toLocalDate()
+    val contentState = remember { TextFieldState(journal.text) }
     val context = LocalContext.current
-    val richTextState = rememberRichTextState()
-    val interactionSource = remember { MutableInteractionSource() }
-    val lastHtml = rememberSaveable(journal.journalId) { mutableStateOf(journal.text) }
-    val pickedImages = rememberSaveable { mutableStateListOf<String>().apply { addAll(journal.images) } }
-    var showDatePicker by rememberSaveable { mutableStateOf(false) }
-    var selectedDateTime by rememberSaveable { mutableLongStateOf(journal.dateTime) }
-    var previewImage by remember { mutableStateOf<String?>(null) }
+    val scope = rememberCoroutineScope()
+    val sheetState = rememberModalBottomSheetState()
+    val hasContent = remember(journal.journalId) { journal.text.isNotBlank() }
+
+    val pagerState = rememberPagerState(
+        initialPage = if (startWithReadView && hasContent) 1 else 0,
+        pageCount = { 2 }
+    )
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showShareDialog by remember { mutableStateOf(false) }
+    var showSaveDialog by remember { mutableStateOf(false) }
+    var showOutlineSheet by remember { mutableStateOf(false) }
+    var selectedHeader by remember { mutableStateOf<IntRange?>(null) }
+    var searchState by remember { mutableStateOf(FindAndReplaceState()) }
+    var isSearching by remember { mutableStateOf(false) }
+    var showAboutNotes by rememberSaveable { mutableStateOf(false) }
+    var showLinkDialog by rememberSaveable { mutableStateOf(false) }
+    var showTaskDialog by rememberSaveable { mutableStateOf(false) }
+    var showTableDialog by rememberSaveable { mutableStateOf(false) }
+    var showListDialog by rememberSaveable { mutableStateOf(false) }
+    val isReadView by remember { derivedStateOf { pagerState.currentPage == 1 } }
+    var readWebView by remember { mutableStateOf<WebView?>(null) }
+
+    val rootPicker =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            val uri = result.data?.data ?: return@rememberLauncherForActivityResult
+            settingsViewModel.saveRootUri(uri)
+        }
+
+    val photoPicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 10)
+    ) { uris -> if (uris.isNotEmpty()) { onJournalEvents(JournalEvents.ImportImages(context, uris, contentState)) } }
+
+    val videoPicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri -> if (uri != null) { onJournalEvents(JournalEvents.ImportVideo(context, uri, contentState)) } }
+
+    val audioPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let { onJournalEvents(JournalEvents.ImportAudio(context, uri, contentState)) }
+    }
+
+    val renderedHtml by remember(contentState.text) {
+        derivedStateOf {
+            journalViewModel.renderMarkdown(contentState.text.toString())
+        }
+    }
+
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val focusManager = LocalFocusManager.current
+
+    LaunchedEffect(isReadView) {
+        keyboardController?.hide()
+        focusManager.clearFocus()
+        isSearching = false
+    }
+
+    LaunchedEffect(startWithReadView, hasContent) {
+        pagerState.scrollToPage(
+            if (startWithReadView && hasContent) 1 else 0
+        )
+    }
+
+    val onSaveJournal = {
+        onJournalEvents(
+            JournalEvents.UpsertEntry(
+                journal.copy(
+                    text = contentState.text.toString(),
+                    dateTime = if (isToday) System.currentTimeMillis() else journal.dateTime
+                )
+            )
+        )
+    }
+
+    BackHandler {
+        onSaveJournal()
+        focusManager.clearFocus()
+        navController.popBackStack()
+    }
+
+    Scaffold(
+        modifier = Modifier.imePadding(),
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        topBar = {
+            JournalDetailsTopBar(
+                isReadView = isReadView,
+                isSearching= isSearching,
+                onBackPressed = {
+                    onSaveJournal()
+                    navController.popBackStack() },
+                onOutlineClicked = {
+                    onJournalEvents(JournalEvents.CalculateOutline(contentState.text.toString()))
+                    showOutlineSheet=true },
+                onReadClick = { scope.launch { pagerState.animateScrollToPage(1) } },
+                onEditClick = { scope.launch { pagerState.animateScrollToPage(0) } },
+                onSearchClick = { isSearching= !isSearching },
+                onDelete = { showDeleteDialog=true },
+                onAboutClicked = {
+                    onJournalEvents(JournalEvents.CalculateTextState(contentState.text.toString()))
+                    showAboutNotes=true },
+                onShareNote = { showShareDialog=true },
+                onSaveNote = { showSaveDialog=true },
+                onPrintNote = { printPdf(context as Activity, readWebView, convertMillisToDate(journal.dateTime)+"_"+ convertMillisToTime(journal.dateTime)) }
+            )
+        },
+        bottomBar = {
+            AnimatedVisibility(
+                visible = !isReadView,
+                enter = slideInVertically { fullHeight -> fullHeight },
+                exit = slideOutVertically { fullHeight -> fullHeight }) {
+                MarkdownEditorRow(
+                    canRedo = contentState.undoState.canRedo,
+                    canUndo = contentState.undoState.canUndo,
+                    onEdit = { onMarkdownKeyPressed(it, contentState, null) },
+                    onTableButtonClick = { showTableDialog = true },
+                    onListButtonClick = { showListDialog = true },
+                    onTaskButtonClick = { showTaskDialog = true },
+                    onLinkButtonClick = { showLinkDialog = true },
+                    onImageButtonClick = {
+                        ensureStorageRoot(
+                            scope = scope,
+                            settingsViewModel = settingsViewModel,
+                            rootPicker = rootPicker
+                        ) { photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) } },
+                    onAudioButtonClick = {
+                        ensureStorageRoot(
+                            scope = scope,
+                            settingsViewModel = settingsViewModel,
+                            rootPicker = rootPicker
+                        ) { audioPickerLauncher.launch("audio/*") } },
+                    onVideoButtonClick = {
+                        ensureStorageRoot(
+                            scope = scope,
+                            settingsViewModel = settingsViewModel,
+                            rootPicker = rootPicker
+                        ) { videoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly)) }
+                    }
+                )
+            }
+        }
+    ) { innerPadding ->
+        Column(modifier = Modifier
+            .fillMaxSize()
+            .padding(innerPadding)) {
+            AnimatedContent(
+                modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
+                targetState = isSearching,
+                contentAlignment = Alignment.TopCenter
+            ) {
+                Column {
+                    if (it) FindAndReplaceField(
+                        state = searchState,
+                        onStateUpdate = { state -> searchState = state })
+                }
+            }
+
+            /*-------------------------------------------------*/
+            val scrollState = rememberScrollState()
+            HorizontalPager(
+                state = pagerState,
+                beyondViewportPageCount = 1,
+                userScrollEnabled = false
+            ) { currentPage: Int ->
+                when (currentPage) {
+                    0 -> {
+                        StandardTextField(
+                            modifier = Modifier.fillMaxSize(),
+                            state = contentState,
+                            readMode = isReadView,
+                            showLineNumbers = isLineNumbersVisible,
+                            scrollState = scrollState,
+                            isLintActive = isLintValid,
+                            headerRange = selectedHeader,
+                            findAndReplaceState = searchState,
+                            onFindAndReplaceUpdate = { searchState = it }
+                        )
+                    }
+
+                    1 -> {
+                        ReadView(
+                            modifier = Modifier.fillMaxSize(),
+                            html = renderedHtml,
+                            scrollState = scrollState,
+                            rootUri = rootUri,
+                            isAppInDarkMode = isDarkMode,
+                            onWebViewReady = { readWebView = it }
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    OutlineBottomSheet(showOutlineSheet, outline, sheetState, onHeaderClick = { selectedHeader = it } ) { showOutlineSheet=false }
+
+    if (showLinkDialog) {
+        LinkDialog(onDismissRequest = { showLinkDialog = false }) { linkName, linkUri ->
+            val insertText = "[${linkName}](${linkUri})"
+            onMarkdownKeyPressed(Constants.Editor.TEXT, contentState, insertText)
+        }
+    }
+
+    if (showTableDialog) {
+        TableDialog(onDismissRequest = { showTableDialog = false }) { row, column ->
+            onMarkdownKeyPressed(Constants.Editor.TABLE, contentState, "$row,$column")
+        }
+    }
+
+    if (showListDialog) {
+        ListDialog(onDismissRequest = { showListDialog = false }) {
+            onMarkdownKeyPressed(Constants.Editor.LIST, contentState, it.fastJoinToString(separator = "\n"))
+        }
+    }
+
+    if (showTaskDialog) {
+        TaskDialog(onDismissRequest = { showTaskDialog = false }) {
+            onMarkdownKeyPressed(Constants.Editor.TASK, contentState, Json.encodeToString<List<TaskItem>>(it))
+        }
+    }
 
     if(showDeleteDialog){
         DeleteAlert({
@@ -102,200 +328,47 @@ fun EditJournal(
         })
     }
 
-    val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent(),
-        onResult = { uri: Uri? ->
-            uri?.let {
-                pickedImages.add(
-                    copyToInternalStorage(
-                        context,
-                        uri
-                    ).toString()
-                )
-            }
-        }
-    )
-
-    LaunchedEffect(journal.journalId) {
-        if (richTextState.annotatedString.isBlank()) {
-            richTextState.setHtml(lastHtml.value)
-        }
+    if(showShareDialog){
+        ShareDialog( true, {
+            shareJournal(context, it, convertMillisToDate(journal.dateTime)+"_"+ convertMillisToTime(journal.dateTime),contentState.text.toString(), journalViewModel, readWebView)
+            showShareDialog = false
+        }){ showShareDialog = false }
     }
 
-    LaunchedEffect(richTextState) {
-        snapshotFlow { richTextState.toHtml() }
-            .distinctUntilChanged()
-            .collect { html ->
-                lastHtml.value = html
-            }
-    }
-
-    if (showDatePicker) {
-        DatePickerModal(onDateSelected = { newDateMillis ->
-            if (newDateMillis != null) {
-                selectedDateTime = newDateMillis
-            }
-        }, onDismiss = { showDatePicker = false })
-    }
-
-    if (previewImage != null) {
-        Dialog(
-            onDismissRequest = { previewImage = null },
-            properties = DialogProperties(
-                usePlatformDefaultWidth = false
-            )
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.95f))
-            ) {
-
-                Image(
-                    painter = rememberAsyncImagePainter(previewImage),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(24.dp),
-                    contentScale = ContentScale.Fit
-                )
-
-                IconButton(
-                    onClick = { previewImage = null },
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(16.dp)
-                        .size(48.dp)
-                        .background(
-                            color = Color.Black.copy(alpha = 0.6f),
-                            shape = CircleShape
-                        )
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Close",
-                        tint = Color.White
-                    )
-                }
-            }
+    if(showSaveDialog){
+        ShareDialog( false, {
+            onJournalEvents(
+                JournalEvents.ExportJournal(
+                    context,
+                    it,
+                    convertMillisToDate(journal.dateTime)+"_"+ convertMillisToTime(journal.dateTime),
+                    contentState.text.toString(),
+                    readWebView
+                ))
+            showSaveDialog = false
+        }){
+            showSaveDialog = false
         }
     }
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-        topBar = {
-            CenterAlignedTopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(MaterialTheme.colorScheme.surfaceContainerLow),
-                title = { Text(selectedDateTime.toFormattedDate()) },
-                navigationIcon = {
-                    IconButton({ navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Default.ArrowBack, null)
-                    }
-                },
-                actions = {
-                    IconButton({
-                        onJournalEvents(
-                            JournalEvents.UpsertEntry(
-                                journal.copy(
-                                    text = richTextState.toHtml(),
-                                    images = pickedImages.toList(),
-                                    dateTime = if (isToday) System.currentTimeMillis() else journal.dateTime
-                                )
-                            )
-                        )
-                        navController.popBackStack()
-                    }) {
-                        Icon(Icons.Default.Check, null)
-                    }
-                    IconButton({ showDeleteDialog=true }) {
-                        Icon(
-                            Icons.Default.DeleteOutline,
-                            null,
-                            tint = MaterialTheme.colorScheme.error
-                        )
-                    }
-                }
-            )
-        }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .imePadding()
-        ) {
-            Carousel(pickedImages, {pickedImages.remove(it)}) { previewImage=it }
-            RichTextEditor(
-                state = richTextState,
-                interactionSource = interactionSource,
-                placeholder = { Text(stringResource(R.string.Write_here)) },
-                textStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraLight),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .padding(bottom = 12.dp),
-                colors = RichTextEditorDefaults.richTextEditorColors(
-                    focusedIndicatorColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                    unfocusedIndicatorColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                    placeholderColor = MaterialTheme.colorScheme.primary,
-                )
-            )
-
-            Row {
-                RichTextStyleRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    state = richTextState,
-                    isAddImage = true
-                ) {
-                    imagePickerLauncher.launch("image/*")
-                }
-            }
-        }
+    if(showDeleteDialog){
+        DeleteAlert({
+            showDeleteDialog=false
+        }, {
+            onJournalEvents(JournalEvents.DeleteEntry(journal))
+            navController.popBackStack()
+            showDeleteDialog=false
+        })
     }
-}
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun Carousel(items: List<String>, onItemRemoved: (String) -> Unit, onClick: (String)->Unit) {
-    if (items.isNotEmpty()) {
-        HorizontalMultiBrowseCarousel(
-            state = rememberCarouselState { items.count() },
-            modifier = Modifier
-                .fillMaxWidth()
-                .wrapContentHeight()
-                .padding(top = 9.dp, bottom = 8.dp),
-            preferredItemWidth = 160.dp,
-            itemSpacing = 8.dp,
-            contentPadding = PaddingValues(horizontal = 16.dp)
-        ) { i ->
-            val item = items[i]
-            Box(
-                modifier = Modifier
-                    .height(160.dp)
-                    .clickable{onClick(item)}
-                    .maskClip(MaterialTheme.shapes.extraLarge)
-            ) {
-                AsyncImage(
-                    model = item,
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-
-                IconButton(
-                    onClick = { onItemRemoved(item) },
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(4.dp),
-                    colors = IconButtonDefaults.iconButtonColors(
-                        containerColor = Color.White.copy(alpha = 0.8f),
-                        contentColor = MaterialTheme.colorScheme.error
-                    )
-                ) {
-                    Icon(Icons.Default.DeleteOutline, contentDescription = "Delete image")
-                }
-            }
-        }
-    }
+    NotesInfoBottomSheet(
+        isVisible = showAboutNotes,
+        words = aboutJournal.wordCountWithPunctuation,
+        characters = aboutJournal.charCount,
+        lastEdited = convertMillisToDate(journal.dateTime),
+        sheetState = sheetState,
+        paragraph = aboutJournal.paragraphCount,
+        wordsWithoutPunctuations = aboutJournal.wordCountWithoutPunctuation,
+        lines = aboutJournal.lineCount
+    ) { showAboutNotes=false }
 }

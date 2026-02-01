@@ -4,11 +4,13 @@ import androidx.room.TypeConverter
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.serialization.json.Json
+import java.util.UUID
 
 class Converter {
     private val json = Json {
         encodeDefaults = true
         ignoreUnknownKeys = true
+        coerceInputValues = true
     }
 
     @TypeConverter
@@ -31,8 +33,34 @@ class Converter {
 
     @TypeConverter
     fun toTodoItemList(json: String): List<TodoItem> {
-        val type = object : TypeToken<List<TodoItem>>() {}.type
-        return Gson().fromJson(json, type)
+        return try {
+            val type = object : TypeToken<List<TodoItem>>() {}.type
+            val items: List<TodoItem> = Gson().fromJson(json, type)
+
+            // Ensure all items have valid IDs (migration for old data)
+            items.map { item ->
+                if (item.id.isEmpty()) {
+                    item.copy(id = UUID.randomUUID().toString())
+                } else {
+                    item
+                }
+            }
+        } catch (_: Exception) {
+            // Fallback: Try to parse old format without id field
+            try {
+                val type = object : TypeToken<List<OldTodoItem>>() {}.type
+                val oldItems: List<OldTodoItem> = Gson().fromJson(json, type)
+                oldItems.map { oldItem ->
+                    TodoItem(
+                        id = UUID.randomUUID().toString(),
+                        value = oldItem.value,
+                        isChecked = oldItem.isChecked
+                    )
+                }
+            } catch (_: Exception) {
+                emptyList()
+            }
+        }
     }
 
     @TypeConverter
@@ -57,3 +85,9 @@ class Converter {
         return Gson().fromJson(value, listType)
     }
 }
+
+// Helper class for parsing old data format (without id field)
+private data class OldTodoItem(
+    var value: String = "",
+    var isChecked: Boolean = false
+)

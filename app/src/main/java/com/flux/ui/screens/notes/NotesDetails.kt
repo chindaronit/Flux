@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
@@ -83,7 +82,7 @@ import com.flux.ui.components.NoteDetailsTopBar
 import com.flux.ui.components.NotesInfoBottomSheet
 import com.flux.ui.components.OutlineBottomSheet
 import com.flux.ui.components.SelectLabelDialog
-import com.flux.ui.components.ShareNoteDialog
+import com.flux.ui.components.ShareDialog
 import com.flux.ui.components.TableDialog
 import com.flux.ui.components.TaskDialog
 import com.flux.ui.components.TaskItem
@@ -126,6 +125,7 @@ fun NoteDetails(
         initialPage = if (startWithReadView && hasContent) 1 else 0,
         pageCount = { 2 }
     )
+
     val titleState = remember { TextFieldState(note.title) }
     val contentState = remember { TextFieldState(note.description) }
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -142,7 +142,6 @@ fun NoteDetails(
     var showListDialog by rememberSaveable { mutableStateOf(false) }
     var showSelectLabels by rememberSaveable { mutableStateOf(false) }
     var isPinned by rememberSaveable(note.notesId) { mutableStateOf(note.isPinned) }
-    val pickedImages = rememberSaveable { mutableStateListOf<String>().apply { addAll(note.images) } }
     val noteLabels = rememberSaveable { mutableStateListOf<LabelModel>().apply { addAll(allLabels.filter { note.labels.contains(it.labelId) }) } }
     val isReadView by remember { derivedStateOf { pagerState.currentPage == 1 } }
     var readWebView by remember { mutableStateOf<WebView?>(null) }
@@ -212,8 +211,7 @@ fun NoteDetails(
                     description = contentState.text.toString(),
                     isPinned = isPinned,
                     lastEdited = System.currentTimeMillis(),
-                    labels = noteLabels.map { it.labelId },
-                    images = pickedImages.toList()
+                    labels = noteLabels.map { it.labelId }
                 )
             )
         )
@@ -226,7 +224,6 @@ fun NoteDetails(
     }
 
     Scaffold(
-        modifier = Modifier.imePadding(),
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         topBar = {
             NoteDetailsTopBar(
@@ -271,19 +268,21 @@ fun NoteDetails(
                             scope = scope,
                             settingsViewModel = settingsViewModel,
                             rootPicker = rootPicker
-                        ) {
-                            photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-                        }
+                        ) { photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }
                     },
-                    onAudioButtonClick = { audioPickerLauncher.launch("audio/*") },
+                    onAudioButtonClick = {
+                        ensureStorageRoot(
+                            scope = scope,
+                            settingsViewModel = settingsViewModel,
+                            rootPicker = rootPicker
+                        ) { audioPickerLauncher.launch("audio/*") }
+                    },
                     onVideoButtonClick = {
                         ensureStorageRoot(
                             scope = scope,
                             settingsViewModel = settingsViewModel,
                             rootPicker = rootPicker
-                        ) {
-                            videoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly))
-                        }
+                        ) { videoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly)) }
                     }
                 )
             }
@@ -385,8 +384,7 @@ fun NoteDetails(
                             isLintActive = isLintValid,
                             headerRange = selectedHeader,
                             findAndReplaceState = searchState,
-                            onFindAndReplaceUpdate = { searchState = it },
-                            onImageReceived = {}
+                            onFindAndReplaceUpdate = { searchState = it }
                         )
                     }
 
@@ -452,7 +450,7 @@ fun NoteDetails(
     }
 
     if(showShareNotesDialog){
-        ShareNoteDialog( true, {
+        ShareDialog( true, {
             shareNote(
                 context = context,
                 exportType = it,
@@ -466,7 +464,7 @@ fun NoteDetails(
     }
 
     if(showSaveNotesDialog){
-        ShareNoteDialog( false, {
+        ShareDialog( false, {
             onNotesEvents(NotesEvents.ExportNote(context, it, titleState.text.toString(), contentState.text.toString(), readWebView))
             showSaveNotesDialog = false
         }){

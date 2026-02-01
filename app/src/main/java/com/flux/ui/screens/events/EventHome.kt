@@ -72,31 +72,20 @@ fun LazyListScope.eventHomeItems(
         item {
             MonthlyViewCalendar(
                 selectedMonth, selectedDate,
-                onMonthChange = {
-                    onTaskEvents(TaskEvents.ChangeMonth(it))
-                },
-                onDateChange = {
-                    onTaskEvents(TaskEvents.LoadDateTask(workspaceId, it))
-                    onTaskEvents(TaskEvents.ChangeDate(it))
-                })
+                onMonthChange = { onTaskEvents(TaskEvents.ChangeMonth(it)) },
+                onDateChange = { onTaskEvents(TaskEvents.ChangeDate(it)) }
+            )
         }
     } else {
         item {
-            DailyViewCalendar(
-                selectedMonth,
-                selectedDate,
-                onDateChange = {
-                    onTaskEvents(TaskEvents.LoadDateTask(workspaceId, it))
-                    onTaskEvents(TaskEvents.ChangeDate(it))
-                })
+            DailyViewCalendar(selectedMonth, selectedDate){
+                onTaskEvents(TaskEvents.ChangeDate(it))
+            }
         }
     }
 
-    if (isLoading) {
-        item { Loader() }
-    } else if (datedEvents.isEmpty()) {
-        item { EmptyEvents() }
-    } else {
+    if (isLoading) { item { Loader() }
+    } else if (datedEvents.isEmpty()) { item { EmptyEvents() } } else {
         item { Spacer(Modifier.height(24.dp)) }
 
         val pendingTasks = datedEvents.filter { task ->
