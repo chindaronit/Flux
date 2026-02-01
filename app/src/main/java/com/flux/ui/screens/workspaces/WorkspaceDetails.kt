@@ -133,10 +133,8 @@ fun WorkspaceDetails(
     val todoLabel = stringResource(R.string.To_Do)
     val eventsLabel = stringResource(R.string.Events)
     val analyticsLabel = stringResource(R.string.Analytics)
-
     val importSuccess = stringResource(R.string.import_success)
     val importFailed = stringResource(R.string.import_failed)
-
     val radius = settings.data.cornerRadius
     val is24HourFormat = settings.data.is24HourFormat
     val context = LocalContext.current
@@ -147,25 +145,19 @@ fun WorkspaceDetails(
     var showSpacesMenu by remember { mutableStateOf(false) }
     var showDeleteWorkspaceDialog by remember { mutableStateOf(false) }
     var showLockDialog by remember { mutableStateOf(false) }
-    val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent(),
-        onResult = { uri: Uri? ->
-            uri?.let {
-                onWorkspaceEvents(
-                    WorkspaceEvents.UpsertSpace(
-                        workspace.copy(
-                            cover = copyToInternalStorage(context, uri).toString()
-                        )
-                    )
-                )
-            }
-        }
-    )
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
     var addSpaceBottomSheet by remember { mutableStateOf(false) }
     val spacesList = getSpacesList()
     var showDeleteDialog by remember { mutableStateOf(false) }
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = { uri: Uri? -> uri?.let { onWorkspaceEvents(WorkspaceEvents.ChangeCover(context, uri, workspace)) } }
+    )
+    val expandedTODOIds = rememberSaveable(workspaceId) {
+        mutableStateOf<Set<String>>(emptySet())
+    }
+
 
     val importNoteLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
@@ -396,12 +388,20 @@ fun WorkspaceDetails(
             }
             if (spacesList.find { it.id == selectedSpaceId.intValue }?.title == todoLabel) {
                 todoHomeItems(
-                    navController,
-                    radius,
-                    allLists,
-                    workspaceId,
-                    isTodoLoading,
-                    onTodoEvents
+                    navController = navController,
+                    radius = radius,
+                    allList = allLists,
+                    workspaceId = workspaceId,
+                    isLoading = isTodoLoading,
+                    expandedTODOIds = expandedTODOIds.value,
+                    onExpandToggle = { id ->
+                        expandedTODOIds.value =
+                            if (id in expandedTODOIds.value)
+                                expandedTODOIds.value - id
+                            else
+                                expandedTODOIds.value + id
+                    },
+                    onTodoEvents = onTodoEvents
                 )
             }
             if (spacesList.find { it.id == selectedSpaceId.intValue }?.title == eventsLabel) {
@@ -516,23 +516,6 @@ fun WorkspaceDetails(
         }, onDismissRequest = {
             showDeleteDialog=false
         })
-    }
-}
-
-fun copyToInternalStorage(context: Context, uri: Uri): String? {
-    return try {
-        val inputStream = context.contentResolver.openInputStream(uri)
-        val fileName = "img_${System.currentTimeMillis()}.jpg"
-        val file = File(context.filesDir, fileName)
-        inputStream?.use { input ->
-            FileOutputStream(file).use { output ->
-                input.copyTo(output)
-            }
-        }
-        file.absolutePath
-    } catch (e: Exception) {
-        e.printStackTrace()
-        null
     }
 }
 

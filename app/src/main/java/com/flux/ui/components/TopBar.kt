@@ -94,7 +94,7 @@ fun NoteDetailsTopBar(
         colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
         navigationIcon = { IconButton(onClick = onBackPressed) { Icon(Icons.AutoMirrored.Default.ArrowBack, null) } },
         actions = {
-            IconButton({onSearchClick()}) { Icon(if(isSearching) Icons.Default.SearchOff else Icons.Default.Search, null) }
+            if(!isReadView){ IconButton({onSearchClick()}) { Icon(if(isSearching) Icons.Default.SearchOff else Icons.Default.Search, null) } }
             IconButton({onOutlineClicked()}) { Icon(Icons.Default.Summarize, null) }
             DropdownMenuWithDetails(isPinned, onTogglePinned, onAddLabel, onAboutClicked, onShareNote, onSaveNote, onPrintNote, onDelete) }
     )
@@ -147,7 +147,7 @@ fun JournalDetailsTopBar(
         colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
         navigationIcon = { IconButton(onClick = onBackPressed) { Icon(Icons.AutoMirrored.Default.ArrowBack, null) } },
         actions = {
-            IconButton({onSearchClick()}) { Icon(if(isSearching) Icons.Default.SearchOff else Icons.Default.Search, null) }
+            if(!isReadView){ IconButton({onSearchClick()}) { Icon(if(isSearching) Icons.Default.SearchOff else Icons.Default.Search, null) } }
             IconButton({onOutlineClicked()}) { Icon(Icons.Default.Summarize, null) }
             JournalDropdownMenu(onAboutClicked, onShareNote, onSaveNote, onPrintNote, onDelete) }
     )

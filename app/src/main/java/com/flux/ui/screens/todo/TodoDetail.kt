@@ -3,6 +3,7 @@ package com.flux.ui.screens.todo
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -68,6 +69,7 @@ fun TodoDetail(
     }
 
     Scaffold(
+        modifier = Modifier.imePadding(),
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         topBar = {
             CenterAlignedTopAppBar(
@@ -89,19 +91,19 @@ fun TodoDetail(
                                 onTodoEvents(TodoEvents.UpsertList(list.copy(title = title, items = itemList.toList(), workspaceId = workspaceId)))
                                 isEditing=false
                             }) { Icon(Icons.Default.Check, null) }
-                        IconButton({ showDeleteDialog=true }) {
-                            Icon(
-                                Icons.Default.DeleteOutline,
-                                null,
-                                tint = MaterialTheme.colorScheme.error
-                            )
-                        }
                     }
                     else{
                         IconButton({ isEditing=true }) {
                             Icon(
                                 Icons.Default.Edit,
                                 null,
+                            )
+                        }
+                        IconButton({ showDeleteDialog=true }) {
+                            Icon(
+                                Icons.Default.DeleteOutline,
+                                null,
+                                tint = MaterialTheme.colorScheme.error
                             )
                         }
                     }

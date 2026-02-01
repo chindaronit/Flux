@@ -8,11 +8,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Checklist
+import androidx.compose.material.icons.filled.Circle
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.Verified
+import androidx.compose.material.icons.outlined.CheckBoxOutlineBlank
+import androidx.compose.material.icons.outlined.Circle
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ElevatedCard
@@ -20,6 +28,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
@@ -38,12 +47,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.flux.R
+import com.flux.data.model.TodoItem
 import com.flux.data.model.TodoModel
 import com.flux.navigation.Loader
 import com.flux.navigation.NavRoutes
 import com.flux.ui.components.DeleteAlert
 import com.flux.ui.components.shapeManager
 import com.flux.ui.events.TodoEvents
+import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 fun LazyListScope.todoHomeItems(
@@ -52,18 +63,22 @@ fun LazyListScope.todoHomeItems(
     allList: List<TodoModel>,
     workspaceId: String,
     isLoading: Boolean,
+    expandedTODOIds: Set<String>,
+    onExpandToggle: (String) -> Unit,
     onTodoEvents: (TodoEvents) -> Unit
 ) {
     when {
         isLoading -> item { Loader() }
         allList.isEmpty() -> item { EmptyTodoList() }
         else -> {
-            item {
+            items(allList, key = {it.id}) { todoItem->
                 TodoExpandableCard(
                     navController = navController,
                     radius = radius,
-                    allList = allList,
+                    item = todoItem,
                     workspaceId = workspaceId,
+                    isExpanded = todoItem.id in expandedTODOIds,
+                    onExpandToggle = onExpandToggle,
                     onTodoEvents = onTodoEvents
                 )
             }
@@ -76,18 +91,18 @@ fun LazyListScope.todoHomeItems(
 private fun TodoExpandableCard(
     navController: NavController,
     radius: Int,
-    allList: List<TodoModel>,
+    item: TodoModel,
+    isExpanded: Boolean,
     workspaceId: String,
+    onExpandToggle: (String) -> Unit,
     onTodoEvents: (TodoEvents) -> Unit
 ) {
-    var expandedIds by rememberSaveable { mutableStateOf<Set<String>>(emptySet()) }
     var showDeleteDialog by rememberSaveable { mutableStateOf(false) }
     var selectedItem by remember { mutableStateOf<TodoModel?>(null) }
 
     if (showDeleteDialog && selectedItem != null) {
         DeleteAlert(
             onConfirmation = {
-                expandedIds = expandedIds - selectedItem?.id.orEmpty()
                 onTodoEvents(TodoEvents.DeleteList(selectedItem!!))
                 selectedItem = null
                 showDeleteDialog = false
@@ -96,47 +111,31 @@ private fun TodoExpandableCard(
         )
     }
 
-    ElevatedCard(
-        modifier = Modifier.padding(top = 8.dp),
-        shape = shapeManager(radius = radius * 2),
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)
+    Card(
+        modifier = Modifier.padding(top = 4.dp),
+        shape = if(isExpanded) shapeManager(isBoth = true, radius=radius) else RoundedCornerShape(50),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer
         )
     ) {
         Column {
-            allList.forEach { item ->
-                val isExpanded = item.id in expandedIds
-
-                TodoHeaderRow(
-                    item = item,
-                    isExpanded = isExpanded,
-                    onExpandToggle = {
-                        expandedIds = if (isExpanded) {
-                            expandedIds - item.id
-                        } else {
-                            expandedIds + item.id
-                        }
-                    },
-                    onDelete = {
-                        selectedItem = item
-                        showDeleteDialog = true
-                    },
-                    onNavigate = {
-                        navController.navigate(
-                            NavRoutes.TodoDetail.withArgs(workspaceId, item.id)
-                        )
-                    }
-                )
-
-                if (isExpanded) {
-                    TodoItems(
-                        item = item,
-                        workspaceId = workspaceId,
-                        onTodoEvents = onTodoEvents
+            TodoHeaderRow(
+                id = item.id,
+                title = item.title,
+                onExpandToggle = onExpandToggle,
+                onNavigate = {
+                    navController.navigate(
+                        NavRoutes.TodoDetail.withArgs(workspaceId, item.id)
                     )
                 }
+            )
 
-                HorizontalDivider(Modifier.alpha(0.5f))
+            if (isExpanded) {
+                TodoItems(
+                    todoList = item,
+                    workspaceId = workspaceId,
+                    onTodoEvents = onTodoEvents
+                )
             }
         }
     }
@@ -144,92 +143,87 @@ private fun TodoExpandableCard(
 
 @Composable
 private fun TodoHeaderRow(
-    item: TodoModel,
-    isExpanded: Boolean,
-    onExpandToggle: () -> Unit,
-    onDelete: () -> Unit,
+    id: String,
+    title: String,
+    onExpandToggle: (String) -> Unit,
     onNavigate: () -> Unit
 ) {
     Row(
         modifier = Modifier
+            .padding(horizontal = 4.dp, vertical = 1.dp)
             .fillMaxWidth()
-            .clickable { onNavigate() },
+            .clickable { onExpandToggle(id) },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Row(
+        Text(
+            text = title,
+            fontSize = 16.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
             modifier = Modifier
                 .weight(1f)
-                .padding(end = 3.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            IconButton(onClick = onExpandToggle) {
-                Icon(
-                    if (isExpanded)
-                        Icons.Default.KeyboardArrowDown
-                    else
-                        Icons.AutoMirrored.Default.KeyboardArrowRight,
-                    contentDescription = null
-                )
-            }
-
-            Text(
-                text = item.title,
-                fontSize = 16.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-
-        IconButton(onClick = onDelete) {
-            Icon(
-                Icons.Default.Remove,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.error
-            )
+                .padding(start = 20.dp, end = 3.dp),
+        )
+        IconButton(onClick = onNavigate) {
+            Icon(Icons.Default.Edit, null)
         }
     }
 }
 
 @Composable
 private fun TodoItems(
-    item: TodoModel,
+    todoList: TodoModel,
     workspaceId: String,
     onTodoEvents: (TodoEvents) -> Unit
 ) {
-    Column {
-        item.items.forEach { checkItem ->
-            Row(
+    fun onToggleCheck (todoItem: TodoItem) {
+        val updatedItems = todoList.items.map {
+            if (it.id == todoItem.id)
+                it.copy(isChecked = !it.isChecked)
+            else it
+        }
+
+        if (updatedItems != todoList.items) {
+            onTodoEvents(
+                TodoEvents.UpsertList(
+                    todoList.copy(
+                        items = updatedItems,
+                        workspaceId = workspaceId
+                    )
+                )
+            )
+        }
+    }
+
+    Column(
+        Modifier
+            .padding(horizontal = 6.dp)
+            .padding(top = 4.dp, bottom = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp)
+    ) {
+        todoList.items.forEach { todoItem ->
+            Card(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+                shape = RoundedCornerShape(50),
+                colors = CardDefaults.cardColors(
+                    containerColor = if(todoItem.isChecked) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh
+                ),
+                onClick = { onToggleCheck(todoItem) }
             ) {
-                Checkbox(
-                    checked = checkItem.isChecked,
-                    onCheckedChange = { checked ->
-                        val updatedItems = item.items.map {
-                            if (it.id == checkItem.id)
-                                it.copy(isChecked = checked)
-                            else it
-                        }
-
-                        if (updatedItems != item.items) {
-                            onTodoEvents(
-                                TodoEvents.UpsertList(
-                                    item.copy(
-                                        items = updatedItems,
-                                        workspaceId = workspaceId
-                                    )
-                                )
-                            )
-                        }
-                    }
-                )
-
-                Text(
-                    text = checkItem.value,
-                    style = MaterialTheme.typography.labelLarge
-                )
+                Row (verticalAlignment = Alignment.CenterVertically) {
+                    IconButton({onToggleCheck(todoItem)}, colors = IconButtonDefaults.iconButtonColors(
+                        containerColor = if(todoItem.isChecked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                        contentColor = if(todoItem.isChecked) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+                    )) { Icon(if(todoItem.isChecked) Icons.Default.Verified else Icons.Outlined.Circle, null) }
+                    Text(
+                        text = todoItem.value,
+                        style = MaterialTheme.typography.labelLarge,
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 1,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
         }
     }

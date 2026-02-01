@@ -153,7 +153,7 @@ class NotesViewModel @Inject constructor(
                     val imagesDir = openNoteDir?.let { dir -> getOrCreateDirectory(context, dir.uri, Constants.File.FLUX_IMAGES) }
                     val savedUriList = mutableListOf<String>()
                     imagesDir?.let { dir ->
-                        uriList.forEachIndexed { index, uri ->
+                        uriList.forEachIndexed { _, uri ->
 
                             val timestamp = System.currentTimeMillis()
                             val name = getFileName(context, uri)
