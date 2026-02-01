@@ -153,7 +153,7 @@ val JournalScreens =
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 val SettingsScreens =
     mapOf<String, @Composable (navController: NavController, snackbarHostState: SnackbarHostState, states: States, viewModels: ViewModels) -> Unit>(
-        NavRoutes.Settings.route to { navController, _, states, viewModels ->
+        NavRoutes.Settings.route to { navController, _, states, _ ->
             Settings(navController, states.settings)
         },
         NavRoutes.Privacy.route to { navController, _, states, viewModels ->
@@ -215,7 +215,7 @@ val WorkspaceScreens =
                 viewModels.workspaceViewModel::onEvent
             )
         },
-        NavRoutes.WorkspaceHome.route + "/{workspaceId}" to { navController, snackbarHostState, states, viewModels, workspaceId ->
+        NavRoutes.WorkspaceHome.route + "/{workspaceId}" to { navController, _, states, viewModels, workspaceId ->
             WorkspaceDetails(
                 navController,
                 states.notesState.allLabels.filter { it.workspaceId == workspaceId },
@@ -236,6 +236,7 @@ val WorkspaceScreens =
                 states.eventState.datedEvents,
                 states.habitState.allHabits,
                 states.todoState.allLists,
+                states.journalState.datedEntries,
                 states.journalState.allEntries,
                 states.habitState.allInstances,
                 states.eventState.allEventInstances,

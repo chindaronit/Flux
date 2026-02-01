@@ -12,7 +12,6 @@ activityCompose = "1.12.2"
 composeBom = "2025.12.01"
 coreSplashscreen = "1.2.0"
 navigationCompose = "2.9.6"
-richeditorCompose = "1.0.0-rc13"
 room = "2.8.4"
 coilCompose = "2.7.0"
 
@@ -51,7 +50,6 @@ hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", ve
 #Coil (Image rendering)
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
-richeditor-compose = { module = "com.mohamedrejeb.richeditor:richeditor-compose", version.ref = "richeditorCompose" }
 
 # Commonmark for markdown
 commonmark = { group = "org.commonmark", name = "commonmark", version.ref = "commonmark" }

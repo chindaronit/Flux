@@ -40,6 +40,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -144,27 +145,24 @@ fun TodoToolBar(navController: NavController, workspaceId: String) {
 fun JournalToolBar(
     navController: NavController,
     workspaceId: String,
-    selectedDate: Long,
+    selectedEpochDay: Long,
     isMonthlyView: Boolean,
     onChangeView: (Boolean) -> Unit
 ) {
-    val selectedLocalDate = remember(selectedDate) { LocalDate.ofEpochDay(selectedDate) }
-    val isToday = selectedLocalDate == LocalDate.now()
-    val navigationTimeMillis = remember(selectedDate) {
-        if (isToday) { System.currentTimeMillis()
-        } else {
-            // other day → start of that day
-            selectedLocalDate
-                .atStartOfDay(ZoneId.systemDefault())
-                .toInstant()
-                .toEpochMilli()
-        }
+    val context = LocalContext.current
+    val zoneId = ZoneId.systemDefault()
+
+    val selectedDate = remember(selectedEpochDay) {
+        LocalDate.ofEpochDay(selectedEpochDay)
     }
+
+    val today = LocalDate.now()
+    val isToday = selectedDate.isEqual(today)
 
     Row {
         IconButton(onClick = { onChangeView(!isMonthlyView) }) {
             Icon(
-                if (isMonthlyView)
+                imageVector = if (isMonthlyView)
                     Icons.Default.CalendarViewDay
                 else
                     Icons.Default.CalendarViewMonth,
@@ -175,23 +173,45 @@ fun JournalToolBar(
 
         IconButton(
             onClick = {
+                if (selectedDate.isAfter(today)) {
+                    Toast
+                        .makeText(
+                            context,
+                            "You can't write journals for future dates",
+                            Toast.LENGTH_SHORT
+                        )
+                        .show()
+                    return@IconButton
+                }
+
+                val navigationEpochMillis =
+                    if (isToday) {
+                        System.currentTimeMillis()
+                    } else {
+                        selectedDate
+                            .atStartOfDay(zoneId)
+                            .toInstant()
+                            .toEpochMilli()
+                    }
+
                 navController.navigate(
                     NavRoutes.EditJournal.withArgs(
                         workspaceId,
                         "",
-                        navigationTimeMillis
+                        navigationEpochMillis
                     )
                 )
             }
         ) {
             Icon(
-                Icons.Default.Add,
+                imageVector = Icons.Default.Add,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary
             )
         }
     }
 }
+
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU, Build.VERSION_CODES.S)
 @Composable

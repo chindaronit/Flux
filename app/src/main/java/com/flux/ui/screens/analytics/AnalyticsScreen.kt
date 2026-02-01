@@ -67,6 +67,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
+import java.time.temporal.TemporalAdjusters
 
 fun LazyListScope.analyticsItems(
     workspace: WorkspaceModel,
@@ -668,17 +669,23 @@ fun countJournalsThisWeekAndMonth(entries: List<JournalModel>): Pair<Int, Int> {
     val zoneId = ZoneId.systemDefault()
     val today = LocalDate.now(zoneId)
 
-    val startOfWeek = today.with(DayOfWeek.MONDAY)
+    val startOfWeek = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
     val startOfMonth = today.withDayOfMonth(1)
 
-    val journalsThisWeek = entries.count {
-        val date = Instant.ofEpochMilli(it.dateTime).atZone(zoneId).toLocalDate()
-        date in startOfWeek..today
-    }
+    var journalsThisWeek = 0
+    var journalsThisMonth = 0
 
-    val journalsThisMonth = entries.count {
-        val date = Instant.ofEpochMilli(it.dateTime).atZone(zoneId).toLocalDate()
-        date in startOfMonth..today
+    for (entry in entries) {
+        val date = Instant.ofEpochMilli(entry.dateTime)
+            .atZone(zoneId)
+            .toLocalDate()
+
+        if (date in startOfMonth..today) {
+            journalsThisMonth++
+            if (date in startOfWeek..today) {
+                journalsThisWeek++
+            }
+        }
     }
 
     return journalsThisWeek to journalsThisMonth

@@ -161,11 +161,18 @@ fun EditJournal(
         )
     }
 
-    val onSaveJournal = {
+    fun onSaveJournal() {
+        val newText = contentState.text.toString()
+
+        val hasChanged = newText != journal.text
+        val hasMeaningfulContent = newText.isNotBlank()
+
+        if (!hasChanged || !hasMeaningfulContent && journal.text.isBlank()) return
+
         onJournalEvents(
             JournalEvents.UpsertEntry(
                 journal.copy(
-                    text = contentState.text.toString(),
+                    text = newText,
                     dateTime = if (isToday) System.currentTimeMillis() else journal.dateTime
                 )
             )

@@ -12,5 +12,6 @@ data class JournalState(
     val textState: TextState = TextState(),
     val selectedYearMonth: YearMonth = YearMonth.now(),
     val selectedDate: Long = LocalDate.now().toEpochDay(),
-    val allEntries: List<JournalModel> = emptyList()
+    val allEntries: List<JournalModel> = emptyList(),
+    val datedEntries: List<JournalModel> = emptyList()
 )

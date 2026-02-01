@@ -80,17 +80,21 @@ class JournalViewModel @Inject constructor(
                 .map { it.workspaceId }
                 .distinctUntilChanged()
                 .filterNotNull()
-                .flatMapLatest { workspaceId -> repository.loadAllEntries(workspaceId) }
+                .flatMapLatest { workspaceId ->
+                    repository.loadAllEntries(workspaceId)
+                }
                 .combine(
                     state.map { it.selectedDate }.distinctUntilChanged()
-                ) { allEntries, selectedDate ->
-                    filterByDate(allEntries, selectedDate)
+                ) { allJournals, selectedDate ->
+                    val datedJournals = filterByDate(allJournals, selectedDate)
+                    Pair(allJournals, datedJournals)
                 }
-                .collect { filtered ->
+                .collect { (allJournals, datedJournals) ->
                     updateState {
                         it.copy(
                             isLoading = false,
-                            allEntries = filtered
+                            allEntries = allJournals,
+                            datedEntries = datedJournals
                         )
                     }
                 }
@@ -207,7 +211,7 @@ class JournalViewModel @Inject constructor(
                     val imagesDir = openNoteDir?.let { dir -> getOrCreateDirectory(context, dir.uri, Constants.File.FLUX_IMAGES) }
                     val savedUriList = mutableListOf<String>()
                     imagesDir?.let { dir ->
-                        uriList.forEachIndexed { index, uri ->
+                        uriList.forEachIndexed { _, uri ->
 
                             val timestamp = System.currentTimeMillis()
                             val name = getFileName(context, uri)

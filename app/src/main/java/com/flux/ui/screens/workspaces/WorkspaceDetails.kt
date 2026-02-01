@@ -83,7 +83,6 @@ import java.io.File
 import java.io.FileOutputStream
 import java.time.YearMonth
 import com.flux.R
-import com.mohamedrejeb.richeditor.model.rememberRichTextState
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -108,7 +107,8 @@ fun WorkspaceDetails(
     datedEvents: List<EventModel>,
     allHabits: List<HabitModel>,
     allLists: List<TodoModel>,
-    allEntries: List<JournalModel>,
+    datedJournalEntries: List<JournalModel>,
+    allJournalEntries: List<JournalModel>,
     allHabitInstances: List<HabitInstanceModel>,
     allEventInstances: List<EventInstanceModel>,
     onWorkspaceEvents: (WorkspaceEvents) -> Unit,
@@ -127,6 +127,15 @@ fun WorkspaceDetails(
         onTaskEvents(TaskEvents.EnterWorkspace(workspaceId))
         onHabitEvents(HabitEvents.EnterWorkspace(workspaceId))
     }
+    val notesLabel = stringResource(R.string.Notes)
+    val habitsLabel = stringResource(R.string.Habits)
+    val journalLabel = stringResource(R.string.Journal)
+    val todoLabel = stringResource(R.string.To_Do)
+    val eventsLabel = stringResource(R.string.Events)
+    val analyticsLabel = stringResource(R.string.Analytics)
+
+    val importSuccess = stringResource(R.string.import_success)
+    val importFailed = stringResource(R.string.import_failed)
 
     val radius = settings.data.cornerRadius
     val is24HourFormat = settings.data.is24HourFormat
@@ -156,7 +165,6 @@ fun WorkspaceDetails(
     val scope = rememberCoroutineScope()
     var addSpaceBottomSheet by remember { mutableStateOf(false) }
     val spacesList = getSpacesList()
-    val richTextState = rememberRichTextState()
     var showDeleteDialog by remember { mutableStateOf(false) }
 
     val importNoteLauncher = rememberLauncherForActivityResult(
@@ -174,22 +182,20 @@ fun WorkspaceDetails(
                     ?.substringBeforeLast(".")
                     ?: "Imported Note"
 
-                richTextState.setMarkdown(content)
-
-                // Create a new note with parsed HTML
+                // Create a new note
                 val newNote = NotesModel(
                     title = fileName,
-                    description = richTextState.toHtml(),
+                    description = content,
                     workspaceId = workspaceId,
                     lastEdited = System.currentTimeMillis()
                 )
 
                 onNotesEvents(NotesEvents.UpsertNote(newNote))
-                Toast.makeText(context, context.getString(R.string.import_success), Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, importSuccess, Toast.LENGTH_SHORT).show()
 
             } catch (e: Exception) {
                 e.printStackTrace()
-                Toast.makeText(context, context.getString(R.string.import_failed), Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, importFailed, Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -338,7 +344,7 @@ fun WorkspaceDetails(
                     }
                 }
             }
-            if (spacesList.find { it.id == selectedSpaceId.intValue }?.title == context.getString(R.string.Habits)) {
+            if (spacesList.find { it.id == selectedSpaceId.intValue }?.title == habitsLabel) {
                 habitsHomeItems(
                     navController,
                     isHabitLoading,
@@ -350,7 +356,7 @@ fun WorkspaceDetails(
                     onHabitEvents
                 )
             }
-            if (spacesList.find { it.id == selectedSpaceId.intValue }?.title == context.getString(R.string.Notes)) {
+            if (spacesList.find { it.id == selectedSpaceId.intValue }?.title == notesLabel) {
                 notesHomeItems(
                     navController,
                     workspaceId,
@@ -364,7 +370,7 @@ fun WorkspaceDetails(
                     onNotesEvents
                 )
             }
-            if (spacesList.find { it.id == selectedSpaceId.intValue }?.title == context.getString(R.string.Journal)) {
+            if (spacesList.find { it.id == selectedSpaceId.intValue }?.title == journalLabel) {
                 journalHomeItems(
                     navController,
                     settings,
@@ -372,23 +378,23 @@ fun WorkspaceDetails(
                     journalSelectedDate,
                     isJournalEntriesLoading,
                     workspaceId,
-                    allEntries,
+                    datedJournalEntries,
                     onJournalEvents)
             }
-            if (spacesList.find { it.id == selectedSpaceId.intValue }?.title == context.getString(R.string.Analytics)) {
+            if (spacesList.find { it.id == selectedSpaceId.intValue }?.title == analyticsLabel) {
                 analyticsItems(
                     workspace,
                     radius,
                     allHabitInstances,
                     totalHabits = allHabits.size,
                     totalNotes = allNotes.size,
-                    allEntries,
+                    allJournalEntries,
                     allHabits,
                     allEvents,
                     allEventInstances
                 )
             }
-            if (spacesList.find { it.id == selectedSpaceId.intValue }?.title == context.getString(R.string.To_Do)) {
+            if (spacesList.find { it.id == selectedSpaceId.intValue }?.title == todoLabel) {
                 todoHomeItems(
                     navController,
                     radius,
@@ -398,7 +404,7 @@ fun WorkspaceDetails(
                     onTodoEvents
                 )
             }
-            if (spacesList.find { it.id == selectedSpaceId.intValue }?.title == context.getString(R.string.Events)) {
+            if (spacesList.find { it.id == selectedSpaceId.intValue }?.title == eventsLabel) {
                 eventHomeItems(
                     navController,
                     radius,
@@ -417,7 +423,8 @@ fun WorkspaceDetails(
     }
 
     if (showLockDialog) {
-        SetPasskeyDialog({ onWorkspaceEvents(WorkspaceEvents.UpsertSpace(workspace.copy(passKey = it))) })
+        SetPasskeyDialog(
+            { onWorkspaceEvents(WorkspaceEvents.UpsertSpace(workspace.copy(passKey = it))) })
         { showLockDialog = false }
     }
 

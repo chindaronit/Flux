@@ -110,9 +110,6 @@ dependencies {
     implementation(libs.gson)
     implementation(libs.kotlinx.serialization.json)
 
-    implementation(libs.richeditor.compose)
-
-
     // CommonMark, for markdown rendering and parsing
     implementation(libs.commonmark.ext.autolink)
     implementation(libs.commonmark.ext.footnotes)

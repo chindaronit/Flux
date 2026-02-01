@@ -203,7 +203,13 @@ fun NoteDetails(
         )
     }
 
-    val onSaveNote = {
+    fun onSaveNote() {
+
+        val newTitle = titleState.text.toString()
+        val newDescription = contentState.text.toString()
+
+        if (newTitle == note.title && newDescription == note.description) return
+
         onNotesEvents(
             NotesEvents.UpsertNote(
                 note.copy(
