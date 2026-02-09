@@ -7,8 +7,7 @@ import com.flux.data.model.HabitInstanceModel
 import com.flux.data.model.HabitModel
 import com.flux.data.repository.HabitRepository
 import com.flux.other.cancelReminder
-import com.flux.other.getNextOccurrence
-import com.flux.other.scheduleReminder
+import com.flux.other.scheduleNextReminder
 import com.flux.ui.events.HabitEvents
 import com.flux.ui.state.HabitState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -94,6 +93,8 @@ class HabitViewModel @Inject constructor(private val repository: HabitRepository
                     habit.description,
                     habit.workspaceId,
                     habit.endDateTime,
+                    habit.startDateTime,
+                    habit.notificationOffset,
                     habit.recurrence
                 )
             }
@@ -107,31 +108,29 @@ class HabitViewModel @Inject constructor(private val repository: HabitRepository
 
     private fun deleteHabit(data: HabitModel, context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
-            cancelReminder(context, data.id, data.type.toString(), data.title, data.description, data.workspaceId, data.endDateTime, data.recurrence)
+            cancelReminder(context, data.id, data.type.toString(), data.title, data.description, data.workspaceId, data.endDateTime, data.startDateTime, data.notificationOffset, data.recurrence)
             repository.deleteHabit(data)
         }
     }
 
     private fun upsertHabit(context: Context, data: HabitModel) {
         viewModelScope.launch(Dispatchers.IO) {
-            cancelReminder(context, data.id, data.type.toString(), data.title, data.description, data.workspaceId, data.endDateTime, data.recurrence)
-            repository.upsertHabit(data)
-            val nextOccurrence = getNextOccurrence(data.recurrence, data.startDateTime)
+            cancelReminder(
+                context,
+                data.id,
+                data.type.toString(),
+                data.title,
+                data.description,
+                data.workspaceId,
+                data.endDateTime,
+                data.startDateTime,
+                data.notificationOffset,
+                data.recurrence
+            )
 
-            // Only schedule reminder if there's a future occurrence
-            if (nextOccurrence != null && nextOccurrence > System.currentTimeMillis()) {
-                scheduleReminder(
-                    context = context,
-                    id = data.id,
-                    data.type.toString(),
-                    recurrence = data.recurrence,
-                    timeInMillis = nextOccurrence,
-                    title = data.title,
-                    description = data.description,
-                    workspaceId = data.workspaceId,
-                    endTimeInMillis = data.endDateTime
-                )
-            }
+            repository.upsertHabit(data)
+
+            scheduleNextReminder(context = context, item = data)
         }
     }
 }

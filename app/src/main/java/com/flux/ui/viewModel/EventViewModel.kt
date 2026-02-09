@@ -8,8 +8,7 @@ import com.flux.data.model.EventModel
 import com.flux.data.model.occursOn
 import com.flux.data.repository.EventRepository
 import com.flux.other.cancelReminder
-import com.flux.other.getNextOccurrence
-import com.flux.other.scheduleReminder
+import com.flux.other.scheduleNextReminder
 import com.flux.ui.events.TaskEvents
 import com.flux.ui.state.EventState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -147,7 +146,9 @@ class EventViewModel @Inject constructor(
                 data.description,
                 data.workspaceId,
                 data.endDateTime,
-                data.recurrence
+                data.startDateTime,
+                data.notificationOffset,
+                data.recurrence,
             )
             repository.deleteEvent(data)
         }
@@ -163,25 +164,17 @@ class EventViewModel @Inject constructor(
                 data.description,
                 data.workspaceId,
                 data.endDateTime,
-                data.recurrence
+                data.startDateTime,
+                data.notificationOffset,
+                data.recurrence,
             )
 
             repository.upsertEvent(data)
 
-            val next = getNextOccurrence(data.recurrence, data.startDateTime)
-            if (next != null && next > System.currentTimeMillis()) {
-                scheduleReminder(
-                    context = context,
-                    id = data.id,
-                    data.type.toString(),
-                    recurrence = data.recurrence,
-                    timeInMillis = next - data.notificationOffset,
-                    title = data.title,
-                    description = data.description,
-                    workspaceId = data.workspaceId,
-                    endTimeInMillis = data.endDateTime
-                )
-            }
+            scheduleNextReminder(
+                context = context,
+                item = data
+            )
         }
     }
 
@@ -196,6 +189,8 @@ class EventViewModel @Inject constructor(
                     event.description,
                     event.workspaceId,
                     event.endDateTime,
+                    event.startDateTime,
+                    event.notificationOffset,
                     event.recurrence
                 )
             }

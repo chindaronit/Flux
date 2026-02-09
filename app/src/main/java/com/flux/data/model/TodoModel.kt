@@ -18,6 +18,6 @@ data class TodoModel(
 @Serializable
 data class TodoItem(
     val id: String = UUID.randomUUID().toString(),
-    var value: String = "",
-    var isChecked: Boolean = false
+    val value: String = "",
+    val isChecked: Boolean = false
 )

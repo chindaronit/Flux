@@ -24,6 +24,8 @@ import com.flux.R
 import com.flux.data.model.EventInstanceModel
 import com.flux.data.model.HabitInstanceModel
 import com.flux.data.model.RecurrenceRule
+import com.flux.data.model.ReminderItem
+import com.flux.data.model.ReminderType
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -38,7 +40,9 @@ class ReminderReceiver : BroadcastReceiver() {
     }
 
     override fun onReceive(context: Context, intent: Intent) {
-
+        // ─────────────────────────────────────────────
+        // MARK DONE ACTION
+        // ─────────────────────────────────────────────
         if (intent.action == ACTION_MARK_DONE) {
             val id = intent.getStringExtra("ID") ?: return
             val type = intent.getStringExtra("TYPE") ?: return
@@ -48,111 +52,239 @@ class ReminderReceiver : BroadcastReceiver() {
             return
         }
 
-        val title = intent.getStringExtra("TITLE") ?: "Reminder"
+        // ─────────────────────────────────────────────
+        // EXTRACT PAYLOAD
+        // ─────────────────────────────────────────────
+        val title =
+            intent.getStringExtra("TITLE") ?: "Reminder"
+
         val description =
-            intent.getStringExtra("DESCRIPTION") ?: "It's time to complete pending things"
-        val id = intent.getStringExtra("ID") ?: ""
-        val workspaceId = intent.getStringExtra("WORKSPACE_ID") ?: ""
-        val type = intent.getStringExtra("TYPE") ?: "EVENT"
-        val endTimeInMillis = intent.getLongExtra("ENDTIME", -1L)
+            intent.getStringExtra("DESCRIPTION")
+                ?: "It's time to complete pending things"
+
+        val id = intent.getStringExtra("ID") ?: return
+        val workspaceId =
+            intent.getStringExtra("WORKSPACE_ID") ?: ""
+
+        val type =
+            intent.getStringExtra("TYPE") ?: "EVENT"
+
+        val endTimeInMillis =
+            intent.getLongExtra("ENDTIME", -1L)
+
+        val startDateTime =
+            intent.getLongExtra("START_TIME", -1L)
+
+        val offset =
+            intent.getLongExtra("OFFSET", 0L)
+
+        // Guard against corrupted / legacy alarms
+        if (startDateTime <= 0L) return
 
         // Deserialize recurrence rule
-        val recurrenceJson = intent.getStringExtra("RECURRENCE")
-        val recurrence = recurrenceJson?.let {
-            Json.decodeFromString<RecurrenceRule>(it)
-        } ?: RecurrenceRule.Once
+        val recurrenceJson =
+            intent.getStringExtra("RECURRENCE")
 
-        val icon = when(type) {
-            "EVENT" -> R.drawable.check_list
-            else -> R.drawable.calendar_check
-        }
-        val notificationId = getUniqueRequestCode(type, id)
+        val recurrence =
+            recurrenceJson?.let {
+                Json.decodeFromString<RecurrenceRule>(it)
+            } ?: RecurrenceRule.Once
 
-        val doneIntent = Intent(context, ReminderReceiver::class.java).apply {
-            action = ACTION_MARK_DONE
-            putExtra("ID", id)
-            putExtra("TYPE", type)
-            putExtra("WORKSPACE_ID", workspaceId)
-        }
+        // ─────────────────────────────────────────────
+        // SHOW NOTIFICATION
+        // ─────────────────────────────────────────────
+        val icon =
+            if (type == "EVENT")
+                R.drawable.check_list
+            else
+                R.drawable.calendar_check
 
-        val donePendingIntent = PendingIntent.getBroadcast(
-            context,
-            notificationId,
-            doneIntent,
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        )
+        val notificationId =
+            getUniqueRequestCode(type, id)
 
-        val notification = NotificationCompat.Builder(context, "notification_channel")
-            .setSmallIcon(icon)
-            .setContentTitle(title)
-            .setContentText(description)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setAutoCancel(true)
-            .addAction(R.drawable.check_list, "Done", donePendingIntent)
-            .build()
+        val doneIntent =
+            Intent(context, ReminderReceiver::class.java).apply {
+                action = ACTION_MARK_DONE
+                putExtra("ID", id)
+                putExtra("TYPE", type)
+                putExtra("WORKSPACE_ID", workspaceId)
+            }
 
-        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val donePendingIntent =
+            PendingIntent.getBroadcast(
+                context,
+                notificationId,
+                doneIntent,
+                PendingIntent.FLAG_IMMUTABLE or
+                        PendingIntent.FLAG_UPDATE_CURRENT
+            )
+
+        val notification =
+            NotificationCompat.Builder(
+                context,
+                "notification_channel"
+            )
+                .setSmallIcon(icon)
+                .setContentTitle(title)
+                .setContentText(description)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setAutoCancel(true)
+                .addAction(
+                    R.drawable.check_list,
+                    "Done",
+                    donePendingIntent
+                )
+                .build()
+
+        val manager =
+            context.getSystemService(
+                Context.NOTIFICATION_SERVICE
+            ) as NotificationManager
+
         manager.notify(notificationId, notification)
 
-        val nextTime = getNextOccurrence(recurrence, System.currentTimeMillis())
-        val shouldReschedule = nextTime != null &&
-                (endTimeInMillis == -1L || nextTime <= endTimeInMillis)
-
-        if (shouldReschedule) {
-            scheduleReminder(
-                context = context,
-                id = id,
-                type = type,
-                recurrence = recurrence,
-                timeInMillis = nextTime,
-                title = title,
-                description = description,
-                workspaceId = workspaceId,
-                endTimeInMillis = endTimeInMillis
-            )
+        // ─────────────────────────────────────────────
+        // BUILD REMINDER ITEM
+        // ─────────────────────────────────────────────
+        val item = object : ReminderItem {
+            override val id = id
+            override val title = title
+            override val description = description
+            override val recurrence = recurrence
+            override val type =
+                ReminderType.valueOf(type)
+            override val startDateTime = startDateTime
+            override val endDateTime = endTimeInMillis
+            override val workspaceId = workspaceId
+            override val notificationOffset = offset
         }
+
+        // ─────────────────────────────────────────────
+        // RESCHEDULE NEXT OCCURRENCE
+        // ─────────────────────────────────────────────
+        scheduleNextReminder(context, item)
     }
 }
 
-private fun markDone(context: Context, type: String, id: String, workspaceId: String) {
+private fun markDone(
+    context: Context,
+    type: String,
+    id: String,
+    workspaceId: String
+) {
     CoroutineScope(Dispatchers.IO).launch {
         try {
-            val entryPoint = EntryPointAccessors.fromApplication(
-                context,
-                ReceiverEntryPoint::class.java
-            )
+            val entryPoint =
+                EntryPointAccessors.fromApplication(
+                    context,
+                    ReceiverEntryPoint::class.java
+                )
 
             when (type) {
-                "EVENT" -> entryPoint.eventRepository().upsertEventInstance(eventInstanceModel =
-                    EventInstanceModel(
-                        eventId = id,
-                        workspaceId = workspaceId,
-                    )
-                )
-                else -> entryPoint.habitRepository().upsertHabitInstance(habitInstance =
-                    HabitInstanceModel(
-                        habitId = id,
-                        workspaceId = workspaceId,
-                    )
-                )
+
+                "EVENT" ->
+                    entryPoint.eventRepository()
+                        .upsertEventInstance(
+                            EventInstanceModel(
+                                eventId = id,
+                                workspaceId = workspaceId
+                            )
+                        )
+
+                else ->
+                    entryPoint.habitRepository()
+                        .upsertHabitInstance(
+                            HabitInstanceModel(
+                                habitId = id,
+                                workspaceId = workspaceId
+                            )
+                        )
             }
 
             withContext(Dispatchers.Main) {
-                Toast.makeText(context, "Done!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    context,
+                    "Done!",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
+
         } catch (e: Exception) {
+
             e.printStackTrace()
+
             withContext(Dispatchers.Main) {
-                Toast.makeText(context, "Failed to mark done", Toast.LENGTH_LONG).show()
+                Toast.makeText(
+                    context,
+                    "Failed to mark done",
+                    Toast.LENGTH_LONG
+                ).show()
             }
         }
     }
 
-    // Cancel the notification immediately
-    val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-    manager.cancel(getUniqueRequestCode(type, id))
+    val manager =
+        context.getSystemService(
+            Context.NOTIFICATION_SERVICE
+        ) as NotificationManager
+
+    manager.cancel(
+        getUniqueRequestCode(type, id)
+    )
 }
 
+fun scheduleNextReminder(
+    context: Context,
+    item: ReminderItem
+) {
+    val now = System.currentTimeMillis()
+
+    if (item.startDateTime <= 0L) return
+
+    var candidate =
+        getNextOccurrence(
+            item.recurrence,
+            item.startDateTime
+        ) ?: return
+
+    var finalTime: Long?
+
+    // Catch-up loop (handles missed alarms / backups)
+    while (true) {
+
+        val alarmTime =
+            candidate - item.notificationOffset
+
+        if (alarmTime > now) {
+            finalTime = alarmTime
+            break
+        }
+
+        candidate =
+            getNextOccurrence(
+                item.recurrence,
+                candidate
+            ) ?: return
+    }
+
+    if (item.endDateTime != -1L &&
+        finalTime > item.endDateTime
+    ) return
+
+    scheduleReminder(
+        context = context,
+        id = item.id,
+        type = item.type.toString(),
+        recurrence = item.recurrence,
+        timeInMillis = finalTime,
+        endTimeInMillis = item.endDateTime,
+        startDateTime = item.startDateTime,
+        notificationOffset = item.notificationOffset,
+        workspaceId = item.workspaceId,
+        title = item.title,
+        description = item.description
+    )
+}
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 fun createNotificationChannel(context: Context) {
@@ -198,13 +330,15 @@ fun scheduleReminder(
     recurrence: RecurrenceRule,
     timeInMillis: Long,
     endTimeInMillis: Long,
+    startDateTime: Long,
+    notificationOffset: Long,
     workspaceId: String,
     title: String,
     description: String
 ) {
     try {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val intent = createReminderIntent(context, id, type, title, description, workspaceId, endTimeInMillis, recurrence)
+        val intent = createReminderIntent(context, id, type, title, description, workspaceId, startDateTime, notificationOffset, endTimeInMillis, recurrence)
         val requestCode = getUniqueRequestCode(type, id)
 
         val pendingIntent = PendingIntent.getBroadcast(
@@ -230,6 +364,8 @@ fun createReminderIntent(
     title: String,
     description: String,
     workspaceId: String,
+    startDateTime: Long,
+    notificationOffset: Long,
     endTimeInMillis: Long,
     recurrence: RecurrenceRule
 ): Intent {
@@ -241,6 +377,8 @@ fun createReminderIntent(
         putExtra("RECURRENCE", Json.encodeToString(recurrence))
         putExtra("ENDTIME", endTimeInMillis)
         putExtra("WORKSPACE_ID", workspaceId)
+        putExtra("START_TIME", startDateTime)
+        putExtra("OFFSET", notificationOffset)
     }
 }
 
@@ -256,6 +394,8 @@ fun cancelReminder(
     description: String,
     workspaceId: String,
     endTimeInMillis: Long,
+    startDateTime: Long,
+    notificationOffset: Long,
     recurrence: RecurrenceRule
 ) {
     try {
@@ -267,7 +407,9 @@ fun cancelReminder(
             description = description,
             recurrence = recurrence,
             workspaceId = workspaceId,
-            endTimeInMillis = endTimeInMillis
+            endTimeInMillis = endTimeInMillis,
+            startDateTime = startDateTime,
+            notificationOffset = notificationOffset
         )
         val requestCode = getUniqueRequestCode(type, id)
         val pendingIntent = PendingIntent.getBroadcast(

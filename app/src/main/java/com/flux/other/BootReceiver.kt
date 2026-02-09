@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import com.flux.data.model.ReminderItem
+import com.flux.data.model.isLive
 import com.flux.data.repository.EventRepository
 import com.flux.data.repository.HabitRepository
 import dagger.hilt.EntryPoint
@@ -13,6 +14,7 @@ import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+
 
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -26,23 +28,7 @@ class BootReceiver : BroadcastReceiver() {
 
                 // Reschedule each reminder at its next occurrence
                 reminders.forEach { reminder ->
-                    val nextTime = getNextOccurrence(reminder.recurrence, System.currentTimeMillis())
-                    val shouldReschedule = nextTime != null &&
-                            (reminder.endDateTime == -1L || nextTime <= reminder.endDateTime)
-
-                    if (shouldReschedule) {
-                        scheduleReminder(
-                            context = context,
-                            id = reminder.id,
-                            type = reminder.type.name,
-                            recurrence = reminder.recurrence,
-                            timeInMillis = nextTime-reminder.notificationOffset,
-                            title = reminder.title,
-                            description = reminder.description,
-                            workspaceId = reminder.workspaceId,
-                            endTimeInMillis = reminder.endDateTime
-                        )
-                    }
+                    scheduleNextReminder(context, reminder)
                 }
 
                 pendingResult.finish()
@@ -62,7 +48,8 @@ class BootReceiver : BroadcastReceiver() {
         val habits = habitRepository.loadAllHabits()
         val events = eventRepository.loadAllEvents()
 
-        return habits + events
+        return habits.filter { it.isLive() } + events
+
     }
 }
 

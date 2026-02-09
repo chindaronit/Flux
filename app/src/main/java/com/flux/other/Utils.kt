@@ -58,6 +58,9 @@ import org.commonmark.node.StrongEmphasis
 import org.commonmark.node.Text
 import org.commonmark.parser.IncludeSourceSpans
 import org.commonmark.parser.Parser
+import com.vladsch.flexmark.html2md.converter.FlexmarkHtmlConverter
+import androidx.core.net.toUri
+
 
 fun Int.toHexColor(): String {
     return String.format("#%06X", 0xFFFFFF and this)
@@ -120,6 +123,22 @@ fun ensureStorageRoot(
                 )
             }
         }
+    }
+}
+
+fun tryRestoreUriPermission(context: Context, uriString: String): Boolean {
+    return try {
+        val uri = uriString.toUri()
+
+        context.contentResolver.takePersistableUriPermission(
+            uri,
+            Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+        )
+
+        true
+    } catch (_: SecurityException) {
+        false
     }
 }
 
@@ -270,14 +289,23 @@ private fun shareAsText(
     )
 }
 
+private fun sanitizeFileName(name: String): String {
+    return name
+        .replace(Regex("[\\\\/:*?\"<>|]"), "") // remove illegal chars
+        .replace("\\s+".toRegex(), "_")        // collapse spaces
+        .take(50)                               // limit length
+}
+
 private fun shareAsImage(
     context: Context,
     webView: WebView,
     noteName: String) {
     // temp file
+    val safeName = sanitizeFileName(noteName)
+
     val file = File(
         context.cacheDir,
-        "${noteName}_${System.currentTimeMillis()}_preview.jpg"
+        "${safeName}_${System.currentTimeMillis()}_preview.jpg"
     )
 
     val bitmap = convertHtmlToBitmap(webView) ?: return
@@ -347,13 +375,6 @@ fun printPdf(
         activity = activity,
         name = sanitizeFileName(noteName)
     )
-}
-
-private fun sanitizeFileName(name: String): String {
-    return name
-        .trim()
-        .replace(Regex("""[\\/:*?"<>|]"""), "_")
-        .replace(Regex("""\s+"""), " ")
 }
 
 private fun createWebPrintJob(
@@ -463,10 +484,9 @@ fun findTagRanges(text: String): StyleRanges {
             if (child is Paragraph) {
                 val node = child.firstChild
                 if (node is Text) {
-                    val textNode = node
                     val span = listItem.sourceSpans.firstOrNull()
                     if (span != null) {
-                        val literal = textNode.literal
+                        val literal = node.literal
                         val markerStart = span.inputIndex
                         markerRanges.add(markerStart until (markerStart + markerIndent + 1))
                         val matchResult = REGEX_TASK_LIST_ITEM.find(literal)

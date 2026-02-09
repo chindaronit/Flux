@@ -154,15 +154,15 @@ fun AddLabelDialog(
 
 @Composable
 fun SelectLabelDialog(
-    currNoteLabels: List<LabelModel>,
+    currNoteLabelIds: List<String>,
     labels: List<LabelModel>,
     onAddLabel: () -> Unit,
-    onConfirmation: (List<LabelModel>) -> Unit,
+    onConfirmation: (List<String>) -> Unit,
     onDismissRequest: () -> Unit
 ) {
-    val selectedLabel = remember {
-        mutableStateListOf<LabelModel>().apply {
-            addAll(currNoteLabels)
+    val selectedLabelIds = remember {
+        mutableStateListOf<String>().apply {
+            addAll(currNoteLabelIds)
         }
     }
 
@@ -179,20 +179,20 @@ fun SelectLabelDialog(
         title = { Text(text = stringResource(R.string.Select_Label)) },
         text = {
             LabelCheckBoxList(
-                selectedLabel,
+                labels.filter { selectedLabelIds.contains(it.labelId) },
                 labels,
-                onChecked = { selectedLabel.add(it) },
+                onChecked = { selectedLabelIds.add(it.labelId) },
                 onAddLabel = {
                     onAddLabel()
                     onDismissRequest()
                 },
-                onUnChecked = { selectedLabel.remove(it) })
+                onUnChecked = { selectedLabelIds.remove(it.labelId) })
         },
         onDismissRequest = { onDismissRequest() },
         confirmButton = {
             TextButton(
                 onClick = {
-                    onConfirmation(selectedLabel)
+                    onConfirmation(selectedLabelIds)
                     onDismissRequest()
                 },
                 colors = ButtonDefaults.buttonColors(

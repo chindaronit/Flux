@@ -13,7 +13,6 @@ import androidx.compose.material.icons.rounded.Restore
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -39,7 +38,6 @@ fun Backup(
     backupViewModel: BackupViewModel
 ) {
     val context = LocalContext.current
-    val backupResult = backupViewModel.backupResult.collectAsState(initial = null)
 
     // EXPORT launcher
     val exportLauncher = rememberLauncherForActivityResult(
@@ -55,9 +53,9 @@ fun Backup(
         uri?.let { backupViewModel.importBackup(context, it) }
     }
 
-    // Observe result
-    LaunchedEffect(backupResult.value) {
-        backupResult.value?.let { result ->
+    // Observe result - Collect SharedFlow properly
+    LaunchedEffect(Unit) {
+        backupViewModel.backupResult.collect { result ->
             if (result.isSuccess) {
                 Toast.makeText(context, "Operation successful!", Toast.LENGTH_LONG).show()
             } else {
@@ -66,6 +64,7 @@ fun Backup(
         }
     }
 
+    // ... rest of your UI
     BasicScaffold(
         title = stringResource(R.string.Backup),
         onBackClicked = {

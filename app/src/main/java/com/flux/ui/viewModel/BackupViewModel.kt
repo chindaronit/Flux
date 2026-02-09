@@ -6,11 +6,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flux.data.database.FluxBackup
 import com.flux.data.database.FluxDatabase
-import com.flux.di.IODispatcher
-import com.flux.other.getNextOccurrence
-import com.flux.other.scheduleReminder
+import com.flux.data.model.SettingsModel
+import com.flux.other.scheduleNextReminder
+import com.flux.other.tryRestoreUriPermission
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
@@ -21,7 +21,6 @@ import kotlinx.serialization.json.Json
 @HiltViewModel
 class BackupViewModel @Inject constructor(
     private val db: FluxDatabase,
-    @IODispatcher private val ioDispatcher: CoroutineDispatcher
 ) : ViewModel() {
 
     private val _backupResult = MutableSharedFlow<Result<Unit>>()
@@ -53,7 +52,7 @@ class BackupViewModel @Inject constructor(
         }
     }
 
-    private suspend fun writeJsonBackup(): String = withContext(ioDispatcher) {
+    private suspend fun writeJsonBackup(): String = withContext(Dispatchers.IO) {
         val backup = FluxBackup(
             workspaces = db.workspaceDao.getAll(),
             notes = db.notesDao.loadAllNotes(),
@@ -63,13 +62,14 @@ class BackupViewModel @Inject constructor(
             journals = db.journalDao.loadAllEntries(),
             labels = db.labelDao.getAll(),
             events = db.eventDao.loadAllEvents(),
-            eventInstances = db.eventInstanceDao.getAll()
+            eventInstances = db.eventInstanceDao.getAll(),
+            settings = db.settingsDao.loadSetting()?: SettingsModel()
         )
         Json.encodeToString(FluxBackup.serializer(), backup)
     }
 
     private suspend fun saveToUri(context: Context, uri: Uri, json: String) =
-        withContext(ioDispatcher) {
+        withContext(Dispatchers.IO) {
             context.contentResolver.openOutputStream(uri)?.use { outputStream ->
                 outputStream.write(json.toByteArray())
                 outputStream.flush()
@@ -77,12 +77,12 @@ class BackupViewModel @Inject constructor(
         }
 
     private suspend fun readFromUri(context: Context, uri: Uri): String =
-        withContext(ioDispatcher) {
+        withContext(Dispatchers.IO) {
             context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
                 ?: throw IllegalStateException("Could not open InputStream")
         }
 
-    private suspend fun uploadBackupToDatabase(context: Context, json: String) = withContext(ioDispatcher) {
+    private suspend fun uploadBackupToDatabase(context: Context, json: String) = withContext(Dispatchers.IO) {
         // Explicit serializer here too
         val backup = Json.decodeFromString(FluxBackup.serializer(), json)
 
@@ -103,20 +103,8 @@ class BackupViewModel @Inject constructor(
 
         // --- Habits ---
         backup.habits.forEach { habit ->
-            if (!db.habitDao.exists(habit.id)){
-                val nextOccurrence = getNextOccurrence(habit.recurrence, habit.startDateTime-habit.notificationOffset)
-                if(nextOccurrence != null && nextOccurrence > System.currentTimeMillis())
-                    scheduleReminder(
-                        context = context,
-                        id = habit.id,
-                        type = habit.type.toString(),
-                        recurrence = habit.recurrence,
-                        timeInMillis = nextOccurrence,
-                        title = habit.title,
-                        description = habit.description,
-                        workspaceId = habit.workspaceId,
-                        endTimeInMillis = habit.endDateTime
-                    )
+            if (!db.habitDao.exists(habit.id)) {
+                scheduleNextReminder(context, habit)
                 db.habitDao.upsertHabit(habit)
             }
         }
@@ -139,26 +127,30 @@ class BackupViewModel @Inject constructor(
         // --- Events ---
         backup.events.forEach { event ->
             if (!db.eventDao.exists(event.id)){
-                val nextOccurrence = getNextOccurrence(event.recurrence, event.startDateTime - event.notificationOffset)
-                if(nextOccurrence != null && nextOccurrence > System.currentTimeMillis())
-                    scheduleReminder(
-                        context = context,
-                        id = event.id,
-                        type = event.type.toString(),
-                        recurrence = event.recurrence,
-                        timeInMillis = nextOccurrence,
-                        title = event.title,
-                        description = event.description,
-                        workspaceId = event.workspaceId,
-                        endTimeInMillis = event.endDateTime
-                    )
+                scheduleNextReminder(context, event)
                 db.eventDao.upsertEvent(event)
             }
         }
 
         // --- Event Instances ---
         backup.eventInstances.forEach { ei ->
-            if (!db.eventInstanceDao.exists(ei.eventId, ei.instanceDate)) db.eventInstanceDao.upsertEventInstance(ei)
+            if (!db.eventInstanceDao.exists(ei.eventId, ei.instanceDate))
+                db.eventInstanceDao.upsertEventInstance(ei)
+        }
+
+        // --- Settings ---
+        val current = db.settingsDao.loadSetting()
+
+        val merged = if (backup.settings.storageRootUri != null) {
+            backup.settings
+        } else {
+            backup.settings.copy(storageRootUri = current?.storageRootUri)
+        }
+
+        db.settingsDao.upsertSettings(merged)
+
+        merged.storageRootUri?.let {
+            tryRestoreUriPermission(context, it)
         }
     }
 }

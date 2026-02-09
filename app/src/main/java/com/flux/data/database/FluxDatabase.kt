@@ -28,11 +28,12 @@ import com.flux.data.model.TodoModel
 import com.flux.data.model.WorkspaceModel
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.vladsch.flexmark.html2md.converter.FlexmarkHtmlConverter
 import kotlinx.serialization.json.Json
 
 @Database(
     entities = [EventModel::class, LabelModel::class, EventInstanceModel::class, SettingsModel::class, NotesModel::class, HabitModel::class, HabitInstanceModel::class, WorkspaceModel::class, TodoModel::class, JournalModel::class],
-    version = 8,
+    version = 9,
     exportSchema = false
 )
 @TypeConverters(Converter::class)
@@ -299,5 +300,67 @@ val MIGRATION_7_8 = object : Migration(7, 8) {
 
         // 4. Rename new table
         db.execSQL("ALTER TABLE NotesModel_new RENAME TO NotesModel")
+    }
+}
+
+val Migration_8_9 = object : Migration(8, 9) {
+
+    override fun migrate(db: SupportSQLiteDatabase) {
+
+        val converter = FlexmarkHtmlConverter.builder().build()
+
+        /* ---------------- Notes Migration ---------------- */
+
+        db.query(
+            "SELECT notesId, description FROM NotesModel"
+        ).use { cursor ->
+
+            while (cursor.moveToNext()) {
+
+                val id = cursor.getString(0)
+                val html = cursor.getString(1) ?: continue
+
+                if (html.contains("<")) {
+
+                    val markdown = converter.convert(html)
+
+                    db.execSQL(
+                        """
+                        UPDATE NotesModel
+                        SET description = ?
+                        WHERE notesId = ?
+                        """.trimIndent(),
+                        arrayOf(markdown, id)
+                    )
+                }
+            }
+        }
+
+        /* ---------------- Journals Migration ---------------- */
+
+        db.query(
+            "SELECT journalId, text FROM JournalModel"
+        ).use { cursor ->
+
+            while (cursor.moveToNext()) {
+
+                val id = cursor.getString(0)
+                val html = cursor.getString(1) ?: continue
+
+                if (html.contains("<")) {
+
+                    val markdown = converter.convert(html)
+
+                    db.execSQL(
+                        """
+                        UPDATE JournalModel
+                        SET text = ?
+                        WHERE journalId = ?
+                        """.trimIndent(),
+                        arrayOf(markdown, id)
+                    )
+                }
+            }
+        }
     }
 }

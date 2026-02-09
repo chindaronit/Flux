@@ -7,6 +7,7 @@ import com.flux.data.model.HabitModel
 import com.flux.data.model.JournalModel
 import com.flux.data.model.LabelModel
 import com.flux.data.model.NotesModel
+import com.flux.data.model.SettingsModel
 import com.flux.data.model.TodoModel
 import com.flux.data.model.WorkspaceModel
 import kotlinx.serialization.Serializable
@@ -21,5 +22,6 @@ data class FluxBackup(
     val journals: List<JournalModel> = emptyList(),
     val labels: List<LabelModel> = emptyList(),
     val events: List<EventModel> = emptyList(),
-    val eventInstances: List<EventInstanceModel> = emptyList()
+    val eventInstances: List<EventInstanceModel> = emptyList(),
+    val settings: SettingsModel = SettingsModel()
 )

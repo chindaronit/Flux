@@ -64,7 +64,6 @@ class WorkspaceViewModel @Inject constructor(
         context: Context,
         sourceUri: Uri
     ): String? = withContext(Dispatchers.IO) {
-
         val resolver = context.contentResolver
         val rootUri = settingsRepository.getStorageRoot()
 

@@ -142,7 +142,11 @@ fun NoteDetails(
     var showListDialog by rememberSaveable { mutableStateOf(false) }
     var showSelectLabels by rememberSaveable { mutableStateOf(false) }
     var isPinned by rememberSaveable(note.notesId) { mutableStateOf(note.isPinned) }
-    val noteLabels = rememberSaveable { mutableStateListOf<LabelModel>().apply { addAll(allLabels.filter { note.labels.contains(it.labelId) }) } }
+    val noteLabelIds = rememberSaveable {
+        mutableStateListOf<String>().apply {
+            addAll(note.labels)
+        }
+    }
     val isReadView by remember { derivedStateOf { pagerState.currentPage == 1 } }
     var readWebView by remember { mutableStateOf<WebView?>(null) }
 
@@ -208,7 +212,7 @@ fun NoteDetails(
         val newTitle = titleState.text.toString()
         val newDescription = contentState.text.toString()
 
-        if (newTitle == note.title && newDescription == note.description) return
+        if (newTitle == note.title && newDescription == note.description && noteLabelIds.toList()==note.labels) return
 
         onNotesEvents(
             NotesEvents.UpsertNote(
@@ -217,7 +221,7 @@ fun NoteDetails(
                     description = contentState.text.toString(),
                     isPinned = isPinned,
                     lastEdited = System.currentTimeMillis(),
-                    labels = noteLabels.map { it.labelId }
+                    labels = noteLabelIds.toList()
                 )
             )
         )
@@ -339,9 +343,9 @@ fun NoteDetails(
                         }
                     )
 
-                    if (noteLabels.isNotEmpty()) {
+                    if (noteLabelIds.isNotEmpty()) {
                         LazyRow(modifier = Modifier.padding(start = 12.dp, top = 2.dp, bottom = 2.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            items(noteLabels) { label ->
+                            items(allLabels.filter { l-> noteLabelIds.contains(l.labelId) }) { label ->
                                 Box(
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(50))
@@ -445,10 +449,10 @@ fun NoteDetails(
     }
 
     if (showSelectLabels) {
-        SelectLabelDialog(noteLabels, allLabels,
+        SelectLabelDialog(noteLabelIds, allLabels,
             onConfirmation = {
-                noteLabels.clear()
-                noteLabels.addAll(it)
+                noteLabelIds.clear()
+                noteLabelIds.addAll(it)
             },
             onDismissRequest = { showSelectLabels = false },
             onAddLabel = { navController.navigate(NavRoutes.EditLabels.withArgs(workspaceId)) }

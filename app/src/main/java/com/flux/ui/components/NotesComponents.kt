@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -82,10 +81,10 @@ fun NotesPreviewCard(
                 text = parseMarkdownContent(note.description),
                 style = MaterialTheme.typography.bodyMedium,
                 overflow = TextOverflow.Ellipsis,
+                maxLines = 12,
                 modifier = Modifier
                     .alpha(0.9f)
                     .padding(horizontal = 12.dp)
-                    .heightIn(max = 300.dp)
             )
 
             val maxVisibleLabels = 2

@@ -20,6 +20,7 @@ import com.flux.data.database.MIGRATION_4_5
 import com.flux.data.database.MIGRATION_5_6
 import com.flux.data.database.MIGRATION_6_7
 import com.flux.data.database.MIGRATION_7_8
+import com.flux.data.database.Migration_8_9
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -39,7 +40,7 @@ object DataModule {
         FluxDatabase::class.java,
         "FluxDatabase"
     )
-        .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
+        .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, Migration_8_9)
         .build()
 
     @Singleton

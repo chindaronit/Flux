@@ -1,5 +1,6 @@
 [versions]
 agp = "8.11.1"
+flexmarkHtml2mdConverter = "0.64.8"
 kotlin = "2.2.10"
 ksp = "2.2.10-2.0.2"
 kotlinxSerializationJson = "1.9.0"
@@ -42,6 +43,7 @@ androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 
 # Hilt (Dependency Injection)
+flexmarkHtml2mdConverter = { module = "com.vladsch.flexmark:flexmark-html2md-converter",  version.ref = "flexmarkHtml2mdConverter" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hilt" }

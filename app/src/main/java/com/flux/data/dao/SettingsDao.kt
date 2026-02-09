@@ -14,4 +14,7 @@ interface SettingsDao {
 
     @Query("SELECT * FROM SettingsModel LIMIT 1")
     fun loadSettings(): Flow<SettingsModel?>
+
+    @Query("SELECT * FROM SettingsModel LIMIT 1")
+    fun loadSetting(): SettingsModel?
 }
