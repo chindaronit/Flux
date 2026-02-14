@@ -23,10 +23,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.flux.R
 import com.flux.ui.components.ActionType
 import com.flux.ui.components.BasicScaffold
 import com.flux.ui.components.SettingOption
@@ -42,7 +44,7 @@ fun Editor(
     onSettingsEvents: (SettingEvents) -> Unit
 ) {
     BasicScaffold(
-        title = "Editor",
+        title = stringResource(R.string.editor_title),
         onBackClicked = { navController.popBackStack() }
     ) { innerPadding ->
         LazyColumn(
@@ -53,8 +55,8 @@ fun Editor(
 
             item {
                 SettingOption(
-                    title = "Show Line Numbers",
-                    description = "Show line numbers in the editor",
+                    title = stringResource(R.string.show_line_numbers_title),
+                    description = stringResource(R.string.show_line_numbers_description),
                     icon = Icons.Filled.FormatListNumbered,
                     radius = shapeManager(radius = settings.data.cornerRadius, isFirst = true),
                     actionType = ActionType.SWITCH,
@@ -73,8 +75,8 @@ fun Editor(
 
             item {
                 SettingOption(
-                    title = "Markdown Lint",
-                    description = "Markdown format and syntax will be checked",
+                    title = stringResource(R.string.markdown_lint_title),
+                    description = stringResource(R.string.markdown_lint_description),
                     icon = Icons.Filled.Spellcheck,
                     radius = shapeManager(radius = settings.data.cornerRadius, isLast = true),
                     actionType = ActionType.SWITCH,
@@ -95,7 +97,7 @@ fun Editor(
                 Spacer(Modifier.height(12.dp))
                 AnimatedVisibility(visible = !settings.data.dynamicTheme) {
                     Text(
-                        "Default Editor View",
+                        stringResource(R.string.default_editor_view),
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp
@@ -124,7 +126,7 @@ fun Editor(
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                 Icon(Icons.AutoMirrored.Filled.ChromeReaderMode, null)
-                                Text("Reading View")
+                                Text(stringResource(R.string.reading_view))
                             }
                         }
 
@@ -145,7 +147,7 @@ fun Editor(
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                 Icon(Icons.Default.EditNote, null)
-                                Text("Editing View")
+                                Text(stringResource(R.string.editing_view))
                             }
                         }
                     }

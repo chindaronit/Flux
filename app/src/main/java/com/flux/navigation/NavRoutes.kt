@@ -240,6 +240,7 @@ val WorkspaceScreens =
                 states.journalState.allEntries,
                 states.habitState.allInstances,
                 states.eventState.allEventInstances,
+                viewModels.settingsViewModel,
                 viewModels.workspaceViewModel::onEvent,
                 viewModels.notesViewModel::onEvent,
                 viewModels.eventViewModel::onEvent,

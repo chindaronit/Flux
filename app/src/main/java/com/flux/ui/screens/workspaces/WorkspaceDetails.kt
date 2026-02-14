@@ -83,6 +83,8 @@ import java.io.File
 import java.io.FileOutputStream
 import java.time.YearMonth
 import com.flux.R
+import com.flux.other.ensureStorageRoot
+import com.flux.ui.viewModel.SettingsViewModel
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -111,6 +113,7 @@ fun WorkspaceDetails(
     allJournalEntries: List<JournalModel>,
     allHabitInstances: List<HabitInstanceModel>,
     allEventInstances: List<EventInstanceModel>,
+    settingsViewModel: SettingsViewModel,
     onWorkspaceEvents: (WorkspaceEvents) -> Unit,
     onNotesEvents: (NotesEvents) -> Unit,
     onTaskEvents: (TaskEvents) -> Unit,
@@ -157,7 +160,13 @@ fun WorkspaceDetails(
     val expandedTODOIds = rememberSaveable(workspaceId) {
         mutableStateOf<Set<String>>(emptySet())
     }
-
+    val rootPicker =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            val uri = result.data?.data ?: return@rememberLauncherForActivityResult
+            settingsViewModel.saveRootUri(uri)
+        }
 
     val importNoteLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
@@ -213,7 +222,13 @@ fun WorkspaceDetails(
                         onWorkspaceEvents(WorkspaceEvents.UpsertSpace(workspace.copy(passKey = "")))
                     } else showLockDialog = true
                 },
-                onAddCover = { imagePickerLauncher.launch("image/*") },
+                onAddCover = { ensureStorageRoot(
+                    scope = scope,
+                    settingsViewModel = settingsViewModel,
+                    rootPicker = rootPicker
+                ) {
+                    imagePickerLauncher.launch("image/*")
+                } },
                 onEditDetails = { editWorkspaceDialog = true },
                 onEditLabel = { navController.navigate(NavRoutes.EditLabels.withArgs(workspaceId)) },
                 onRemoveCover = { onWorkspaceEvents(WorkspaceEvents.UpsertSpace(workspace.copy(cover = ""))) }

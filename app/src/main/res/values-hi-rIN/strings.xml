@@ -83,6 +83,21 @@
     <string name="Plain_Text">साधारण पाठ (.txt)</string>
     <string name="Markdown">मार्कडाउन (.md)</string>
     <string name="Change_Font">फ़ॉन्ट बदलें</string>
+    <string name="share">साझा करें</string>
+    <string name="save">सहेजें</string>
+    <string name="print">प्रिंट</string>
+    <string name="delete">हटाएँ</string>
+    <string name="share_as">इस रूप में साझा करें</string>
+    <string name="html">HTML</string>
+    <string name="image">छवि</string>
+    <string name="Outline">रूपरेखा</string>
+    <string name="paragraph">अनुच्छेद</string>
+    <string name="words_excluding_punctuations">विराम चिह्नों को छोड़कर शब्द</string>
+    <string name="lines">पंक्तियाँ</string>
+    <string name="show_line_numbers">पंक्ति संख्याएँ दिखाएँ</string>
+    <string name="show_line_numbers_desc">संपादक में पंक्ति संख्याएँ दिखाएँ</string>
+    <string name="markdown_lint">मार्कडाउन लिंट</string>
+    <string name="markdown_lint_desc">मार्कडाउन फ़ॉर्मेट और सिंटैक्स की जाँच की जाएगी</string>
 
     <!-- Settings - Privacy -->
     <string name="Privacy">गोपनीयता</string>
@@ -115,6 +130,8 @@
     <string name="Developer_Name">रोनित चिंदा</string>
     <string name="Source_Code">सोर्स कोड</string>
     <string name="Github_Repository">गिटहब रिपोजिटरी</string>
+    <string name="license">लाइसेंस</string>
+    <string name="license_gpl3_only">GPL-3.0 Only</string>
 
     <!-- Settings - Contact & Support -->
     <string name="Contact">संपर्क करें</string>
@@ -122,6 +139,14 @@
     <string name="Contact_desc2">गिटहब पर समस्या उठाएँ</string>
     <string name="Support">सहायता</string>
     <string name="Support_desc">अपना समर्थन दिखाएँ</string>
+    <string name="feature_request">फ़ीचर अनुरोध / सुझाव</string>
+    <string name="feature_request_desc">अपने विचार GitHub Discussions पर साझा करें।</string>
+    <string name="bug_report">बग रिपोर्ट</string>
+    <string name="email">ईमेल</string>
+    <string name="email_desc">प्रतिक्रिया या सहायता के लिए हमें ईमेल करें।</string>
+    <string name="discord">डिस्कॉर्ड</string>
+    <string name="discord_desc">डिस्कॉर्ड चैनल से जुड़ें</string>
+    <string name="no_email_app">कोई ईमेल ऐप नहीं मिला</string>
 
     <!-- Workspace -->
     <string name="Home">होम</string>
@@ -139,10 +164,12 @@
     <string name="Empty_Workspace">कोई वर्कस्पेस नहीं मिला</string>
     <string name="Wrong_Passkey">Wrong Passkey</string>
     <string name="enterPasskey">पासकी दर्ज करें</string>
+    <string name="Remove_Cover">कवर हटाएँ</string>
+    <string name="Search_Here">यहाँ खोजें…</string>
 
     <!-- Space Management -->
-    <string name="Current">Current</string>
-    <string name="Available_Spaces">Available Spaces</string>
+    <string name="Current">वर्तमान</string>
+    <string name="Available_Spaces">उपलब्ध स्थान</string>
 
     <!-- Notes -->
     <string name="Notes">नोट्स</string>
@@ -161,6 +188,8 @@
     <string name="Export_Note">नोट निर्यात करें</string>
     <string name="import_success">सफलतापूर्वक आयात किया गया</string>
     <string name="import_failed">नोट आयात करने में विफल</string>
+    <string name="find">खोजें</string>
+    <string name="replace">बदलें</string>
 
     <!-- To-Do -->
     <string name="To_Do">करने के कार्य</string>
@@ -276,4 +305,23 @@
     <string name="Add_Spaces_Content_Desc">स्पेस जोड़ें</string>
     <string name="Space_Content_Desc">स्पेस</string>
     <string name="Edit_Space_Content_Desc">स्पेस संपादित करें</string>
+
+    <string name="editor_title">संपादक</string>
+    <string name="editor_subtitle">डिफ़ॉल्ट दृश्य • डिफ़ॉल्ट संपादन मोड</string>
+
+    <string name="show_line_numbers_title">पंक्ति संख्याएँ दिखाएँ</string>
+    <string name="show_line_numbers_description">
+        संपादक में पंक्ति संख्याएँ दिखाएँ
+    </string>
+
+    <string name="markdown_lint_title">मार्कडाउन लिंट</string>
+    <string name="markdown_lint_description">
+        मार्कडाउन फ़ॉर्मेट और सिंटैक्स की जाँच की जाएगी
+    </string>
+
+    <string name="default_editor_view">डिफ़ॉल्ट संपादक दृश्य</string>
+
+    <string name="reading_view">पठन दृश्य</string>
+    <string name="editing_view">संपादन दृश्य</string>
+
 </resources>

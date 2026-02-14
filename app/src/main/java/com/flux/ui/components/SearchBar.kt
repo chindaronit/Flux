@@ -36,10 +36,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.unit.dp
+import com.flux.R
 
 @Composable
 fun NotesSearchBar(
@@ -47,7 +49,7 @@ fun NotesSearchBar(
     onQueryChange: (String) -> Unit,
     onCloseClicked: () -> Unit,
     modifier: Modifier = Modifier,
-    placeholder: String = "Search..."
+    placeholder: String = stringResource(R.string.Search_Here)
 ) {
     Box(
         modifier = modifier
@@ -183,7 +185,7 @@ fun GeneralSearchInputField(
         onSearch = onSearch,
         expanded = false,
         onExpandedChange = { },
-        placeholder = { Text("Search here...") },
+        placeholder = { Text(stringResource(R.string.Search_Here)) },
         leadingIcon = {
             IconButton(onClick = onLeadingIconClicked) {
                 Icon(

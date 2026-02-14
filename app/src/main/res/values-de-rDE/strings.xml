@@ -83,6 +83,21 @@
     <string name="Plain_Text">Klartext (.txt)</string>
     <string name="Markdown">Markdown (.md)</string>
     <string name="Change_Font">Schriftart ändern</string>
+    <string name="share">Teilen</string>
+    <string name="save">Speichern</string>
+    <string name="print">Drucken</string>
+    <string name="delete">Löschen</string>
+    <string name="share_as">Teilen als</string>
+    <string name="html">HTML</string>
+    <string name="image">Bild</string>
+    <string name="Outline">Gliederung</string>
+    <string name="paragraph">Absatz</string>
+    <string name="words_excluding_punctuations">Wörter ohne Satzzeichen</string>
+    <string name="lines">Zeilen</string>
+    <string name="show_line_numbers">Zeilennummern anzeigen</string>
+    <string name="show_line_numbers_desc">Zeilennummern im Editor anzeigen</string>
+    <string name="markdown_lint">Markdown-Lint</string>
+    <string name="markdown_lint_desc">Markdown-Format und Syntax werden überprüft</string>
 
     <!-- Settings - Privacy -->
     <string name="Privacy">Datenschutz</string>
@@ -115,6 +130,8 @@
     <string name="Developer_Name">Ronit Chinda</string>
     <string name="Source_Code">Quellcode</string>
     <string name="Github_Repository">GitHub-Repository</string>
+    <string name="license">Lizenz</string>
+    <string name="license_gpl3_only">GPL-3.0 Only</string>
 
     <!-- Settings - Contact & Support -->
     <string name="Contact">Kontakt</string>
@@ -122,6 +139,14 @@
     <string name="Contact_desc2">Problem auf GitHub melden</string>
     <string name="Support">Support</string>
     <string name="Support_desc">Zeige deine Unterstützung</string>
+    <string name="feature_request">Funktionsanfrage / Vorschlag</string>
+    <string name="feature_request_desc">Teile deine Ideen in den GitHub-Diskussionen.</string>
+    <string name="bug_report">Fehlerbericht</string>
+    <string name="email">E-Mail</string>
+    <string name="email_desc">Sende uns Feedback oder Support-Anfragen per E-Mail.</string>
+    <string name="discord">Discord</string>
+    <string name="discord_desc">Discord-Kanal beitreten</string>
+    <string name="no_email_app">Keine E-Mail-App gefunden</string>
 
     <!-- Workspace -->
     <string name="Home">Startseite</string>
@@ -139,6 +164,8 @@
     <string name="Empty_Workspace">Kein Arbeitsbereich gefunden</string>
     <string name="Wrong_Passkey">Falsches Passwort</string>
     <string name="enterPasskey">Passwort eingeben</string>
+    <string name="Remove_Cover">Cover entfernen</string>
+    <string name="Search_Here">Hier suchen…</string>
 
     <!-- Space Management -->
     <string name="Current">Aktuell</string>
@@ -161,6 +188,8 @@
     <string name="Export_Note">Notiz exportieren</string>
     <string name="import_success">Erfolgreich importiert</string>
     <string name="import_failed">Fehler beim Import der Notiz</string>
+    <string name="find">Suchen</string>
+    <string name="replace">Ersetzen</string>
 
     <!-- To-Do -->
     <string name="To_Do">Aufgaben</string>
@@ -276,5 +305,24 @@
     <string name="Add_Spaces_Content_Desc">Bereiche hinzufügen</string>
     <string name="Space_Content_Desc">Bereich</string>
     <string name="Edit_Space_Content_Desc">Bereich bearbeiten</string>
+
+
+    <string name="editor_title">Editor</string>
+    <string name="editor_subtitle">Standardansicht • Standardbearbeitungsmodus</string>
+
+    <string name="show_line_numbers_title">Zeilennummern anzeigen</string>
+    <string name="show_line_numbers_description">
+        Zeilennummern im Editor anzeigen
+    </string>
+
+    <string name="markdown_lint_title">Markdown-Lint</string>
+    <string name="markdown_lint_description">
+        Markdown-Format und Syntax werden überprüft
+    </string>
+
+    <string name="default_editor_view">Standard-Editoransicht</string>
+
+    <string name="reading_view">Leseansicht</string>
+    <string name="editing_view">Bearbeitungsansicht</string>
 
 </resources>

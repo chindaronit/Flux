@@ -21,7 +21,6 @@ import androidx.compose.material.icons.filled.Colorize
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.FormatListNumbered
 import androidx.compose.material.icons.filled.LightMode
-import androidx.compose.material.icons.filled.RemoveRedEye
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Spellcheck
 import androidx.compose.material.icons.rounded.FontDownload
@@ -319,28 +318,8 @@ fun Customize(
 
             item {
                 SettingOption(
-                    title = "Default Editor View",
-                    description = "Keep editor in read view when opened",
-                    icon = Icons.Filled.RemoveRedEye,
-                    radius = shapeManager(radius = settings.data.cornerRadius),
-                    actionType = ActionType.SWITCH,
-                    variable = settings.data.startWithReadView,
-                    switchEnabled = {
-                        onSettingsEvents(
-                            SettingEvents.UpdateSettings(
-                                settings.data.copy(
-                                    startWithReadView = it
-                                )
-                            )
-                        )
-                    }
-                )
-            }
-
-            item {
-                SettingOption(
-                    title = "Show Line Numbers",
-                    description = "Show line numbers in the editor",
+                    title = stringResource(R.string.show_line_numbers),
+                    description = stringResource(R.string.show_line_numbers_desc),
                     icon = Icons.Filled.FormatListNumbered,
                     radius = shapeManager(radius = settings.data.cornerRadius),
                     actionType = ActionType.SWITCH,
@@ -359,8 +338,8 @@ fun Customize(
 
             item {
                 SettingOption(
-                    title = "Markdown Lint",
-                    description = "Markdown format and syntax will be checked",
+                    title = stringResource(R.string.markdown_lint),
+                    description = stringResource(R.string.markdown_lint_desc),
                     icon = Icons.Filled.Spellcheck,
                     radius = shapeManager(radius = settings.data.cornerRadius),
                     actionType = ActionType.SWITCH,

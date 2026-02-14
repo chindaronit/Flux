@@ -83,6 +83,21 @@
     <string name="Plain_Text">Texto simples (.txt)</string>
     <string name="Markdown">Markdown (.md)</string>
     <string name="Change_Font">Alterar fonte</string>
+    <string name="share">Compartilhar</string>
+    <string name="save">Salvar</string>
+    <string name="print">Imprimir</string>
+    <string name="delete">Excluir</string>
+    <string name="share_as">Compartilhar como</string>
+    <string name="html">HTML</string>
+    <string name="image">Imagem</string>
+    <string name="Outline">Estrutura</string>
+    <string name="paragraph">Parágrafo</string>
+    <string name="words_excluding_punctuations">Palavras sem pontuação</string>
+    <string name="lines">Linhas</string>
+    <string name="show_line_numbers">Mostrar números de linha</string>
+    <string name="show_line_numbers_desc">Mostrar números de linha no editor</string>
+    <string name="markdown_lint">Lint de Markdown</string>
+    <string name="markdown_lint_desc">O formato e a sintaxe do Markdown serão verificados</string>
 
     <!-- Settings - Privacy -->
     <string name="Privacy">Privacidade</string>
@@ -115,6 +130,8 @@
     <string name="Developer_Name">Ronit Chinda</string>
     <string name="Source_Code">Código-fonte</string>
     <string name="Github_Repository">Repositório no GitHub</string>
+    <string name="license">Licença</string>
+    <string name="license_gpl3_only">GPL-3.0 Only</string>
 
     <!-- Settings - Contact & Support -->
     <string name="Contact">Contato</string>
@@ -122,6 +139,14 @@
     <string name="Contact_desc2">Registrar problema no GitHub</string>
     <string name="Support">Apoiar</string>
     <string name="Support_desc">Mostre seu apoio</string>
+    <string name="feature_request">Solicitação de recurso / Sugestão</string>
+    <string name="feature_request_desc">Compartilhe suas ideias nas discussões do GitHub.</string>
+    <string name="bug_report">Relatar erro</string>
+    <string name="email">E-mail</string>
+    <string name="email_desc">Envie-nos feedback ou solicite suporte por e-mail.</string>
+    <string name="discord">Discord</string>
+    <string name="discord_desc">Entrar no canal do Discord</string>
+    <string name="no_email_app">Nenhum app de e-mail encontrado</string>
 
     <!-- Workspace -->
     <string name="Home">Início</string>
@@ -139,6 +164,8 @@
     <string name="Empty_Workspace">Nenhuma área de trabalho encontrada</string>
     <string name="Wrong_Passkey">Chave incorreta</string>
     <string name="enterPasskey">Digite a chave de acesso</string>
+    <string name="Remove_Cover">Remover capa</string>
+    <string name="Search_Here">Pesquisar aqui…</string>
 
     <!-- Space Management -->
     <string name="Current">Atual</string>
@@ -161,6 +188,8 @@
     <string name="Export_Note">Exportar nota</string>
     <string name="import_success">Importado com sucesso</string>
     <string name="import_failed">Falha ao importar nota</string>
+    <string name="find">Pesquisar</string>
+    <string name="replace">Substituir</string>
 
     <!-- To-Do -->
     <string name="To_Do">Tarefas</string>
@@ -276,5 +305,23 @@
     <string name="Add_Spaces_Content_Desc">Adicionar espaços</string>
     <string name="Space_Content_Desc">espaço</string>
     <string name="Edit_Space_Content_Desc">Editar espaço</string>
+
+    <string name="editor_title">Editor</string>
+    <string name="editor_subtitle">Visualização padrão • Modo de edição padrão</string>
+
+    <string name="show_line_numbers_title">Mostrar números de linha</string>
+    <string name="show_line_numbers_description">
+        Mostrar números de linha no editor
+    </string>
+
+    <string name="markdown_lint_title">Lint de Markdown</string>
+    <string name="markdown_lint_description">
+        O formato e a sintaxe do Markdown serão verificados
+    </string>
+
+    <string name="default_editor_view">Visualização padrão do editor</string>
+
+    <string name="reading_view">Visualização de leitura</string>
+    <string name="editing_view">Visualização de edição</string>
 
 </resources>

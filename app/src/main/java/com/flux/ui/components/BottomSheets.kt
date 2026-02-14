@@ -432,7 +432,7 @@ fun RecurrenceBottomSheet(
                     ) {
                         Icon(Icons.Default.Repeat, null)
                         Text(
-                            "Repeat",
+                            stringResource(R.string.repeat),
                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold)
                         )
                     }
@@ -460,8 +460,7 @@ fun RecurrenceBottomSheet(
                 }
 
                 item {
-                    val rule = tempRule
-                    when (rule) {
+                    when (val rule = tempRule) {
                         is RecurrenceRule.Once -> {
                             Row(Modifier
                                 .padding(horizontal = 12.dp)
@@ -478,19 +477,23 @@ fun RecurrenceBottomSheet(
                         is RecurrenceRule.Custom -> {
                             OutlinedTextField(
                                 value = rule.everyXDays.toString(),
-                                onValueChange = { new ->
-                                    new.toIntOrNull()?.let {
-                                        tempRule = rule.copy(everyXDays = it)
-                                    }
-                                },
+                                onValueChange = { new -> new.toIntOrNull()?.let { tempRule = rule.copy(everyXDays = it) } },
                                 modifier = Modifier.padding(start = 8.dp),
-                                label = { Text("every n day(s)") },
+                                label = { Text(stringResource(R.string.recurrence_every_x_days)) },
                                 singleLine = true
                             )
                         }
 
                         is RecurrenceRule.Weekly -> {
-                            val weekdays = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+                            val weekdays = listOf(
+                                stringResource(R.string.monday_short),
+                                stringResource(R.string.tuesday_short),
+                                stringResource(R.string.wednesday_short),
+                                stringResource(R.string.thursday_short),
+                                stringResource(R.string.friday_short),
+                                stringResource(R.string.saturday_short),
+                                stringResource(R.string.sunday_short)
+                            )
                             Row (
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -627,7 +630,9 @@ fun OutlineBottomSheet(
             sheetState = sheetState,
             containerColor = MaterialTheme.colorScheme.surfaceContainer
         ) {
-            LazyColumn(Modifier.fillMaxWidth().heightIn(300.dp)) {
+            LazyColumn(Modifier
+                .fillMaxWidth()
+                .heightIn(300.dp)) {
                 item {
                         Row(
                             modifier = Modifier
@@ -637,7 +642,7 @@ fun OutlineBottomSheet(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Outline",
+                                text = stringResource(R.string.Outline),
                                 style = MaterialTheme.typography.titleLarge,
                                 color = MaterialTheme.colorScheme.onSurface,
                                 fontWeight = FontWeight.Bold
@@ -777,7 +782,7 @@ fun NotesInfoBottomSheet(
                     SettingOption(
                         radius = shapeManager(radius = 32),
                         icon = Icons.Default.FormatQuote,
-                        title = "Words excluding punctuations",
+                        title = stringResource(R.string.words_excluding_punctuations),
                         description = wordsWithoutPunctuations.toString(),
                         actionType = ActionType.None
                     )
@@ -797,7 +802,7 @@ fun NotesInfoBottomSheet(
                     SettingOption(
                         radius = shapeManager(radius = 32),
                         icon = Icons.AutoMirrored.Filled.List,
-                        title = "Lines",
+                        title = stringResource(R.string.lines),
                         description = lines.toString(),
                         actionType = ActionType.None
                     )
@@ -807,7 +812,7 @@ fun NotesInfoBottomSheet(
                     SettingOption(
                         radius = shapeManager(radius = 32, isLast = true),
                         icon = Icons.AutoMirrored.Filled.FormatAlignLeft,
-                        title = "Paragraph",
+                        title = stringResource(R.string.paragraph),
                         description = paragraph.toString(),
                         actionType = ActionType.None
                     )

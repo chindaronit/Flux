@@ -75,8 +75,8 @@ fun Settings(
 
             item {
                 SettingCategory(
-                    title = "Editor",
-                    subTitle = "Default View • Default Editing Mode",
+                    title = stringResource(R.string.editor_title),
+                    subTitle = stringResource(R.string.editor_subtitle),
                     icon = Icons.Rounded.EditNote,
                     shape = shapeManager(radius = settings.data.cornerRadius),
                     action = {

@@ -6,7 +6,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
@@ -14,7 +15,6 @@ import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.SubdirectoryArrowRight
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -37,6 +37,7 @@ import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.flux.R
@@ -58,14 +59,15 @@ fun TodoDetail(
     var showDeleteDialog by remember { mutableStateOf(false) }
     var isEditing by remember { mutableStateOf(list.title.isBlank() && list.items.isEmpty()) }
 
-    if(showDeleteDialog){
-        DeleteAlert({
-            showDeleteDialog=false
-        }, {
-            onTodoEvents(TodoEvents.DeleteList(list))
-            navController.popBackStack()
-            showDeleteDialog=false
-        })
+    if (showDeleteDialog) {
+        DeleteAlert(
+            { showDeleteDialog = false },
+            {
+                onTodoEvents(TodoEvents.DeleteList(list))
+                navController.popBackStack()
+                showDeleteDialog = false
+            }
+        )
     }
 
     Scaffold(
@@ -74,32 +76,32 @@ fun TodoDetail(
         topBar = {
             CenterAlignedTopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(MaterialTheme.colorScheme.surfaceContainerLow),
-                title = { Text(if(isEditing) stringResource(R.string.Edit_list) else title) },
+                title = { Text(if (isEditing) stringResource(R.string.Edit_list) else title) },
                 navigationIcon = {
                     IconButton({ navController.popBackStack() }) {
-                        Icon(
-                            Icons.AutoMirrored.Default.ArrowBack,
-                            null
-                        )
+                        Icon(Icons.AutoMirrored.Default.ArrowBack, null)
                     }
                 },
                 actions = {
-                    if(isEditing){
+                    if (isEditing) {
                         IconButton(
                             enabled = title.isNotBlank(),
                             onClick = {
-                                onTodoEvents(TodoEvents.UpsertList(list.copy(title = title, items = itemList.toList(), workspaceId = workspaceId)))
-                                isEditing=false
-                            }) { Icon(Icons.Default.Check, null) }
-                    }
-                    else{
-                        IconButton({ isEditing=true }) {
-                            Icon(
-                                Icons.Default.Edit,
-                                null,
-                            )
-                        }
-                        IconButton({ showDeleteDialog=true }) {
+                                onTodoEvents(
+                                    TodoEvents.UpsertList(
+                                        list.copy(
+                                            title = title,
+                                            items = itemList.toList(),
+                                            workspaceId = workspaceId
+                                        )
+                                    )
+                                )
+                                isEditing = false
+                            }
+                        ) { Icon(Icons.Default.Check, null) }
+                    } else {
+                        IconButton({ isEditing = true }) { Icon(Icons.Default.Edit, null) }
+                        IconButton({ showDeleteDialog = true }) {
                             Icon(
                                 Icons.Default.DeleteOutline,
                                 null,
@@ -109,71 +111,74 @@ fun TodoDetail(
                     }
                 }
             )
-        },
+        }
     ) { innerPadding ->
         LazyColumn(Modifier.padding(innerPadding)) {
-            if (isEditing){
+            if (isEditing) {
                 item {
                     TextField(
                         value = title,
-                        singleLine = true,
                         onValueChange = { title = it },
-                        placeholder = { Text(stringResource(R.string.Title)) },
+                        singleLine = true,
+                        placeholder = {
+                            Text(stringResource(R.string.Title))
+                        },
                         textStyle = MaterialTheme.typography.titleLarge,
                         modifier = Modifier.fillMaxWidth(),
                         colors = TextFieldDefaults.colors(
                             focusedIndicatorColor = MaterialTheme.colorScheme.surfaceContainer,
                             unfocusedIndicatorColor = MaterialTheme.colorScheme.surfaceContainer,
                             unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            focusedTextColor = MaterialTheme.colorScheme.primary,
-                            focusedPlaceholderColor = MaterialTheme.colorScheme.primary
+                            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow
                         )
                     )
                 }
             }
 
-            items(itemList) { item ->
+            itemsIndexed(itemList, key = { _, item -> item.id }) { index, item ->
+                if (index >= itemList.size) return@itemsIndexed
+
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .animateItem(),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        modifier = Modifier.weight(0.85f),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Checkbox(item.isChecked, onCheckedChange = { checked ->
-                            if(isEditing){
-                                val index = itemList.indexOf(item)
-                                if (index != -1) {
-                                    itemList[index] = item.copy(isChecked = checked)
-                                }
+                    Checkbox(
+                        checked = item.isChecked,
+                        onCheckedChange = { checked ->
+                            if (isEditing) {
+                                val i = itemList.indexOfFirst { it.id == item.id }
+                                if (i >= 0) itemList[i] = item.copy(isChecked = checked)
                             }
-                        })
-                        TextField(
-                            value = item.value,
-                            singleLine = true,
-                            onValueChange = { newText ->
-                                val index = itemList.indexOf(item)
-                                if (index != -1) {
-                                    itemList[index] = item.copy(value = newText)
-                                }
-                            },
-                            readOnly = !isEditing,
-                            placeholder = { Text(stringResource(R.string.Title)) },
-                            colors = TextFieldDefaults.colors(
-                                focusedIndicatorColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                                unfocusedIndicatorColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                                focusedTextColor = MaterialTheme.colorScheme.primary,
-                                focusedPlaceholderColor = MaterialTheme.colorScheme.primary
-                            )
+                        }
+                    )
+
+                    TextField(
+                        value = item.value,
+                        onValueChange = { newText ->
+                            val i = itemList.indexOfFirst { it.id == item.id }
+                            if (i >= 0) itemList[i] = item.copy(value = newText)
+                        },
+                        readOnly = !isEditing,
+                        singleLine = true,
+                        placeholder = { Text(stringResource(R.string.Title)) },
+                        modifier = Modifier.weight(1f),
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                        colors = TextFieldDefaults.colors(
+                            focusedIndicatorColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                            unfocusedIndicatorColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow
                         )
-                    }
-                    if(isEditing){
-                        IconButton({ itemList.remove(item) }) {
+                    )
+
+                    if (isEditing) {
+                        IconButton({
+                            val i = itemList.indexOfFirst { it.id == item.id }
+                            if (i >= 0) itemList.removeAt(i)
+                        }) {
                             Icon(
                                 Icons.Default.Remove,
                                 null,
@@ -183,14 +188,11 @@ fun TodoDetail(
                     }
                 }
             }
-            if (isEditing){
+
+            if (isEditing) {
                 item {
                     TextButton(
                         onClick = { itemList.add(TodoItem()) },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            contentColor = MaterialTheme.colorScheme.onSurface
-                        ),
                         modifier = Modifier.padding(start = 8.dp)
                     ) {
                         Row(

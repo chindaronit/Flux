@@ -698,7 +698,7 @@ fun ShareDialog(
         ) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
-                    text = if(isSharing) "Share as" else stringResource(R.string.Export_As),
+                    text = if(isSharing) stringResource(R.string.share_as) else stringResource(R.string.Export_As),
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(bottom = 16.dp)
@@ -711,10 +711,10 @@ fun ShareDialog(
                 ExportCard(Icons.Default.FilePresent, stringResource(R.string.Markdown)) { onConfirm(ExportType.MARKDOWN) }
 
                 // Image
-                ExportCard(Icons.Default.Image, "Image") { onConfirm(ExportType.IMAGE) }
+                ExportCard(Icons.Default.Image, stringResource(R.string.image)) { onConfirm(ExportType.IMAGE) }
 
                 // HTML Export
-                ExportCard(Icons.Default.Code, "HTML") { onConfirm(ExportType.HTML) }
+                ExportCard(Icons.Default.Code, stringResource(R.string.html)) { onConfirm(ExportType.HTML) }
             }
         }
     }

@@ -60,6 +60,7 @@ fun Languages(navController: NavController, settings: Settings) {
     var query by rememberSaveable { mutableStateOf("") }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         topBar = {
             GeneralSearchBar(
                 leadingIcon = Icons.AutoMirrored.Filled.ArrowBack,

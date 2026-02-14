@@ -30,7 +30,7 @@ import com.flux.ui.components.shapeManager
 @Composable
 fun Contact(navController: NavController, radius: Int) {
     val context = LocalContext.current
-
+    val no_email_app = stringResource(R.string.no_email_app)
     BasicScaffold(
         title = stringResource(R.string.Contact),
         onBackClicked = { navController.popBackStack() }
@@ -42,8 +42,8 @@ fun Contact(navController: NavController, radius: Int) {
         ) {
             item {
                 SettingOption(
-                    title = "Feature Request/Suggestion",
-                    description = "Give your ideas on github discussion.",
+                    title = stringResource(R.string.feature_request),
+                    description = stringResource(R.string.feature_request_desc),
                     icon = Icons.Default.Lightbulb,
                     radius = shapeManager(radius = radius, isFirst = true),
                     actionType = ActionType.LINK,
@@ -59,7 +59,7 @@ fun Contact(navController: NavController, radius: Int) {
 
             item {
                 SettingOption(
-                    title = "Bug Report",
+                    title = stringResource(R.string.bug_report),
                     description = stringResource(R.string.Contact_desc2),
                     icon = Icons.Rounded.Feedback,
                     radius = shapeManager(radius = radius, isLast = true),
@@ -77,8 +77,8 @@ fun Contact(navController: NavController, radius: Int) {
 
             item {
                 SettingOption(
-                    title = "Email",
-                    description = "Email us for feedback/support.",
+                    title = stringResource(R.string.email),
+                    description = stringResource(R.string.email_desc),
                     icon = Icons.Rounded.Email,
                     radius = shapeManager(radius = radius, isFirst = true),
                     actionType = ActionType.LINK,
@@ -89,15 +89,15 @@ fun Contact(navController: NavController, radius: Int) {
                         try {
                             context.startActivity(intent)
                         } catch (_: ActivityNotFoundException) {
-                            Toast.makeText(context, "No email app found", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, no_email_app, Toast.LENGTH_SHORT).show()
                         }
                     }
                 )
             }
             item {
                 SettingOption(
-                    title = "Discord",
-                    description = "Join discord channel",
+                    title = stringResource(R.string.discord),
+                    description = stringResource(R.string.discord_desc),
                     icon = Icons.Rounded.ChatBubble,
                     radius = shapeManager(radius = radius, isLast = true),
                     actionType = ActionType.LINK,

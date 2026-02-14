@@ -86,8 +86,8 @@ fun About(navController: NavController, radius: Int) {
 
             item {
                 SettingOption(
-                    title = "License",
-                    description = "GPL-3.0 Only",
+                    title = stringResource(R.string.license),
+                    description = stringResource(R.string.license_gpl3_only),
                     icon = Icons.AutoMirrored.Rounded.Article,
                     radius = shapeManager(radius = radius),
                     actionType = ActionType.None

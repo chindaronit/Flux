@@ -80,9 +80,24 @@
     <string name="Error_Share_txt">Failed to share text file</string>
     <string name="Error_Share_md">Failed to share .md file</string>
     <string name="Export_As">Export As</string>
+    <string name="share_as">Share As</string>
     <string name="Plain_Text">Plain Text (.txt)</string>
     <string name="Markdown">Markdown (.md)</string>
     <string name="Change_Font">Change Font</string>
+    <string name="share">Share</string>
+    <string name="save">Save</string>
+    <string name="print">Print</string>
+    <string name="delete">Delete</string>
+    <string name="html">HTML</string>
+    <string name="image">Image</string>
+    <string name="Outline">Outline</string>
+    <string name="words_excluding_punctuations">Words excluding punctuations</string>
+    <string name="lines">Lines</string>
+    <string name="paragraph">Paragraph</string>
+    <string name="show_line_numbers">Show Line Numbers</string>
+    <string name="show_line_numbers_desc">Show line numbers in the editor</string>
+    <string name="markdown_lint">Markdown Lint</string>
+    <string name="markdown_lint_desc">Markdown format and syntax will be checked</string>
 
     <!-- Settings - Privacy -->
     <string name="Privacy">Privacy</string>
@@ -115,6 +130,8 @@
     <string name="Developer_Name">Ronit Chinda</string>
     <string name="Source_Code">Source Code</string>
     <string name="Github_Repository">Github Repository</string>
+    <string name="license">License</string>
+    <string name="license_gpl3_only">GPL-3.0 Only</string>
 
     <!-- Settings - Contact & Support -->
     <string name="Contact">Contact</string>
@@ -122,6 +139,14 @@
     <string name="Contact_desc2">Raise issue on github</string>
     <string name="Support">Support</string>
     <string name="Support_desc">Show your love</string>
+    <string name="feature_request">Feature Request / Suggestion</string>
+    <string name="feature_request_desc">Give your ideas on GitHub Discussions.</string>
+    <string name="bug_report">Bug Report</string>
+    <string name="email">Email</string>
+    <string name="email_desc">Email us for feedback or support.</string>
+    <string name="discord">Discord</string>
+    <string name="discord_desc">Join the Discord channel</string>
+    <string name="no_email_app">No email app found</string>
 
     <!-- Workspace -->
     <string name="Home">Home</string>
@@ -139,6 +164,8 @@
     <string name="Empty_Workspace">No Workspace Found</string>
     <string name="Wrong_Passkey">Wrong Passkey</string>
     <string name="enterPasskey">Enter Passkey</string>
+    <string name="Remove_Cover">Remove Cover</string>
+    <string name="Search_Here">Search here…</string>
 
     <!-- Space Management -->
     <string name="Current">Current</string>
@@ -161,6 +188,8 @@
     <string name="Export_Note">Export Note</string>
     <string name="import_success">Imported Successfully</string>
     <string name="import_failed">Failed to import note</string>
+    <string name="find">Find</string>
+    <string name="replace">Replace</string>
 
     <!-- To-Do -->
     <string name="To_Do">To-Do</string>
@@ -185,7 +214,6 @@
     <string name="friday_short">Fri</string>
     <string name="saturday_short">Sat</string>
     <string name="sunday_short">Sun</string>
-
     <string name="past_habits">Past Habits</string>
     <string name="time">Time</string>
     <string name="repeat">Repeat</string>
@@ -199,7 +227,6 @@
     <string name="cannot_mark_future_dates">You can’t mark future dates!</string>
     <string name="habit_starts_later">Your habit starts later!</string>
     <string name="date_not_in_schedule">This date isn’t part of your habit schedule.</string>
-
 
     <!-- Events -->
     <string name="Events">Events</string>
@@ -276,5 +303,30 @@
     <string name="Add_Spaces_Content_Desc">Add-spaces</string>
     <string name="Space_Content_Desc">space</string>
     <string name="Edit_Space_Content_Desc">Edit-space</string>
+
+
+    <!-- Editor -->
+    <string name="editor_title">Editor</string>
+    <string name="editor_subtitle">Default View • Default Editing Mode</string>
+
+    <!-- Line Numbers -->
+    <string name="show_line_numbers_title">Show Line Numbers</string>
+    <string name="show_line_numbers_description">
+        Show line numbers in the editor
+    </string>
+
+    <!-- Markdown Lint -->
+    <string name="markdown_lint_title">Markdown Lint</string>
+    <string name="markdown_lint_description">
+        Markdown format and syntax will be checked
+    </string>
+
+    <!-- Default Editor View -->
+    <string name="default_editor_view">Default Editor View</string>
+
+    <!-- Editor Modes -->
+    <string name="reading_view">Reading View</string>
+    <string name="editing_view">Editing View</string>
+
 
 </resources>

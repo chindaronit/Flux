@@ -33,6 +33,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
@@ -79,7 +80,7 @@ fun FindAndReplaceField(
                     style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
                 )
             },
-            placeholderText = "Find"
+            placeholderText = stringResource(R.string.find)
         )
         IconButton(onClick = {
             onStateUpdate(state.copy(scrollDirection = ScrollDirection.PREVIOUS))
@@ -120,7 +121,7 @@ fun FindAndReplaceField(
             value = state.replaceWord,
             onValueChange = { onStateUpdate(state.copy(replaceWord = it)) },
             leadingIcon = Icons.Outlined.Autorenew,
-            placeholderText = "Replace"
+            placeholderText = stringResource(R.string.replace)
         )
         IconButton(onClick = { onStateUpdate(state.copy(replaceType = ReplaceType.CURRENT)) }) {
             Icon(

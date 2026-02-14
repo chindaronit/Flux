@@ -96,7 +96,7 @@ fun DropdownMenuWithDetails(
             )
             HorizontalDivider()
             DropdownMenuItem(
-                text = { Text("Share") },
+                text = { Text(stringResource(R.string.share)) },
                 leadingIcon = { Icon(Icons.Outlined.Share, contentDescription = null) },
                 onClick = {
                     expanded = false
@@ -105,7 +105,7 @@ fun DropdownMenuWithDetails(
             )
             HorizontalDivider()
             DropdownMenuItem(
-                text = { Text("Save") },
+                text = { Text(stringResource(R.string.save)) },
                 leadingIcon = { Icon(Icons.Outlined.Download, contentDescription = null) },
                 onClick = {
                     expanded = false
@@ -114,7 +114,7 @@ fun DropdownMenuWithDetails(
             )
             HorizontalDivider()
             DropdownMenuItem(
-                text = { Text("Print") },
+                text = { Text(stringResource(R.string.print)) },
                 leadingIcon = { Icon(Icons.Outlined.Print, contentDescription = null) },
                 onClick = {
                     expanded = false
@@ -136,7 +136,7 @@ fun DropdownMenuWithDetails(
                     textColor = MaterialTheme.colorScheme.error,
                     leadingIconColor = MaterialTheme.colorScheme.error
                 ),
-                text = { Text("Delete") },
+                text = { Text(stringResource(R.string.delete)) },
                 leadingIcon = { Icon(Icons.Outlined.Delete, contentDescription = null) },
                 onClick = {
                     expanded = false
@@ -169,7 +169,7 @@ fun JournalDropdownMenu(
             onDismissRequest = { expanded = false }
         ) {
             DropdownMenuItem(
-                text = { Text("Share") },
+                text = { Text(stringResource(R.string.share)) },
                 leadingIcon = { Icon(Icons.Outlined.Share, contentDescription = null) },
                 onClick = {
                     expanded = false
@@ -178,7 +178,7 @@ fun JournalDropdownMenu(
             )
             HorizontalDivider()
             DropdownMenuItem(
-                text = { Text("Save") },
+                text = { Text(stringResource(R.string.save)) },
                 leadingIcon = { Icon(Icons.Outlined.Download, contentDescription = null) },
                 onClick = {
                     expanded = false
@@ -187,7 +187,7 @@ fun JournalDropdownMenu(
             )
             HorizontalDivider()
             DropdownMenuItem(
-                text = { Text("Print") },
+                text = { Text(stringResource(R.string.print)) },
                 leadingIcon = { Icon(Icons.Outlined.Print, contentDescription = null) },
                 onClick = {
                     expanded = false
@@ -209,7 +209,7 @@ fun JournalDropdownMenu(
                     textColor = MaterialTheme.colorScheme.error,
                     leadingIconColor = MaterialTheme.colorScheme.error
                 ),
-                text = { Text("Delete") },
+                text = { Text(stringResource(R.string.delete)) },
                 leadingIcon = { Icon(Icons.Outlined.Delete, contentDescription = null) },
                 onClick = {
                     expanded = false
@@ -363,7 +363,7 @@ fun WorkspaceMore(
                         leadingIconColor = MaterialTheme.colorScheme.error,
                         textColor = MaterialTheme.colorScheme.error
                     ),
-                    text = { Text("Remove Cover") },
+                    text = { Text(stringResource(R.string.Remove_Cover)) },
                     leadingIcon = {
                         Icon(
                             Icons.Default.RemoveCircleOutline,

@@ -83,6 +83,21 @@
     <string name="Plain_Text">Простой текст (.txt)</string>
     <string name="Markdown">Markdown (.md)</string>
     <string name="Change_Font">Сменить шрифт</string>
+    <string name="share">Поделиться</string>
+    <string name="save">Сохранить</string>
+    <string name="print">Печать</string>
+    <string name="delete">Удалить</string>
+    <string name="share_as">Поделиться как</string>
+    <string name="html">HTML</string>
+    <string name="image">Изображение</string>
+    <string name="Outline">Структура</string>
+    <string name="paragraph">Абзац</string>
+    <string name="words_excluding_punctuations">Слова без знаков препинания</string>
+    <string name="lines">Строки</string>
+    <string name="show_line_numbers">Показывать номера строк</string>
+    <string name="show_line_numbers_desc">Показывать номера строк в редакторе</string>
+    <string name="markdown_lint">Проверка Markdown</string>
+    <string name="markdown_lint_desc">Формат и синтаксис Markdown будут проверены</string>
 
     <!-- Settings - Privacy -->
     <string name="Privacy">Конфиденциальность</string>
@@ -115,6 +130,8 @@
     <string name="Developer_Name">Ronit Chinda</string>
     <string name="Source_Code">Исходный код</string>
     <string name="Github_Repository">Репозиторий GitHub</string>
+    <string name="license">Лицензия</string>
+    <string name="license_gpl3_only">GPL-3.0 Only</string>
 
     <!-- Settings - Contact & Support -->
     <string name="Contact">Контакт</string>
@@ -122,6 +139,14 @@
     <string name="Contact_desc2">Сообщить о проблеме на GitHub</string>
     <string name="Support">Поддержка</string>
     <string name="Support_desc">Покажи свою поддержку</string>
+    <string name="feature_request">Запрос функции / Предложение</string>
+    <string name="feature_request_desc">Поделитесь своими идеями в обсуждениях GitHub.</string>
+    <string name="bug_report">Сообщить об ошибке</string>
+    <string name="email">Электронная почта</string>
+    <string name="email_desc">Напишите нам для обратной связи или поддержки.</string>
+    <string name="discord">Discord</string>
+    <string name="discord_desc">Присоединиться к каналу Discord</string>
+    <string name="no_email_app">Почтовое приложение не найдено</string>
 
     <!-- Workspace -->
     <string name="Home">Главная</string>
@@ -139,6 +164,8 @@
     <string name="Empty_Workspace">Рабочее пространство не найдено</string>
     <string name="Wrong_Passkey">Неверный пароль</string>
     <string name="enterPasskey">Введите пароль</string>
+    <string name="Remove_Cover">Удалить обложку</string>
+    <string name="Search_Here">Искать здесь…</string>
 
     <!-- Space Management -->
     <string name="Current">Текущее</string>
@@ -161,6 +188,8 @@
     <string name="Export_Note">Экспортировать заметку</string>
     <string name="import_success">Импорт успешно выполнен</string>
     <string name="import_failed">Ошибка при импорте заметки</string>
+    <string name="find">Найти</string>
+    <string name="replace">Заменить</string>
 
     <!-- To-Do -->
     <string name="To_Do">Задачи</string>
@@ -275,5 +304,23 @@
     <string name="Add_Spaces_Content_Desc">Добавить пространства</string>
     <string name="Space_Content_Desc">пространство</string>
     <string name="Edit_Space_Content_Desc">Редактировать пространство</string>
+
+    <string name="editor_title">Редактор</string>
+    <string name="editor_subtitle">Вид по умолчанию • Режим редактирования по умолчанию</string>
+
+    <string name="show_line_numbers_title">Показывать номера строк</string>
+    <string name="show_line_numbers_description">
+        Показывать номера строк в редакторе
+    </string>
+
+    <string name="markdown_lint_title">Markdown-линт</string>
+    <string name="markdown_lint_description">
+        Формат и синтаксис Markdown будут проверены
+    </string>
+
+    <string name="default_editor_view">Вид редактора по умолчанию</string>
+
+    <string name="reading_view">Режим чтения</string>
+    <string name="editing_view">Режим редактирования</string>
 
 </resources>

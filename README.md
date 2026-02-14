@@ -4,6 +4,14 @@
 <br>
 
 # Flux
+
+![Android](https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white)
+![Kotlin](https://img.shields.io/badge/kotlin-%237F52FF.svg?style=for-the-badge&logo=kotlin&logoColor=white)
+![Compose](https://img.shields.io/static/v1?style=for-the-badge&message=Jetpack+Compose&color=4285F4&logo=Jetpack+Compose&logoColor=FFFFFF&label=)
+![Material](https://custom-icon-badges.demolab.com/badge/material%20you-lightblue?style=for-the-badge&logoColor=333&logo=material-you)
+![LaTeX](https://img.shields.io/badge/latex-%23008080.svg?style=for-the-badge&logo=latex&logoColor=white)
+![Markdown](https://img.shields.io/badge/markdown-%23000000.svg?style=for-the-badge&logo=markdown&logoColor=white)
+
 **A lightweight Android productivity app built with Material 3.**
 
 [<img src=".github/get-github.png" alt="Get it on GitHub" height="55">](https://github.com/chindaronit/Flux/releases/)
@@ -34,6 +42,48 @@
 - 📸 **Instagram:** [@chinda.ronit](https://www.instagram.com/chinda_ronit/)
 
 ---
+
+## 🌎 Translations
+English, Hindi, French, Portugal (Brazil), Russian, German, Spanish, Dutch
+
+## 🔎 Technical Details
+- **Programming Languages**: Kotlin
+- **Build Tool**: Gradle with Kotlin DSL
+- **Android Version**: The application targets Android SDK version 36 and is compatible with devices
+  running Android SDK version 29 and above.
+- **Kotlin Version**: 2.2.10.
+- **Java Version**: JVM Target 11.
+
+## 🛠️ Architecture
+- **MVI**: Model View ViewModel
+
+## 📚 Libraries and Frameworks
+
+- **Compose**: A modern toolkit for building native Android UI.
+- **Hilt**: A dependency injection library for Android.
+- **KSP (Kotlin Symbol Processing API)**: Enhances Kotlin compilation with additional metadata
+  processing.
+- **Room**: A persistence library providing an abstraction layer over SQLite.
+- **Compose Navigation**: Simplifies the implementation of navigation between screens.
+- **Material Icons**: Provides Material Design icons for consistent visual elements.
+- **CommonMark**: For markdown parsing and rendering.
+- **Flexmark HTML to Markdown Converter**: Converts HTML to Markdown.
+
+## 📦 Installation
+
+To build and run this application, you need to install the latest version of Android Studio. Then,
+you can clone this repository from GitHub and open it in Android Studio.
+
+```bash
+git clone https://github.com/YangDai2003/OpenNote.git
+```
+
+In Android Studio, select `Run > Run 'app'` to start the application.
+
+## 🎈 Contribution
+
+Any form of contribution is welcome! If you find a bug or have a new feature request, please create
+an issue. If you want to contribute code directly to this project, you can create a pull request.
 
 ## ⚠️ License
 

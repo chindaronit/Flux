@@ -83,6 +83,21 @@
     <string name="Plain_Text">Platte Tekst (.txt)</string>
     <string name="Markdown">Markdown (.md)</string>
     <string name="Change_Font">Verander lettertype</string>
+    <string name="share">Delen</string>
+    <string name="save">Opslaan</string>
+    <string name="print">Afdrukken</string>
+    <string name="delete">Verwijderen</string>
+    <string name="share_as">Delen als</string>
+    <string name="html">HTML</string>
+    <string name="image">Afbeelding</string>
+    <string name="Outline">Overzicht</string>
+    <string name="paragraph">Alinea</string>
+    <string name="words_excluding_punctuations">Woorden zonder leestekens</string>
+    <string name="lines">Regels</string>
+    <string name="show_line_numbers">Regelnummers weergeven</string>
+    <string name="show_line_numbers_desc">Regelnummers weergeven in de editor</string>
+    <string name="markdown_lint">Markdown-lint</string>
+    <string name="markdown_lint_desc">Markdown-indeling en syntaxis worden gecontroleerd</string>
 
     <!-- Settings - Privacy -->
     <string name="Privacy">Privacy</string>
@@ -115,6 +130,8 @@
     <string name="Developer_Name">Ronit Chinda</string>
     <string name="Source_Code">Broncode</string>
     <string name="Github_Repository">Github Repository</string>
+    <string name="license">Licentie</string>
+    <string name="license_gpl3_only">GPL-3.0 Only</string>
 
     <!-- Settings - Contact & Support -->
     <string name="Contact">Contact</string>
@@ -122,6 +139,14 @@
     <string name="Contact_desc2">Probleem melden op github</string>
     <string name="Support">Ondersteuning</string>
     <string name="Support_desc">Toon je waardering</string>
+    <string name="feature_request">Functieaanvraag / Suggestie</string>
+    <string name="feature_request_desc">Deel je ideeën in GitHub-discussies.</string>
+    <string name="bug_report">Bugrapport</string>
+    <string name="email">E-mail</string>
+    <string name="email_desc">E-mail ons voor feedback of ondersteuning.</string>
+    <string name="discord">Discord</string>
+    <string name="discord_desc">Word lid van het Discord-kanaal</string>
+    <string name="no_email_app">Geen e-mailapp gevonden</string>
 
     <!-- Workspace -->
     <string name="Home">Huis</string>
@@ -139,6 +164,8 @@
     <string name="Empty_Workspace">Geen werkruimte gevonden</string>
     <string name="Wrong_Passkey">Onjuiste Toegangscode</string>
     <string name="enterPasskey">Voer toegangscode in</string>
+    <string name="Remove_Cover">Omslag verwijderen</string>
+    <string name="Search_Here">Hier zoeken…</string>
 
     <!-- Space Management -->
     <string name="Current">Huidig</string>
@@ -161,6 +188,8 @@
     <string name="Export_Note">Exporteer notitie</string>
     <string name="import_success">Succesvol geïmporteerd</string>
     <string name="import_failed">Mislukt om notitie te importeren</string>
+    <string name="find">Zoeken</string>
+    <string name="replace">Vervangen</string>
 
     <!-- To-Do -->
     <string name="To_Do">Te Doen</string>
@@ -275,5 +304,23 @@
     <string name="Add_Spaces_Content_Desc">Voeg-ruimtes toe</string>
     <string name="Space_Content_Desc">ruimte</string>
     <string name="Edit_Space_Content_Desc">Bewerk-ruimte</string>
+
+    <string name="editor_title">Editor</string>
+    <string name="editor_subtitle">Standaardweergave • Standaard bewerkingsmodus</string>
+
+    <string name="show_line_numbers_title">Regelnummers weergeven</string>
+    <string name="show_line_numbers_description">
+        Regelnummers weergeven in de editor
+    </string>
+
+    <string name="markdown_lint_title">Markdown-lint</string>
+    <string name="markdown_lint_description">
+        Markdown-indeling en syntaxis worden gecontroleerd
+    </string>
+
+    <string name="default_editor_view">Standaard editorweergave</string>
+
+    <string name="reading_view">Leesweergave</string>
+    <string name="editing_view">Bewerkingsweergave</string>
 
 </resources>

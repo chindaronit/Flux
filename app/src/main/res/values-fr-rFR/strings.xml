@@ -83,6 +83,21 @@
     <string name="Plain_Text">Texte brut (.txt)</string>
     <string name="Markdown">Markdown (.md)</string>
     <string name="Change_Font">Changer la police</string>
+    <string name="share">Partager</string>
+    <string name="save">Enregistrer</string>
+    <string name="print">Imprimer</string>
+    <string name="delete">Supprimer</string>
+    <string name="share_as">Partager en tant que</string>
+    <string name="html">HTML</string>
+    <string name="image">Image</string>
+    <string name="Outline">Plan</string>
+    <string name="paragraph">Paragraphe</string>
+    <string name="words_excluding_punctuations">Mots sans ponctuation</string>
+    <string name="lines">Lignes</string>
+    <string name="show_line_numbers">Afficher les numéros de ligne</string>
+    <string name="show_line_numbers_desc">Afficher les numéros de ligne dans l’éditeur</string>
+    <string name="markdown_lint">Lint Markdown</string>
+    <string name="markdown_lint_desc">Le format et la syntaxe Markdown seront vérifiés</string>
 
     <!-- Settings - Privacy -->
     <string name="Privacy">Confidentialité</string>
@@ -115,6 +130,8 @@
     <string name="Developer_Name">Ronit Chinda</string>
     <string name="Source_Code">Code Source</string>
     <string name="Github_Repository">Dépôt Github</string>
+    <string name="license">Licence</string>
+    <string name="license_gpl3_only">GPL-3.0 Only</string>
 
     <!-- Settings - Contact & Support -->
     <string name="Contact">Contact</string>
@@ -122,6 +139,14 @@
     <string name="Contact_desc2">Signaler un problème sur Github</string>
     <string name="Support">Soutien</string>
     <string name="Support_desc">Montrez votre soutien</string>
+    <string name="feature_request">Demande de fonctionnalité / Suggestion</string>
+    <string name="feature_request_desc">Partagez vos idées dans les discussions GitHub.</string>
+    <string name="bug_report">Rapport de bug</string>
+    <string name="email">E-mail</string>
+    <string name="email_desc">Envoyez-nous vos retours ou demandes de support par e-mail.</string>
+    <string name="discord">Discord</string>
+    <string name="discord_desc">Rejoindre le canal Discord</string>
+    <string name="no_email_app">Aucune application e-mail trouvée</string>
 
     <!-- Workspace -->
     <string name="Home">Accueil</string>
@@ -139,6 +164,8 @@
     <string name="Empty_Workspace">Aucun espace de travail trouvé</string>
     <string name="Wrong_Passkey">Code secret incorrect</string>
     <string name="enterPasskey">Entrer le code secret</string>
+    <string name="Remove_Cover">Supprimer la couverture</string>
+    <string name="Search_Here">Rechercher ici…</string>
 
     <!-- Space Management -->
     <string name="Current">Actuel</string>
@@ -161,6 +188,8 @@
     <string name="Export_Note">Exporter la note</string>
     <string name="import_success">Importé avec succès</string>
     <string name="import_failed">Échec de l\'importation de la note</string>
+    <string name="find">Rechercher</string>
+    <string name="replace">Remplacer</string>
 
     <!-- To-Do -->
     <string name="To_Do">À faire</string>
@@ -276,5 +305,23 @@
     <string name="Add_Spaces_Content_Desc">Ajouter-espaces</string>
     <string name="Space_Content_Desc">espace</string>
     <string name="Edit_Space_Content_Desc">Modifier-espace</string>
+
+    <string name="editor_title">Éditeur</string>
+    <string name="editor_subtitle">Vue par défaut • Mode d’édition par défaut</string>
+
+    <string name="show_line_numbers_title">Afficher les numéros de ligne</string>
+    <string name="show_line_numbers_description">
+        Afficher les numéros de ligne dans l’éditeur
+    </string>
+
+    <string name="markdown_lint_title">Lint Markdown</string>
+    <string name="markdown_lint_description">
+        Le format et la syntaxe Markdown seront vérifiés
+    </string>
+
+    <string name="default_editor_view">Vue par défaut de l’éditeur</string>
+
+    <string name="reading_view">Vue de lecture</string>
+    <string name="editing_view">Vue d’édition</string>
 
 </resources>
