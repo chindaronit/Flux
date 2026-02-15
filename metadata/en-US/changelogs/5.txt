@@ -1,7 +1,4 @@
-* Markdown Support Notes & Journal.
+* Markdown Support in Notes & Journal.
 * Share Notes and Journal as markdown, html, image, pdf.
 * Improved To-do UI
 * Merged Calender with Events and Journal.
-* Added more analytics components for habits.
-* Added support to many other languages (German, Russian, Portuguese (Brazil), Spanish).
-* Bug fixes of staggered List in notes, state disappearing in rotation.

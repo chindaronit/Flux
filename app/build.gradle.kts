@@ -16,7 +16,7 @@ android {
         minSdk = 29
         targetSdk = 36
         versionCode = 5
-        versionName = "3"
+        versionName = "3.0"
     }
 
     dependenciesInfo {

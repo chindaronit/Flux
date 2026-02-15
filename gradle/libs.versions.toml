@@ -8,16 +8,16 @@ biometric = "1.4.0-alpha05"
 gson = "2.13.2"
 coreKtx = "1.17.0"
 appcompat = "1.7.1"
-lifecycleRuntimeKtx = "2.10.0"
-activityCompose = "1.12.2"
-composeBom = "2025.12.01"
-coreSplashscreen = "1.2.0"
-navigationCompose = "2.9.6"
-room = "2.8.4"
+lifecycleRuntimeKtx = "2.9.4"
+activityCompose = "1.11.0"
+composeBom = "2025.10.00"
+coreSplashscreen = "1.0.1"
+navigationCompose = "2.9.5"
+room = "2.8.2"
 coilCompose = "2.7.0"
 
 # Common Mark
-commonmark = "0.27.0"
+commonmark = "0.27.1"
 
 # Hilt
 hilt = "2.57.2"
