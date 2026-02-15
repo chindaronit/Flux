@@ -26,6 +26,16 @@ android {
         includeInBundle = false
     }
 
+    signingConfigs {
+        create("release") {
+            keyAlias = project.findProperty("signingKeyAlias") as String? ?: "release"
+            keyPassword = project.findProperty("signingKeyPassword") as String? ?: ""
+            storeFile =
+                file(project.findProperty("signingStoreFile") as String? ?: "releaseKey.jks")
+            storePassword = project.findProperty("signingStorePassword") as String? ?: ""
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -36,10 +46,12 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
         }
         debug {
             isMinifyEnabled = false
             isDebuggable = true
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {
