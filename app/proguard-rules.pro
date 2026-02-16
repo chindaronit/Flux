@@ -22,3 +22,23 @@
 
 # Suppress Guava J2ObjC annotation missing classes
 -dontwarn com.google.j2objc.annotations.**
+
+# Keep kotlinx.serialization generated serializers
+-keepclassmembers class **$$serializer { *; }
+
+# Keep Serializable classes
+-keep @kotlinx.serialization.Serializable class * { *; }
+
+# Keep sealed subclasses of RecurrenceRule
+-keep class com.flux.data.model.RecurrenceRule** { *; }
+
+# Keep enum constants
+-keepclassmembers enum * {
+    *;
+}
+
+# Keep polymorphic serialization metadata
+-keepattributes *Annotation*
+
+# Keep Kotlin metadata (critical)
+-keep class kotlin.Metadata { *; }
