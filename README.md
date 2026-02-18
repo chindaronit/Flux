@@ -75,7 +75,7 @@ To build and run this application, you need to install the latest version of And
 you can clone this repository from GitHub and open it in Android Studio.
 
 ```bash
-git clone https://github.com/YangDai2003/OpenNote.git
+git clone git@github.com:chindaronit/Flux.git
 ```
 
 In Android Studio, select `Run > Run 'app'` to start the application.
