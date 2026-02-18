@@ -15,7 +15,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == Intent.ACTION_BOOT_COMPLETED ||
@@ -49,7 +48,6 @@ class BootReceiver : BroadcastReceiver() {
         val events = eventRepository.loadAllEvents()
 
         return habits.filter { it.isLive() } + events
-
     }
 }
 

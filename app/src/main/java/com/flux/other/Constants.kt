@@ -19,6 +19,11 @@ object Constants {
         const val FLUX_IMAGES = "Images"
         const val FLUX_AUDIO = "Audio"
         const val FLUX_VIDEOS = "Videos"
+        const val FLUX_BACKUP = "Backup"
+    }
+
+    object Other {
+        const val SIDE_EFFECT_KEY = "side_effect"
     }
 
     object Editor {

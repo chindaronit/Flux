@@ -10,7 +10,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -22,6 +24,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flux.navigation.AppNavHost
 import com.flux.navigation.Loader
+import com.flux.other.Constants.Other
 import com.flux.other.createNotificationChannel
 import com.flux.ui.effects.ScreenEffect
 import com.flux.ui.theme.FluxTheme
@@ -34,6 +37,9 @@ import com.flux.ui.viewModel.SettingsViewModel
 import com.flux.ui.viewModel.TodoViewModel
 import com.flux.ui.viewModel.WorkspaceViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -73,18 +79,11 @@ class MainActivity : AppCompatActivity() {
             // Stop splash screen when settings are loaded
             LaunchedEffect(settings.isLoading) { keepSplashScreen.value = settings.isLoading }
 
-            // Snackbar effect
-            LaunchedEffect(Unit) {
-                workspaceViewModel.effect.collect { effect ->
-                    if (effect is ScreenEffect.ShowSnackBarMessage) {
-                        snackBarHostState.currentSnackbarData?.dismiss()
-                        snackBarHostState.showSnackbar(
-                            message = effect.message,
-                            duration = SnackbarDuration.Short
-                        )
-                    }
-                }
-            }
+            HandleSideEffects(
+                snackBarHostState,
+                workspaceViewModel.effect,
+                settingsViewModel.effect
+            )
 
             if (!settings.isLoading) {
                 FluxTheme(settings) {
@@ -115,6 +114,32 @@ class MainActivity : AppCompatActivity() {
             } else {
                 Loader()
             }
+        }
+    }
+}
+
+@Composable
+fun HandleSideEffects(
+    snackbarHostState: SnackbarHostState,
+    vararg effectFlows: Flow<ScreenEffect>
+) {
+    LaunchedEffect(Other.SIDE_EFFECT_KEY) {
+        effectFlows.forEach { effectFlow ->
+            effectFlow
+                .onEach { effect ->
+                    if (effect is ScreenEffect.ShowSnackBarMessage) {
+                        val result = snackbarHostState.showSnackbar(
+                            message = effect.message,
+                            actionLabel = "Dismiss",
+                            duration = SnackbarDuration.Short
+                        )
+
+                        if (result == SnackbarResult.ActionPerformed) {
+                            snackbarHostState.currentSnackbarData?.dismiss()
+                        }
+                    }
+                }
+                .launchIn(this)
         }
     }
 }

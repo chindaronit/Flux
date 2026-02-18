@@ -19,10 +19,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Colorize
 import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.FormatListNumbered
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Spellcheck
 import androidx.compose.material.icons.rounded.FontDownload
 import androidx.compose.material.icons.rounded.RoundedCorner
 import androidx.compose.material.icons.rounded.ViewCompact
@@ -312,46 +310,6 @@ fun Customize(
                                 )
                             )
                         }
-                    }
-                )
-            }
-
-            item {
-                SettingOption(
-                    title = stringResource(R.string.show_line_numbers),
-                    description = stringResource(R.string.show_line_numbers_desc),
-                    icon = Icons.Filled.FormatListNumbered,
-                    radius = shapeManager(radius = settings.data.cornerRadius),
-                    actionType = ActionType.SWITCH,
-                    variable = settings.data.isLineNumbersVisible,
-                    switchEnabled = {
-                        onSettingsEvents(
-                            SettingEvents.UpdateSettings(
-                                settings.data.copy(
-                                    isLineNumbersVisible = it
-                                )
-                            )
-                        )
-                    }
-                )
-            }
-
-            item {
-                SettingOption(
-                    title = stringResource(R.string.markdown_lint),
-                    description = stringResource(R.string.markdown_lint_desc),
-                    icon = Icons.Filled.Spellcheck,
-                    radius = shapeManager(radius = settings.data.cornerRadius),
-                    actionType = ActionType.SWITCH,
-                    variable = settings.data.isLintValid,
-                    switchEnabled = {
-                        onSettingsEvents(
-                            SettingEvents.UpdateSettings(
-                                settings.data.copy(
-                                    isLintValid = it
-                                )
-                            )
-                        )
                     }
                 )
             }

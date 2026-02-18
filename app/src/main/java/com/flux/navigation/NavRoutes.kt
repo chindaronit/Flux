@@ -19,9 +19,9 @@ import com.flux.ui.screens.journal.EditJournal
 import com.flux.ui.screens.notes.EditLabels
 import com.flux.ui.screens.notes.NoteDetails
 import com.flux.ui.screens.settings.About
-import com.flux.ui.screens.settings.Backup
 import com.flux.ui.screens.settings.Contact
 import com.flux.ui.screens.settings.Customize
+import com.flux.ui.screens.settings.Data
 import com.flux.ui.screens.settings.Editor
 import com.flux.ui.screens.settings.Languages
 import com.flux.ui.screens.settings.Privacy
@@ -171,8 +171,8 @@ val SettingsScreens =
         NavRoutes.Contact.route to { navController, _, states, _ ->
             Contact(navController, states.settings.data.cornerRadius)
         },
-        NavRoutes.Backup.route to { navController, _, states, viewModels ->
-            Backup(navController, states.settings.data.cornerRadius, viewModels.backupViewModel)
+        NavRoutes.Backup.route to { navController, snackbarHostState, states, viewModels ->
+            Data(navController, states.settings.data.cornerRadius, states.settings, snackbarHostState, viewModels.backupViewModel, viewModels.settingsViewModel::onEvent)
         },
         NavRoutes.Editor.route to { navController, _, states, viewModels ->
             Editor(navController, states.settings, viewModels.settingsViewModel::onEvent)

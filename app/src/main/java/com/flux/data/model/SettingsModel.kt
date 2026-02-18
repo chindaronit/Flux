@@ -26,5 +26,6 @@ data class SettingsModel(
     val isLintValid: Boolean = false,
     val isLineNumbersVisible: Boolean = false,
     val startWithReadView: Boolean = false,
-    val storageRootUri: String? = null
+    val storageRootUri: String? = null,
+    val backupFrequency: Int = 0
 )

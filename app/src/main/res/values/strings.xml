@@ -328,5 +328,9 @@
     <string name="reading_view">Reading View</string>
     <string name="editing_view">Editing View</string>
 
+    <string name="never">Never</string>
+    <string name="daily">Daily</string>
+    <string name="weekly">Weekly</string>
+    <string name="monthly">Monthly</string>
 
 </resources>

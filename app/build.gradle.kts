@@ -92,6 +92,7 @@ dependencies {
     implementation(libs.androidx.biometric)
     implementation(libs.androidx.browser)
     implementation(libs.androidx.documentfile)
+    implementation(libs.androidx.work.runtime.ktx)
 
     // Hilt
     ksp(libs.hilt.android.compiler)

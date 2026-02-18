@@ -24,6 +24,7 @@ hilt = "2.57.2"
 hiltNavigationCompose = "1.3.0"
 browser = "1.9.0"
 documentfile = "1.1.0"
+workRuntimeKtx = "2.11.1"
 
 [libraries]
 androidx-biometric = { module = "androidx.biometric:biometric", version.ref = "biometric" }
@@ -66,6 +67,7 @@ commonmark-ext-heading-anchor = { group = "org.commonmark", name = "commonmark-e
 commonmark-ext-yaml-front-matter = { group = "org.commonmark", name = "commonmark-ext-yaml-front-matter", version.ref = "commonmark" }
 androidx-browser = { group = "androidx.browser", name = "browser", version.ref = "browser" }
 androidx-documentfile = { group = "androidx.documentfile", name = "documentfile", version.ref = "documentfile" }
+androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workRuntimeKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
