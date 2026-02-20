@@ -5,6 +5,7 @@
 - [What is GitHub Flavored Markdown?](#what-is-github-flavored-markdown)
 - [What is LaTeX?](#what-is-latex)
 - [How to use LaTeX in Markdown?](#how-to-use-latex-in-markdown)
+- [What is Flux?](#what-is-flux-approach)
 - [What has Flux offered?](#what-has-flux-offered)
 - [Some Basic Markdown Syntax](#some-basic-markdown-syntax)
 - [Some Extended Markdown Syntax](#some-extended-markdown-syntax)
@@ -67,6 +68,29 @@ Mathematical expressions are key to information sharing amongst engineers, scien
 scientists, and mathematicians.
 
 You can use the $ and $$ delimiters in GFM to insert math expressions in TeX and LaTeX style syntax.
+
+# What is Flux Approach
+
+Flux is built around the idea that information should be organized based on context, intent, and workflow rather than being confined to a single linear note system.
+
+At the core of this approach is the concept of **Workspaces**.
+
+A workspace acts as an independent environment that users can create based on specific needs or domains of their life or work. For example, a user might create separate workspaces for Personal Life, Work Projects, Research, Study, or Fitness Tracking.
+
+Each workspace functions as a self-contained organizational unit, allowing users to keep related data structured and isolated without interference from other contexts.
+
+Within every workspace, Flux provides multiple **Templates** designed for different types of information and productivity workflows. These templates include, but are not limited to:
+
+* **Notes** — Rich Markdown documents with media and LaTeX support
+* **Todo** — Task tracking with completion states and prioritization
+* **Events** — Scheduled items with time and reminder support
+* **Calendar** — Temporal visualization of events and plans
+* **Journal** — Chronological personal or professional entries
+* **Analytics** — Insights and productivity metrics derived from workspace data
+
+This modular structure allows users to mix and match templates depending on their requirements. A research workspace might emphasize notes and analytics, while a personal workspace may focus on journals, todos, and events.
+
+By separating data into workspaces and structuring content through templates, Flux enables scalable organization, reduces cognitive clutter, and supports diverse productivity systems within a single unified platform.
 
 # What has Flux offered?
 

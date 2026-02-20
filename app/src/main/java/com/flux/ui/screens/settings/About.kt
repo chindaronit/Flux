@@ -8,10 +8,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Article
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.rounded.Code
 import androidx.compose.material.icons.rounded.DeveloperMode
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.IosShare
+import androidx.compose.material.icons.rounded.PrivacyTip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -106,6 +108,41 @@ fun About(navController: NavController, radius: Int) {
                         val intent = Intent(
                             Intent.ACTION_VIEW,
                             "https://github.com/chindaronit/Flux".toUri()
+                        )
+                        context.startActivity(intent)
+                    }
+                )
+            }
+
+            item {
+                Spacer(Modifier.height(24.dp))
+                SettingOption(
+                    title = "User Guide",
+                    description = "Read guide to fully utilize the application.",
+                    icon = Icons.Outlined.Info,
+                    radius = shapeManager(radius = radius, isFirst = true),
+                    actionType = ActionType.LINK,
+                    linkClicked = {
+                        val intent = Intent(
+                            Intent.ACTION_VIEW,
+                            "https://github.com/chindaronit/Flux/blob/master/Guide.md".toUri()
+                        )
+                        context.startActivity(intent)
+                    }
+                )
+            }
+
+            item {
+                SettingOption(
+                    title = "Privacy Policy",
+                    description = "Privacy policy of the application.",
+                    icon = Icons.Rounded.PrivacyTip,
+                    radius = shapeManager(radius = radius, isLast = true),
+                    actionType = ActionType.LINK,
+                    linkClicked = {
+                        val intent = Intent(
+                            Intent.ACTION_VIEW,
+                            "https://github.com/chindaronit/Flux/blob/master/PRIVACY_POLICY.md".toUri()
                         )
                         context.startActivity(intent)
                     }
