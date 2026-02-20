@@ -304,7 +304,6 @@
     <string name="Space_Content_Desc">space</string>
     <string name="Edit_Space_Content_Desc">Edit-space</string>
 
-
     <!-- Editor -->
     <string name="editor_title">Editor</string>
     <string name="editor_subtitle">Default View • Default Editing Mode</string>
@@ -332,5 +331,13 @@
     <string name="daily">Daily</string>
     <string name="weekly">Weekly</string>
     <string name="monthly">Monthly</string>
+
+    <string name="shareContent">
+        Flux is a modern Android productivity app built entirely with Compose.\n
+        It allows you to create, edit, and delete workspace which has various templates such as Notes, Habits, Journal, To-Do, Events, etc. along with advanced functionalities such as find and replace, note templates, local image/video/audio import, Markdown, LaTeX math formulas, and Mermaid diagram support.\n
+        Download and try it now:\n
+        - [GitHub](https://github.com/YangDai2003/OpenNote-Compose/releases)\n
+        - [F-droid](https://f-droid.org/packages/com.flux/)
+    </string>
 
 </resources>

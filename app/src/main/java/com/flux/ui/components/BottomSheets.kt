@@ -82,6 +82,7 @@ import com.flux.data.model.getSpacesList
 import com.flux.other.HeaderNode
 import com.flux.other.icons
 import com.flux.other.workspaceIconList
+import com.flux.ui.screens.events.formatCustom
 import com.flux.ui.screens.events.formatMonthly
 import com.flux.ui.screens.events.formatOnce
 import com.flux.ui.screens.events.formatYearly
@@ -479,7 +480,7 @@ fun RecurrenceBottomSheet(
                                 value = rule.everyXDays.toString(),
                                 onValueChange = { new -> new.toIntOrNull()?.let { tempRule = rule.copy(everyXDays = it) } },
                                 modifier = Modifier.padding(start = 8.dp),
-                                label = { Text(stringResource(R.string.recurrence_every_x_days)) },
+                                label = { Text(formatCustom(rule)) },
                                 singleLine = true
                             )
                         }

@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.rounded.Code
 import androidx.compose.material.icons.rounded.DeveloperMode
 import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.IosShare
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -107,6 +108,28 @@ fun About(navController: NavController, radius: Int) {
                             "https://github.com/chindaronit/Flux".toUri()
                         )
                         context.startActivity(intent)
+                    }
+                )
+            }
+
+            item {
+                Spacer(Modifier.height(24.dp))
+                SettingOption(
+                    title = "Share",
+                    description = "Share application to friends and family.",
+                    icon = Icons.Rounded.IosShare,
+                    radius = shapeManager(radius = radius, isBoth = true),
+                    actionType = ActionType.LINK,
+                    linkClicked = {
+                        val sendIntent = Intent(Intent.ACTION_SEND)
+                        sendIntent.setType("text/plain")
+                        sendIntent.putExtra(
+                            Intent.EXTRA_TITLE, context.getString(R.string.app_name)
+                        )
+                        sendIntent.putExtra(
+                            Intent.EXTRA_TEXT, context.getString(R.string.shareContent)
+                        )
+                        context.startActivity(Intent.createChooser(sendIntent, null))
                     }
                 )
             }

@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
@@ -65,13 +66,12 @@ fun LazyListScope.notesHomeItems(
                 item {
                     val columns = if (isGridView) 2 else 1
                     val rowCount = ceil(pinnedNotes.size / columns.toFloat()).toInt()
-                    val gridHeight =
-                        rowCount * 300.dp + if (pinnedNotes.isNotEmpty()) 200.dp else 0.dp
+                    val gridHeight = rowCount * 300.dp + if (pinnedNotes.isNotEmpty() && unPinnedNotes.isEmpty()) 200.dp else 25.dp
 
                     Box(
                         Modifier
                             .fillMaxWidth()
-                            .height(gridHeight)
+                            .heightIn(max=gridHeight)
                     ) {
                         LazyVerticalStaggeredGrid(
                             columns = StaggeredGridCells.Fixed(columns),
