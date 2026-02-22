@@ -120,6 +120,14 @@
     <string name="Backup_Description">Respaldar tus datos a un archivo</string>
     <string name="Restore">Restaurar</string>
     <string name="Restore_Description">Restaurar tus datos desde un archivo de respaldo</string>
+    <string name="reset">Restablecer</string>
+    <string name="backup_frequency">Frecuencia de copia de seguridad automática</string>
+    <string name="reset_database">Restablecer base de datos</string>
+    <string name="clear_app_data">Borrar todos los datos de la app</string>
+    <string name="never">Nunca</string>
+    <string name="daily">Diario</string>
+    <string name="weekly">Semanal</string>
+    <string name="monthly">Mensual</string>
 
     <!-- Settings - About -->
     <string name="About">Acerca de</string>
@@ -132,6 +140,14 @@
     <string name="Github_Repository">Repositorio de Github</string>
     <string name="license">Licencia</string>
     <string name="license_gpl3_only">GPL-3.0 Only</string>
+    <string name="user_guide_title">Guía de usuario</string>
+    <string name="user_guide_description">Lee la guía para aprovechar completamente la aplicación.</string>
+    <string name="privacy_policy_title">Política de privacidad</string>
+    <string name="privacy_policy_description">Política de privacidad de la aplicación.</string>
+    <string name="share_title">Compartir</string>
+    <string name="share_description">Comparte la aplicación con amigos y familiares.</string>
+    <string name="data_title">Datos</string>
+    <string name="data_subtitle">Copia de seguridad • Recuperación</string>
 
     <!-- Settings - Contact & Support -->
     <string name="Contact">Contacto</string>
@@ -190,6 +206,10 @@
     <string name="import_failed">Error al importar la nota</string>
     <string name="find">Buscar</string>
     <string name="replace">Reemplazar</string>
+    <string name="record_audio">Grabar audio</string>
+    <string name="tap_to_start">Toca para comenzar</string>
+    <string name="retry">Reintentar</string>
+    <string name="permission_required">Por favor concede permiso de grabación.</string>
 
     <!-- To-Do -->
     <string name="To_Do">Tareas</string>
@@ -320,5 +340,13 @@
 
     <string name="reading_view">Vista de lectura</string>
     <string name="editing_view">Vista de edición</string>
+
+    <string name="shareContent">
+        Flux es una aplicación moderna de productividad para Android creada completamente con Compose.\n
+        Permite crear, editar y eliminar espacios de trabajo con plantillas como Notas, Hábitos, Diario, Tareas, Eventos, etc., junto con funciones avanzadas como buscar y reemplazar, plantillas de notas, importación local de imagen/video/audio, Markdown, fórmulas matemáticas LaTeX y diagramas Mermaid.\n
+        Descárgala y pruébala ahora:\n
+        - GitHub: https://github.com/YangDai2003/OpenNote-Compose/releases\n
+        - F-Droid: https://f-droid.org/packages/com.flux/
+    </string>
 
 </resources>

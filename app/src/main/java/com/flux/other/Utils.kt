@@ -58,9 +58,7 @@ import org.commonmark.node.StrongEmphasis
 import org.commonmark.node.Text
 import org.commonmark.parser.IncludeSourceSpans
 import org.commonmark.parser.Parser
-import com.vladsch.flexmark.html2md.converter.FlexmarkHtmlConverter
 import androidx.core.net.toUri
-
 
 fun Int.toHexColor(): String {
     return String.format("#%06X", 0xFFFFFF and this)

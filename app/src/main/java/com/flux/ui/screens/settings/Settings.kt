@@ -119,8 +119,8 @@ fun Settings(
 
             item {
                 SettingCategory(
-                    title = "Data",
-                    subTitle = "Backup * Recovery",
+                    title = stringResource(R.string.data_title),
+                    subTitle = stringResource(R.string.data_subtitle),
                     icon = Icons.Rounded.Backup,
                     shape = shapeManager(radius = settings.data.cornerRadius),
                     action = {

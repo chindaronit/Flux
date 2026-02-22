@@ -120,6 +120,14 @@
     <string name="Backup_Description">Сохранить данные в файл</string>
     <string name="Restore">Восстановить</string>
     <string name="Restore_Description">Восстановить данные из резервной копии</string>
+    <string name="reset">Сбросить</string>
+    <string name="backup_frequency">Частота автоматического резервного копирования</string>
+    <string name="reset_database">Сбросить базу данных</string>
+    <string name="clear_app_data">Очистить все данные приложения</string>
+    <string name="never">Никогда</string>
+    <string name="daily">Ежедневно</string>
+    <string name="weekly">Еженедельно</string>
+    <string name="monthly">Ежемесячно</string>
 
     <!-- Settings - About -->
     <string name="About">О приложении</string>
@@ -132,6 +140,14 @@
     <string name="Github_Repository">Репозиторий GitHub</string>
     <string name="license">Лицензия</string>
     <string name="license_gpl3_only">GPL-3.0 Only</string>
+    <string name="user_guide_title">Руководство пользователя</string>
+    <string name="user_guide_description">Прочитайте руководство, чтобы полностью использовать приложение.</string>
+    <string name="privacy_policy_title">Политика конфиденциальности</string>
+    <string name="privacy_policy_description">Политика конфиденциальности приложения.</string>
+    <string name="share_title">Поделиться</string>
+    <string name="share_description">Поделитесь приложением с друзьями и семьёй.</string>
+    <string name="data_title">Данные</string>
+    <string name="data_subtitle">Резервное копирование • Восстановление</string>
 
     <!-- Settings - Contact & Support -->
     <string name="Contact">Контакт</string>
@@ -190,6 +206,10 @@
     <string name="import_failed">Ошибка при импорте заметки</string>
     <string name="find">Найти</string>
     <string name="replace">Заменить</string>
+    <string name="record_audio">Записать аудио</string>
+    <string name="tap_to_start">Нажмите, чтобы начать</string>
+    <string name="retry">Повторить</string>
+    <string name="permission_required">Пожалуйста, предоставьте разрешение на запись.</string>
 
     <!-- To-Do -->
     <string name="To_Do">Задачи</string>
@@ -322,5 +342,13 @@
 
     <string name="reading_view">Режим чтения</string>
     <string name="editing_view">Режим редактирования</string>
+
+    <string name="shareContent">
+        Flux — это современное Android-приложение для продуктивности, полностью созданное с использованием Compose.\n
+        Оно позволяет создавать, редактировать и удалять рабочие пространства с шаблонами, такими как Заметки, Привычки, Дневник, Задачи, События и др., а также поддерживает расширенные функции: поиск и замена, шаблоны заметок, локальный импорт изображений/видео/аудио, Markdown, формулы LaTeX и диаграммы Mermaid.\n
+        Скачайте и попробуйте сейчас:\n
+        - GitHub: https://github.com/YangDai2003/OpenNote-Compose/releases\n
+        - F-Droid: https://f-droid.org/packages/com.flux/
+    </string>
 
 </resources>

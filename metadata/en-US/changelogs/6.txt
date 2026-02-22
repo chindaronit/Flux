@@ -1,0 +1,4 @@
+* Audio recorder added to notes and journal.
+* Privacy Policy and User guide added in About.
+* Removal of redundant editor options in Customize Screen.
+* Automatic Backup manager added in Flux.

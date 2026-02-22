@@ -120,6 +120,14 @@
     <string name="Backup_Description">Daten in einer Datei sichern</string>
     <string name="Restore">Wiederherstellen</string>
     <string name="Restore_Description">Daten aus einer Backup-Datei wiederherstellen</string>
+    <string name="reset">Zurücksetzen</string>
+    <string name="backup_frequency">Häufigkeit der automatischen Sicherung</string>
+    <string name="reset_database">Datenbank zurücksetzen</string>
+    <string name="clear_app_data">Alle App-Daten löschen</string>
+    <string name="never">Nie</string>
+    <string name="daily">Täglich</string>
+    <string name="weekly">Wöchentlich</string>
+    <string name="monthly">Monatlich</string>
 
     <!-- Settings - About -->
     <string name="About">Über</string>
@@ -132,6 +140,14 @@
     <string name="Github_Repository">GitHub-Repository</string>
     <string name="license">Lizenz</string>
     <string name="license_gpl3_only">GPL-3.0 Only</string>
+    <string name="user_guide_title">Benutzerhandbuch</string>
+    <string name="user_guide_description">Lesen Sie das Handbuch, um die Anwendung vollständig zu nutzen.</string>
+    <string name="privacy_policy_title">Datenschutzrichtlinie</string>
+    <string name="privacy_policy_description">Datenschutzrichtlinie der Anwendung.</string>
+    <string name="share_title">Teilen</string>
+    <string name="share_description">Teilen Sie die Anwendung mit Freunden und Familie.</string>
+    <string name="data_title">Daten</string>
+    <string name="data_subtitle">Sicherung • Wiederherstellung</string>
 
     <!-- Settings - Contact & Support -->
     <string name="Contact">Kontakt</string>
@@ -190,6 +206,10 @@
     <string name="import_failed">Fehler beim Import der Notiz</string>
     <string name="find">Suchen</string>
     <string name="replace">Ersetzen</string>
+    <string name="record_audio">Audio aufnehmen</string>
+    <string name="tap_to_start">Tippen zum Starten</string>
+    <string name="retry">Erneut versuchen</string>
+    <string name="permission_required">Bitte erteilen Sie die Aufnahmeberechtigung.</string>
 
     <!-- To-Do -->
     <string name="To_Do">Aufgaben</string>
@@ -309,20 +329,20 @@
 
     <string name="editor_title">Editor</string>
     <string name="editor_subtitle">Standardansicht • Standardbearbeitungsmodus</string>
-
     <string name="show_line_numbers_title">Zeilennummern anzeigen</string>
-    <string name="show_line_numbers_description">
-        Zeilennummern im Editor anzeigen
-    </string>
-
+    <string name="show_line_numbers_description">Zeilennummern im Editor anzeigen</string>
     <string name="markdown_lint_title">Markdown-Lint</string>
-    <string name="markdown_lint_description">
-        Markdown-Format und Syntax werden überprüft
-    </string>
-
+    <string name="markdown_lint_description">Markdown-Format und Syntax werden überprüft</string>
     <string name="default_editor_view">Standard-Editoransicht</string>
-
     <string name="reading_view">Leseansicht</string>
     <string name="editing_view">Bearbeitungsansicht</string>
+
+    <string name="shareContent">
+        Flux ist eine moderne Android-Produktivitäts-App, die vollständig mit Compose entwickelt wurde.\n
+        Sie ermöglicht das Erstellen, Bearbeiten und Löschen von Workspaces mit Vorlagen wie Notizen, Gewohnheiten, Journal, To-Do, Ereignissen usw. sowie erweiterten Funktionen wie Suchen und Ersetzen, Notizvorlagen, lokalem Import von Bildern/Videos/Audio, Markdown, LaTeX-Formeln und Mermaid-Diagrammen.\n
+        Jetzt herunterladen und ausprobieren:\n
+        - GitHub: https://github.com/YangDai2003/OpenNote-Compose/releases\n
+        - F-Droid: https://f-droid.org/packages/com.flux/
+    </string>
 
 </resources>

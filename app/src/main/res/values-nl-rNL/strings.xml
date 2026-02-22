@@ -120,6 +120,14 @@
     <string name="Backup_Description">Maak een back-up van je gegevens naar een bestand</string>
     <string name="Restore">Herstellen</string>
     <string name="Restore_Description">Herstel je gegevens van een back-upbestand</string>
+    <string name="reset">Resetten</string>
+    <string name="backup_frequency">Frequentie van automatische back-up</string>
+    <string name="reset_database">Database resetten</string>
+    <string name="clear_app_data">Alle appgegevens wissen</string>
+    <string name="never">Nooit</string>
+    <string name="daily">Dagelijks</string>
+    <string name="weekly">Wekelijks</string>
+    <string name="monthly">Maandelijks</string>
 
     <!-- Settings - About -->
     <string name="About">Over</string>
@@ -132,6 +140,14 @@
     <string name="Github_Repository">Github Repository</string>
     <string name="license">Licentie</string>
     <string name="license_gpl3_only">GPL-3.0 Only</string>
+    <string name="user_guide_title">Gebruikershandleiding</string>
+    <string name="user_guide_description">Lees de handleiding om de applicatie volledig te benutten.</string>
+    <string name="privacy_policy_title">Privacybeleid</string>
+    <string name="privacy_policy_description">Privacybeleid van de applicatie.</string>
+    <string name="share_title">Delen</string>
+    <string name="share_description">Deel de applicatie met vrienden en familie.</string>
+    <string name="data_title">Gegevens</string>
+    <string name="data_subtitle">Back-up • Herstel</string>
 
     <!-- Settings - Contact & Support -->
     <string name="Contact">Contact</string>
@@ -190,6 +206,10 @@
     <string name="import_failed">Mislukt om notitie te importeren</string>
     <string name="find">Zoeken</string>
     <string name="replace">Vervangen</string>
+    <string name="record_audio">Audio opnemen</string>
+    <string name="tap_to_start">Tik om te starten</string>
+    <string name="retry">Opnieuw proberen</string>
+    <string name="permission_required">Geef alstublieft opname-toestemming.</string>
 
     <!-- To-Do -->
     <string name="To_Do">Te Doen</string>
@@ -323,4 +343,11 @@
     <string name="reading_view">Leesweergave</string>
     <string name="editing_view">Bewerkingsweergave</string>
 
+    <string name="shareContent">
+        Flux is een moderne Android-productiviteitsapp die volledig met Compose is gebouwd.\n
+        Hiermee kun je werkruimtes maken, bewerken en verwijderen met sjablonen zoals Notities, Gewoonten, Dagboek, To-Do, Evenementen, enz., samen met geavanceerde functies zoals zoeken en vervangen, notitiesjablonen, lokale import van afbeeldingen/video/audio, Markdown, LaTeX-formules en Mermaid-diagrammen.\n
+        Download en probeer het nu:\n
+        - GitHub: https://github.com/YangDai2003/OpenNote-Compose/releases\n
+        - F-Droid: https://f-droid.org/packages/com.flux/
+    </string>
 </resources>

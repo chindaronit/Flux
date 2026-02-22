@@ -1,13 +1,23 @@
 package com.flux.ui.components
 
+import android.Manifest
+import android.content.Context
+import android.net.Uri
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -18,6 +28,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -28,6 +39,7 @@ import androidx.compose.material.icons.automirrored.outlined.FormatListBulleted
 import androidx.compose.material.icons.automirrored.outlined.LabelImportant
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AudioFile
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Edit
@@ -35,10 +47,14 @@ import androidx.compose.material.icons.filled.EditCalendar
 import androidx.compose.material.icons.filled.FilePresent
 import androidx.compose.material.icons.filled.FontDownload
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.NewLabel
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.StopCircle
 import androidx.compose.material.icons.filled.SubdirectoryArrowRight
 import androidx.compose.material.icons.filled.TextFields
+import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.outlined.FormatListNumbered
 import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material3.AlertDialog
@@ -70,15 +86,22 @@ import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -86,13 +109,20 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.core.net.toUri
 import com.flux.R
 import com.flux.data.model.LabelModel
+import com.flux.other.AudioRecorder
 import com.flux.other.ExportType
 import com.flux.ui.theme.FONTS
+import com.flux.ui.theme.completed
+import com.flux.ui.theme.failed
+import kotlinx.coroutines.delay
 import kotlinx.serialization.Serializable
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -1124,4 +1154,396 @@ fun TaskDialog(
             }
         }
     )
+}
+
+@Composable
+fun RecordAudioDialog(
+    context: Context,
+    recorder: AudioRecorder,
+    onSave: (Uri?) -> Unit,
+    onDismissRequest: () -> Unit,
+) {
+    var isRecording by remember { mutableStateOf(false) }
+    var recordedFile by remember { mutableStateOf<File?>(null) }
+    val hasRecorded = recordedFile != null
+    var recordedTime by remember { mutableLongStateOf(0L) }
+    val permissionRequired = stringResource(R.string.permission_required)
+
+    // Permission launcher
+    val permissionLauncher =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { granted ->
+            if (granted) {
+                recorder.startRecording()
+                isRecording = true
+            } else {
+                Toast.makeText(context, permissionRequired, Toast.LENGTH_SHORT).show()
+            }
+        }
+
+    Dialog(
+        onDismissRequest = {
+            if (isRecording) { recorder.deleteRecording() }
+            onDismissRequest()
+        }
+    ) {
+        Card(modifier = Modifier.size(320.dp)) {
+            Column(
+                modifier = Modifier.padding(16.dp).fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                if (!isRecording&& !hasRecorded) {
+                    Spacer(Modifier.height(8.dp))
+                    Text(stringResource(R.string.record_audio), style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold))
+
+                    Spacer(Modifier.height(32.dp))
+                    // RECORD/ STOP
+                    IconButton({
+                        if (recorder.hasMicPermission(context)) {
+                            recorder.startRecording()
+                            isRecording = true
+                        } else {
+                            permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                        }
+                    }, colors = IconButtonDefaults.iconButtonColors(
+                        containerColor = failed,
+                        contentColor = Color.White
+                    ), modifier = Modifier.size(120.dp),
+                        shape = CurlyCornerShape(14.0, 6)
+                        ) {
+                        Icon(Icons.Default.Mic, null, modifier = Modifier.size(75.dp))
+                    }
+                    Spacer(Modifier.height(32.dp))
+                    Text(stringResource(R.string.tap_to_start), style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Light))
+                }
+
+                if(isRecording && !hasRecorded) {
+                    StudioRecorderUI(recorder) {
+                        recordedTime=it
+                        recordedFile = recorder.stopRecording()
+                        isRecording = false
+                    }
+                }
+
+                if(hasRecorded){
+                    Spacer(Modifier.height(8.dp))
+                    Text(formatDuration(recordedTime), style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold))
+                    Spacer(Modifier.height(16.dp))
+
+                    // RECORD/ STOP
+                    IconButton({}, colors = IconButtonDefaults.iconButtonColors(
+                        containerColor = failed,
+                        contentColor = Color.White
+                    ), modifier = Modifier.size(120.dp),
+                        shape = CurlyCornerShape(curlCount = 8, curlAmplitude = 12.0)) {
+                        Icon(Icons.Default.AudioFile, null, modifier = Modifier.size(80.dp))
+                    }
+                    Spacer(Modifier.height(12.dp))
+
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        // Retry
+                        Button(
+                            modifier = Modifier.fillMaxWidth(),
+                            onClick = {
+                                recorder.deleteRecording()
+                                recordedFile=null
+                                recorder.startRecording()
+                                isRecording = true
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = failed,
+                                contentColor = Color.White
+                            )
+                        ) {
+                            Icon(Icons.Default.Refresh, null)
+                            Text(stringResource(R.string.retry), modifier = Modifier.padding(start = 8.dp))
+                        }
+
+                        Button(
+                            modifier = Modifier.fillMaxWidth(),
+                            onClick = {
+                                onSave(recordedFile?.toUri())
+                                onDismissRequest()
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = completed,
+                                contentColor = Color.White
+                            )
+                        ) {
+                            Icon(Icons.Default.Verified, null)
+                            Text(stringResource(R.string.save), modifier = Modifier.padding(start = 8.dp))
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun StudioRecorderUI(
+    recorder: AudioRecorder,
+    onStop: (Long) -> Unit
+) {
+    val amplitudes = remember { MutableList(120) { 0.02f }.toMutableStateList() }
+    var elapsedMs by remember { mutableLongStateOf(0L) }
+
+    LaunchedEffect(Unit) {
+        val start = System.currentTimeMillis()
+        var smoothedAmp = 0f
+
+        while (true) {
+
+            val raw = recorder.getAmplitude() / 32767f
+
+            // Low-pass smoothing filter
+            smoothedAmp = (raw * 0.2f) + (smoothedAmp * 0.8f)
+
+            // Silence floor so waveform never vanishes
+            val visualAmp = maxOf(smoothedAmp, 0.02f)
+
+            amplitudes.add(visualAmp)
+
+            if (amplitudes.size > 200) {
+                amplitudes.removeAt(0)
+            }
+
+            elapsedMs = System.currentTimeMillis() - start
+
+            delay(50)
+        }
+    }
+
+    Column(
+        modifier = Modifier.fillMaxWidth().fillMaxHeight().padding(8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // TIMELINE + WAVE
+        Box(modifier = Modifier.fillMaxWidth().height(160.dp)) {
+            TimelineWaveform(amplitudes, elapsedMs)
+
+            // CENTER RED CURSOR
+            Box(
+                modifier = Modifier
+                    .width(2.dp)
+                    .fillMaxHeight()
+                    .align(Alignment.Center)
+                    .background(Color.Red)
+            )
+        }
+
+        Spacer(Modifier.height(6.dp))
+
+        // TIMER
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.size(12.dp).background(Color.Red, CircleShape))
+            Spacer(Modifier.width(8.dp))
+            Text(text = formatDuration(elapsedMs), fontSize = 22.sp)
+        }
+
+        Spacer(Modifier.height(8.dp))
+
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            IconButton(
+                onClick = {onStop(elapsedMs)},
+                modifier = Modifier.size(80.dp)
+            ) {
+                Icon(
+                    Icons.Default.StopCircle,
+                    contentDescription = null,
+                    tint = failed,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun TimelineWaveform(
+    amplitudes: List<Float>,
+    elapsedMs: Long
+) {
+    val onSurface = MaterialTheme.colorScheme.onSurface
+
+    Canvas(modifier = Modifier.fillMaxWidth().height(160.dp)) {
+        val width = size.width
+        val height = size.height
+        val centerX = width / 2f
+        val centerY = height / 2f
+
+        val pxPerSecond = 80f
+        val samplesPerSecond = 20f
+        val pxPerSample = pxPerSecond / samplesPerSecond
+
+        val secondsElapsed = elapsedMs / 1000f
+
+        // ==============================
+        // WAVEFORM (PAST → LEFT)
+        // ==============================
+
+        amplitudes.forEachIndexed { index, rawAmp ->
+
+            val x = centerX - (amplitudes.size - index) * (pxPerSample * 1.6f)
+
+            if (x >= 0f) {
+
+                // Boost amplitude visually
+                val amp = rawAmp.coerceIn(0f, 1f)
+
+                val visualHeight =
+                    (amp * height * 1.2f).coerceAtMost(height * 0.95f)
+
+                val halfBar = visualHeight / 2f
+
+                // Dynamic alpha for clarity
+                val alpha =
+                    0.3f + (amp * 0.7f)
+
+                drawLine(
+                    color = onSurface.copy(alpha = alpha),
+                    start = Offset(x, centerY - halfBar),
+                    end = Offset(x, centerY + halfBar),
+                    strokeWidth = 3f,
+                    cap = StrokeCap.Round
+                )
+            }
+        }
+
+        // ==============================
+        // FUTURE PLACEHOLDER (RIGHT DOTS)
+        // ==============================
+
+        var futureX = centerX + pxPerSample
+
+        while (futureX < width) {
+
+            drawLine(
+                color = Color.Gray.copy(alpha = 0.4f),
+                start = Offset(futureX, centerY - 4f),
+                end = Offset(futureX, centerY + 4f),
+                strokeWidth = 3f,
+                cap = StrokeCap.Round
+            )
+
+            futureX += pxPerSample * 2
+        }
+
+        // ==============================
+        // TIMELINE TICKS + LABELS
+        // ==============================
+
+        val offsetPx = (secondsElapsed * pxPerSecond) % pxPerSecond
+
+        val paint = android.graphics.Paint().apply {
+            color = android.graphics.Color.BLACK
+            textSize = 28f
+            textAlign = android.graphics.Paint.Align.CENTER
+        }
+
+        // Prevent duplicate labels
+        val drawnSeconds = mutableSetOf<Int>()
+
+        // -------- PAST (LEFT) --------
+
+        var pastTickIndex = 0
+        var tickX = centerX - offsetPx
+
+        while (tickX > 0f) {
+            val timeAtTick = secondsElapsed - pastTickIndex
+            val secondInt = timeAtTick.toInt()
+
+            // Tick line
+            drawLine(
+                color = Color.Gray,
+                start = Offset(tickX, 0f),
+                end = Offset(tickX, 24f),
+                strokeWidth = 2f
+            )
+
+            // Draw label only if:
+            // 1. Time exists (>= 0)
+            // 2. Even second
+            // 3. Not already drawn
+            if (secondInt >= 0 &&
+                secondInt % 2 == 0 &&
+                drawnSeconds.add(secondInt)
+            ) {
+                drawContext.canvas.nativeCanvas.drawText(
+                    formatTimelineLabel(secondInt),
+                    tickX,
+                    48f,
+                    paint
+                )
+            }
+
+            tickX -= pxPerSecond
+            pastTickIndex++
+        }
+
+        // -------- FUTURE (RIGHT) --------
+
+        var futureTickIndex = 1
+        var futureTickX =
+            centerX + (pxPerSecond - offsetPx)
+
+        while (futureTickX < width) {
+
+            val futureSecond =
+                (secondsElapsed + futureTickIndex).toInt()
+
+            drawLine(
+                color = onSurface,
+                start = Offset(futureTickX, 0f),
+                end = Offset(futureTickX, 24f),
+                strokeWidth = 2f
+            )
+
+            if (futureSecond % 2 == 0 &&
+                drawnSeconds.add(futureSecond)
+            ) {
+                drawContext.canvas.nativeCanvas.drawText(
+                    formatTimelineLabel(futureSecond),
+                    futureTickX,
+                    48f,
+                    paint
+                )
+            }
+
+            futureTickX += pxPerSecond
+            futureTickIndex++
+        }
+
+        // ==============================
+        // CURSOR
+        // ==============================
+
+        drawLine(
+            color = failed,
+            start = Offset(centerX, 0f),
+            end = Offset(centerX, height),
+            strokeWidth = 3f
+        )
+    }
+}
+
+fun formatTimelineLabel(seconds: Int): String {
+
+    val min = seconds / 60
+    val sec = seconds % 60
+
+    return "%02d:%02d".format(min, sec)
+}
+
+fun formatDuration(ms: Long): String {
+
+    val totalSec = ms / 1000
+    val min = totalSec / 60
+    val sec = totalSec % 60
+
+    return "%02d:%02d".format(min, sec)
 }

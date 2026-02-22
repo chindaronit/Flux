@@ -20,6 +20,7 @@ import androidx.compose.material.icons.automirrored.outlined.FormatIndentIncreas
 import androidx.compose.material.icons.automirrored.outlined.Label
 import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.outlined.AddChart
+import androidx.compose.material.icons.outlined.AudioFile
 import androidx.compose.material.icons.outlined.CheckBox
 import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.DataArray
@@ -99,6 +100,7 @@ fun MarkdownEditorRow(
     onLinkButtonClick: () -> Unit,
     onImageButtonClick: () -> Unit,
     onAudioButtonClick: () -> Unit,
+    onRecordAudioClick: () -> Unit,
     onVideoButtonClick: () -> Unit
 ) {
 
@@ -365,6 +367,12 @@ fun MarkdownEditorRow(
 
         CustomIconButton(
             imageVector = Icons.Outlined.Mic,
+            contentDescription = "Audio",
+            onClick = onRecordAudioClick
+        )
+
+        CustomIconButton(
+            imageVector = Icons.Outlined.AudioFile,
             contentDescription = "Audio",
             onClick = onAudioButtonClick
         )

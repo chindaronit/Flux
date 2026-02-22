@@ -120,6 +120,14 @@
     <string name="Backup_Description">अपने डेटा का बैकअप फ़ाइल में लें</string>
     <string name="Restore">पुनर्स्थापित करें</string>
     <string name="Restore_Description">बैकअप फ़ाइल से अपना डेटा पुनर्स्थापित करें</string>
+    <string name="reset">रीसेट करें</string>
+    <string name="backup_frequency">स्वचालित बैकअप की आवृत्ति</string>
+    <string name="reset_database">डेटाबेस रीसेट करें</string>
+    <string name="clear_app_data">सभी ऐप डेटा साफ़ करें</string>
+    <string name="never">कभी नहीं</string>
+    <string name="daily">दैनिक</string>
+    <string name="weekly">साप्ताहिक</string>
+    <string name="monthly">मासिक</string>
 
     <!-- Settings - About -->
     <string name="About">अबाउट</string>
@@ -132,6 +140,14 @@
     <string name="Github_Repository">गिटहब रिपोजिटरी</string>
     <string name="license">लाइसेंस</string>
     <string name="license_gpl3_only">GPL-3.0 Only</string>
+    <string name="user_guide_title">उपयोगकर्ता मार्गदर्शिका</string>
+    <string name="user_guide_description">एप्लिकेशन का पूर्ण उपयोग करने के लिए मार्गदर्शिका पढ़ें।</string>
+    <string name="privacy_policy_title">गोपनीयता नीति</string>
+    <string name="privacy_policy_description">एप्लिकेशन की गोपनीयता नीति।</string>
+    <string name="share_title">साझा करें</string>
+    <string name="share_description">एप्लिकेशन को मित्रों और परिवार के साथ साझा करें।</string>
+    <string name="data_title">डेटा</string>
+    <string name="data_subtitle">बैकअप • रिकवरी</string>
 
     <!-- Settings - Contact & Support -->
     <string name="Contact">संपर्क करें</string>
@@ -190,6 +206,10 @@
     <string name="import_failed">नोट आयात करने में विफल</string>
     <string name="find">खोजें</string>
     <string name="replace">बदलें</string>
+    <string name="record_audio">ऑडियो रिकॉर्ड करें</string>
+    <string name="tap_to_start">शुरू करने के लिए टैप करें</string>
+    <string name="retry">पुनः प्रयास करें</string>
+    <string name="permission_required">कृपया रिकॉर्डिंग की अनुमति दें।</string>
 
     <!-- To-Do -->
     <string name="To_Do">करने के कार्य</string>
@@ -323,5 +343,13 @@
 
     <string name="reading_view">पठन दृश्य</string>
     <string name="editing_view">संपादन दृश्य</string>
+
+    <string name="shareContent">
+        Flux एक आधुनिक Android प्रोडक्टिविटी ऐप है जिसे पूरी तरह Compose से बनाया गया है।\n
+        यह आपको Notes, Habits, Journal, To-Do, Events आदि जैसे टेम्पलेट्स के साथ वर्कस्पेस बनाने, संपादित करने और हटाने की सुविधा देता है, साथ ही find &amp; replace, note templates, लोकल इमेज/वीडियो/ऑडियो इम्पोर्ट, Markdown, LaTeX गणित सूत्र और Mermaid डायग्राम सपोर्ट जैसी उन्नत सुविधाएँ प्रदान करता है।\n
+        अभी डाउनलोड करें:\n
+        - GitHub: https://github.com/YangDai2003/OpenNote-Compose/releases\n
+        - F-Droid: https://f-droid.org/packages/com.flux/
+    </string>
 
 </resources>

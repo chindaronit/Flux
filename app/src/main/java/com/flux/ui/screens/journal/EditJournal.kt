@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastJoinToString
 import androidx.navigation.NavController
 import com.flux.data.model.JournalModel
+import com.flux.other.AudioRecorder
 import com.flux.other.Constants
 import com.flux.other.HeaderNode
 import com.flux.other.ensureStorageRoot
@@ -55,6 +56,7 @@ import com.flux.ui.components.ListDialog
 import com.flux.ui.components.MarkdownEditorRow
 import com.flux.ui.components.NotesInfoBottomSheet
 import com.flux.ui.components.OutlineBottomSheet
+import com.flux.ui.components.RecordAudioDialog
 import com.flux.ui.components.ShareDialog
 import com.flux.ui.components.TableDialog
 import com.flux.ui.components.TaskDialog
@@ -116,7 +118,9 @@ fun EditJournal(
     var showTableDialog by rememberSaveable { mutableStateOf(false) }
     var showListDialog by rememberSaveable { mutableStateOf(false) }
     val isReadView by remember { derivedStateOf { pagerState.currentPage == 1 } }
+    var showAudioRecorder by rememberSaveable { mutableStateOf(false) }
     var readWebView by remember { mutableStateOf<WebView?>(null) }
+    val recorder = AudioRecorder(context)
 
     val rootPicker =
         rememberLauncherForActivityResult(
@@ -223,6 +227,15 @@ fun EditJournal(
                     onListButtonClick = { showListDialog = true },
                     onTaskButtonClick = { showTaskDialog = true },
                     onLinkButtonClick = { showLinkDialog = true },
+                    onRecordAudioClick = {
+                        ensureStorageRoot(
+                            scope = scope,
+                            settingsViewModel = settingsViewModel,
+                            rootPicker = rootPicker
+                        ) {
+                            showAudioRecorder=true
+                        }
+                    },
                     onImageButtonClick = {
                         ensureStorageRoot(
                             scope = scope,
@@ -366,6 +379,12 @@ fun EditJournal(
             navController.popBackStack()
             showDeleteDialog=false
         })
+    }
+
+    if(showAudioRecorder){
+        RecordAudioDialog(context, recorder, {onJournalEvents(JournalEvents.ImportAudio(context, it!!, contentState))}) {
+            showAudioRecorder=false
+        }
     }
 
     NotesInfoBottomSheet(

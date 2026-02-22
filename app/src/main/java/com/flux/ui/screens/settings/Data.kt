@@ -104,7 +104,7 @@ fun Data(
         topBar = {
             TopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-                title = { Text("Data") },
+                title = { Text(stringResource(R.string.data_title)) },
                 navigationIcon = {
                     IconButton({navController.navigateUp()}) {
                         Icon(
@@ -203,7 +203,7 @@ fun Data(
                     colors = ListItemDefaults.colors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerLow
                     ),
-                    headlineContent = { Text(text = "Frequency of automatic backup") },
+                    headlineContent = { Text(stringResource(R.string.backup_frequency)) },
                     supportingContent = { Text(text = stringResource(selectedFrequency.textRes)) }
                 )
 
@@ -231,7 +231,7 @@ fun Data(
                             contentDescription = "Reset"
                         )
                     },
-                    headlineContent = { Text(text = "Reset Database") },
+                    headlineContent = { Text(stringResource(R.string.reset_database)) },
                     trailingContent = {
                         TextButton(
                             onClick = {
@@ -243,13 +243,11 @@ fun Data(
                                 contentColor = MaterialTheme.colorScheme.onErrorContainer
                             )
                         ) {
-                            Text(text = "Reset")
+                            Text(stringResource(R.string.reset))
                         }
                     },
                     supportingContent = {
-                        Text(
-                            text = "Clear all app data"
-                        )
+                        Text(stringResource(R.string.clear_app_data))
                     }
                 )
             }

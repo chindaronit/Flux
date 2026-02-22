@@ -120,6 +120,14 @@
     <string name="Backup_Description">Backup your data to a file</string>
     <string name="Restore">Restore</string>
     <string name="Restore_Description">Restore your data from backup file</string>
+    <string name="reset">Reset</string>
+    <string name="backup_frequency">Frequency of automatic backup</string>
+    <string name="reset_database">Reset Database</string>
+    <string name="clear_app_data">Clear all app data</string>
+    <string name="never">Never</string>
+    <string name="daily">Daily</string>
+    <string name="weekly">Weekly</string>
+    <string name="monthly">Monthly</string>
 
     <!-- Settings - About -->
     <string name="About">About</string>
@@ -132,6 +140,14 @@
     <string name="Github_Repository">Github Repository</string>
     <string name="license">License</string>
     <string name="license_gpl3_only">GPL-3.0 Only</string>
+    <string name="user_guide_title">User Guide</string>
+    <string name="user_guide_description">Read the guide to fully utilize the application.</string>
+    <string name="privacy_policy_title">Privacy Policy</string>
+    <string name="privacy_policy_description">Privacy policy of the application.</string>
+    <string name="share_title">Share</string>
+    <string name="share_description">Share the application with friends and family.</string>
+    <string name="data_title">Data</string>
+    <string name="data_subtitle">Backup • Recovery</string>
 
     <!-- Settings - Contact & Support -->
     <string name="Contact">Contact</string>
@@ -190,6 +206,10 @@
     <string name="import_failed">Failed to import note</string>
     <string name="find">Find</string>
     <string name="replace">Replace</string>
+    <string name="record_audio">Record Audio</string>
+    <string name="tap_to_start">Tap to start</string>
+    <string name="retry">Retry</string>
+    <string name="permission_required">Please provide recording permission.</string>
 
     <!-- To-Do -->
     <string name="To_Do">To-Do</string>
@@ -327,10 +347,6 @@
     <string name="reading_view">Reading View</string>
     <string name="editing_view">Editing View</string>
 
-    <string name="never">Never</string>
-    <string name="daily">Daily</string>
-    <string name="weekly">Weekly</string>
-    <string name="monthly">Monthly</string>
 
     <string name="shareContent">
         Flux is a modern Android productivity app built entirely with Compose.\n
@@ -339,5 +355,6 @@
         - [GitHub](https://github.com/YangDai2003/OpenNote-Compose/releases)\n
         - [F-droid](https://f-droid.org/packages/com.flux/)
     </string>
+
 
 </resources>

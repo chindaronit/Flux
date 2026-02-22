@@ -96,6 +96,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import com.flux.other.AudioRecorder
+import com.flux.ui.components.RecordAudioDialog
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -121,6 +123,7 @@ fun NoteDetails(
     val hasContent = remember(note.notesId) {
         note.title.isNotBlank() || note.description.isNotBlank()
     }
+    val recorder = AudioRecorder(context)
 
     val pagerState = rememberPagerState(
         initialPage = if (startWithReadView && hasContent) 1 else 0,
@@ -141,6 +144,7 @@ fun NoteDetails(
     var showTaskDialog by rememberSaveable { mutableStateOf(false) }
     var showTableDialog by rememberSaveable { mutableStateOf(false) }
     var showListDialog by rememberSaveable { mutableStateOf(false) }
+    var showAudioRecorder by rememberSaveable { mutableStateOf(false) }
     var showSelectLabels by rememberSaveable { mutableStateOf(false) }
     var isPinned by rememberSaveable(note.notesId) { mutableStateOf(note.isPinned) }
     val noteLabelIds = rememberSaveable {
@@ -275,6 +279,15 @@ fun NoteDetails(
                     onListButtonClick = { showListDialog = true },
                     onTaskButtonClick = { showTaskDialog = true },
                     onLinkButtonClick = { showLinkDialog = true },
+                    onRecordAudioClick = {
+                        ensureStorageRoot(
+                            scope = scope,
+                            settingsViewModel = settingsViewModel,
+                            rootPicker = rootPicker
+                        ) {
+                            showAudioRecorder=true
+                        }
+                    },
                     onImageButtonClick = {
                         ensureStorageRoot(
                             scope = scope,
@@ -481,6 +494,12 @@ fun NoteDetails(
             showSaveNotesDialog = false
         }){
             showSaveNotesDialog = false
+        }
+    }
+
+    if(showAudioRecorder){
+        RecordAudioDialog(context, recorder, {onNotesEvents(NotesEvents.ImportAudio(context, it!!, contentState))}) {
+            showAudioRecorder=false
         }
     }
 

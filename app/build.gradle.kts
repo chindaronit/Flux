@@ -15,8 +15,8 @@ android {
         applicationId = "com.flux"
         minSdk = 29
         targetSdk = 36
-        versionCode = 5
-        versionName = "3.0"
+        versionCode = 6
+        versionName = "3.1"
     }
 
     dependenciesInfo {
@@ -93,6 +93,7 @@ dependencies {
     implementation(libs.androidx.browser)
     implementation(libs.androidx.documentfile)
     implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.compose.foundation.layout)
 
     // Hilt
     ksp(libs.hilt.android.compiler)

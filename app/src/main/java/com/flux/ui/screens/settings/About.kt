@@ -117,8 +117,8 @@ fun About(navController: NavController, radius: Int) {
             item {
                 Spacer(Modifier.height(24.dp))
                 SettingOption(
-                    title = "User Guide",
-                    description = "Read guide to fully utilize the application.",
+                    title = stringResource(R.string.user_guide_title),
+                    description = stringResource(R.string.user_guide_description),
                     icon = Icons.Outlined.Info,
                     radius = shapeManager(radius = radius, isFirst = true),
                     actionType = ActionType.LINK,
@@ -134,8 +134,8 @@ fun About(navController: NavController, radius: Int) {
 
             item {
                 SettingOption(
-                    title = "Privacy Policy",
-                    description = "Privacy policy of the application.",
+                    title = stringResource(R.string.privacy_policy_title),
+                    description = stringResource(R.string.privacy_policy_description),
                     icon = Icons.Rounded.PrivacyTip,
                     radius = shapeManager(radius = radius, isLast = true),
                     actionType = ActionType.LINK,
@@ -152,8 +152,8 @@ fun About(navController: NavController, radius: Int) {
             item {
                 Spacer(Modifier.height(24.dp))
                 SettingOption(
-                    title = "Share",
-                    description = "Share application to friends and family.",
+                    title = stringResource(R.string.share),
+                    description = stringResource(R.string.share_description),
                     icon = Icons.Rounded.IosShare,
                     radius = shapeManager(radius = radius, isBoth = true),
                     actionType = ActionType.LINK,
