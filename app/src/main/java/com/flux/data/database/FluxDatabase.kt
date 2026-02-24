@@ -34,7 +34,7 @@ import java.util.UUID
 
 @Database(
     entities = [EventModel::class, LabelModel::class, EventInstanceModel::class, SettingsModel::class, NotesModel::class, HabitModel::class, HabitInstanceModel::class, WorkspaceModel::class, TodoModel::class, JournalModel::class],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 @TypeConverters(Converter::class)

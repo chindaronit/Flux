@@ -341,7 +341,7 @@
         Flux ist eine moderne Android-Produktivitäts-App, die vollständig mit Compose entwickelt wurde.\n
         Sie ermöglicht das Erstellen, Bearbeiten und Löschen von Workspaces mit Vorlagen wie Notizen, Gewohnheiten, Journal, To-Do, Ereignissen usw. sowie erweiterten Funktionen wie Suchen und Ersetzen, Notizvorlagen, lokalem Import von Bildern/Videos/Audio, Markdown, LaTeX-Formeln und Mermaid-Diagrammen.\n
         Jetzt herunterladen und ausprobieren:\n
-        - GitHub: https://github.com/YangDai2003/OpenNote-Compose/releases\n
+        - GitHub:  https://github.com/chindaronit/Flux/releases\n
         - F-Droid: https://f-droid.org/packages/com.flux/
     </string>
 
