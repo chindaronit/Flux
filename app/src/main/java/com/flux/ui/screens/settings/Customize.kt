@@ -1,9 +1,7 @@
 package com.flux.ui.screens.settings
 
 import android.os.Build
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -12,24 +10,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Colorize
-import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.rounded.FontDownload
 import androidx.compose.material.icons.rounded.RoundedCorner
 import androidx.compose.material.icons.rounded.ViewCompact
 import androidx.compose.material.icons.rounded.ViewCompactAlt
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
@@ -44,19 +35,19 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import com.flux.R
+import com.flux.navigation.NavRoutes
 import com.flux.ui.components.ActionType
 import com.flux.ui.components.BasicScaffold
 import com.flux.ui.components.FontDialog
-import com.flux.ui.components.SelectableColorPlatte
+import com.flux.ui.components.SettingIcon
 import com.flux.ui.components.SettingOption
+import com.flux.ui.components.SingleSettingOption
 import com.flux.ui.components.shapeManager
 import com.flux.ui.events.SettingEvents
 import com.flux.ui.state.Settings
-import com.flux.ui.theme.lightSchemes
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,12 +56,6 @@ fun Customize(
     settings: Settings,
     onSettingsEvents: (SettingEvents) -> Unit
 ) {
-    val options = listOf(
-        stringResource(R.string.Low),
-        stringResource(R.string.Medium),
-        stringResource(R.string.High)
-    )
-
     var showRadiusDialog by remember { mutableStateOf(false) }
     var showFontDialog by remember { mutableStateOf(false) }
 
@@ -109,91 +94,27 @@ fun Customize(
                 .padding(16.dp, 8.dp, 16.dp, 16.dp)
         ) {
             item {
-                Text(
-                    stringResource(R.string.Themes),
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp
-                )
-                Spacer(Modifier.height(12.dp))
-
-                SettingOption(
-                    title = stringResource(R.string.System_theme),
-                    description = stringResource(R.string.System_theme_desc),
-                    icon = Icons.Filled.Settings,
-                    radius = shapeManager(radius = settings.data.cornerRadius, isFirst = true),
-                    actionType = ActionType.RADIOBUTTON,
-                    variable = settings.data.isAutomaticTheme,
-                    switchEnabled = {
-                        onSettingsEvents(
-                            SettingEvents.UpdateSettings(
-                                settings.data.copy(
-                                    isAutomaticTheme = true,
-                                    isDarkMode = false,
-                                    dynamicTheme = false,
-                                    amoledTheme = false
-                                )
-                            )
-                        )
-                    }
-                )
+                SingleSettingOption(
+                    radius = settings.data.cornerRadius,
+                    text = stringResource(R.string.Themes),
+                    description = "Change app theme",
+                    leadingIcon = SettingIcon.Vector(Icons.Default.LightMode)
+                ) {
+                    navController.navigate(NavRoutes.Theme.route)
+                }
             }
 
             item {
-                SettingOption(
-                    title = stringResource(R.string.Light_theme),
-                    description = stringResource(R.string.Light_theme_desc),
-                    icon = Icons.Filled.LightMode,
-                    radius = shapeManager(radius = settings.data.cornerRadius),
-                    actionType = ActionType.RADIOBUTTON,
-                    variable = !settings.data.isAutomaticTheme && !settings.data.isDarkMode,
-                    switchEnabled = {
-                        onSettingsEvents(
-                            SettingEvents.UpdateSettings(
-                                settings.data.copy(
-                                    isAutomaticTheme = false,
-                                    isDarkMode = false
-                                )
-                            )
-                        )
-                    }
-                )
-            }
-
-            item {
-                val isManuallyDarkMode = !(settings.data.isAutomaticTheme || !settings.data.isDarkMode)
-                val supportsDynamicColor = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S // Android 12+
-
-                SettingOption(
-                    title = stringResource(R.string.Dark_theme),
-                    description = stringResource(R.string.Dark_theme_desc),
-                    icon = Icons.Filled.DarkMode,
-                    radius = shapeManager(radius = settings.data.cornerRadius, isLast = !isManuallyDarkMode && !supportsDynamicColor),
-                    actionType = ActionType.RADIOBUTTON,
-                    variable = !settings.data.isAutomaticTheme && settings.data.isDarkMode,
-                    switchEnabled = {
-                        onSettingsEvents(
-                            SettingEvents.UpdateSettings(
-                                settings.data.copy(
-                                    isAutomaticTheme = false,
-                                    isDarkMode = true
-                                )
-                            )
-                        )
-                    }
-                )
-            }
-
-            item {
-                val isLast = settings.data.isAutomaticTheme || !settings.data.isDarkMode
                 val supportsDynamicColor = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S // Android 12+
 
                 if (supportsDynamicColor) {
+                    Spacer(Modifier.height(12.dp))
+
                     SettingOption(
                         title = stringResource(R.string.Dynamic_theme),
                         description = stringResource(R.string.Dynamic_theme_desc),
                         icon = Icons.Filled.Colorize,
-                        radius = shapeManager(radius = settings.data.cornerRadius, isLast = isLast),
+                        radius = shapeManager(radius = settings.data.cornerRadius, isBoth = true),
                         actionType = ActionType.SWITCH,
                         variable = settings.data.dynamicTheme,
                         switchEnabled = {
@@ -210,37 +131,7 @@ fun Customize(
             }
 
             item {
-                val isEnabled = settings.data.isDarkMode
-                SettingOption(
-                    title = stringResource(R.string.Amoled_theme),
-                    description = stringResource(R.string.Amoled_theme_desc),
-                    icon = Icons.Filled.DarkMode,
-                    isEnabled = isEnabled,
-                    radius = shapeManager(radius = settings.data.cornerRadius, isLast = true),
-                    actionType = ActionType.SWITCH,
-                    variable = settings.data.amoledTheme,
-                    switchEnabled = {
-                        onSettingsEvents(
-                            SettingEvents.UpdateSettings(
-                                settings.data.copy(
-                                    amoledTheme = it
-                                )
-                            )
-                        )
-                    },
-                )
-            }
-
-            item {
                 Spacer(Modifier.height(12.dp))
-                Text(
-                    stringResource(R.string.Shape),
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp
-                )
-                Spacer(Modifier.height(12.dp))
-
                 SettingOption(
                     title = stringResource(R.string.Radius),
                     description = stringResource(R.string.Radius_desc),
@@ -339,14 +230,6 @@ fun Customize(
 
             item {
                 Spacer(Modifier.height(12.dp))
-                Text(
-                    stringResource(R.string.Font),
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp
-                )
-                Spacer(Modifier.height(12.dp))
-
                 SettingOption(
                     title = stringResource(R.string.Font),
                     description = stringResource(R.string.Change_Font),
@@ -358,65 +241,6 @@ fun Customize(
                     actionType = ActionType.CUSTOM,
                     onCustomClick = { showFontDialog = true }
                 )
-            }
-
-            item {
-                Spacer(Modifier.height(12.dp))
-                Text(
-                    stringResource(R.string.Theme_Palette),
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp
-                )
-                Spacer(Modifier.height(12.dp))
-
-                LazyRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    itemsIndexed(lightSchemes){ index, item->
-                        SelectableColorPlatte(
-                            selected = index==settings.data.themeNumber,
-                            colorScheme = item
-                        ) {
-                            onSettingsEvents(SettingEvents.UpdateSettings(settings.data.copy(themeNumber = index)))
-                        }
-                    }
-                }
-            }
-
-            item {
-                Spacer(Modifier.height(12.dp))
-                AnimatedVisibility(visible = !settings.data.dynamicTheme) {
-                    Text(
-                        stringResource(R.string.Contrast),
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp
-                    )
-                }
-                Spacer(Modifier.height(12.dp))
-
-                AnimatedVisibility(visible = !settings.data.dynamicTheme) {
-                    SingleChoiceSegmentedButtonRow {
-                        options.forEachIndexed { index, label ->
-                            SegmentedButton(
-                                shape = SegmentedButtonDefaults.itemShape(
-                                    index = index,
-                                    count = options.size
-                                ),
-                                onClick = {
-                                    onSettingsEvents(
-                                        SettingEvents.UpdateSettings(
-                                            settings.data.copy(
-                                                contrast = index
-                                            )
-                                        )
-                                    )
-                                },
-                                selected = index == settings.data.contrast,
-                                label = { Text(label) }
-                            )
-                        }
-                    }
-                }
             }
         }
     }

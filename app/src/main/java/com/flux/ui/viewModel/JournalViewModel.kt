@@ -53,8 +53,10 @@ import org.commonmark.node.Heading
 import org.commonmark.parser.Parser
 import org.commonmark.renderer.html.HtmlRenderer
 import java.io.OutputStreamWriter
+import java.time.Instant
 import java.time.LocalDate
 import java.time.YearMonth
+import java.time.ZoneId
 import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -89,12 +91,19 @@ class JournalViewModel @Inject constructor(
                     val datedJournals = filterByDate(allJournals, selectedDate)
                     Pair(allJournals, datedJournals)
                 }
-                .collect { (allJournals, datedJournals) ->
+                .combine(
+                    state.map { it.selectedYearMonth }.distinctUntilChanged()
+                ) { (allJournals, datedJournals), selectedYearMonth ->
+                    val monthlyCount = computeMonthlyCount(allJournals, selectedYearMonth)
+                    Triple(allJournals, datedJournals, monthlyCount)
+                }
+                .collect { (allJournals, datedJournals, monthlyCount) ->
                     updateState {
                         it.copy(
                             isLoading = false,
                             allEntries = allJournals,
-                            datedEntries = datedJournals
+                            datedEntries = datedJournals,
+                            monthlyJournalCount = monthlyCount
                         )
                     }
                 }
@@ -272,6 +281,25 @@ class JournalViewModel @Inject constructor(
 
             is JournalEvents.EnterWorkspace -> { updateState { if (it.workspaceId == event.workspaceId) { it } else { it.copy(workspaceId = event.workspaceId, isLoading = true) }} }
         }
+    }
+
+    private fun computeMonthlyCount(
+        journals: List<JournalModel>,
+        yearMonth: YearMonth
+    ): Map<LocalDate, Int> {
+        return journals
+            .filter { journal ->
+                val journalDate = Instant.ofEpochMilli(journal.dateTime)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate()
+                YearMonth.from(journalDate) == yearMonth
+            }
+            .groupBy { journal ->
+                Instant.ofEpochMilli(journal.dateTime)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate()
+            }
+            .mapValues { (_, entries) -> entries.size }
     }
 
     fun buildOutline(markdown: CharSequence): HeaderNode {

@@ -32,6 +32,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -134,6 +135,9 @@ fun Data(
             }
 
             item {
+                val reminderPermission = stringResource(R.string.Reminder_Permission)
+                val notificationPermission = stringResource(R.string.Notification_Permission)
+
                 SettingOption(
                     title = stringResource(R.string.Restore),
                     description = stringResource(R.string.Restore_Description),
@@ -144,7 +148,7 @@ fun Data(
                         if (!canScheduleReminder(context)) {
                             Toast.makeText(
                                 context,
-                                context.getText(R.string.Reminder_Permission),
+                                reminderPermission,
                                 Toast.LENGTH_SHORT
                             ).show()
                             requestExactAlarmPermission(context)
@@ -152,7 +156,7 @@ fun Data(
                         if (!isNotificationPermissionGranted(context)) {
                             Toast.makeText(
                                 context,
-                                context.getText(R.string.Notification_Permission),
+                                notificationPermission,
                                 Toast.LENGTH_SHORT
                             ).show()
                             openAppNotificationSettings(context)
@@ -183,15 +187,11 @@ fun Data(
                     3f -> BackupFrequency.MONTHLY
                     else -> BackupFrequency.NEVER
                 }
-
-                val sliderPosition = remember(settings.data.backupFrequency) {
-                    mapDaysToSliderPosition(settings.data.backupFrequency)
+                var currentSliderPosition by remember(settings.data.backupFrequency) {
+                    mutableFloatStateOf(mapDaysToSliderPosition(settings.data.backupFrequency))
                 }
 
-                val selectedFrequency = remember(sliderPosition) {
-                    mapSliderPositionToFrequency(sliderPosition)
-                }
-
+                val selectedFrequency = mapSliderPositionToFrequency(currentSliderPosition)
                 ListItem(
                     modifier = Modifier.padding(top = 8.dp),
                     leadingContent = {
@@ -209,13 +209,16 @@ fun Data(
 
                 Slider(
                     modifier = Modifier.padding(horizontal = 16.dp),
-                    value = sliderPosition,
+                    value = currentSliderPosition,
                     onValueChange = { newPosition ->
+                        currentSliderPosition = newPosition  // update local state immediately
                         hapticFeedback.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
                         val newFrequency = mapSliderPositionToFrequency(newPosition)
                         onSettingsEvents(SettingEvents.UpdateSettings(settings.data.copy(backupFrequency = newFrequency.days)))
                     },
-                    onValueChangeFinished = { backupManager.scheduleBackup(selectedFrequency) },
+                    onValueChangeFinished = {
+                        backupManager.scheduleBackup(mapSliderPositionToFrequency(currentSliderPosition))
+                    },
                     valueRange = 0f..3f,
                     steps = 2
                 )

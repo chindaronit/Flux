@@ -115,6 +115,33 @@ fun AppNavHost(
             }
         }
 
+        StorageSelectionScreen.forEach { (route, screen) ->
+            animatedComposable(route) {
+                screen(
+                    navController,
+                    States(
+                        notesState,
+                        eventState,
+                        habitState,
+                        todoState,
+                        workspaceState,
+                        journalState,
+                        settings
+                    ),
+                    ViewModels(
+                        notesViewModel,
+                        eventViewModel,
+                        todoViewModel,
+                        habitViewModel,
+                        workspaceViewModel,
+                        journalViewModel,
+                        settingsViewModel,
+                        backupViewModel
+                    )
+                )
+            }
+        }
+
         JournalScreens.forEach { (route, screen) ->
             val arguments = mutableListOf<NamedNavArgument>()
 

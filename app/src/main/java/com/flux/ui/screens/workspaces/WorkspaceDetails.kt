@@ -79,12 +79,11 @@ import com.flux.ui.screens.notes.notesHomeItems
 import com.flux.ui.screens.todo.todoHomeItems
 import com.flux.ui.state.Settings
 import kotlinx.coroutines.launch
-import java.io.File
-import java.io.FileOutputStream
 import java.time.YearMonth
 import com.flux.R
 import com.flux.other.ensureStorageRoot
 import com.flux.ui.viewModel.SettingsViewModel
+import java.time.LocalDate
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -104,8 +103,10 @@ fun WorkspaceDetails(
     selectedNotes: List<String>,
     eventSelectedYearMonth: YearMonth,
     eventSelectedDate: Long,
+    monthlyEventCount:  Map<LocalDate, Int>,
     journalSelectedYearMonth: YearMonth,
     journalSelectedDate: Long,
+    monthlyJournalCount:  Map<LocalDate, Int>,
     datedEvents: List<EventModel>,
     allHabits: List<HabitModel>,
     allLists: List<TodoModel>,
@@ -385,6 +386,7 @@ fun WorkspaceDetails(
                     journalSelectedDate,
                     isJournalEntriesLoading,
                     workspaceId,
+                    monthlyJournalCount,
                     datedJournalEntries,
                     onJournalEvents)
             }
@@ -428,6 +430,7 @@ fun WorkspaceDetails(
                     workspaceId,
                     eventSelectedYearMonth,
                     eventSelectedDate,
+                    monthlyEventCount,
                     settings,
                     datedEvents,
                     allEventInstances,

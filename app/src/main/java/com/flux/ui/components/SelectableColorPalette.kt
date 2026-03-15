@@ -30,15 +30,11 @@ fun SelectableColorPlatte(
     selected: Boolean,
     colorScheme: ColorScheme,
     onClick: () -> Unit
-) = Surface(
-    modifier = modifier,
-    shape = MaterialTheme.shapes.large,
-    color = MaterialTheme.colorScheme.surfaceContainer
-) {
+) = Box(modifier = modifier.clip(MaterialTheme.shapes.large)) {
     Surface(
         modifier = Modifier
             .clickable { onClick() }
-            .padding(12.dp)
+            .padding(6.dp)
             .size(48.dp),
         shape = CircleShape,
         color = colorScheme.primary,
@@ -71,7 +67,7 @@ fun SelectableColorPlatte(
                     modifier = Modifier
                         .padding(8.dp)
                         .size(16.dp),
-                    tint = MaterialTheme.colorScheme.surface
+                    tint = MaterialTheme.colorScheme.onTertiary
                 )
             }
         }

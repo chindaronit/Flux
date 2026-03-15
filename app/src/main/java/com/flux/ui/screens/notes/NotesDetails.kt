@@ -52,6 +52,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -117,21 +118,21 @@ fun NoteDetails(
     notesViewModel: NotesViewModel,
     onNotesEvents: (NotesEvents) -> Unit
 ) {
+    val textFieldStateSaver = Saver<TextFieldState, String>(
+        save = { it.text.toString() },
+        restore = { TextFieldState(it) }
+    )
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState()
-    val hasContent = remember(note.notesId) {
-        note.title.isNotBlank() || note.description.isNotBlank()
-    }
+    val hasContent = remember(note.notesId) { note.title.isNotBlank() || note.description.isNotBlank() }
     val recorder = AudioRecorder(context)
-
     val pagerState = rememberPagerState(
         initialPage = if (startWithReadView && hasContent) 1 else 0,
         pageCount = { 2 }
     )
-
-    val titleState = remember { TextFieldState(note.title) }
-    val contentState = remember { TextFieldState(note.description) }
+    val titleState = rememberSaveable(saver = textFieldStateSaver) { TextFieldState(note.title) }
+    val contentState = rememberSaveable(saver = textFieldStateSaver) { TextFieldState(note.description) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showShareNotesDialog by remember { mutableStateOf(false) }
     var showSaveNotesDialog by remember { mutableStateOf(false) }
@@ -206,12 +207,6 @@ fun NoteDetails(
         isSearching = false
     }
 
-    LaunchedEffect(startWithReadView, hasContent) {
-        pagerState.scrollToPage(
-            if (startWithReadView && hasContent) 1 else 0
-        )
-    }
-
     fun onSaveNote() {
 
         val newTitle = titleState.text.toString()
@@ -262,7 +257,12 @@ fun NoteDetails(
                     onNotesEvents(NotesEvents.CalculateTextState(contentState.text.toString()))
                     showAboutNotes=true },
                 onShareNote = { showShareNotesDialog=true },
-                onSaveNote = { showSaveNotesDialog=true },
+                onSaveNote = {
+                    ensureStorageRoot(
+                        scope = scope,
+                        settingsViewModel = settingsViewModel,
+                        rootPicker = rootPicker
+                    ) { showSaveNotesDialog = true } },
                 onPrintNote = { printPdf(context as Activity, readWebView, titleState.text.toString()) }
             )
         },

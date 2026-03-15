@@ -77,6 +77,7 @@ import kotlinx.serialization.json.Json
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import androidx.compose.runtime.saveable.Saver
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -94,8 +95,12 @@ fun EditJournal(
     settingsViewModel: SettingsViewModel,
     onJournalEvents: (JournalEvents) -> Unit
 ) {
+    val textFieldStateSaver = Saver<TextFieldState, String>(
+        save = { it.text.toString() },
+        restore = { TextFieldState(it) }
+    )
     val isToday = LocalDate.now() == Instant.ofEpochMilli(journal.dateTime).atZone(ZoneId.systemDefault()).toLocalDate()
-    val contentState = remember { TextFieldState(journal.text) }
+    val contentState = rememberSaveable(saver = textFieldStateSaver) { TextFieldState(journal.text) }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState()
@@ -157,12 +162,6 @@ fun EditJournal(
         keyboardController?.hide()
         focusManager.clearFocus()
         isSearching = false
-    }
-
-    LaunchedEffect(startWithReadView, hasContent) {
-        pagerState.scrollToPage(
-            if (startWithReadView && hasContent) 1 else 0
-        )
     }
 
     fun onSaveJournal() {

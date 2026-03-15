@@ -9,6 +9,7 @@ data class EventState(
     val isDatedEventLoading: Boolean = true,
     val isAllEventsLoading: Boolean = true,
     val workspaceId: String? = null,
+    val monthlyEventDates: Map<LocalDate, Int> = emptyMap(),
     val selectedYearMonth: YearMonth = YearMonth.now(),
     val selectedDate: Long = LocalDate.now().toEpochDay(),
     val allEvent: List<EventModel> = emptyList(),

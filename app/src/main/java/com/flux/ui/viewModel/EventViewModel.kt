@@ -26,7 +26,16 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.YearMonth
+import java.time.temporal.ChronoUnit
 import javax.inject.Inject
+
+data class Quadruple<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)
+
+// destructuring support
+operator fun <A, B, C, D> Quadruple<A, B, C, D>.component1() = first
+operator fun <A, B, C, D> Quadruple<A, B, C, D>.component2() = second
+operator fun <A, B, C, D> Quadruple<A, B, C, D>.component3() = third
+operator fun <A, B, C, D> Quadruple<A, B, C, D>.component4() = fourth
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
@@ -61,20 +70,26 @@ class EventViewModel @Inject constructor(
                 }
                 .combine(
                     state.map { it.selectedDate }.distinctUntilChanged()
-                ) { eventsAndInstances: Pair<List<EventModel>, List<EventInstanceModel>>, selectedDate: Long ->
+                ) { eventsAndInstances, selectedDate ->
                     val (allEvents, allInstances) = eventsAndInstances
                     val datedEvents = filterByDate(allEvents, selectedDate)
-
                     Triple(allEvents, datedEvents, allInstances)
                 }
-                .collect { (allEvents, datedEvents, allInstances) ->
+                .combine(
+                    state.map { it.selectedYearMonth }.distinctUntilChanged()
+                ) { (allEvents, datedEvents, allInstances), selectedYearMonth ->
+                    val monthlyDates = computeMonthlyEventDates(allEvents, selectedYearMonth)
+                    Quadruple(allEvents, datedEvents, allInstances, monthlyDates)
+                }
+                .collect { (allEvents, datedEvents, allInstances, monthlyDates) ->
                     updateState {
                         it.copy(
                             isAllEventsLoading = false,
                             isDatedEventLoading = false,
                             allEvent = allEvents,
                             datedEvents = datedEvents,
-                            allEventInstances = allInstances
+                            allEventInstances = allInstances,
+                            monthlyEventDates = monthlyDates
                         )
                     }
                 }
@@ -196,6 +211,21 @@ class EventViewModel @Inject constructor(
             }
             repository.deleteAllWorkspaceEvent(workspaceId)
         }
+    }
+
+    private fun computeMonthlyEventDates(
+        events: List<EventModel>,
+        yearMonth: YearMonth
+    ): Map<LocalDate, Int> {
+        val monthStart = yearMonth.atDay(1)
+        val monthEnd = yearMonth.atEndOfMonth()
+
+        if (monthEnd < monthStart) return emptyMap()
+
+        return (0..ChronoUnit.DAYS.between(monthStart, monthEnd))
+            .map { monthStart.plusDays(it) }
+            .associateWith { date -> events.count { event -> event.occursOn(date) } }
+            .filter { (_, count) -> count > 0 }
     }
 
     private fun filterByDate(

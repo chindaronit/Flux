@@ -49,6 +49,7 @@ import com.flux.ui.components.TimelineBody
 import com.flux.ui.components.convertMillisToTime
 import com.flux.ui.components.shapeManager
 import com.flux.ui.events.JournalEvents
+import java.time.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 fun LazyListScope.journalHomeItems(
@@ -58,6 +59,7 @@ fun LazyListScope.journalHomeItems(
     selectedDate: Long,
     isLoading: Boolean,
     workspaceId: String,
+    monthlyJournalCount:  Map<LocalDate, Int> = emptyMap(),
     allEntries: List<JournalModel>,
     onJournalEvents: (JournalEvents) -> Unit
 ) {
@@ -67,7 +69,7 @@ fun LazyListScope.journalHomeItems(
     if (isMonthlyView) {
         item {
             MonthlyViewCalendar(
-                selectedMonth, selectedDate,
+                selectedMonth, selectedDate, monthlyJournalCount,
                 onMonthChange = {
                     onJournalEvents(JournalEvents.ChangeMonth(it))
                 },
@@ -90,7 +92,7 @@ fun LazyListScope.journalHomeItems(
         isLoading -> item { Loader() }
         allEntries.isEmpty() -> item { EmptyJournal() }
         else -> {
-            itemsIndexed(allEntries) { index, entry ->
+            itemsIndexed(allEntries) { _, entry ->
                 Column(Modifier.padding(top = 16.dp)) {
                     JournalCardHeader(convertMillisToTime(entry.dateTime))
                     Row(modifier = Modifier.height(IntrinsicSize.Min)) {

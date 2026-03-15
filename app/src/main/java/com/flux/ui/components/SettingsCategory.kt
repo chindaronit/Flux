@@ -74,7 +74,7 @@ fun SettingCategory(
             }
         }
     }
-    Spacer(modifier = Modifier.height(if (isLast) 24.dp else 2.dp))
+    Spacer(modifier = Modifier.height(if (isLast) 12.dp else 2.dp))
 }
 
 fun shapeManager(

@@ -26,6 +26,8 @@ import com.flux.ui.screens.settings.Editor
 import com.flux.ui.screens.settings.Languages
 import com.flux.ui.screens.settings.Privacy
 import com.flux.ui.screens.settings.Settings
+import com.flux.ui.screens.settings.StorageSelectionScreen
+import com.flux.ui.screens.settings.Themes
 import com.flux.ui.screens.todo.TodoDetail
 import com.flux.ui.screens.workspaces.WorkSpaces
 import com.flux.ui.screens.workspaces.WorkspaceDetails
@@ -34,6 +36,7 @@ import com.flux.ui.viewModel.ViewModels
 
 sealed class NavRoutes(val route: String) {
     data object AuthScreen : NavRoutes("biometric") // auth screen
+    data object StorageSelection : NavRoutes("storageSelection") // Storage Selection
     data object Workspace : NavRoutes("workspace") // workspaces
     data object WorkspaceHome : NavRoutes("workspace/details")
     data object EditLabels : NavRoutes("workspace/labels/edit") //Labels
@@ -49,6 +52,7 @@ sealed class NavRoutes(val route: String) {
     data object Settings : NavRoutes("settings")
     data object Privacy : NavRoutes("settings/privacy")
     data object Customize : NavRoutes("settings/customize")
+    data object Theme : NavRoutes("settings/customize/theme")
     data object Languages : NavRoutes("settings/language")
     data object About : NavRoutes("settings/about")
     data object Contact : NavRoutes("settings/contact")
@@ -71,6 +75,12 @@ val AuthScreen =
             AuthScreen(navController, states.settings.data.isBiometricEnabled)
         }
     )
+
+val StorageSelectionScreen = mapOf<String, @Composable (navController: NavController, states: States, viewModels: ViewModels) -> Unit>(
+    NavRoutes.StorageSelection.route to { navController, states, viewModels ->
+        StorageSelectionScreen(navController, viewModels.settingsViewModel, states.settings.data.storageRootUri!=null)
+    }
+)
 
 val NotesScreens =
     mapOf<String, @Composable (navController: NavController, notesId: String, workspaceId: String, states: States, viewModels: ViewModels) -> Unit>(
@@ -176,6 +186,9 @@ val SettingsScreens =
         },
         NavRoutes.Editor.route to { navController, _, states, viewModels ->
             Editor(navController, states.settings, viewModels.settingsViewModel::onEvent)
+        },
+        NavRoutes.Theme.route to { navController, _, states, viewModels ->
+            Themes(navController, states.settings, viewModels.settingsViewModel::onEvent)
         }
     )
 
@@ -231,8 +244,10 @@ val WorkspaceScreens =
                 states.notesState.selectedNotes,
                 states.eventState.selectedYearMonth,
                 states.eventState.selectedDate,
+                states.eventState.monthlyEventDates,
                 states.journalState.selectedYearMonth,
                 states.journalState.selectedDate,
+                states.journalState.monthlyJournalCount,
                 states.eventState.datedEvents,
                 states.habitState.allHabits,
                 states.todoState.allLists,

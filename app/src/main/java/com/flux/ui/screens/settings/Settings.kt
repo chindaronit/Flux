@@ -1,6 +1,8 @@
 package com.flux.ui.screens.settings
 
 import android.content.Intent
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -44,21 +46,7 @@ fun Settings(
             modifier = Modifier
                 .padding(innerPadding)
                 .padding(16.dp, 8.dp, 16.dp)
-        )
-        {
-            item {
-                SingleSettingOption(
-                    radius = settings.data.cornerRadius,
-                    text = stringResource(R.string.Support),
-                    description = stringResource(R.string.Support_desc),
-                    trailingIcon = SettingIcon.Vector(Icons.Default.Coffee),
-                    last = true
-                ) {
-                    val intent = Intent(Intent.ACTION_VIEW, "https://coff.ee/chindaronit".toUri())
-                    context.startActivity(intent)
-                }
-            }
-
+        ) {
             item {
                 SettingCategory(
                     title = stringResource(R.string.Customize),
@@ -122,7 +110,7 @@ fun Settings(
                     title = stringResource(R.string.data_title),
                     subTitle = stringResource(R.string.data_subtitle),
                     icon = Icons.Rounded.Backup,
-                    shape = shapeManager(radius = settings.data.cornerRadius),
+                    shape = shapeManager(radius = settings.data.cornerRadius, isLast = true),
                     action = {
                         navController.navigate(NavRoutes.Backup.route)
                     }
@@ -130,11 +118,12 @@ fun Settings(
             }
 
             item {
+                Spacer(Modifier.height(12.dp))
                 SettingCategory(
                     title = stringResource(R.string.About),
                     subTitle = stringResource(R.string.About_desc),
                     icon = Icons.Rounded.Info,
-                    shape = shapeManager(radius = settings.data.cornerRadius),
+                    shape = shapeManager(radius = settings.data.cornerRadius, isFirst = true),
                     action = {
                         navController.navigate(NavRoutes.About.route) {
                             launchSingleTop = true
@@ -155,6 +144,20 @@ fun Settings(
                             restoreState = true
                         }
                     })
+            }
+
+            item {
+                Spacer(Modifier.height(12.dp))
+                SingleSettingOption(
+                    radius = settings.data.cornerRadius,
+                    text = stringResource(R.string.Support),
+                    description = stringResource(R.string.Support_desc),
+                    trailingIcon = SettingIcon.Vector(Icons.Default.Coffee),
+                    last = true
+                ) {
+                    val intent = Intent(Intent.ACTION_VIEW, "https://coff.ee/chindaronit".toUri())
+                    context.startActivity(intent)
+                }
             }
         }
     }

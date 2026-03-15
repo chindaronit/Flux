@@ -46,6 +46,7 @@ import com.flux.ui.events.TaskEvents
 import com.flux.ui.state.Settings
 import java.text.SimpleDateFormat
 import java.time.Instant
+import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -61,6 +62,7 @@ fun LazyListScope.eventHomeItems(
     workspaceId: String,
     selectedMonth: YearMonth,
     selectedDate: Long,
+    monthlyEventCount: Map<LocalDate, Int>,
     settings: Settings,
     datedEvents: List<EventModel>,
     allEventInstances: List<EventInstanceModel>,
@@ -71,7 +73,7 @@ fun LazyListScope.eventHomeItems(
     if (isMonthlyView) {
         item {
             MonthlyViewCalendar(
-                selectedMonth, selectedDate,
+                selectedMonth, selectedDate, monthlyEventCount,
                 onMonthChange = { onTaskEvents(TaskEvents.ChangeMonth(it)) },
                 onDateChange = { onTaskEvents(TaskEvents.ChangeDate(it)) }
             )

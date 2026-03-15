@@ -38,6 +38,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -96,20 +99,35 @@ fun DailyViewDateCard(date: Long, day: String, isSelected: Boolean, onClick: () 
 }
 
 @Composable
-fun MonthlyViewDateCard(date: Long, isSelected: Boolean, onClick: () -> Unit) {
+fun MonthlyViewDateCard(date: Long, count: Int, maxCount: Int = 0, isSelected: Boolean, onClick: () -> Unit) {
     val localDate = LocalDate.ofEpochDay(date)
-
+    val fraction = if (maxCount > 0 && count > 0) count.toFloat() / maxCount.toFloat() else 0f
     val containerColor =
         if (isSelected) MaterialTheme.colorScheme.primary
         else MaterialTheme.colorScheme.surfaceContainerLow
     val contentColor =
         if (isSelected) MaterialTheme.colorScheme.onSurface
         else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+    val primaryColor = MaterialTheme.colorScheme.primary
 
     Box(
         modifier = Modifier
             .size(48.dp)
             .clip(RoundedCornerShape(50))
+            .drawBehind {
+                if (fraction > 0f && !isSelected) {
+                    drawCircle(
+                        brush = Brush.radialGradient(
+                            colors = listOf(
+                                primaryColor.copy(alpha = 0.35f * fraction),
+                                Color.Transparent
+                            ),
+                            center = center,
+                            radius = size.minDimension / 2f
+                        )
+                    )
+                }
+            }
             .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
@@ -179,6 +197,7 @@ fun DailyViewCalendar(
 fun MonthlyViewCalendar(
     currentMonth: YearMonth,
     selectedDate: Long,
+    monthlyJournalCount:  Map<LocalDate, Int> = emptyMap(),
     onMonthChange: (YearMonth) -> Unit,
     onDateChange: (Long) -> Unit
 ) {
@@ -192,7 +211,7 @@ fun MonthlyViewCalendar(
         stringResource(R.string.sunday_short)
     )
     val firstDayOfMonth = currentMonth.atDay(1)
-    val firstDayOffset = firstDayOfMonth.dayOfWeek.value % 7
+    val firstDayOffset = (firstDayOfMonth.dayOfWeek.value - 1) % 7
     val daysInMonth = currentMonth.lengthOfMonth()
 
     val allDates = buildList {
@@ -227,7 +246,9 @@ fun MonthlyViewCalendar(
                     Icons.AutoMirrored.Default.ArrowBackIos,
                     tint = MaterialTheme.colorScheme.primary,
                     contentDescription = "Previous month",
-                    modifier = Modifier.size(18.dp).alpha(0.5f)
+                    modifier = Modifier
+                        .size(18.dp)
+                        .alpha(0.5f)
                 )
             }
 
@@ -240,7 +261,9 @@ fun MonthlyViewCalendar(
                     Icons.AutoMirrored.Default.ArrowForwardIos,
                     tint = MaterialTheme.colorScheme.primary,
                     contentDescription = "Next month",
-                    modifier = Modifier.size(18.dp).alpha(0.5f)
+                    modifier = Modifier
+                        .size(18.dp)
+                        .alpha(0.5f)
                 )
             }
         }
@@ -274,6 +297,8 @@ fun MonthlyViewCalendar(
                     MonthlyViewDateCard(
                         date = date,
                         isSelected = selectedDate == date,
+                        count = monthlyJournalCount[LocalDate.ofEpochDay(date)] ?: 0,
+                        maxCount = monthlyJournalCount.values.maxOrNull() ?: 0,
                         onClick = { onDateChange(date) }
                     )
                 }
