@@ -1,0 +1,385 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Flux</string>
+
+    <!-- Authentication -->
+    <string name="Auth_with_Biometric">生物识别认证</string>
+    <string name="Auth_Error">错误：认证失败</string>
+    <string name="Biometric_Title">生物识别认证</string>
+    <string name="Biometric_Subtitle">使用指纹或面容进行认证</string>
+    <string name="Biometric_Cancel">取消</string>
+
+    <!-- Common UI Elements -->
+    <string name="Pin">固定</string>
+    <string name="Unpin">取消固定</string>
+    <string name="Pinned">已固定</string>
+    <string name="Dismiss">关闭</string>
+    <string name="Confirm">确认</string>
+    <string name="Cancel">取消</string>
+    <string name="Set">设置</string>
+    <string name="Custom">自定义</string>
+    <string name="Today">今天</string>
+    <string name="New">新建</string>
+    <string name="Others">其他</string>
+    <string name="Title">标题</string>
+    <string name="Description">描述</string>
+    <string name="Amount">数量</string>
+    <string name="at">于</string>
+    <string name="on">在</string>
+
+    <!-- Dialog Messages -->
+    <string name="deleteDialogTitle">确定要删除吗？</string>
+    <string name="deleteDialogText">此操作无法撤销，将永久删除所有数据。</string>
+    <string name="removeDialogTitle">移除空间？</string>
+    <string name="removeDialogText">此操作无法撤销，将删除该空间的所有数据</string>
+
+    <!-- Permissions -->
+    <string name="Reminder_Permission">请开启提醒权限</string>
+    <string name="Notification_Permission">请开启通知权限</string>
+
+    <!-- Settings -->
+    <string name="Settings">设置</string>
+
+    <!-- Settings - Customize -->
+    <string name="Customize">个性化</string>
+    <string name="Customize_desc">主题 • 形状 • 对比度</string>
+    <string name="System_theme">系统主题</string>
+    <string name="System_theme_desc">自动适配设备主题</string>
+    <string name="Light_theme">浅色主题</string>
+    <string name="Light_theme_desc">切换至浅色主题</string>
+    <string name="Dark_theme">深色主题</string>
+    <string name="Dark_theme_desc">切换至深色主题</string>
+    <string name="Dynamic_theme">动态主题</string>
+    <string name="Dynamic_theme_desc">自动适配背景</string>
+    <string name="Amoled_theme">AMOLED 主题</string>
+    <string name="Amoled_theme_desc">使用纯黑色背景</string>
+    <string name="Themes">主题</string>
+    <string name="Shape">形状 • 视图</string>
+    <string name="Radius">圆角半径</string>
+    <string name="Radius_desc">修改形状</string>
+    <string name="Select_radius">选择圆角半径</string>
+    <string name="Contrast">对比度</string>
+    <string name="Low">低</string>
+    <string name="Medium">中</string>
+    <string name="High">高</string>
+    <string name="Grid_View">网格视图</string>
+    <string name="Grid_View_Desc">将笔记视图切换为网格</string>
+    <string name="Monthly_View">月视图</string>
+    <string name="Monthly_View_Desc">切换至月历视图</string>
+    <string name="Hour_Format_24">24小时制</string>
+    <string name="Hour_Format_24_Desc">使用24小时时间格式</string>
+    <string name="Compact_Mode">紧凑模式</string>
+    <string name="Compact_Mode_Desc">以紧凑模式显示工作区</string>
+    <string name="Extreme_Compact_Mode">极致紧凑模式</string>
+    <string name="Extreme_Compact_Mode_Desc">缩小工作区间的间距</string>
+    <string name="Theme_Palette">主题调色板</string>
+    <string name="Font">字体</string>
+    <string name="Fonts">字体</string>
+    <string name="Share_txt">分享文本文件</string>
+    <string name="Share_md">分享 Markdown 文件</string>
+    <string name="Error_Share_txt">分享文本文件失败</string>
+    <string name="Error_Share_md">分享 .md 文件失败</string>
+    <string name="Export_As">导出为</string>
+    <string name="share_as">分享为</string>
+    <string name="Plain_Text">纯文本 (.txt)</string>
+    <string name="Markdown">Markdown (.md)</string>
+    <string name="Change_Font">更换字体</string>
+    <string name="share">分享</string>
+    <string name="save">保存</string>
+    <string name="print">打印</string>
+    <string name="delete">删除</string>
+    <string name="html">网页</string>
+    <string name="image">图片</string>
+    <string name="Outline">大纲</string>
+    <string name="words_excluding_punctuations">不含标点的字数</string>
+    <string name="lines">行数</string>
+    <string name="paragraph">段落</string>
+    <string name="show_line_numbers">显示行号</string>
+    <string name="show_line_numbers_desc">在编辑器中显示行号</string>
+    <string name="markdown_lint">Markdown 校验</string>
+    <string name="markdown_lint_desc">将检查 Markdown 格式与语法</string>
+    <string name="color_palette">调色板</string>
+    <string name="change_app_theme">更换应用主题</string>
+
+    <!-- Settings - Privacy -->
+    <string name="Privacy">隐私</string>
+    <string name="Privacy_desc">屏幕保护 • 应用锁</string>
+    <string name="Screen_Protection">屏幕保护</string>
+    <string name="Screen_Protection_Desc">禁用截图功能</string>
+    <string name="App_Lock">应用锁</string>
+    <string name="App_Lock_desc">指纹认证</string>
+    <string name="Encrypt">加密</string>
+    <string name="Encrypt_Desc">备份时加密你的数据</string>
+
+    <!-- Settings - Languages -->
+    <string name="Languages">语言</string>
+    <string name="Languages_desc">切换语言</string>
+    <string name="System_language">系统语言</string>
+    <string name="System_language_desc">自动适配设备语言</string>
+
+    <!-- Settings - Backup -->
+    <string name="Backup">备份</string>
+    <string name="Backup_Description">将数据备份至文件</string>
+    <string name="Restore">恢复</string>
+    <string name="Restore_Description">从备份文件恢复数据</string>
+    <string name="reset">重置</string>
+    <string name="backup_frequency">自动备份频率</string>
+    <string name="reset_database">重置数据库</string>
+    <string name="clear_app_data">清除所有应用数据</string>
+    <string name="never">从不</string>
+    <string name="daily">每天</string>
+    <string name="weekly">每周</string>
+    <string name="monthly">每月</string>
+    <string name="success">成功</string>
+
+    <!-- Settings - About -->
+    <string name="About">关于</string>
+    <string name="About_desc">版本 • 开发者 • 源代码</string>
+    <string name="Build_type">构建类型</string>
+    <string name="Build_version">构建版本</string>
+    <string name="Developer">开发者</string>
+    <string name="Developer_Name">Ronit Chinda</string>
+    <string name="Source_Code">源代码</string>
+    <string name="Github_Repository">GitHub 仓库</string>
+    <string name="license">许可证</string>
+    <string name="license_gpl3_only">仅 GPL-3.0</string>
+    <string name="user_guide_title">用户指南</string>
+    <string name="user_guide_description">阅读指南以充分使用应用功能</string>
+    <string name="privacy_policy_title">隐私政策</string>
+    <string name="privacy_policy_description">应用的隐私政策</string>
+    <string name="share_title">分享</string>
+    <string name="share_description">将应用分享给亲友</string>
+    <string name="data_title">数据</string>
+    <string name="data_subtitle">备份 • 恢复</string>
+
+    <!-- Settings - Contact & Support -->
+    <string name="Contact">联系我们</string>
+    <string name="Contact_desc">功能建议 • 错误反馈</string>
+    <string name="Contact_desc2">在 GitHub 提交问题</string>
+    <string name="Support">支持</string>
+    <string name="Support_desc">表达你的喜爱</string>
+    <string name="feature_request">功能请求 / 建议</string>
+    <string name="feature_request_desc">在 GitHub 讨论区分享你的想法</string>
+    <string name="bug_report">错误反馈</string>
+    <string name="email">邮箱</string>
+    <string name="email_desc">发送邮件反馈或寻求支持</string>
+    <string name="discord">Discord</string>
+    <string name="discord_desc">加入 Discord 频道</string>
+    <string name="no_email_app">未找到邮箱应用</string>
+
+    <!-- Workspace -->
+    <string name="Home">主页</string>
+    <string name="Edit_Workspace">编辑工作区</string>
+    <string name="Add_Workspace">添加工作区</string>
+    <string name="Search_Workspaces">搜索工作区…</string>
+    <string name="Delete_Workspace">删除工作区</string>
+    <string name="Edit_Details">编辑详情</string>
+    <string name="Change_Cover">更换封面</string>
+    <string name="Change_Icon">更换图标</string>
+    <string name="Lock_Workspace">锁定工作区</string>
+    <string name="Unlock_Workspace">解锁工作区</string>
+    <string name="Add_Spaces">添加空间</string>
+    <string name="Add_Space">添加空间</string>
+    <string name="Empty_Workspace">未找到工作区</string>
+    <string name="Wrong_Passkey">密码错误</string>
+    <string name="enterPasskey">输入密码</string>
+    <string name="Remove_Cover">移除封面</string>
+    <string name="Search_Here">在此搜索…</string>
+    <string name="current">当前</string>
+    <string name="add">添加</string>
+    <string name="workspace_deleted">工作区已删除</string>
+
+    <!-- Space Management -->
+    <string name="Current">当前</string>
+    <string name="Available_Spaces">可用空间</string>
+
+    <!-- Notes -->
+    <string name="Notes">笔记</string>
+    <string name="Search_Notes">搜索笔记…</string>
+    <string name="Delete_Note">删除笔记</string>
+    <string name="Empty_Notes">未找到笔记</string>
+    <string name="Last_Edited">最后编辑</string>
+    <string name="Word_Count">字数统计</string>
+    <string name="Character_Count">字符统计</string>
+    <string name="Labels">标签</string>
+    <string name="Empty_Labels">未找到标签</string>
+    <string name="Edit_Labels">编辑标签</string>
+    <string name="Add_Label">添加新标签</string>
+    <string name="Edit_Label">编辑标签</string>
+    <string name="Select_Label">选择标签</string>
+    <string name="Export_Note">导出笔记</string>
+    <string name="import_success">导入成功</string>
+    <string name="import_failed">笔记导入失败</string>
+    <string name="find">查找</string>
+    <string name="replace">替换</string>
+    <string name="record_audio">录制音频</string>
+    <string name="tap_to_start">点击开始</string>
+    <string name="retry">重试</string>
+    <string name="permission_required">请提供录音权限</string>
+    <string name="task">任务</string>
+    <string name="item_value">项目值</string>
+    <string name="list">列表</string>
+    <string name="column">列</string>
+    <string name="row">行</string>
+    <string name="table">表格</string>
+    <string name="url">链接</string>
+    <string name="name">名称</string>
+    <string name="link">链接</string>
+
+    <!-- To-Do -->
+    <string name="To_Do">待办事项</string>
+    <string name="Empty_Lists">未找到列表</string>
+    <string name="Edit_list">编辑列表</string>
+    <string name="Add_Item">添加新项目</string>
+    <string name="more">…更多</string>
+
+    <!-- Habits -->
+    <string name="Habits">习惯</string>
+    <string name="Empty_Habits">未找到习惯</string>
+    <string name="Started">开始于</string>
+    <string name="Current_Streak">当前连续天数：</string>
+    <string name="Best_Streak">最高记录：</string>
+    <string name="Add_Habit">添加习惯</string>
+    <string name="Edit_Habit">编辑习惯</string>
+    <string name="completed_habits">已完成 %1$d 次</string>
+    <string name="monday_short">周一</string>
+    <string name="tuesday_short">周二</string>
+    <string name="wednesday_short">周三</string>
+    <string name="thursday_short">周四</string>
+    <string name="friday_short">周五</string>
+    <string name="saturday_short">周六</string>
+    <string name="sunday_short">周日</string>
+    <string name="past_habits">历史习惯</string>
+    <string name="time">时间</string>
+    <string name="repeat">重复</string>
+    <string name="never_ends">永不结束</string>
+    <string name="ends_on">结束于</string>
+    <string name="mark_completed">标记为已完成</string>
+    <string name="mark_pending">标记为待完成</string>
+    <string name="ends_on_date">结束于 %1$s</string>
+    <string name="weekly_habit_completion">每周习惯完成情况</string>
+    <string name="habit_already_ended">该习惯已结束！</string>
+    <string name="cannot_mark_future_dates">无法标记未来日期！</string>
+    <string name="habit_starts_later">你的习惯尚未开始！</string>
+    <string name="date_not_in_schedule">该日期不在你的习惯计划中</string>
+
+    <!-- Events -->
+    <string name="Events">事件</string>
+    <string name="Empty_Events">未找到事件</string>
+    <string name="Edit_Event">编辑事件</string>
+    <string name="All_Day">全天</string>
+    <string name="Repeat_Task">重复任务</string>
+    <string name="Repeat">重复</string>
+    <string name="Once">一次</string>
+    <string name="Weekly">每周</string>
+    <string name="Monthly">每月</string>
+    <string name="Yearly">每年</string>
+    <string name="Status_Completed">已完成</string>
+    <string name="Status_Pending">待完成</string>
+    <string name="Mark_As_Completed">标记为已完成</string>
+    <string name="Mark_As_Uncompleted">标记为未完成</string>
+    <string name="recurrence_once">仅一次 %1$s</string>
+    <string name="recurrence_daily">每天</string>
+    <string name="recurrence_every_x_days">每 %1$d 天</string>
+    <string name="recurrence_weekly_on">每周 %1$s</string>
+    <string name="recurrence_monthly_on">每月 %1$d 日</string>
+    <string name="recurrence_yearly_on">每年 %1$s</string>
+    <string name="recurrence_at_time">%1$s %2$s</string>
+
+    <!-- Event Notifications -->
+    <string name="On_Time">事件发生时</string>
+    <string name="five_minutes_before">提前5分钟</string>
+    <string name="ten_minutes_before">提前10分钟</string>
+    <string name="fifteen_minutes_before">提前15分钟</string>
+    <string name="thirty_minutes_before">提前30分钟</string>
+    <string name="one_hour_before">提前1小时</string>
+    <string name="Custom_Notification">自定义通知</string>
+    <string name="Add_Notification">添加通知</string>
+    <string name="Select_Time">选择时间</string>
+
+    <!-- Time Units -->
+    <string name="day">天</string>
+    <string name="days">天</string>
+    <string name="hour">小时</string>
+    <string name="hours">小时</string>
+    <string name="minute">分钟</string>
+    <string name="minutes">分钟</string>
+    <string name="before">前</string>
+
+    <!-- Calendar -->
+    <string name="Calendar">日历</string>
+
+    <!-- Journal -->
+    <string name="Journal">日记</string>
+    <string name="Write_here">在此书写…</string>
+    <string name="Empty_Journal">未找到记录</string>
+    <string name="Today_Entry">今日记录</string>
+
+    <!-- Analytics -->
+    <string name="Analytics">统计分析</string>
+    <string name="Empty_Analytics">添加空间以查看统计数据</string>
+    <string name="HeatMap">习惯热力图</string>
+    <string name="Completed_Today">今日已完成</string>
+    <string name="This_Week">本周</string>
+    <string name="This_Month">本月</string>
+    <string name="Upcoming">即将到来</string>
+    <string name="Failed">未完成</string>
+    <string name="Completed">已完成</string>
+    <string name="journals_written">已写 %1$d 篇日记</string>
+    <string name="best_streak">最高记录：%1$d 天</string>
+    <string name="completion_percentage">完成率 %1$d%%</string>
+
+    <!-- Error Messages -->
+    <string name="Error_Alarm_Permission_Settings">无法打开闹钟权限设置</string>
+    <string name="Error_Schedule_Alarm_Failed">错误：设置闹钟失败</string>
+    <string name="Error_Cancel_Alarm_Failed">错误：取消闹钟失败</string>
+
+    <!-- Content Descriptions (Accessibility) -->
+    <string name="Add_Spaces_Content_Desc">添加空间</string>
+    <string name="Space_Content_Desc">空间</string>
+    <string name="Edit_Space_Content_Desc">编辑空间</string>
+
+    <!-- Editor -->
+    <string name="editor_title">编辑器</string>
+    <string name="editor_subtitle">默认视图 • 默认编辑模式</string>
+
+    <!-- Line Numbers -->
+    <string name="show_line_numbers_title">显示行号</string>
+    <string name="show_line_numbers_description">
+        在编辑器中显示行号
+    </string>
+
+    <!-- Markdown Lint -->
+    <string name="markdown_lint_title">Markdown 校验</string>
+    <string name="markdown_lint_description">
+        将检查 Markdown 格式与语法
+    </string>
+
+    <!-- Default Editor View -->
+    <string name="default_editor_view">默认编辑器视图</string>
+
+    <!-- Editor Modes -->
+    <string name="reading_view">阅读视图</string>
+    <string name="editing_view">编辑视图</string>
+
+
+    <string name="shareContent">
+        Flux 是一款完全使用 Compose 构建的现代化安卓效率应用。\n
+        支持创建、编辑、删除工作区，内置笔记、习惯、日记、待办、事件等多种模板；\n
+        同时具备查找替换、笔记模板、本地音视频/图片导入、Markdown、LaTeX 公式、Mermaid 图表等高级功能。\n
+        立即下载体验：\n
+        - [GitHub]  https://github.com/chindaronit/Flux/releases\n
+        - [F-droid] https://f-droid.org/packages/com.flux/
+    </string>
+
+    <string name="select_folder">选择文件夹</string>
+    <string name="select_folder_description">选择存储应用数据的位置（包含图片、音频、视频、文档、备份）</string>
+
+    <!-- Progress Tracker -->
+    <string name="not_started">未开始</string>
+    <string name="in_progress">进行中</string>
+    <string name="empty">空</string>
+    <string name="target">目标</string>
+    <string name="start">开始</string>
+    <string name="progress_tracker">进度追踪</string>
+</resources>
