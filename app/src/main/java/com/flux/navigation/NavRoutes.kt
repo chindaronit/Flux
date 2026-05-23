@@ -111,7 +111,7 @@ val NotesScreens =
                 states.notesState.allNotes.find { it.notesId == notesId }
                     ?: NotesModel(workspaceId = workspaceId),
                 states.settings.data.storageRootUri,
-                states.labelState.allLabels,
+                states.labelState.allLabels.filter { it.workspaceId==workspaceId },
                 viewModel.settingsViewModel,
                 viewModel.notesViewModel,
                 viewModel.notesViewModel::onEvent
