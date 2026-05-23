@@ -1,28 +1,27 @@
 package com.flux.ui.screens.habits
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.flux.data.model.HabitConfig
 import com.flux.data.model.HabitInstanceModel
 import com.flux.data.model.HabitModel
 import com.flux.navigation.NavRoutes
-import com.flux.ui.components.HabitCalendarCard
-import com.flux.ui.components.HabitEndCard
-import com.flux.ui.components.HabitScaffold
-import com.flux.ui.components.HabitStartCard
-import com.flux.ui.components.HabitStreakCard
-import com.flux.ui.components.MonthlyHabitAnalyticsCard
-import com.flux.ui.components.WeeklyHabitAnalyticsCard
+import com.flux.ui.common.DeleteAlert
+import com.flux.ui.common.HabitScaffold
 import com.flux.ui.events.HabitEvents
+import java.time.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,15 +34,23 @@ fun HabitDetails(
     onHabitEvents: (HabitEvents) -> Unit
 ) {
     val context = LocalContext.current
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    val todayEpoch = LocalDate.now().toEpochDay()
+    val todayInstance = habitInstances.firstOrNull { it.instanceDate == todayEpoch }
 
-    HabitScaffold(
-        title = habit.title,
-        description = habit.description,
-        onBackPressed = { navController.popBackStack() },
-        onDeleteClicked = {
+    if(showDeleteDialog){
+        DeleteAlert({
+            showDeleteDialog=false
+        }, {
             navController.popBackStack()
             onHabitEvents(HabitEvents.DeleteHabit(habit, context))
-        },
+            showDeleteDialog=false
+        })
+    }
+
+    HabitScaffold(
+        onBackPressed = { navController.popBackStack() },
+        onDeleteClicked = { showDeleteDialog=true },
         onEditClicked = { navController.navigate(NavRoutes.NewHabit.withArgs(workspaceId, habit.id)) },
         content = { innerPadding ->
             LazyColumn(
@@ -53,24 +60,20 @@ fun HabitDetails(
                     .fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                item { HabitStartCard(habit.startDateTime, radius) }
-                if(habit.endDateTime!=-1L){ item { HabitEndCard(habit.endDateTime, radius) } }
-                item { HabitStreakCard(habit, habitInstances, radius) }
-                item {
-                    Spacer(Modifier.height(8.dp))
-                    HabitCalendarCard(
-                        radius,
-                        habit.id,
-                        workspaceId,
-                        habit.startDateTime,
-                        habit.endDateTime,
-                        habit.recurrence,
-                        habitInstances,
-                        onHabitEvents
-                    )
+                item { HabitDetailedInfo(radius, habit, habitInstances) }
+                if(habit.habitConfig is HabitConfig.Counted) {
+                    item { CountedHabitStatus(radius, habit, todayInstance, onHabitEvents) }
                 }
-                item { WeeklyHabitAnalyticsCard(radius, habitInstances) }
-                item { MonthlyHabitAnalyticsCard(radius, habitInstances) }
+                if(habit.habitConfig is HabitConfig.Timed) {
+                    item { TimedHabitStatus(radius, habit, todayInstance, onHabitEvents) }
+                }
+                item { HabitCalendarCard(radius, habit, habitInstances, onHabitEvents) }
+                item { WeeklyHabitAnalyticsCard(radius, habit, habitInstances) }
+                if(habit.habitConfig is HabitConfig.Timed || habit.habitConfig is HabitConfig.Counted){
+                    item { SingleHabitWeeklyProgressChart(radius, habit, habitInstances) }
+                }
+                item { MonthlyHabitAnalyticsCard(radius, habit, habitInstances) }
+                item { SingleHabitHeatMap(radius, habit, habitInstances) }
             }
         }
     )

@@ -100,6 +100,9 @@ dependencies {
     implementation(libs.androidx.documentfile)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.compose.foundation.layout)
+    implementation(libs.androidx.compose.adaptive)
+    implementation(libs.androidx.compose.foundation)
+    implementation(libs.androidx.navigation.common.ktx)
 
     // Hilt
     ksp(libs.hilt.android.compiler)

@@ -11,6 +11,6 @@ interface EventRepository {
     suspend fun deleteEventInstance(eventInstanceModel: EventInstanceModel)
     suspend fun upsertEventInstance(eventInstanceModel: EventInstanceModel)
     suspend fun loadAllEvents(): List<EventModel>
-    fun loadAllWorkspaceEvents(workspaceId: String): Flow<List<EventModel>>
-    fun loadAllEventInstances(workspaceId: String): Flow<List<EventInstanceModel>>
+    fun loadEventData(): Flow<List<EventModel>>
+    fun loadEventInstanceData(): Flow<List<EventInstanceModel>>
 }

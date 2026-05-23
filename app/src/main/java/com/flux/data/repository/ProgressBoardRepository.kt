@@ -7,5 +7,5 @@ interface ProgressBoardRepository {
     suspend fun upsertBoardItem(item: ProgressBoardModel)
     suspend fun deleteBoardItem(item: ProgressBoardModel)
     suspend fun deleteBoardItemsByWorkspace(workspaceId: String)
-    fun getBoardItemsByWorkspace(workspaceId: String): Flow<List<ProgressBoardModel>>
+    fun getProgressBoardData(): Flow<List<ProgressBoardModel>>
 }

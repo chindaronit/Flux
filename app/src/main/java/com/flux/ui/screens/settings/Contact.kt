@@ -21,10 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.navigation.NavController
 import com.flux.R
-import com.flux.ui.components.ActionType
-import com.flux.ui.components.BasicScaffold
-import com.flux.ui.components.SettingOption
-import com.flux.ui.components.shapeManager
+import com.flux.ui.common.BasicScaffold
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

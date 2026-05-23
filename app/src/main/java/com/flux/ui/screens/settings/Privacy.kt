@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.EnhancedEncryption
 import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.RemoveRedEye
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -15,10 +14,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.flux.R
-import com.flux.ui.components.ActionType
-import com.flux.ui.components.BasicScaffold
-import com.flux.ui.components.SettingOption
-import com.flux.ui.components.shapeManager
+import com.flux.ui.common.BasicScaffold
 import com.flux.ui.events.SettingEvents
 import com.flux.ui.state.Settings
 

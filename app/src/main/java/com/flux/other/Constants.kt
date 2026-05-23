@@ -24,6 +24,7 @@ object Constants {
 
     object Other {
         const val SIDE_EFFECT_KEY = "side_effect"
+        const val ACTION_MARK_DONE = "flux.action.MARK_DONE"
     }
 
     object Editor {
@@ -200,15 +201,15 @@ val HEADER_LINE_STYLES = listOf(
 
 val HEADER_STYLES = listOf(
     SpanStyle(
-        fontSize = 32.sp,
+        fontSize = 22.sp,
         fontWeight = FontWeight.Black,
         fontSynthesis = FontSynthesis.Weight
     ), SpanStyle(
-        fontSize = 24.sp,
+        fontSize = 20.sp,
         fontWeight = FontWeight.ExtraBold,
         fontSynthesis = FontSynthesis.Weight
     ), SpanStyle(
-        fontSize = 18.72.sp,
+        fontSize = 18.sp,
         fontWeight = FontWeight.ExtraBold,
         fontSynthesis = FontSynthesis.Weight
     ), SpanStyle(
@@ -216,11 +217,11 @@ val HEADER_STYLES = listOf(
         fontWeight = FontWeight.Bold,
         fontSynthesis = FontSynthesis.Weight
     ), SpanStyle(
-        fontSize = 13.28.sp,
+        fontSize = 14.sp,
         fontWeight = FontWeight.Bold,
         fontSynthesis = FontSynthesis.Weight
     ), SpanStyle(
-        fontSize = 12.sp,
+        fontSize = 13.sp,
         fontWeight = FontWeight.SemiBold,
         fontSynthesis = FontSynthesis.Weight
     )

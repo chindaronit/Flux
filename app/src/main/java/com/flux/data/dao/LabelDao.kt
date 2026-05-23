@@ -22,8 +22,8 @@ interface LabelDao {
     @Query("DELETE FROM LabelModel WHERE workspaceId = :workspaceId")
     suspend fun deleteAllWorkspaceLabels(workspaceId: String)
 
-    @Query("SELECT * FROM LabelModel where workspaceId IN (:workspaceId)")
-    fun loadAllLabels(workspaceId: String): Flow<List<LabelModel>>
+    @Query("SELECT * FROM LabelModel")
+    fun loadAllLabels(): Flow<List<LabelModel>>
 
     @Query("SELECT * FROM LabelModel")
     suspend fun getAll(): List<LabelModel>

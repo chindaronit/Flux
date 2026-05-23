@@ -22,20 +22,24 @@ import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.compose.rememberNavController
 import com.flux.navigation.AppNavHost
 import com.flux.navigation.Loader
 import com.flux.other.Constants.Other
 import com.flux.other.createNotificationChannel
 import com.flux.ui.effects.ScreenEffect
+import com.flux.ui.state.States
 import com.flux.ui.theme.FluxTheme
 import com.flux.ui.viewModel.BackupViewModel
 import com.flux.ui.viewModel.EventViewModel
 import com.flux.ui.viewModel.HabitViewModel
 import com.flux.ui.viewModel.JournalViewModel
+import com.flux.ui.viewModel.LabelViewModel
 import com.flux.ui.viewModel.NotesViewModel
 import com.flux.ui.viewModel.ProgressBoardViewModel
 import com.flux.ui.viewModel.SettingsViewModel
 import com.flux.ui.viewModel.TodoViewModel
+import com.flux.ui.viewModel.ViewModels
 import com.flux.ui.viewModel.WorkspaceViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.Flow
@@ -68,6 +72,7 @@ class MainActivity : AppCompatActivity() {
             val todoViewModel: TodoViewModel = hiltViewModel()
             val journalViewModel: JournalViewModel = hiltViewModel()
             val backupViewModel: BackupViewModel = hiltViewModel()
+            val labelViewModel: LabelViewModel = hiltViewModel()
             val progressBoardViewModel: ProgressBoardViewModel = hiltViewModel()
 
             // States
@@ -78,6 +83,7 @@ class MainActivity : AppCompatActivity() {
             val habitState by habitViewModel.state.collectAsStateWithLifecycle()
             val todoState by todoViewModel.state.collectAsStateWithLifecycle()
             val journalState by journalViewModel.state.collectAsStateWithLifecycle()
+            val labelState by labelViewModel.state.collectAsStateWithLifecycle()
             val progressBoardState by progressBoardViewModel.state.collectAsStateWithLifecycle()
 
             // Stop splash screen when settings are loaded
@@ -96,24 +102,31 @@ class MainActivity : AppCompatActivity() {
                         color = MaterialTheme.colorScheme.surfaceContainerLow
                     ) {
                         AppNavHost(
+                            navController = rememberNavController(),
                             snackbarHostState = snackBarHostState,
-                            settingsViewModel = settingsViewModel,
-                            notesViewModel = notesViewModel,
-                            workspaceViewModel = workspaceViewModel,
-                            eventViewModel = eventViewModel,
-                            habitViewModel = habitViewModel,
-                            todoViewModel = todoViewModel,
-                            journalViewModel = journalViewModel,
-                            backupViewModel = backupViewModel,
-                            progressBoardViewModel = progressBoardViewModel,
-                            settings = settings,
-                            notesState = notesState,
-                            workspaceState = workspaceState,
-                            eventState = eventState,
-                            habitState = habitState,
-                            todoState = todoState,
-                            journalState = journalState,
-                            progressBoardState = progressBoardState
+                            viewModels = ViewModels(
+                                notesViewModel,
+                                eventViewModel,
+                                todoViewModel,
+                                habitViewModel,
+                                workspaceViewModel,
+                                journalViewModel,
+                                settingsViewModel,
+                                backupViewModel,
+                                labelViewModel,
+                                progressBoardViewModel
+                            ),
+                            states = States(
+                                notesState,
+                                eventState,
+                                habitState,
+                                todoState,
+                                workspaceState,
+                                journalState,
+                                progressBoardState,
+                                labelState,
+                                settings
+                            )
                         )
                     }
                 }

@@ -79,19 +79,9 @@ import com.flux.other.HeaderNode
 import com.flux.other.ensureStorageRoot
 import com.flux.other.printPdf
 import com.flux.other.shareNote
-import com.flux.ui.components.DeleteAlert
-import com.flux.ui.components.LinkDialog
-import com.flux.ui.components.ListDialog
-import com.flux.ui.components.MarkdownEditorRow
-import com.flux.ui.components.NoteDetailsTopBar
-import com.flux.ui.components.NotesInfoBottomSheet
-import com.flux.ui.components.OutlineBottomSheet
-import com.flux.ui.components.SelectLabelDialog
-import com.flux.ui.components.ShareDialog
-import com.flux.ui.components.TableDialog
-import com.flux.ui.components.TaskDialog
-import com.flux.ui.components.TaskItem
-import com.flux.ui.components.convertMillisToDate
+import com.flux.ui.common.DeleteAlert
+import com.flux.ui.common.NoteDetailsTopBar
+import com.flux.ui.common.convertMillisToDate
 import com.flux.ui.events.NotesEvents
 import com.flux.ui.state.TextState
 import com.flux.ui.viewModel.NotesViewModel
@@ -101,7 +91,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import com.flux.other.AudioRecorder
-import com.flux.ui.components.RecordAudioDialog
+import com.flux.ui.common.convertMillisToTime
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -211,7 +201,6 @@ fun NoteDetails(
     }
 
     fun onSaveNote() {
-
         val newTitle = titleState.text.toString()
         val newDescription = contentState.text.toString()
 
@@ -320,9 +309,7 @@ fun NoteDetails(
             .fillMaxSize()
             .padding(innerPadding)) {
             AnimatedContent(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 4.dp),
+                modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
                 targetState = isSearching,
                 contentAlignment = Alignment.TopCenter
             ) {
@@ -510,7 +497,7 @@ fun NoteDetails(
         isVisible = showAboutNotes,
         words = aboutNotes.wordCountWithPunctuation,
         characters = aboutNotes.charCount,
-        lastEdited = convertMillisToDate(note.lastEdited),
+        lastEdited = "${convertMillisToDate(note.lastEdited)}, ${convertMillisToTime(note.lastEdited)}",
         sheetState = sheetState,
         paragraph = aboutNotes.paragraphCount,
         wordsWithoutPunctuations = aboutNotes.wordCountWithoutPunctuation,

@@ -8,5 +8,6 @@ data class States(
     val workspaceState: WorkspaceState,
     val journalState: JournalState,
     val progressBoardState: ProgressBoardState,
+    val labelState: LabelState,
     val settings: Settings
 )

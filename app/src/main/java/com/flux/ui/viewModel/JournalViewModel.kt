@@ -8,7 +8,6 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flux.data.model.JournalModel
-import com.flux.data.model.writtenOnDate
 import com.flux.data.repository.JournalRepository
 import com.flux.data.repository.SettingsRepository
 import com.flux.other.Constants
@@ -31,11 +30,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.commonmark.Extension
@@ -53,10 +47,6 @@ import org.commonmark.node.Heading
 import org.commonmark.parser.Parser
 import org.commonmark.renderer.html.HtmlRenderer
 import java.io.OutputStreamWriter
-import java.time.Instant
-import java.time.LocalDate
-import java.time.YearMonth
-import java.time.ZoneId
 import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -78,35 +68,9 @@ class JournalViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            state
-                .map { it.workspaceId }
-                .distinctUntilChanged()
-                .filterNotNull()
-                .flatMapLatest { workspaceId ->
-                    repository.loadAllEntries(workspaceId)
-                }
-                .combine(
-                    state.map { it.selectedDate }.distinctUntilChanged()
-                ) { allJournals, selectedDate ->
-                    val datedJournals = filterByDate(allJournals, selectedDate)
-                    Pair(allJournals, datedJournals)
-                }
-                .combine(
-                    state.map { it.selectedYearMonth }.distinctUntilChanged()
-                ) { (allJournals, datedJournals), selectedYearMonth ->
-                    val monthlyCount = computeMonthlyCount(allJournals, selectedYearMonth)
-                    Triple(allJournals, datedJournals, monthlyCount)
-                }
-                .collect { (allJournals, datedJournals, monthlyCount) ->
-                    updateState {
-                        it.copy(
-                            isLoading = false,
-                            allEntries = allJournals,
-                            datedEntries = datedJournals,
-                            monthlyJournalCount = monthlyCount
-                        )
-                    }
-                }
+            repository.loadJournalData().collect { data ->
+                updateState { it.copy(isLoading = false, data = data) }
+            }
         }
     }
 
@@ -136,14 +100,6 @@ class JournalViewModel @Inject constructor(
             is JournalEvents.DeleteEntry -> deleteEntry(event.entry)
             is JournalEvents.DeleteWorkspaceEntries -> deleteAllWorkspaceEntries(event.workspaceId)
             is JournalEvents.UpsertEntry -> upsertEntry(event.entry)
-            is JournalEvents.ChangeMonth -> updateState { it.copy(selectedYearMonth = event.newYearMonth) }
-            is JournalEvents.ChangeDate -> {
-                val newDate = event.newLocalDate
-                updateState { it.copy(
-                    selectedDate = newDate,
-                    selectedYearMonth = YearMonth.from(LocalDate.ofEpochDay(newDate))
-                ) }
-            }
 
             is JournalEvents.CalculateOutline -> {
                 val hash = event.content.hashCode()
@@ -178,11 +134,8 @@ class JournalViewModel @Inject constructor(
                 val rootUri = settingsRepository.getStorageRoot()
                 val contentState = event.contentState
 
-                val baseDir =
-                    getOrCreateDirectory(context, rootUri, Constants.File.FLUX)
-                val audioDir = baseDir?.let { dir ->
-                    getOrCreateDirectory(context, dir.uri, Constants.File.FLUX_AUDIO)
-                }
+                val baseDir = getOrCreateDirectory(context, rootUri, Constants.File.FLUX)
+                val audioDir = baseDir?.let { dir -> getOrCreateDirectory(context, dir.uri, Constants.File.FLUX_AUDIO) }
 
                 audioDir?.let { dir ->
                     val sourceFile = DocumentFile.fromSingleUri(context, sourceUri)
@@ -278,28 +231,7 @@ class JournalViewModel @Inject constructor(
                     }
                 }
             }
-
-            is JournalEvents.EnterWorkspace -> { updateState { if (it.workspaceId == event.workspaceId) { it } else { it.copy(workspaceId = event.workspaceId, isLoading = true) }} }
         }
-    }
-
-    private fun computeMonthlyCount(
-        journals: List<JournalModel>,
-        yearMonth: YearMonth
-    ): Map<LocalDate, Int> {
-        return journals
-            .filter { journal ->
-                val journalDate = Instant.ofEpochMilli(journal.dateTime)
-                    .atZone(ZoneId.systemDefault())
-                    .toLocalDate()
-                YearMonth.from(journalDate) == yearMonth
-            }
-            .groupBy { journal ->
-                Instant.ofEpochMilli(journal.dateTime)
-                    .atZone(ZoneId.systemDefault())
-                    .toLocalDate()
-            }
-            .mapValues { (_, entries) -> entries.size }
     }
 
     fun buildOutline(markdown: CharSequence): HeaderNode {
@@ -408,13 +340,5 @@ class JournalViewModel @Inject constructor(
 
     private fun upsertEntry(data: JournalModel) {
         viewModelScope.launch(Dispatchers.IO) { repository.upsertEntry(data) }
-    }
-
-    private fun filterByDate(
-        entries: List<JournalModel>,
-        epochDay: Long
-    ): List<JournalModel> {
-        val date = LocalDate.ofEpochDay(epochDay)
-        return entries.filter { it.writtenOnDate(date) }
     }
 }

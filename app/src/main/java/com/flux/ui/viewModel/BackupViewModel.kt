@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.flux.data.database.FluxBackup
 import com.flux.data.database.FluxDatabase
 import com.flux.data.model.SettingsModel
+import com.flux.data.model.toScheduleRequest
 import com.flux.data.repository.SettingsRepository
 import com.flux.other.BackupFrequency
 import com.flux.other.BackupManager
@@ -36,6 +37,7 @@ class BackupViewModel @Inject constructor(
         ignoreUnknownKeys = true   // old backups won't have new fields → skip them
         coerceInputValues = true   // null where non-null expected → use default
         encodeDefaults = true      // ensure new fields are always written on export
+        classDiscriminator = "type"
     }
 
     suspend fun exportBackup(context: Context) {
@@ -131,7 +133,7 @@ class BackupViewModel @Inject constructor(
         // --- Habits ---
         backup.habits.forEach { habit ->
             if (!db.habitDao.exists(habit.id)) {
-                scheduleNextReminder(context, habit)
+                scheduleNextReminder(context, habit.toScheduleRequest())
                 db.habitDao.upsertHabit(habit)
             }
         }
@@ -154,7 +156,7 @@ class BackupViewModel @Inject constructor(
         // --- Events ---
         backup.events.forEach { event ->
             if (!db.eventDao.exists(event.id)){
-                scheduleNextReminder(context, event)
+                scheduleNextReminder(context, event.toScheduleRequest())
                 db.eventDao.upsertEvent(event)
             }
         }

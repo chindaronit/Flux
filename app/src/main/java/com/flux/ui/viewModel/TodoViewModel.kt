@@ -12,10 +12,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -37,21 +33,8 @@ class TodoViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            state
-                .map { it.workspaceId }
-                .distinctUntilChanged()
-                .filterNotNull()
-                .flatMapLatest { workspaceId: String ->
-                    repository.loadAllLists(workspaceId)
-                }
-                .collect { lists ->
-                    updateState {
-                        it.copy(
-                            isLoading = false,
-                            allLists = lists
-                        )
-                    }
-                }
+            repository.loadTodoData()
+                .collect { lists -> updateState { it.copy(isLoading = false, allLists = lists) } }
         }
     }
 
@@ -60,7 +43,6 @@ class TodoViewModel @Inject constructor(
             is TodoEvents.DeleteList -> { deleteList(event.data) }
             is TodoEvents.UpsertList -> { upsertList(event.data) }
             is TodoEvents.DeleteAllWorkspaceLists -> deleteWorkspaceLists(event.workspaceId)
-            is TodoEvents.EnterWorkspace -> { updateState { if (it.workspaceId == event.workspaceId) { it } else {it.copy(workspaceId = event.workspaceId, isLoading = true) }} }
         }
     }
 

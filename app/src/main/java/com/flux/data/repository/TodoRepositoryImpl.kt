@@ -10,8 +10,8 @@ import javax.inject.Inject
 class TodoRepositoryImpl @Inject constructor(
     val dao: TodoDao
 ) : TodoRepository {
-    override fun loadAllLists(workspaceId: String): Flow<List<TodoModel>> {
-        return dao.loadAllLists(workspaceId)
+    override fun loadTodoData(): Flow<List<TodoModel>> {
+        return dao.loadTodoData()
     }
 
     override suspend fun upsertList(list: TodoModel) {

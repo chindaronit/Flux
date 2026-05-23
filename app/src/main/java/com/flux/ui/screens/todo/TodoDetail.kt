@@ -44,7 +44,7 @@ import androidx.navigation.NavController
 import com.flux.R
 import com.flux.data.model.TodoItem
 import com.flux.data.model.TodoModel
-import com.flux.ui.components.DeleteAlert
+import com.flux.ui.common.DeleteAlert
 import com.flux.ui.events.TodoEvents
 
 @OptIn(ExperimentalMaterial3Api::class)

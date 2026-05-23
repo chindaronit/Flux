@@ -7,12 +7,12 @@ import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDeepLink
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
-import com.flux.ui.components.defaultScreenEnterAnimation
-import com.flux.ui.components.defaultScreenExitAnimation
-import com.flux.ui.components.slideFromBottomEnter
-import com.flux.ui.components.slideScreenEnterAnimation
-import com.flux.ui.components.slideScreenExitAnimation
-import com.flux.ui.components.slideToBottomExit
+import com.flux.ui.common.defaultScreenEnterAnimation
+import com.flux.ui.common.defaultScreenExitAnimation
+import com.flux.ui.common.slideFromBottomEnter
+import com.flux.ui.common.slideScreenEnterAnimation
+import com.flux.ui.common.slideScreenExitAnimation
+import com.flux.ui.common.slideToBottomExit
 
 
 fun NavGraphBuilder.animatedComposable(

@@ -13,6 +13,11 @@ class HabitRepositoryImpl @Inject constructor(
     private val dao: HabitsDao,
     private val instanceDao: HabitInstanceDao
 ) : HabitRepository {
+
+    override suspend fun getHabitInstance(habitId: String, instanceDate: Long): HabitInstanceModel? {
+        return withContext(Dispatchers.IO) { instanceDao.getHabitInstance(habitId, instanceDate) }
+    }
+
     override suspend fun upsertHabit(habit: HabitModel) {
         return withContext(Dispatchers.IO) { dao.upsertHabit(habit) }
     }
@@ -29,12 +34,12 @@ class HabitRepositoryImpl @Inject constructor(
         return withContext(Dispatchers.IO) { dao.loadAllHabits() }
     }
 
-    override fun loadAllHabitInstance(workspaceId: String): Flow<List<HabitInstanceModel>> {
-        return instanceDao.loadAllInstances(workspaceId)
+    override fun loadHabitInstanceData(): Flow<List<HabitInstanceModel>> {
+        return instanceDao.loadHabitInstanceData()
     }
 
-    override fun loadAllHabitsOfWorkspace(workspaceId: String): Flow<List<HabitModel>> {
-        return dao.loadAllHabitsOfWorkspace(workspaceId)
+    override fun loadHabitData(): Flow<List<HabitModel>> {
+        return dao.loadHabitData()
     }
 
     override suspend fun deleteHabit(habit: HabitModel) {

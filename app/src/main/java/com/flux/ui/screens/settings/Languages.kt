@@ -40,11 +40,8 @@ import androidx.compose.ui.unit.dp
 import androidx.core.os.LocaleListCompat
 import androidx.navigation.NavController
 import com.flux.R
-import com.flux.ui.components.CircleWrapper
-import com.flux.ui.components.GeneralSearchBar
-import com.flux.ui.components.MaterialText
-import com.flux.ui.components.RenderRadio
-import com.flux.ui.components.shapeManager
+import com.flux.ui.common.EmptyLanguage
+import com.flux.ui.common.GeneralSearchBar
 import com.flux.ui.state.Settings
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
@@ -78,20 +75,26 @@ fun Languages(navController: NavController, settings: Settings) {
                 .padding(innerPadding)
                 .padding(16.dp)
         ) {
-            item {
-                LanguageItem(
-                    title = stringResource(R.string.System_language),
-                    isSelected = currentLocale.isEmpty,
-                    shape = shapeManager(radius = settings.data.cornerRadius, isFirst = true),
-                    icon = R.drawable.translate,
-                    description = stringResource(R.string.System_language_desc),
-                    onRadioClicked = { AppCompatDelegate.setApplicationLocales(LocaleListCompat.getEmptyLocaleList()) }
-                )
+            if(query.isBlank()){
+                item {
+                    LanguageItem(
+                        title = stringResource(R.string.System_language),
+                        isSelected = currentLocale.isEmpty,
+                        shape = shapeManager(radius = settings.data.cornerRadius, isFirst = true),
+                        icon = R.drawable.translate,
+                        description = stringResource(R.string.System_language_desc),
+                        onRadioClicked = { AppCompatDelegate.setApplicationLocales(LocaleListCompat.getEmptyLocaleList()) }
+                    )
+                }
             }
 
             val filteredLanguages = supportedLanguages
                 .toList()
                 .filter { it.first.contains(query, ignoreCase = true) }
+
+            if(filteredLanguages.isEmpty()){
+                item { EmptyLanguage() }
+            }
 
             itemsIndexed(filteredLanguages) { index, (displayName, languageCode) ->
                 val languageInfo = getLanguageInfo(languageCode)
@@ -101,6 +104,8 @@ fun Languages(navController: NavController, settings: Settings) {
                     isSelected = !currentLocale.isEmpty && currentLocale[0]?.language == languageCode,
                     shape = shapeManager(
                         radius = settings.data.cornerRadius,
+                        isBoth = filteredLanguages.size==1,
+                        isFirst = index == 0 && query.isNotBlank(),
                         isLast = index == filteredLanguages.lastIndex
                     ),
                     icon = languageInfo.iconRes,

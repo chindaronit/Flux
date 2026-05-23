@@ -3,8 +3,10 @@ package com.flux.ui.viewModel
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.flux.data.model.HabitConfig
 import com.flux.data.model.HabitInstanceModel
 import com.flux.data.model.HabitModel
+import com.flux.data.model.toScheduleRequest
 import com.flux.data.repository.HabitRepository
 import com.flux.other.cancelReminder
 import com.flux.other.scheduleNextReminder
@@ -44,29 +46,20 @@ class HabitViewModel @Inject constructor(private val repository: HabitRepository
     private suspend fun reduce(event: HabitEvents) {
         when (event) {
             is HabitEvents.DeleteHabit -> deleteHabit(event.habit, event.context)
-            is HabitEvents.EnterWorkspace -> { updateState { if (it.workspaceId == event.workspaceId) { it } else { it.copy(workspaceId = event.workspaceId, isLoading = true) }} }
             is HabitEvents.UpsertHabit -> upsertHabit(event.context, event.habit)
-            is HabitEvents.MarkDone -> upsertInstance(event.habitInstance)
-            is HabitEvents.MarkUndone -> deleteInstance(event.habitInstance)
+            is HabitEvents.UpdateInstance -> updateInstance(event.habitInstance, event.config)
             is HabitEvents.DeleteAllWorkspaceHabits -> deleteWorkspaceHabits(event.workspaceId, event.context)
         }
     }
 
     init {
         viewModelScope.launch {
-            state
-                .map { it.workspaceId }
-                .distinctUntilChanged()
-                .filterNotNull()
-                .flatMapLatest { workspaceId ->
-                    combine(
-                        repository.loadAllHabitsOfWorkspace(workspaceId),
-                        repository.loadAllHabitInstance(workspaceId)
-                    ) { habits, instances ->
-                        habits.sortedBy { it.startDateTime } to instances
-                    }
-                }
-                .collect { (habits, instances) ->
+            combine(
+                repository.loadHabitData(),
+                repository.loadHabitInstanceData()
+            ) { habits, instances ->
+                habits.sortedBy { it.startDateTime } to instances
+            }.collect { (habits, instances) ->
                     updateState {
                         it.copy(
                             isLoading = false,
@@ -85,52 +78,32 @@ class HabitViewModel @Inject constructor(private val repository: HabitRepository
     private fun deleteWorkspaceHabits(workspaceId: String, context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
             _state.value.allHabits.forEach { habit ->
-                cancelReminder(
-                    context,
-                    habit.id,
-                    habit.type.toString(),
-                    habit.title,
-                    habit.description,
-                    habit.workspaceId,
-                    habit.endDateTime,
-                    habit.startDateTime,
-                    habit.notificationOffset,
-                    habit.recurrence
-                )
+                cancelReminder(context, habit.toScheduleRequest())
             }
             repository.deleteAllWorkspaceHabit(workspaceId)
         }
     }
 
-    private fun upsertInstance(instance: HabitInstanceModel) {
+    private fun updateInstance(instance: HabitInstanceModel, config: HabitConfig) {
+        if(_state.value.allInstances.filter { it.habitId == instance.habitId }.any { it.instanceDate == instance.instanceDate } && config is HabitConfig.Simple){
+            deleteInstance(instance)
+            return
+        }
         viewModelScope.launch(Dispatchers.IO) { repository.upsertHabitInstance(instance) }
     }
 
     private fun deleteHabit(data: HabitModel, context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
-            cancelReminder(context, data.id, data.type.toString(), data.title, data.description, data.workspaceId, data.endDateTime, data.startDateTime, data.notificationOffset, data.recurrence)
+            cancelReminder(context,data.toScheduleRequest())
             repository.deleteHabit(data)
         }
     }
 
     private fun upsertHabit(context: Context, data: HabitModel) {
         viewModelScope.launch(Dispatchers.IO) {
-            cancelReminder(
-                context,
-                data.id,
-                data.type.toString(),
-                data.title,
-                data.description,
-                data.workspaceId,
-                data.endDateTime,
-                data.startDateTime,
-                data.notificationOffset,
-                data.recurrence
-            )
-
+            cancelReminder(context,data.toScheduleRequest())
             repository.upsertHabit(data)
-
-            scheduleNextReminder(context = context, item = data)
+            scheduleNextReminder(context = context, data.toScheduleRequest())
         }
     }
 }

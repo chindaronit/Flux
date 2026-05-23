@@ -2,7 +2,6 @@ package com.flux.data.repository
 
 import com.flux.data.dao.LabelDao
 import com.flux.data.dao.NotesDao
-import com.flux.data.model.LabelModel
 import com.flux.data.model.NotesModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -17,10 +16,6 @@ class NoteRepositoryImpl @Inject constructor(
         return withContext(Dispatchers.IO) { notesDao.upsertNote(note) }
     }
 
-    override suspend fun upsertLabel(label: LabelModel) {
-        return withContext(Dispatchers.IO) { labelDao.upsertLabel(label) }
-    }
-
     override suspend fun upsertNotes(notes: List<NotesModel>) {
         return withContext(Dispatchers.IO) { notesDao.upsertNotes(notes) }
     }
@@ -29,20 +24,12 @@ class NoteRepositoryImpl @Inject constructor(
         return withContext(Dispatchers.IO) { notesDao.deleteNote(note) }
     }
 
-    override suspend fun deleteLabel(label: LabelModel) {
-        return withContext(Dispatchers.IO) { labelDao.deleteLabel(label) }
-    }
-
     override suspend fun deleteNotes(notes: List<String>) {
         return withContext(Dispatchers.IO) { notesDao.deleteNotes(notes) }
     }
 
-    override fun loadAllNotes(workspaceId: String): Flow<List<NotesModel>> {
-        return notesDao.loadAllNotes(workspaceId)
-    }
-
-    override fun loadAllLabels(workspaceId: String): Flow<List<LabelModel>> {
-        return labelDao.loadAllLabels(workspaceId)
+    override fun loadNotesData(): Flow<List<NotesModel>> {
+        return notesDao.loadNotesData()
     }
 
     override suspend fun deleteAllWorkspaceNotes(workspaceId: String) {

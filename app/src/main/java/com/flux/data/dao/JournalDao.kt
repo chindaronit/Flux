@@ -22,14 +22,8 @@ interface JournalDao {
     @Query("Delete FROM JournalModel where workspaceId = :workspaceId")
     suspend fun deleteAllWorkspaceEntries(workspaceId: String)
 
-    @Query(
-        """
-        SELECT * FROM JournalModel 
-        WHERE workspaceId = :workspaceId
-        ORDER BY dateTime DESC
-    """
-    )
-    fun loadAllEntries(workspaceId: String): Flow<List<JournalModel>>
+    @Query("SELECT * FROM JournalModel ORDER BY dateTime DESC")
+    fun loadJournalData(): Flow<List<JournalModel>>
 
     @Query("SELECT * FROM JournalModel")
     suspend fun loadAllEntries(): List<JournalModel>

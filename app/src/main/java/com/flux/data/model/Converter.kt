@@ -11,6 +11,7 @@ class Converter {
         encodeDefaults = true
         ignoreUnknownKeys = true
         coerceInputValues = true
+        classDiscriminator = "type"
     }
 
     @TypeConverter
@@ -83,6 +84,21 @@ class Converter {
     fun toStringList(value: String): List<String> {
         val listType = object : TypeToken<List<String>>() {}.type
         return Gson().fromJson(value, listType)
+    }
+
+    @TypeConverter
+    fun fromConfig(config: HabitConfig): String {
+        return json.encodeToString(config)
+    }
+
+    @TypeConverter
+    fun toConfig(value: String): HabitConfig {
+        return try {
+            json.decodeFromString(value)
+        } catch (
+            _: Exception) {
+            HabitConfig.Simple // fallback (critical)
+        }
     }
 }
 

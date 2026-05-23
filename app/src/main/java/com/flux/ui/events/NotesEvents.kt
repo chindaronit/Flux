@@ -4,19 +4,15 @@ import android.content.Context
 import android.net.Uri
 import android.webkit.WebView
 import androidx.compose.foundation.text.input.TextFieldState
-import com.flux.data.model.LabelModel
 import com.flux.data.model.NotesModel
 import com.flux.other.ExportType
 
 sealed class NotesEvents {
     data class DeleteAllWorkspaceNotes(val workspaceId: String) : NotesEvents()
-    data class EnterWorkspace(val workspaceId: String) : NotesEvents()
     data class DeleteNote(val data: NotesModel) : NotesEvents()
     data class DeleteNotes(val data: List<NotesModel>) : NotesEvents()
     data class TogglePinMultiple(val data: List<NotesModel>) : NotesEvents()
     data class UpsertNote(val data: NotesModel) : NotesEvents()
-    data class DeleteLabel(val data: LabelModel) : NotesEvents()
-    data class UpsertLabel(val data: LabelModel) : NotesEvents()
     data class SelectNotes(val noteId: String) : NotesEvents()
     data class UnSelectNotes(val noteId: String) : NotesEvents()
     data class ImportAudio(val context: Context, val sourceUri: Uri, val contentState: TextFieldState): NotesEvents()

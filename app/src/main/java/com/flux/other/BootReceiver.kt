@@ -3,8 +3,9 @@ package com.flux.other
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import com.flux.data.model.ReminderItem
+import com.flux.data.model.ScheduleRequest
 import com.flux.data.model.isLive
+import com.flux.data.model.toScheduleRequest
 import com.flux.data.repository.EventRepository
 import com.flux.data.repository.HabitRepository
 import dagger.hilt.EntryPoint
@@ -16,38 +17,47 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class BootReceiver : BroadcastReceiver() {
-    override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action == Intent.ACTION_BOOT_COMPLETED ||
-            intent.action == Intent.ACTION_LOCKED_BOOT_COMPLETED
-        ) {
-            val pendingResult = goAsync()
 
-            CoroutineScope(Dispatchers.IO).launch {
+    override fun onReceive(context: Context, intent: Intent) {
+
+        if (intent.action != Intent.ACTION_BOOT_COMPLETED &&
+            intent.action != Intent.ACTION_LOCKED_BOOT_COMPLETED
+        ) return
+
+        val pendingResult = goAsync()
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
                 val reminders = getStoredReminders(context)
 
-                // Reschedule each reminder at its next occurrence
-                reminders.forEach { reminder ->
-                    scheduleNextReminder(context, reminder)
+                reminders.forEach { request ->
+                    scheduleNextReminder(context, request)
                 }
 
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
                 pendingResult.finish()
             }
         }
     }
 
-    // --- Load reminders from repositories ---
-    private suspend fun getStoredReminders(context: Context): List<ReminderItem> {
+    // ---------------------- LOAD + CONVERT ----------------------
+
+    private suspend fun getStoredReminders(context: Context): List<ScheduleRequest> {
+
         val entryPoint = EntryPointAccessors.fromApplication(
             context,
             ReceiverEntryPoint::class.java
         )
-        val habitRepository = entryPoint.habitRepository()
-        val eventRepository = entryPoint.eventRepository()
 
-        val habits = habitRepository.loadAllHabits()
-        val events = eventRepository.loadAllEvents()
+        val habitRepo = entryPoint.habitRepository()
+        val eventRepo = entryPoint.eventRepository()
 
-        return habits.filter { it.isLive() } + events
+        val habits = habitRepo.loadAllHabits().filter { it.isLive() }.map { it.toScheduleRequest() }
+        val events = eventRepo.loadAllEvents().filter { it.isLive() }.map { it.toScheduleRequest() }
+
+        return habits + events
     }
 }
 

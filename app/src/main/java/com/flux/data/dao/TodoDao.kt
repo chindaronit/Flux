@@ -22,8 +22,8 @@ interface TodoDao {
     @Query("DELETE FROM TodoModel WHERE workspaceId = :workspaceId")
     fun deleteAllWorkspaceLists(workspaceId: String)
 
-    @Query("SELECT * FROM TodoModel where workspaceId IN (:workspaceId)")
-    fun loadAllLists(workspaceId: String): Flow<List<TodoModel>>
+    @Query("SELECT * FROM TodoModel")
+    fun loadTodoData(): Flow<List<TodoModel>>
 
     @Query("SELECT * FROM TodoModel")
     suspend fun loadAllLists(): List<TodoModel>

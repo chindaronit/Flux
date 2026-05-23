@@ -9,5 +9,6 @@ data class ViewModels(
     val journalViewModel: JournalViewModel,
     val settingsViewModel: SettingsViewModel,
     val backupViewModel: BackupViewModel,
+    val labelViewModel: LabelViewModel,
     val progressBoardViewModel: ProgressBoardViewModel
 )

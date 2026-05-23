@@ -100,7 +100,6 @@ class WorkspaceViewModel @Inject constructor(
         }
     }
 
-
     private fun togglePinWorkspaces(spaces: List<WorkspaceModel>) {
         viewModelScope.launch(Dispatchers.IO) {
             val isAllPinned=spaces.all { it.isPinned }
