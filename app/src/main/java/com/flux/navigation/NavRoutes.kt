@@ -135,13 +135,6 @@ val HabitScreens =
         }
     )
 
-val SearchScreens =
-    mapOf<String, @Composable (navController: NavController, states: States, viewModels: ViewModels) -> Unit>(
-        NavRoutes.Search.route to { navController, states, viewModels ->
-            SearchScreen(navController, states, viewModels)
-        }
-    )
-
 val TodoScreens =
     mapOf<String, @Composable (navController: NavController, listId: String, workspaceId: String, states: States, viewModels: ViewModels) -> Unit>(
         NavRoutes.TodoDetail.route + "/{workspaceId}" + "/{listId}" to { navController, listId, workspaceId, states, viewModel ->
@@ -160,7 +153,7 @@ val JournalScreens =
         NavRoutes.EditJournal.route + "/{workspaceId}" + "/{journalId}" + "/{journalDateTime}" to { navController, journalId, journalDateTime, workspaceId, states, viewModel ->
             EditJournal(
                 navController,
-                states.journalState.data.find { it.journalId == journalId } ?: JournalModel(workspaceId = workspaceId, dateTime = journalDateTime),
+                states.journalState.allEntries.find { it.journalId == journalId } ?: JournalModel(workspaceId = workspaceId, dateTime = journalDateTime),
                 states.journalState.outline,
                 states.journalState.textState,
                 states.settings.data.isDarkMode,
@@ -168,7 +161,6 @@ val JournalScreens =
                 states.settings.data.isLineNumbersVisible,
                 states.settings.data.startWithReadView,
                 states.settings.data.storageRootUri,
-                states.labelState.allLabels,
                 viewModel.journalViewModel,
                 viewModel.settingsViewModel,
                 viewModel.journalViewModel::onEvent
@@ -205,9 +197,6 @@ val SettingsScreens =
         },
         NavRoutes.Theme.route to { navController, _, states, viewModels ->
             Themes(navController, states.settings, viewModels.settingsViewModel::onEvent)
-        },
-        NavRoutes.Mode.route to { navController, _, states, viewModels ->
-            Mode(navController, states.settings, viewModels.settingsViewModel::onEvent)
         }
     )
 
