@@ -43,8 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.flux.R
-import com.flux.ui.components.BasicScaffold
-import com.flux.ui.components.SelectableColorPlatte
+import com.flux.ui.common.BasicScaffold
 import com.flux.ui.events.SettingEvents
 import com.flux.ui.state.Settings
 import com.flux.ui.theme.lightSchemes
@@ -203,15 +202,15 @@ fun Themes(
 
                             item {
                                 IconButton({
-                                    onSettingsEvents(
-                                        SettingEvents.UpdateSettings(
-                                            settings.data.copy(
-                                                isAutomaticTheme = false,
-                                                isDarkMode = true,
-                                                amoledTheme = false
+                                        onSettingsEvents(
+                                            SettingEvents.UpdateSettings(
+                                                settings.data.copy(
+                                                    isAutomaticTheme = false,
+                                                    isDarkMode = true,
+                                                    amoledTheme = false
+                                                )
                                             )
                                         )
-                                    )
                                     },
                                     colors = IconButtonDefaults.iconButtonColors(
                                         containerColor = Color.Black.copy(0.8f),

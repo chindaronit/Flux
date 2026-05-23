@@ -17,21 +17,24 @@ import com.flux.ui.screens.events.NewEvent
 import com.flux.ui.screens.habits.HabitDetails
 import com.flux.ui.screens.habits.NewHabit
 import com.flux.ui.screens.journal.EditJournal
-import com.flux.ui.screens.notes.EditLabels
+import com.flux.ui.screens.labels.EditLabels
 import com.flux.ui.screens.notes.NoteDetails
+import com.flux.ui.screens.search.SearchScreen
 import com.flux.ui.screens.settings.About
 import com.flux.ui.screens.settings.Contact
 import com.flux.ui.screens.settings.Customize
 import com.flux.ui.screens.settings.Data
 import com.flux.ui.screens.settings.Editor
 import com.flux.ui.screens.settings.Languages
+import com.flux.ui.screens.settings.Mode
 import com.flux.ui.screens.settings.Privacy
 import com.flux.ui.screens.settings.Settings
 import com.flux.ui.screens.settings.StorageSelectionScreen
 import com.flux.ui.screens.settings.Themes
 import com.flux.ui.screens.todo.TodoDetail
-import com.flux.ui.screens.workspaces.NormalModeDetails
-import com.flux.ui.screens.workspaces.WorkSpaces
+import com.flux.ui.screens.workspaces.NewWorkspaceScreen
+import com.flux.ui.screens.workspaces.WorkspaceDetails
+import com.flux.ui.screens.workspaces.WorkspaceHomeScreen
 import com.flux.ui.state.States
 import com.flux.ui.viewModel.ViewModels
 
@@ -39,6 +42,7 @@ sealed class NavRoutes(val route: String) {
     data object AuthScreen : NavRoutes("biometric") // auth screen
     data object StorageSelection : NavRoutes("storageSelection") // Storage Selection
     data object Workspace : NavRoutes("workspace") // workspaces
+    data object NewWorkspace: NavRoutes("workspace/edit") // edit workspace
     data object WorkspaceHome : NavRoutes("workspace/details")
     data object EditLabels : NavRoutes("workspace/labels/edit") //Labels
     data object NoteDetails : NavRoutes("workspace/note/details") // Notes
@@ -48,6 +52,8 @@ sealed class NavRoutes(val route: String) {
     data object TodoDetail : NavRoutes("workspace/todo/details") // TodoList
     data object EditJournal : NavRoutes("workspace/journal/edit") // Journal
     data object NewEvent : NavRoutes("workspace/event/edit") // new event
+    data object Analytics : NavRoutes("Analytics")
+    data object Search : NavRoutes("workspace/search")
 
     // Settings
     data object Settings : NavRoutes("settings")
@@ -59,6 +65,7 @@ sealed class NavRoutes(val route: String) {
     data object Contact : NavRoutes("settings/contact")
     data object Backup : NavRoutes("setting/backup")
     data object Editor : NavRoutes("setting/editor")
+    data object Mode : NavRoutes("setting/mode")
 
     fun withArgs(vararg args: Any): String {
         return buildString {
@@ -83,6 +90,12 @@ val StorageSelectionScreen = mapOf<String, @Composable (navController: NavContro
     }
 )
 
+val SearchScreens = mapOf<String, @Composable (navController: NavController, states: States, viewModels: ViewModels) -> Unit>(
+    NavRoutes.Search.route to { navController, states, viewModels ->
+        SearchScreen(navController, states, viewModels)
+    }
+)
+
 val NotesScreens =
     mapOf<String, @Composable (navController: NavController, notesId: String, workspaceId: String, states: States, viewModels: ViewModels) -> Unit>(
         NavRoutes.NoteDetails.route + "/{workspaceId}" + "/{notesId}" to { navController, notesId, workspaceId, states, viewModel ->
@@ -98,7 +111,7 @@ val NotesScreens =
                 states.notesState.allNotes.find { it.notesId == notesId }
                     ?: NotesModel(workspaceId = workspaceId),
                 states.settings.data.storageRootUri,
-                states.notesState.allLabels.filter { it.workspaceId == workspaceId },
+                states.labelState.allLabels,
                 viewModel.settingsViewModel,
                 viewModel.notesViewModel,
                 viewModel.notesViewModel::onEvent
@@ -146,7 +159,7 @@ val JournalScreens =
         NavRoutes.EditJournal.route + "/{workspaceId}" + "/{journalId}" + "/{journalDateTime}" to { navController, journalId, journalDateTime, workspaceId, states, viewModel ->
             EditJournal(
                 navController,
-                states.journalState.allEntries.find { it.journalId == journalId } ?: JournalModel(workspaceId = workspaceId, dateTime = journalDateTime),
+                states.journalState.data.find { it.journalId == journalId } ?: JournalModel(workspaceId = workspaceId, dateTime = journalDateTime),
                 states.journalState.outline,
                 states.journalState.textState,
                 states.settings.data.isDarkMode,
@@ -154,6 +167,7 @@ val JournalScreens =
                 states.settings.data.isLineNumbersVisible,
                 states.settings.data.startWithReadView,
                 states.settings.data.storageRootUri,
+                states.labelState.allLabels.filter { it.workspaceId==workspaceId },
                 viewModel.journalViewModel,
                 viewModel.settingsViewModel,
                 viewModel.journalViewModel::onEvent
@@ -190,6 +204,9 @@ val SettingsScreens =
         },
         NavRoutes.Theme.route to { navController, _, states, viewModels ->
             Themes(navController, states.settings, viewModels.settingsViewModel::onEvent)
+        },
+        NavRoutes.Mode.route to { navController, _, states, viewModels ->
+            Mode(navController, states.settings, viewModels.settingsViewModel::onEvent)
         }
     )
 
@@ -220,27 +237,28 @@ val EventScreens =
 val WorkspaceScreens =
     mapOf<String, @Composable (navController: NavController, snackbarHostState: SnackbarHostState, states: States, viewModels: ViewModels, workspaceId: String) -> Unit>(
         NavRoutes.Workspace.route to { navController, snackbarHostState, states, viewModels, _ ->
-            WorkSpaces(
+            WorkspaceHomeScreen(
                 snackbarHostState,
                 navController,
                 states,
                 viewModels
             )
         },
+
+        NavRoutes.NewWorkspace.route + "/{workspaceId}" to { navController, _, states, viewModels, workspaceId ->
+            NewWorkspaceScreen (
+                navController,
+                states.workspaceState.allWorkspaces.find { it.workspaceId==workspaceId }?: WorkspaceModel(),
+                viewModels.workspaceViewModel::onEvent
+            )
+        },
+
         NavRoutes.WorkspaceHome.route + "/{workspaceId}" to { navController, _, states, viewModels, workspaceId ->
-            NormalModeDetails(
+            WorkspaceDetails(
                 navController,
                 states,
                 states.workspaceState.allWorkspaces.find { it.workspaceId==workspaceId }?: WorkspaceModel(workspaceId=workspaceId),
-                viewModels.settingsViewModel,
-                viewModels.workspaceViewModel::onEvent,
-                viewModels.notesViewModel::onEvent,
-                viewModels.eventViewModel::onEvent,
-                viewModels.habitViewModel::onEvent,
-                viewModels.todoViewModel::onEvent,
-                viewModels.journalViewModel::onEvent,
-                viewModels.settingsViewModel::onEvent,
-                viewModels.progressBoardViewModel::onEvent
+                viewModels
             )
         }
     )
@@ -250,10 +268,10 @@ val LabelScreens =
         NavRoutes.EditLabels.route + "/{workspaceId}" to { navController, states, viewModels, workspaceId ->
             EditLabels(
                 navController,
-                states.notesState.isLabelsLoading,
+                states.labelState.isLoading,
                 workspaceId,
-                states.notesState.allLabels,
-                viewModels.notesViewModel::onEvent
+                states.labelState.allLabels.filter { it.workspaceId==workspaceId },
+                viewModels.labelViewModel::onEvent
             )
         }
     )

@@ -15,7 +15,8 @@ data class JournalModel(
     val journalId: String = UUID.randomUUID().toString(),
     val workspaceId: String = "",
     val text: String = "",
-    val dateTime: Long = System.currentTimeMillis()
+    val dateTime: Long = System.currentTimeMillis(),
+    val labels: List<String> = emptyList()
 )
 
 fun JournalModel.writtenOnDate(date: LocalDate): Boolean {

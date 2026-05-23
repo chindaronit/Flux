@@ -7,5 +7,5 @@ interface JournalRepository {
     suspend fun upsertEntry(entry: JournalModel)
     suspend fun deleteEntry(entry: JournalModel)
     suspend fun deleteAllWorkspaceEntry(workspaceId: String)
-    fun loadAllEntries(workspaceId: String): Flow<List<JournalModel>>
+    fun loadJournalData(): Flow<List<JournalModel>>
 }

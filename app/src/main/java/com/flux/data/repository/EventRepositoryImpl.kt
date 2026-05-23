@@ -29,12 +29,12 @@ class EventRepositoryImpl @Inject constructor(
         return eventDao.loadAllEvents()
     }
 
-    override fun loadAllWorkspaceEvents(workspaceId: String): Flow<List<EventModel>> {
-        return eventDao.loadAllEvents(workspaceId)
+    override fun loadEventData(): Flow<List<EventModel>> {
+        return eventDao.loadEventData()
     }
 
-    override fun loadAllEventInstances(workspaceId: String): Flow<List<EventInstanceModel>> {
-        return eventInstanceDao.loadAllWorkspaceInstances(workspaceId)
+    override fun loadEventInstanceData(): Flow<List<EventInstanceModel>> {
+        return eventInstanceDao.loadEventInstanceData()
     }
 
     override suspend fun deleteEvent(event: EventModel) {

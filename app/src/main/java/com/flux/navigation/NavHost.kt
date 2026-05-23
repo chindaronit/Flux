@@ -8,51 +8,13 @@ import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.flux.ui.state.EventState
-import com.flux.ui.state.HabitState
-import com.flux.ui.state.JournalState
-import com.flux.ui.state.NotesState
-import com.flux.ui.state.ProgressBoardState
-import com.flux.ui.state.Settings
 import com.flux.ui.state.States
-import com.flux.ui.state.TodoState
-import com.flux.ui.state.WorkspaceState
-import com.flux.ui.viewModel.BackupViewModel
-import com.flux.ui.viewModel.EventViewModel
-import com.flux.ui.viewModel.HabitViewModel
-import com.flux.ui.viewModel.JournalViewModel
-import com.flux.ui.viewModel.NotesViewModel
-import com.flux.ui.viewModel.ProgressBoardViewModel
-import com.flux.ui.viewModel.SettingsViewModel
-import com.flux.ui.viewModel.TodoViewModel
 import com.flux.ui.viewModel.ViewModels
-import com.flux.ui.viewModel.WorkspaceViewModel
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
-fun AppNavHost(
-    navController: NavHostController = rememberNavController(),
-    snackbarHostState: SnackbarHostState,
-    settingsViewModel: SettingsViewModel,
-    notesViewModel: NotesViewModel,
-    workspaceViewModel: WorkspaceViewModel,
-    eventViewModel: EventViewModel,
-    habitViewModel: HabitViewModel,
-    todoViewModel: TodoViewModel,
-    journalViewModel: JournalViewModel,
-    backupViewModel: BackupViewModel,
-    progressBoardViewModel: ProgressBoardViewModel,
-    settings: Settings,
-    notesState: NotesState,
-    workspaceState: WorkspaceState,
-    eventState: EventState,
-    habitState: HabitState,
-    todoState: TodoState,
-    journalState: JournalState,
-    progressBoardState: ProgressBoardState
-) {
+fun AppNavHost(navController: NavHostController, snackbarHostState: SnackbarHostState, viewModels: ViewModels, states: States) {
     NavHost(navController, startDestination = NavRoutes.AuthScreen.route) {
         NotesScreens.forEach { (route, screen) ->
             val arguments = mutableListOf<NamedNavArgument>()
@@ -79,27 +41,8 @@ fun AppNavHost(
                     navController,
                     notesId,
                     workspaceId,
-                    States(
-                        notesState,
-                        eventState,
-                        habitState,
-                        todoState,
-                        workspaceState,
-                        journalState,
-                        progressBoardState,
-                        settings
-                    ),
-                    ViewModels(
-                        notesViewModel,
-                        eventViewModel,
-                        todoViewModel,
-                        habitViewModel,
-                        workspaceViewModel,
-                        journalViewModel,
-                        settingsViewModel,
-                        backupViewModel,
-                        progressBoardViewModel
-                    )
+                    states,
+                    viewModels
                 )
             }
         }
@@ -108,16 +51,7 @@ fun AppNavHost(
             animatedComposable(route) {
                 screen(
                     navController,
-                    States(
-                        notesState,
-                        eventState,
-                        habitState,
-                        todoState,
-                        workspaceState,
-                        journalState,
-                        progressBoardState,
-                        settings
-                    )
+                    states
                 )
             }
         }
@@ -126,27 +60,8 @@ fun AppNavHost(
             animatedComposable(route) {
                 screen(
                     navController,
-                    States(
-                        notesState,
-                        eventState,
-                        habitState,
-                        todoState,
-                        workspaceState,
-                        journalState,
-                        progressBoardState,
-                        settings
-                    ),
-                    ViewModels(
-                        notesViewModel,
-                        eventViewModel,
-                        todoViewModel,
-                        habitViewModel,
-                        workspaceViewModel,
-                        journalViewModel,
-                        settingsViewModel,
-                        backupViewModel,
-                        progressBoardViewModel
-                    )
+                    states,
+                    viewModels
                 )
             }
         }
@@ -185,27 +100,8 @@ fun AppNavHost(
                     journalId,
                     journalDateTime,
                     workspaceId,
-                    States(
-                        notesState,
-                        eventState,
-                        habitState,
-                        todoState,
-                        workspaceState,
-                        journalState,
-                        progressBoardState,
-                        settings
-                    ),
-                    ViewModels(
-                        notesViewModel,
-                        eventViewModel,
-                        todoViewModel,
-                        habitViewModel,
-                        workspaceViewModel,
-                        journalViewModel,
-                        settingsViewModel,
-                        backupViewModel,
-                        progressBoardViewModel
-                    )
+                    states,
+                    viewModels
                 )
             }
         }
@@ -235,27 +131,8 @@ fun AppNavHost(
                     navController,
                     listId,
                     workspaceId,
-                    States(
-                        notesState,
-                        eventState,
-                        habitState,
-                        todoState,
-                        workspaceState,
-                        journalState,
-                        progressBoardState,
-                        settings
-                    ),
-                    ViewModels(
-                        notesViewModel,
-                        eventViewModel,
-                        todoViewModel,
-                        habitViewModel,
-                        workspaceViewModel,
-                        journalViewModel,
-                        settingsViewModel,
-                        backupViewModel,
-                        progressBoardViewModel
-                    )
+                    states,
+                    viewModels
                 )
             }
         }
@@ -285,88 +162,20 @@ fun AppNavHost(
                     navController,
                     habitId,
                     workspaceId,
-                    States(
-                        notesState,
-                        eventState,
-                        habitState,
-                        todoState,
-                        workspaceState,
-                        journalState,
-                        progressBoardState,
-                        settings
-                    ),
-                    ViewModels(
-                        notesViewModel,
-                        eventViewModel,
-                        todoViewModel,
-                        habitViewModel,
-                        workspaceViewModel,
-                        journalViewModel,
-                        settingsViewModel,
-                        backupViewModel,
-                        progressBoardViewModel
-                    )
+                    states,
+                    viewModels
                 )
             }
         }
 
         SettingsScreens.forEach { (route, screen) ->
-            if (route == NavRoutes.Settings.route) {
-                slideInComposable(route) {
-                    screen(
-                        navController,
-                        snackbarHostState,
-                        States(
-                            notesState,
-                            eventState,
-                            habitState,
-                            todoState,
-                            workspaceState,
-                            journalState,
-                            progressBoardState,
-                            settings
-                        ),
-                        ViewModels(
-                            notesViewModel,
-                            eventViewModel,
-                            todoViewModel,
-                            habitViewModel,
-                            workspaceViewModel,
-                            journalViewModel,
-                            settingsViewModel,
-                            backupViewModel,
-                            progressBoardViewModel
-                        )
-                    )
-                }
-            } else {
-                animatedComposable(route) {
-                    screen(
-                        navController,
-                        snackbarHostState,
-                        States(
-                            notesState,
-                            eventState,
-                            habitState,
-                            todoState,
-                            workspaceState,
-                            journalState,
-                            progressBoardState,
-                            settings
-                        ),
-                        ViewModels(
-                            notesViewModel,
-                            eventViewModel,
-                            todoViewModel,
-                            habitViewModel,
-                            workspaceViewModel,
-                            journalViewModel,
-                            settingsViewModel,
-                            backupViewModel,
-                            progressBoardViewModel
-                        )
-                    )
-                }
+            animatedComposable(route) {
+                screen(
+                    navController,
+                    snackbarHostState,
+                    states,
+                    viewModels
+                )
             }
         }
 
@@ -408,25 +217,8 @@ fun AppNavHost(
                 val eventDate = entry.arguments?.getLong("eventDate") ?: 0L
 
                 screen(navController,
-                    States(
-                        notesState,
-                        eventState,
-                        habitState,
-                        todoState,
-                        workspaceState,
-                        journalState,
-                        progressBoardState,
-                        settings),
-                    ViewModels(
-                        notesViewModel,
-                        eventViewModel,
-                        todoViewModel,
-                        habitViewModel,
-                        workspaceViewModel,
-                        journalViewModel,
-                        settingsViewModel,
-                        backupViewModel,
-                        progressBoardViewModel),
+                    states,
+                    viewModels,
                     eventId,
                     workspaceId,
                     instanceDate,
@@ -449,27 +241,8 @@ fun AppNavHost(
 
                 screen(
                     navController,
-                    States(
-                        notesState,
-                        eventState,
-                        habitState,
-                        todoState,
-                        workspaceState,
-                        journalState,
-                        progressBoardState,
-                        settings
-                    ),
-                    ViewModels(
-                        notesViewModel,
-                        eventViewModel,
-                        todoViewModel,
-                        habitViewModel,
-                        workspaceViewModel,
-                        journalViewModel,
-                        settingsViewModel,
-                        backupViewModel,
-                        progressBoardViewModel
-                    ),
+                    states,
+                    viewModels,
                     workspaceId
                 )
             }
@@ -490,28 +263,19 @@ fun AppNavHost(
                 screen(
                     navController,
                     snackbarHostState,
-                    States(
-                        notesState,
-                        eventState,
-                        habitState,
-                        todoState,
-                        workspaceState,
-                        journalState,
-                        progressBoardState,
-                        settings
-                    ),
-                    ViewModels(
-                        notesViewModel,
-                        eventViewModel,
-                        todoViewModel,
-                        habitViewModel,
-                        workspaceViewModel,
-                        journalViewModel,
-                        settingsViewModel,
-                        backupViewModel,
-                        progressBoardViewModel
-                    ),
+                    states,
+                    viewModels,
                     id
+                )
+            }
+        }
+
+        SearchScreens.forEach { (route, screen) ->
+            animatedComposable(route) {
+                screen(
+                    navController,
+                    states,
+                    viewModels
                 )
             }
         }

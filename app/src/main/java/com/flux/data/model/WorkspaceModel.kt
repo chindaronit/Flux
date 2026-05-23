@@ -27,7 +27,7 @@ data class WorkspaceModel(
     val colorInd: Int = 0,
     val cover: String = "",
     val icon: Int = 48,
-    val passKey: String = "",
+    val passKey: String? = null,
     val isPinned: Boolean = false,
     val selectedSpaces: List<Int> = emptyList()
 )

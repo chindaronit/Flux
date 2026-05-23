@@ -59,6 +59,11 @@ import org.commonmark.node.Text
 import org.commonmark.parser.IncludeSourceSpans
 import org.commonmark.parser.Parser
 import androidx.core.net.toUri
+import com.flux.data.model.EventModel
+import com.flux.data.model.occursOn
+import java.time.LocalDate
+import java.time.YearMonth
+import java.time.temporal.ChronoUnit
 
 fun Int.toHexColor(): String {
     return String.format("#%06X", 0xFFFFFF and this)
@@ -752,4 +757,19 @@ fun parseMarkdownContent(text: String): AnnotatedString {
         }
         append(textWithoutProperties)
     }
+}
+
+fun computeMonthlyEventDates(
+    events: List<EventModel>,
+    yearMonth: YearMonth
+): Map<LocalDate, Int> {
+    val monthStart = yearMonth.atDay(1)
+    val monthEnd = yearMonth.atEndOfMonth()
+
+    if (monthEnd < monthStart) return emptyMap()
+
+    return (0..ChronoUnit.DAYS.between(monthStart, monthEnd))
+        .map { monthStart.plusDays(it) }
+        .associateWith { date -> events.count { event -> event.occursOn(date) } }
+        .filter { (_, count) -> count > 0 }
 }

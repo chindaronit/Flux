@@ -22,7 +22,7 @@ class ProgressBoardRepositoryImpl @Inject constructor(
         return withContext(Dispatchers.IO) { dao.deleteBoardItemsByWorkspace(workspaceId) }
     }
 
-    override fun getBoardItemsByWorkspace(workspaceId: String): Flow<List<ProgressBoardModel>> {
-        return dao.getBoardItemsByWorkspace(workspaceId)
+    override fun getProgressBoardData(): Flow<List<ProgressBoardModel>> {
+        return dao.getProgressBoardData()
     }
 }

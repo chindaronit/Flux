@@ -13,7 +13,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -27,36 +28,51 @@ import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.flux.R
 import com.flux.data.model.EventInstanceModel
 import com.flux.data.model.EventModel
 import com.flux.data.model.HabitInstanceModel
 import com.flux.data.model.HabitModel
 import com.flux.data.model.JournalModel
+import com.flux.data.model.WorkspaceModel
+import com.flux.data.model.isCompleted
 import com.flux.data.model.occursOn
-import com.flux.ui.components.ActionType
-import com.flux.ui.components.SettingOption
-import com.flux.ui.components.WeeklyHabitProgressChart
-import com.flux.ui.components.shapeManager
+import com.flux.navigation.NavRoutes
+import com.flux.ui.common.SpaceTopBar
+import com.flux.ui.common.SpacesMenu
+import com.flux.ui.screens.habits.HabitsWeeklyProgressAnalysis
+import com.flux.ui.screens.settings.ActionType
+import com.flux.ui.screens.settings.SettingOption
+import com.flux.ui.screens.settings.shapeManager
+import com.flux.ui.screens.workspaces.SpacesToolBar
+import com.flux.ui.state.States
 import com.flux.ui.theme.completed
 import com.flux.ui.theme.failed
 import com.flux.ui.theme.pending
@@ -68,62 +84,125 @@ import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 import java.time.temporal.TemporalAdjusters
 
-fun LazyListScope.analyticsItems(
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AnalyticScreen(
+    navController: NavController,
+    states: States,
+    workspace: WorkspaceModel,
     selectedSpaces: List<Int>,
-    radius: Int,
-    allHabitInstances: List<HabitInstanceModel>,
-    totalHabits: Int,
-    totalNotes: Int,
-    journalEntries: List<JournalModel>,
-    allHabits: List<HabitModel>,
-    allEvents: List<EventModel>,
-    allEventInstances: List<EventInstanceModel>
-) {
-    when {
-        selectedSpaces.isEmpty() -> item { EmptyAnalytics() }
-        else -> {
-            if (selectedSpaces.contains(1)){
-                item {
-                    SettingOption(
-                        title = stringResource(R.string.Notes),
-                        description = totalNotes.toString(),
-                        icon = Icons.AutoMirrored.Default.Notes,
-                        radius = shapeManager(radius = radius, isBoth = true),
-                        actionType = ActionType.None
-                    )
-                    Spacer(Modifier.height(8.dp))
-                }
-            }
-            if (selectedSpaces.contains(4)) {
-                item {
-                    JournalAnalytics(radius, journalEntries)
-                    Spacer(Modifier.height(8.dp))
-                }
-            }
-            if (selectedSpaces.contains(3)) {
-                item {
-                    ChartCirclePie(
-                        radius = radius,
-                        weeklyEventStats = calculateWeeklyStats(allEvents, allEventInstances)
-                    )
-                    Spacer(Modifier.height(8.dp))
-                }
-            }
-            if (selectedSpaces.contains(5)){
-                item {
-                    HabitHeatMap(radius, allHabitInstances, totalHabits)
-                    Spacer(Modifier.height(8.dp))
-                }
-            }
-            if(selectedSpaces.contains(5)){
-                item {
-                    WeeklyHabitProgressChart(
-                        radius,
-                        habits = allHabits,
-                        habitInstances = allHabitInstances,
-                        modifier = Modifier.padding(horizontal = 16.dp)
-                    )
-                    Spacer(Modifier.height(8.dp))
+    onShowSpaceBottomSheet: () -> Unit,
+    onSpaceChange: (Int) -> Unit,
+    onAddCover: () -> Unit,
+    onRemoveCover: () -> Unit,
+    onDeleteWorkspace: () -> Unit,
+    onToggleLock: () -> Unit
+){
+    val workspaceId = workspace.workspaceId
+    val totalNotes = states.notesState.allNotes.filter { it.workspaceId == workspaceId }.size
+    val radius = states.settings.data.cornerRadius
+    val allEvents = states.eventState.allEvent.filter { it.workspaceId == workspaceId }
+    val allEventInstances = states.eventState.allEventInstances.filter { it.workspaceId == workspaceId }
+    val journalEntries = states.journalState.data.filter { it.workspaceId == workspaceId }
+    val allHabits = states.habitState.allHabits.filter { it.workspaceId == workspaceId }
+    val allHabitInstances = states.habitState.allInstances.filter { it.workspaceId == workspaceId }
+    val totalHabits = states.habitState.allHabits.filter { it.workspaceId == workspaceId }.size
+    var showSpacesMenu by remember { mutableStateOf(false) }
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        topBar = {
+            SpaceTopBar(
+                scrollBehavior   = scrollBehavior,
+                title            = workspace.title,
+                description      = workspace.description,
+                cover            = workspace.cover,
+                icon             = workspace.icon,
+                isLocked         = workspace.passKey!=null,
+                onBackPressed    = { navController.popBackStack() },
+                onAddCover       = onAddCover,
+                onRemoveCover    = onRemoveCover,
+                onToggleLock     = onToggleLock,
+                onDeleteWorkspace = onDeleteWorkspace,
+                onEditWorkspace   = { navController.navigate(NavRoutes.NewWorkspace.withArgs(workspaceId)) }
+            )
+        },
+    ) { innerPadding ->
+        when {
+            selectedSpaces.isEmpty() -> EmptyAnalytics()
+            else -> {
+                LazyColumn(
+                    Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                        .padding(12.dp)
+                        .nestedScroll(scrollBehavior.nestedScrollConnection)
+                ) {
+                    item {
+                        Row(
+                            Modifier.fillMaxWidth().padding(bottom=8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            SpacesToolBar(
+                                stringResource(R.string.Analytics),
+                                Icons.Default.Analytics,
+                                false,
+                                onMainClick = { showSpacesMenu = true },
+                                onEditClick = onShowSpaceBottomSheet
+                            )
+                            SpacesMenu(showSpacesMenu, workspace, onSpaceChange) { showSpacesMenu = false }
+                        }
+                    }
+                    if (selectedSpaces.contains(1)){
+                        item {
+                            SettingOption(
+                                title = stringResource(R.string.Notes),
+                                description = totalNotes.toString(),
+                                icon = Icons.AutoMirrored.Default.Notes,
+                                radius = shapeManager(radius = radius, isBoth = true),
+                                actionType = ActionType.None
+                            )
+                            Spacer(Modifier.height(8.dp))
+                        }
+                    }
+                    if (selectedSpaces.contains(3)) {
+                        item {
+                            ChartCirclePie(
+                                radius = radius,
+                                weeklyEventStats = calculateWeeklyStats(allEvents, allEventInstances)
+                            )
+                            Spacer(Modifier.height(8.dp))
+                        }
+                    }
+                    if (selectedSpaces.contains(4)) {
+                        item {
+                            JournalAnalytics(radius, journalEntries)
+                            Spacer(Modifier.height(8.dp))
+                        }
+                        item {
+                            JournalHeatMap(radius, journalEntries)
+                            Spacer(Modifier.height(8.dp))
+                        }
+                    }
+                    if (selectedSpaces.contains(5)){
+                        item {
+                            HabitHeatMap(radius, allHabits, allHabitInstances, totalHabits)
+                            Spacer(Modifier.height(8.dp))
+                        }
+                    }
+                    if(selectedSpaces.contains(5)){
+                        item {
+                            HabitsWeeklyProgressAnalysis(
+                                radius,
+                                habits = allHabits,
+                                habitInstances = allHabitInstances,
+                                modifier = Modifier.padding(horizontal = 16.dp)
+                            )
+                            Spacer(Modifier.height(8.dp))
+                        }
+                    }
                 }
             }
         }
@@ -195,7 +274,10 @@ fun calculateWeeklyStats(
 }
 
 @Composable
-fun HabitHeatMap(radius: Int, allHabitInstances: List<HabitInstanceModel>, totalHabits: Int) {
+fun JournalHeatMap(
+    radius: Int,
+    allEntries: List<JournalModel>
+){
     val today = LocalDate.now()
     val yearStart = LocalDate.of(today.year, 1, 1)
 
@@ -206,8 +288,92 @@ fun HabitHeatMap(radius: Int, allHabitInstances: List<HabitInstanceModel>, total
     val totalDays = ChronoUnit.DAYS.between(yearStart, today).toInt() + 1
     val allDates = (0 until totalDays).map { yearStart.plusDays(it.toLong()) }
 
-    val habitMap = remember(allHabitInstances) {
-        allHabitInstances.groupBy { LocalDate.ofEpochDay(it.instanceDate) }
+    val heatMap = remember(allEntries) {
+        allEntries
+            .groupingBy {
+                Instant.ofEpochMilli(it.dateTime)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate()
+            }
+            .eachCount()
+    }
+
+    // Create week columns with proper day alignment
+    val weekColumns = mutableListOf<List<LocalDate?>>()
+    var currentWeek = MutableList<LocalDate?>(7) { null }
+
+    // Fill the first week with nulls for days before January 1st
+    for (i in 0 until offsetFromMonday) {
+        currentWeek[i] = null
+    }
+
+    // Add all dates starting from the correct day of week
+    allDates.forEachIndexed { index, date ->
+        val dayIndex = (offsetFromMonday + index) % 7
+        currentWeek[dayIndex] = date
+
+        // When we complete a week (reach Sunday) or it's the last date
+        if (dayIndex == 6 || index == allDates.size - 1) {
+            weekColumns.add(currentWeek.toList())
+            currentWeek = MutableList(7) { null }
+        }
+    }
+
+    val boxSize = 24.dp
+    val lazyListState = rememberLazyListState()
+
+    // Calculate the index of the current month's first week
+    val currentMonthStartIndex = remember(weekColumns) {
+        val currentMonth = today.month
+        weekColumns.indexOfFirst { week ->
+            week.any { date -> date?.month == currentMonth }
+        }.takeIf { it != -1 } ?: 0
+    }
+
+    // Auto-scroll to current month on first composition
+    LaunchedEffect(currentMonthStartIndex) {
+        if (currentMonthStartIndex > 0) {
+            lazyListState.scrollToItem(index = maxOf(0, currentMonthStartIndex - 2))
+        }
+    }
+
+    HeatMapCard(
+        radius,
+        "Journal Heat Map",
+        "",
+        boxSize,
+        5,
+        lazyListState,
+        weekColumns,
+        heatMap.toMap()
+    )
+}
+
+@Composable
+fun HabitHeatMap(radius: Int, habits: List<HabitModel>, allHabitInstances: List<HabitInstanceModel>, totalHabits: Int) {
+    val today = LocalDate.now()
+    val yearStart = LocalDate.of(today.year, 1, 1)
+
+    // Calculate the offset from Monday for January 1st
+    val jan1DayOfWeek = yearStart.dayOfWeek.value // Monday = 1, Sunday = 7
+    val offsetFromMonday = jan1DayOfWeek - 1 // 0 for Monday, 6 for Sunday
+
+    val totalDays = ChronoUnit.DAYS.between(yearStart, today).toInt() + 1
+    val allDates = (0 until totalDays).map { yearStart.plusDays(it.toLong()) }
+
+    val habitMapById = remember(habits) {
+        habits.associateBy { it.id }
+    }
+
+    val heatMap = remember(allHabitInstances, habits) {
+        allHabitInstances
+            .groupBy { LocalDate.ofEpochDay(it.instanceDate) }
+            .mapValues { (_, instances) ->
+                instances.count { instance ->
+                    val habit = habitMapById[instance.habitId] ?: return@count false
+                    instance.isCompleted(habit)
+                }
+            }
     }
 
     // Create week columns with proper day alignment
@@ -252,6 +418,29 @@ fun HabitHeatMap(radius: Int, allHabitInstances: List<HabitInstanceModel>, total
         }
     }
 
+    HeatMapCard(
+        radius,
+        stringResource(R.string.HeatMap),
+        "${stringResource(R.string.Completed_Today)}: $todayHabit/$totalHabits",
+        boxSize,
+        totalHabits,
+        lazyListState,
+        weekColumns,
+        heatMap.toMap()
+    )
+}
+
+@Composable
+fun HeatMapCard(
+    radius: Int,
+    title: String,
+    description: String,
+    boxSize: Dp,
+    intensityParam: Int,
+    lazyListState: LazyListState,
+    weekColumns: List<List<LocalDate?>>,
+    heatMap: Map<LocalDate, Int>
+){
     Card(
         onClick = {},
         modifier = Modifier.fillMaxWidth(),
@@ -267,16 +456,18 @@ fun HabitHeatMap(radius: Int, allHabitInstances: List<HabitInstanceModel>, total
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                stringResource(R.string.HeatMap),
+                title,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.primary,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
-            Text(
-                "${stringResource(R.string.Completed_Today)}: $todayHabit/$totalHabits",
-                style = MaterialTheme.typography.labelMedium
-            )
+            if(description.isNotBlank()){
+                Text(
+                    description,
+                    style = MaterialTheme.typography.labelMedium
+                )
+            }
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -335,9 +526,9 @@ fun HabitHeatMap(radius: Int, allHabitInstances: List<HabitInstanceModel>, total
                             // Heatmap boxes
                             columnDates.forEach { date ->
                                 if (date != null) {
-                                    val count = habitMap[date]?.size ?: 0
+                                    val count = heatMap[date] ?: 0
                                     val intensity =
-                                        (count / if (totalHabits > 0) totalHabits.toFloat() else 2f)
+                                        (count / if (intensityParam > 0) intensityParam.toFloat() else 2f)
                                             .coerceIn(0f, 1f)
                                     val color = lerp(
                                         MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),

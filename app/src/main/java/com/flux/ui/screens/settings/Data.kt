@@ -52,10 +52,7 @@ import com.flux.other.canScheduleReminder
 import com.flux.other.isNotificationPermissionGranted
 import com.flux.other.openAppNotificationSettings
 import com.flux.other.requestExactAlarmPermission
-import com.flux.ui.components.ActionType
-import com.flux.ui.components.DeleteAlert
-import com.flux.ui.components.SettingOption
-import com.flux.ui.components.shapeManager
+import com.flux.ui.common.DeleteAlert
 import com.flux.ui.events.SettingEvents
 import com.flux.ui.state.Settings
 import com.flux.ui.viewModel.BackupViewModel

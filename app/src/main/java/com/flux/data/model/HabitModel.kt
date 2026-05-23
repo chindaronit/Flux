@@ -9,29 +9,46 @@ import kotlinx.serialization.Serializable
 @Serializable
 @Entity
 data class HabitModel(
-    @PrimaryKey
-    override val id: String = UUID.randomUUID().toString(),
-    override val title: String = "",
-    override val description: String = "",
-    override val recurrence: RecurrenceRule = RecurrenceRule.Weekly(),
-    override val startDateTime: Long = System.currentTimeMillis(),
-    override val endDateTime: Long = -1L,
-    override val notificationOffset: Long = 0L,
-    override val workspaceId: String = "",
-    val bestStreak: Long = 0L
-) : ReminderItem {
-    override val type: ReminderType get() = ReminderType.HABIT
-}
+    @PrimaryKey val id: String = UUID.randomUUID().toString(),
+    val title: String = "",
+    val description: String = "",
+    val recurrence: RecurrenceRule = RecurrenceRule.Weekly(),
+    val startDateTime: Long = System.currentTimeMillis(),
+    val endDateTime: Long = -1L,
+    val notificationOffset: Long = 0L,
+    val workspaceId: String = "",
+    val habitConfig: HabitConfig = HabitConfig.Simple
+)
 
 @Serializable
 @Entity(primaryKeys = ["habitId", "instanceDate"])
 data class HabitInstanceModel(
     val habitId: String = "",
     val workspaceId: String = "",
-    val instanceDate: Long = LocalDate.now().toEpochDay()
+    val instanceDate: Long = LocalDate.now().toEpochDay(),
+
+    // timed
+    val timeSpent: Long = 0L,
+    val isRunning: Boolean = false,
+
+    // counted
+    val count: Int = 0
 )
 
 fun HabitModel.isLive(): Boolean {
     if (endDateTime == -1L) return true
     return endDateTime > System.currentTimeMillis()
+}
+
+val HabitModel.isTimed get() = habitConfig is HabitConfig.Timed
+val HabitModel.isCounted get() = habitConfig is HabitConfig.Counted
+
+fun HabitInstanceModel.isCompleted(habit: HabitModel): Boolean {
+    return when (val config = habit.habitConfig) {
+        is HabitConfig.Simple -> true
+
+        is HabitConfig.Counted -> count >= config.goal
+
+        is HabitConfig.Timed -> timeSpent >= config.durationMillis
+    }
 }

@@ -22,7 +22,7 @@ class JournalRepositoryImpl @Inject constructor(
         return withContext(Dispatchers.IO) { dao.deleteAllWorkspaceEntries(workspaceId) }
     }
 
-    override fun loadAllEntries(workspaceId: String): Flow<List<JournalModel>> {
-        return dao.loadAllEntries(workspaceId)
+    override fun loadJournalData(): Flow<List<JournalModel>> {
+        return dao.loadJournalData()
     }
 }

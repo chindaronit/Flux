@@ -15,12 +15,16 @@ import com.flux.data.dao.SettingsDao
 import com.flux.data.dao.TodoDao
 import com.flux.data.dao.WorkspaceDao
 import com.flux.data.database.FluxDatabase
+import com.flux.data.database.MIGRATION_10_11
 import com.flux.data.database.MIGRATION_1_2
 import com.flux.data.database.MIGRATION_2_3
 import com.flux.data.database.MIGRATION_3_4
 import com.flux.data.database.MIGRATION_4_5
 import com.flux.data.database.MIGRATION_5_6
 import com.flux.data.database.MIGRATION_6_7
+import com.flux.data.database.MIGRATION_7_8
+import com.flux.data.database.MIGRATION_9_10
+import com.flux.data.database.Migration_8_9
 import com.flux.other.BackupManager
 import dagger.Module
 import dagger.Provides
@@ -41,7 +45,17 @@ object DataModule {
         FluxDatabase::class.java,
         "FluxDatabase"
     )
-        .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+        .addMigrations(MIGRATION_1_2,
+            MIGRATION_2_3,
+            MIGRATION_3_4,
+            MIGRATION_4_5,
+            MIGRATION_5_6,
+            MIGRATION_6_7,
+            MIGRATION_7_8,
+            Migration_8_9,
+            MIGRATION_9_10,
+            MIGRATION_10_11
+        )
         .build()
 
     @Singleton

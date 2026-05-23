@@ -6,8 +6,10 @@ import androidx.lifecycle.viewModelScope
 import com.flux.data.model.EventInstanceModel
 import com.flux.data.model.EventModel
 import com.flux.data.model.occursOn
+import com.flux.data.model.toScheduleRequest
 import com.flux.data.repository.EventRepository
 import com.flux.other.cancelReminder
+import com.flux.other.computeMonthlyEventDates
 import com.flux.other.scheduleNextReminder
 import com.flux.ui.events.TaskEvents
 import com.flux.ui.state.EventState
@@ -19,14 +21,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.YearMonth
-import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 
 data class Quadruple<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)
@@ -56,59 +55,34 @@ class EventViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            state
-                .map { it.workspaceId }
-                .distinctUntilChanged()
-                .filterNotNull()
-                .flatMapLatest { workspaceId: String ->
-                    combine(
-                        repository.loadAllWorkspaceEvents(workspaceId),
-                        repository.loadAllEventInstances(workspaceId)
-                    ) { events: List<EventModel>, instances: List<EventInstanceModel> ->
-                        Pair(events, instances)
-                    }
+            combine(
+                repository.loadEventData(),
+                repository.loadEventInstanceData(),
+                state.map { it.selectedDate }.distinctUntilChanged(),
+                state.map { it.selectedYearMonth }.distinctUntilChanged()
+            ) { allEvents, allInstances, selectedDate, selectedYearMonth ->
+                val datedEvents = filterByDate(allEvents, selectedDate)
+                val monthlyDates = computeMonthlyEventDates(allEvents, selectedYearMonth)
+
+                Quadruple(allEvents, datedEvents, allInstances, monthlyDates)
+            }.collect { (allEvents, datedEvents, allInstances, monthlyDates) ->
+
+                updateState {
+                    it.copy(
+                        isAllEventsLoading = false,
+                        isDatedEventLoading = false,
+                        allEvent = allEvents,
+                        datedEvents = datedEvents,
+                        allEventInstances = allInstances,
+                        monthlyEventDates = monthlyDates
+                    )
                 }
-                .combine(
-                    state.map { it.selectedDate }.distinctUntilChanged()
-                ) { eventsAndInstances, selectedDate ->
-                    val (allEvents, allInstances) = eventsAndInstances
-                    val datedEvents = filterByDate(allEvents, selectedDate)
-                    Triple(allEvents, datedEvents, allInstances)
-                }
-                .combine(
-                    state.map { it.selectedYearMonth }.distinctUntilChanged()
-                ) { (allEvents, datedEvents, allInstances), selectedYearMonth ->
-                    val monthlyDates = computeMonthlyEventDates(allEvents, selectedYearMonth)
-                    Quadruple(allEvents, datedEvents, allInstances, monthlyDates)
-                }
-                .collect { (allEvents, datedEvents, allInstances, monthlyDates) ->
-                    updateState {
-                        it.copy(
-                            isAllEventsLoading = false,
-                            isDatedEventLoading = false,
-                            allEvent = allEvents,
-                            datedEvents = datedEvents,
-                            allEventInstances = allInstances,
-                            monthlyEventDates = monthlyDates
-                        )
-                    }
-                }
+            }
         }
     }
 
     private fun reduce(event: TaskEvents) {
         when (event) {
-            is TaskEvents.EnterWorkspace -> {
-                updateState {
-                    if (it.workspaceId == event.workspaceId) { it } else {
-                        it.copy(
-                            workspaceId = event.workspaceId,
-                            isAllEventsLoading = true,
-                            isDatedEventLoading = true
-                        )
-                    }
-                }
-            }
             is TaskEvents.ChangeMonth -> updateState { it.copy(selectedYearMonth = event.newYearMonth) }
             is TaskEvents.ChangeDate -> {
                 val newDate = event.newLocalDate
@@ -153,79 +127,24 @@ class EventViewModel @Inject constructor(
 
     private fun deleteEvent(data: EventModel, context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
-            cancelReminder(
-                context,
-                data.id,
-                data.type.toString(),
-                data.title,
-                data.description,
-                data.workspaceId,
-                data.endDateTime,
-                data.startDateTime,
-                data.notificationOffset,
-                data.recurrence,
-            )
+            cancelReminder(context, data.toScheduleRequest())
             repository.deleteEvent(data)
         }
     }
 
     private fun upsertEvent(context: Context, data: EventModel) {
         viewModelScope.launch(Dispatchers.IO) {
-            cancelReminder(
-                context,
-                data.id,
-                data.type.toString(),
-                data.title,
-                data.description,
-                data.workspaceId,
-                data.endDateTime,
-                data.startDateTime,
-                data.notificationOffset,
-                data.recurrence,
-            )
-
+            cancelReminder(context, data.toScheduleRequest())
             repository.upsertEvent(data)
-
-            scheduleNextReminder(
-                context = context,
-                item = data
-            )
+            scheduleNextReminder(context = context, data.toScheduleRequest())
         }
     }
 
     private fun deleteWorkspaceEvents(workspaceId: String, context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
-            state.value.allEvent.forEach { event ->
-                cancelReminder(
-                    context,
-                    event.id,
-                    event.type.toString(),
-                    event.title,
-                    event.description,
-                    event.workspaceId,
-                    event.endDateTime,
-                    event.startDateTime,
-                    event.notificationOffset,
-                    event.recurrence
-                )
-            }
+            state.value.allEvent.forEach { event -> cancelReminder(context, event.toScheduleRequest()) }
             repository.deleteAllWorkspaceEvent(workspaceId)
         }
-    }
-
-    private fun computeMonthlyEventDates(
-        events: List<EventModel>,
-        yearMonth: YearMonth
-    ): Map<LocalDate, Int> {
-        val monthStart = yearMonth.atDay(1)
-        val monthEnd = yearMonth.atEndOfMonth()
-
-        if (monthEnd < monthStart) return emptyMap()
-
-        return (0..ChronoUnit.DAYS.between(monthStart, monthEnd))
-            .map { monthStart.plusDays(it) }
-            .associateWith { date -> events.count { event -> event.occursOn(date) } }
-            .filter { (_, count) -> count > 0 }
     }
 
     private fun filterByDate(

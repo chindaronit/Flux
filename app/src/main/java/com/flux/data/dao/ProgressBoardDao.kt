@@ -13,8 +13,8 @@ interface ProgressBoardDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertBoardItem(item: ProgressBoardModel)
 
-    @Query("SELECT * FROM ProgressBoardModel WHERE workspaceId = :workspaceId")
-    fun getBoardItemsByWorkspace(workspaceId: String): Flow<List<ProgressBoardModel>>
+    @Query("SELECT * FROM ProgressBoardModel")
+    fun getProgressBoardData(): Flow<List<ProgressBoardModel>>
 
     @Delete
     suspend fun deleteBoardItem(item: ProgressBoardModel)
@@ -28,4 +28,3 @@ interface ProgressBoardDao {
     @Query("SELECT * FROM ProgressBoardModel")
     fun getAllBoardItems(): List<ProgressBoardModel>
 }
-

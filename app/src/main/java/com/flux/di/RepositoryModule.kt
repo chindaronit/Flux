@@ -6,6 +6,8 @@ import com.flux.data.repository.HabitRepository
 import com.flux.data.repository.HabitRepositoryImpl
 import com.flux.data.repository.JournalRepository
 import com.flux.data.repository.JournalRepositoryImpl
+import com.flux.data.repository.LabelRepository
+import com.flux.data.repository.LabelRepositoryImpl
 import com.flux.data.repository.NoteRepository
 import com.flux.data.repository.NoteRepositoryImpl
 import com.flux.data.repository.ProgressBoardRepository
@@ -73,4 +75,10 @@ abstract class RepositoryModule {
     abstract fun bindProgressBoardRepository(
         impl: ProgressBoardRepositoryImpl
     ): ProgressBoardRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindLabelRepository(
+        impl: LabelRepositoryImpl
+    ): LabelRepository
 }

@@ -12,18 +12,15 @@ import java.time.temporal.ChronoUnit
 @Serializable
 @Entity
 data class EventModel(
-    @PrimaryKey
-    override val id: String = UUID.randomUUID().toString(),
-    override val title: String = "",
-    override val description: String = "",
-    override val recurrence: RecurrenceRule = RecurrenceRule.Custom(),
-    override val startDateTime: Long = System.currentTimeMillis(),
-    override val endDateTime: Long = -1L,
-    override val notificationOffset: Long = 0L,
-    override val workspaceId: String = ""
-) : ReminderItem {
-    override val type: ReminderType get() = ReminderType.EVENT
-}
+    @PrimaryKey val id: String = UUID.randomUUID().toString(),
+    val title: String = "",
+    val description: String = "",
+    val recurrence: RecurrenceRule = RecurrenceRule.Custom(),
+    val startDateTime: Long = System.currentTimeMillis(),
+    val endDateTime: Long = -1L,
+    val notificationOffset: Long = 0L,
+    val workspaceId: String = ""
+)
 
 @Serializable
 @Entity(primaryKeys = ["eventId", "instanceDate"])
@@ -32,6 +29,11 @@ data class EventInstanceModel(
     val workspaceId: String = "",
     val instanceDate: Long = LocalDate.now().toEpochDay()
 )
+
+fun EventModel.isLive(): Boolean {
+    if (endDateTime == -1L) return true
+    return endDateTime > System.currentTimeMillis()
+}
 
 fun EventModel.occursOn(date: LocalDate): Boolean {
     val eventStart = Instant.ofEpochMilli(startDateTime)

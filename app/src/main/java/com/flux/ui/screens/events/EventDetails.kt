@@ -49,7 +49,7 @@ import com.flux.R
 import com.flux.data.model.EventModel
 import com.flux.data.model.RecurrenceRule
 import com.flux.navigation.NavRoutes
-import com.flux.ui.components.DeleteAlert
+import com.flux.ui.common.DeleteAlert
 import com.flux.ui.events.TaskEvents
 import com.flux.ui.state.Settings
 import java.time.ZoneId

@@ -28,8 +28,8 @@ interface NotesDao {
     @Query("DELETE FROM NotesModel WHERE workspaceId = :workspaceId")
     suspend fun deleteAllWorkspaceNotes(workspaceId: String)
 
-    @Query("SELECT * FROM NotesModel where workspaceId IN (:workspaceId)")
-    fun loadAllNotes(workspaceId: String): Flow<List<NotesModel>>
+    @Query("SELECT * FROM NotesModel ORDER by lastEdited DESC")
+    fun loadNotesData(): Flow<List<NotesModel>>
 
     @Query("SELECT * FROM NotesModel")
     fun loadAllNotes(): List<NotesModel>

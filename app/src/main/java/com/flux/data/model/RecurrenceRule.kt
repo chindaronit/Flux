@@ -2,8 +2,6 @@ package com.flux.data.model
 
 import kotlinx.serialization.Serializable
 
-enum class ReminderType { EVENT, HABIT }
-
 @Serializable
 sealed class RecurrenceRule {
     @Serializable
@@ -20,16 +18,4 @@ sealed class RecurrenceRule {
 
     @Serializable
     data class Custom(val everyXDays: Int = 1) : RecurrenceRule()
-}
-
-interface ReminderItem {
-    val id: String
-    val title: String
-    val description: String
-    val recurrence: RecurrenceRule
-    val type: ReminderType
-    val startDateTime: Long
-    val endDateTime: Long
-    val workspaceId: String
-    val notificationOffset: Long
 }

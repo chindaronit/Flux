@@ -19,14 +19,17 @@ interface HabitInstanceDao {
     @Query("DELETE FROM HabitInstanceModel WHERE habitId IN (:habitId)")
     suspend fun deleteAllInstances(habitId: String)
 
+    @Query("SELECT * FROM HabitInstanceModel WHERE habitId = :habitId AND instanceDate = :date LIMIT 1")
+    suspend fun getHabitInstance(habitId: String, date: Long): HabitInstanceModel?
+
     @Delete
     suspend fun deleteInstance(habitInstance: HabitInstanceModel)
 
     @Query("DELETE FROM HabitInstanceModel WHERE workspaceId = :workspaceId")
     suspend fun deleteAllWorkspaceInstance(workspaceId: String)
 
-    @Query("SELECT * FROM HabitInstanceModel where workspaceId in (:workspaceId)")
-    fun loadAllInstances(workspaceId: String): Flow<List<HabitInstanceModel>>
+    @Query("SELECT * FROM HabitInstanceModel")
+    fun loadHabitInstanceData(): Flow<List<HabitInstanceModel>>
 
     @Query("SELECT * FROM HabitInstanceModel")
     suspend fun loadAllInstances(): List<HabitInstanceModel>

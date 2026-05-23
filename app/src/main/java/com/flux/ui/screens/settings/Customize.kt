@@ -18,7 +18,6 @@ import androidx.compose.material.icons.filled.Colorize
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.rounded.FontDownload
 import androidx.compose.material.icons.rounded.RoundedCorner
-import androidx.compose.material.icons.rounded.ViewCompact
 import androidx.compose.material.icons.rounded.ViewCompactAlt
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -40,13 +39,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import com.flux.R
 import com.flux.navigation.NavRoutes
-import com.flux.ui.components.ActionType
-import com.flux.ui.components.BasicScaffold
-import com.flux.ui.components.FontDialog
-import com.flux.ui.components.SettingIcon
-import com.flux.ui.components.SettingOption
-import com.flux.ui.components.SingleSettingOption
-import com.flux.ui.components.shapeManager
+import com.flux.ui.common.BasicScaffold
+import com.flux.ui.common.FontDialog
 import com.flux.ui.events.SettingEvents
 import com.flux.ui.state.Settings
 
@@ -100,9 +94,7 @@ fun Customize(
                     text = stringResource(R.string.Themes),
                     description = stringResource(R.string.change_app_theme),
                     leadingIcon = SettingIcon.Vector(Icons.Default.LightMode)
-                ) {
-                    navController.navigate(NavRoutes.Theme.route)
-                }
+                ) { navController.navigate(NavRoutes.Theme.route) }
             }
 
             item {
@@ -147,60 +139,15 @@ fun Customize(
             }
             item {
                 SettingOption(
-                    title = stringResource(R.string.Compact_Mode),
-                    description = stringResource(R.string.Compact_Mode_Desc),
+                    title = "Mode",
+                    description = "Normal • Compact",
                     icon = Icons.Rounded.ViewCompactAlt,
-                    radius = shapeManager(radius = settings.data.cornerRadius, isLast = settings.data.workspaceGridColumns == 1),
-                    variable = settings.data.workspaceGridColumns > 1,
-                    actionType = ActionType.SWITCH,
-                    switchEnabled = {
-                        if (it) {
-                            onSettingsEvents(
-                                SettingEvents.UpdateSettings(
-                                    settings.data.copy(
-                                        workspaceGridColumns = 2
-                                    )
-                                )
-                            )
-                        } else {
-                            onSettingsEvents(
-                                SettingEvents.UpdateSettings(
-                                    settings.data.copy(
-                                        workspaceGridColumns = 1
-                                    )
-                                )
-                            )
-                        }
-                    }
-                )
-            }
-            item {
-                val isEnabled = settings.data.workspaceGridColumns > 1
-                SettingOption(
-                    title = stringResource(R.string.Extreme_Compact_Mode),
-                    description = stringResource(R.string.Extreme_Compact_Mode_Desc),
-                    icon = Icons.Rounded.ViewCompact,
-                    isEnabled = isEnabled,
                     radius = shapeManager(radius = settings.data.cornerRadius, isLast = true),
-                    variable = settings.data.workspaceGridColumns == 3,
-                    actionType = ActionType.SWITCH,
-                    switchEnabled = {
-                        if (it) {
-                            onSettingsEvents(
-                                SettingEvents.UpdateSettings(
-                                    settings.data.copy(
-                                        workspaceGridColumns = 3
-                                    )
-                                )
-                            )
-                        } else {
-                            onSettingsEvents(
-                                SettingEvents.UpdateSettings(
-                                    settings.data.copy(
-                                        workspaceGridColumns = 2
-                                    )
-                                )
-                            )
+                    actionType = ActionType.CUSTOM,
+                    onCustomClick = {
+                        navController.navigate(NavRoutes.Mode.route) {
+                            launchSingleTop = true
+                            restoreState = true
                         }
                     }
                 )

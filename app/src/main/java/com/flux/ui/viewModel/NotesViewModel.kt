@@ -7,7 +7,6 @@ import androidx.compose.ui.util.fastJoinToString
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.flux.data.model.LabelModel
 import com.flux.data.model.NotesModel
 import com.flux.data.repository.NoteRepository
 import com.flux.data.repository.SettingsRepository
@@ -32,11 +31,6 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -102,27 +96,9 @@ class NotesViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            state
-                .map { it.workspaceId }
-                .distinctUntilChanged()
-                .filterNotNull()
-                .flatMapLatest { workspaceId ->
-                    combine(
-                        repository.loadAllNotes(workspaceId),
-                        repository.loadAllLabels(workspaceId)
-                    ) { notes, labels ->
-                        notes.sortedByDescending { it.lastEdited } to labels
-                    }
-                }
-                .collect { (notes, labels) ->
-                    updateState {
-                        it.copy(
-                            isNotesLoading = false,
-                            isLabelsLoading = false,
-                            allNotes = notes,
-                            allLabels = labels
-                        )
-                    }
+            repository.loadNotesData()
+                .collect { notes ->
+                    updateState { it.copy(isLoading = false, allNotes = notes) }
                 }
         }
     }
@@ -133,8 +109,6 @@ class NotesViewModel @Inject constructor(
             is NotesEvents.DeleteNotes -> deleteNotes(event.data)
             is NotesEvents.TogglePinMultiple -> togglePinMultiple(event.data)
             is NotesEvents.DeleteNote -> deleteNote(event.data)
-            is NotesEvents.DeleteLabel -> deleteLabel(event.data)
-            is NotesEvents.UpsertLabel -> upsertLabel(event.data)
             is NotesEvents.DeleteAllWorkspaceNotes -> deleteWorkspaceNotes(event.workspaceId)
             is NotesEvents.ClearSelection -> { updateState { it.copy(selectedNotes = emptyList()) } }
             is NotesEvents.SelectNotes -> { updateState { it.copy(selectedNotes = it.selectedNotes.plus(event.noteId)) } }
@@ -276,8 +250,6 @@ class NotesViewModel @Inject constructor(
                     updateState { it.copy(textState = TextState.fromText(event.content)) }
                 }
             }
-
-            is NotesEvents.EnterWorkspace -> { updateState { if (it.workspaceId == event.workspaceId) { it } else { it.copy(workspaceId = event.workspaceId, isNotesLoading = true, isLabelsLoading = true) }} }
         }
     }
 
@@ -383,14 +355,6 @@ class NotesViewModel @Inject constructor(
 
     private fun deleteNote(data: NotesModel) {
         viewModelScope.launch(Dispatchers.IO) { repository.deleteNote(data) }
-    }
-
-    private fun deleteLabel(data: LabelModel) {
-        viewModelScope.launch(Dispatchers.IO) { repository.deleteLabel(data) }
-    }
-
-    private fun upsertLabel(data: LabelModel) {
-        viewModelScope.launch(Dispatchers.IO) { repository.upsertLabel(data) }
     }
 
     private fun deleteWorkspaceNotes(workspaceId: String) {

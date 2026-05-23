@@ -29,10 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.flux.R
-import com.flux.ui.components.ActionType
-import com.flux.ui.components.BasicScaffold
-import com.flux.ui.components.SettingOption
-import com.flux.ui.components.shapeManager
+import com.flux.ui.common.BasicScaffold
 import com.flux.ui.events.SettingEvents
 import com.flux.ui.state.Settings
 

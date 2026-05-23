@@ -42,7 +42,7 @@ import androidx.navigation.NavController
 import com.flux.R
 import com.flux.navigation.NavRoutes
 import com.flux.other.BiometricAuthenticator
-import com.flux.ui.components.CircleWrapper
+import com.flux.ui.screens.settings.CircleWrapper
 
 @Composable
 fun AuthScreen(

@@ -12,10 +12,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -37,28 +33,15 @@ class ProgressBoardViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            state
-                .map { it.workspaceId }
-                .distinctUntilChanged()
-                .filterNotNull()
-                .flatMapLatest { workspaceId: String ->
-                    repository.getBoardItemsByWorkspace(workspaceId)
-                }
-                .collect { items ->
-                    updateState {
-                        it.copy(
-                            isLoading = false,
-                            allItems  = items
-                        )
-                    }
-                }
+            repository.getProgressBoardData().collect { items ->
+                    updateState { it.copy(isLoading = false, allItems  = items) }
+            }
         }
     }
 
     private fun reduce(event: ProgressBoardEvents) {
         when (event) {
             is ProgressBoardEvents.DeleteBoardItemsByWorkspace -> deleteBoardItemsByWorkspace(event.workspaceId)
-            is ProgressBoardEvents.EnterWorkspace -> { updateState { if (it.workspaceId == event.workspaceId) { it } else {it.copy(workspaceId = event.workspaceId, isLoading = true) }} }
             is ProgressBoardEvents.DeleteProgressItem -> deleteProgressItem(event.data)
             is ProgressBoardEvents.UpsertProgressItem -> upsertProgressItem(event.data)
         }

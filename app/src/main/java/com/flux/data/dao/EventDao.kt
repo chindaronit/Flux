@@ -22,8 +22,8 @@ interface EventDao {
     @Query("Delete FROM EventModel where workspaceId = :workspaceId")
     suspend fun deleteAllWorkspaceEvents(workspaceId: String)
 
-    @Query("SELECT * FROM EventModel WHERE workspaceId = :workspaceId")
-    fun loadAllEvents(workspaceId: String): Flow<List<EventModel>>
+    @Query("SELECT * FROM EventModel")
+    fun loadEventData(): Flow<List<EventModel>>
 
     @Query("SELECT * FROM EventModel")
     suspend fun loadAllEvents(): List<EventModel>
