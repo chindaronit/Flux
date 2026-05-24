@@ -1,0 +1,14 @@
+feat!:
+1. Counter Habit.
+2. Scrollable workspace cover.
+3. UI Improvement.
+4. Global searching.
+5. Filters in notes, journal, global search.
+6. Timeline and labels in journal.
+7. Journal Heat map in analytics.
+8. Additional analytics item in habits.
+
+fix!:
+1. Habit description visibility.
+2. Journal data deletion on habit space removal.
+3. Correction in Streak calculation.
