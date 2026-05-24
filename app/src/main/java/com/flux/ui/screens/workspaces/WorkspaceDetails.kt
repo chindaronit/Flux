@@ -189,7 +189,7 @@ fun SpaceMapper(
         1 -> NotesScreen(
             navController,
             states.notesState,
-            states.labelState.allLabels,
+            states.labelState.allLabels.filter { it.workspaceId==workspace.workspaceId },
             states.settings,
             workspace,
             onShowSpaceBottomSheet,
@@ -227,6 +227,7 @@ fun SpaceMapper(
             onRemoveCover,
             onDeleteWorkspace,
             onToggleLock,
+            viewModels.settingsViewModel::onEvent,
             viewModels.eventViewModel::onEvent
         )
 
@@ -235,7 +236,7 @@ fun SpaceMapper(
             states.journalState,
             states.settings,
             workspace,
-            states.labelState.allLabels,
+            states.labelState.allLabels.filter { it.workspaceId==workspace.workspaceId },
             onShowSpaceBottomSheet,
             onSpaceChange,
             onAddCover,

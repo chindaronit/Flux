@@ -179,6 +179,7 @@ import java.io.File
 import kotlin.math.cos
 import kotlin.math.sin
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import com.flux.ui.common.CategoryRow
 import com.flux.ui.common.FilterCategory
 import com.flux.ui.common.FilterOption
@@ -488,7 +489,7 @@ fun LinkDialog(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Name") },
+                    label = { Text(stringResource(R.string.name)) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
                 )
@@ -1496,36 +1497,36 @@ fun NotesInfoBottomSheet(
     }
 }
 
-fun buildFilterCategories(labels: List<LabelModel>): List<FilterCategory> {
+fun buildFilterCategories(context: Context, labels: List<LabelModel>): List<FilterCategory> {
     return listOf(
         FilterCategory(
-            name = "Sort By",
+            name = context.getString(R.string.sort_by),
             options = listOf(
-                FilterOption("latest", "Latest"),
-                FilterOption("oldest", "Oldest")
+                FilterOption("latest", context.getString(R.string.latest)),
+                FilterOption("oldest", context.getString(R.string.oldest))
             ),
             type = SelectionType.SINGLE
         ),
         FilterCategory(
-            name = "Labels",
+            name = context.getString(R.string.labels),
             options = labels.map {
                 FilterOption(it.labelId, it.value)
             },
             type = SelectionType.MULTIPLE
         ),
         FilterCategory(
-            name = "Pinned",
+            name = context.getString(R.string.pinned),
             options = listOf(
-                FilterOption("pinned", "Pinned"),
-                FilterOption("unpinned", "Unpinned")
+                FilterOption("pinned", context.getString(R.string.pinned)),
+                FilterOption("unpinned", context.getString(R.string.unpinned))
             ),
             type = SelectionType.SINGLE
         ),
         FilterCategory(
-            name = "View",
+            name = context.getString(R.string.view),
             options = listOf(
-                FilterOption("list", "List View"),
-                FilterOption("grid", "Grid View")
+                FilterOption("list", context.getString(R.string.list_view)),
+                FilterOption("grid", context.getString(R.string.grid_view))
             ),
             type = SelectionType.SINGLE
         )
@@ -1542,15 +1543,20 @@ fun NotesFilterSheet(
     onDismiss: () -> Unit = {},
     onApply: (Map<String, String>, Map<String, Set<String>>) -> Unit
 ) {
+    val context = LocalContext.current
     val maxHeight = LocalConfiguration.current.screenHeightDp.dp * 0.4f
-    val categories = remember(labels) { buildFilterCategories(labels) }
+    val categories = remember(labels) { buildFilterCategories(context, labels) }
     var selectedCategory by remember { mutableStateOf(categories.first()) }
+    val sortByLabel = stringResource(R.string.sort_by)
+    val labelName = stringResource(R.string.labels)
+    val pinnedLabel = stringResource(R.string.pinned)
+    val viewLabel = stringResource(R.string.view)
 
     val singleSelections = remember(filterState) {
         mutableStateMapOf<String, String>().apply {
-            filterState.sort?.let { put("Sort By", it) }
-            filterState.view?.let { put("View", it) }
-            filterState.pinned?.let { put("Pinned", it) }
+            filterState.sort?.let { put(sortByLabel, it) }
+            filterState.view?.let { put(viewLabel, it) }
+            filterState.pinned?.let { put(pinnedLabel, it) }
         }
     }
 
@@ -1561,7 +1567,7 @@ fun NotesFilterSheet(
                 .forEach { category ->
                     val list = mutableStateListOf<String>()
 
-                    if (category.name == "Labels") {
+                    if (category.name == labelName) {
                         list.addAll(filterState.selectedLabelIds)
                     }
 
@@ -1617,7 +1623,7 @@ fun NotesFilterSheet(
                                     .padding(24.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text("No options available")
+                                Text(stringResource(R.string.no_options_available))
                             }
                         }
                     }
@@ -1665,9 +1671,7 @@ fun NotesFilterSheet(
 
             // FOOTER
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
 
@@ -1675,11 +1679,11 @@ fun NotesFilterSheet(
                     modifier = Modifier.weight(1f),
                     onClick = {
                         singleSelections.clear()
-                        singleSelections["View"] = "grid"
+                        singleSelections[viewLabel] = "grid"
                         multiSelections.values.forEach { it.clear() }
                     }
                 ) {
-                    Text("Reset")
+                    Text(stringResource(R.string.reset))
                 }
 
                 Button(
@@ -1692,7 +1696,7 @@ fun NotesFilterSheet(
                         onDismiss()
                     }
                 ) {
-                    Text("Apply")
+                    Text(stringResource(R.string.Confirm))
                 }
             }
 

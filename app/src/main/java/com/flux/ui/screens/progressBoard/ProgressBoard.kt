@@ -147,13 +147,6 @@ fun ProgressTrackerScreen(
                                             tint = MaterialTheme.colorScheme.primary
                                         )
                                     }
-                                    IconButton({ showSearchBar = true }) {
-                                        Icon(
-                                            Icons.Default.FilterList,
-                                            null,
-                                            tint = MaterialTheme.colorScheme.primary
-                                        )
-                                    }
                                 }
                             }
                         }

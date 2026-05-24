@@ -378,4 +378,109 @@
     <string name="start">Início</string>
     <string name="progress_tracker">Rastreador de progresso</string>
 
+    <!-- values-pt/strings.xml -->
+
+    <string name="system_time_format_title">Formato de hora do sistema</string>
+    <string name="system_time_format_description">Adapta-se automaticamente ao formato de hora do sistema</string>
+
+    <string name="mode_title">Modo</string>
+    <string name="mode_description">Normal • Compacto</string>
+
+    <string name="made_in_india">Feito na Índia</string>
+
+    <string name="compact_mode">Modo compacto</string>
+    <string name="default_mode">Modo padrão</string>
+
+    <string name="select_mode">Selecionar modo</string>
+
+    <string name="no_options_available">Nenhuma opção disponível</string>
+
+    <string name="current_habit_status">Status atual do hábito</string>
+    <string name="goal">Meta</string>
+    <string name="completion">Conclusão</string>
+
+    <string name="decrement">Diminuir</string>
+    <string name="increment">Incrementar</string>
+    <string name="log_time">Registrar tempo</string>
+
+    <string name="current_streak">Atual %1$d</string>
+
+    <string name="habit_type_simple">Simples</string>
+    <string name="habit_type_timed">Temporizado</string>
+    <string name="habit_type_counter">Contador</string>
+
+    <string name="type">Tipo</string>
+
+    <string name="remind_at">Lembrar às</string>
+
+    <string name="timer">Temporizador</string>
+
+    <string name="active_from">Ativo de</string>
+    <string name="active_until">Ativo até</string>
+
+    <string name="notify_every">Notificar a cada</string>
+
+    <string name="unit">Unidade</string>
+
+    <string name="this_year">Este ano</string>
+
+    <string name="reminder_time">Hora do lembrete</string>
+
+    <string name="end_time_greater_than_start">
+    O horário de término deve ser maior que o horário de início
+</string>
+
+    <string name="unit_optional">Unidade (Opcional)</string>
+
+    <string name="from">De</string>
+    <string name="to">Até</string>
+
+    <string name="remind_every">Lembrar a cada</string>
+
+    <string name="habit_reminder_count">
+    O hábito lembrará %1$d vezes por dia.
+</string>
+
+    <string name="duration">Duração</string>
+
+    <string name="future_journal_entries_not_allowed">
+    Entradas futuras no diário não são permitidas
+</string>
+
+    <string name="empty_no_data_found">Vazio! Nenhum dado encontrado</string>
+    <string name="oops_no_language_found">Ops! Nenhum idioma encontrado</string>
+
+    <string name="marked_done">Marcado como concluído</string>
+    <string name="failed">Falhou</string>
+
+    <string name="category_others">Outros</string>
+    <string name="category_default">Padrão</string>
+    <string name="category_food">Comida</string>
+    <string name="category_emoji">Emoji</string>
+    <string name="category_finance_analytics">Finanças - Análise</string>
+    <string name="journal_heat_map">Mapa de calor do diário</string>
+
+    <string name="selected_spaces">Espaços selecionados</string>
+    <string name="available_spaces">Espaços disponíveis</string>
+    <string name="other_available">Outros disponíveis</string>
+    <string name="passkey">Chave de acesso</string>
+    <string name="icon">Ícone</string>
+    <string name="latest">Mais recente</string>
+    <string name="oldest">Mais antigo</string>
+    <string name="filter_by_date">Filtrar por data</string>
+    <string name="labels">Rótulos</string>
+    <string name="date">Data</string>
+
+    <string name="view">Visualização</string>
+    <string name="list_view">Visualização em lista</string>
+    <string name="grid_view">Visualização em grade</string>
+    <string name="pinned">Fixado</string>
+    <string name="unpinned">Não fixado</string>
+    <string name="sort_by">Ordenar por</string>
+
+    <string name="Import">Importar</string>
+    <string name="create">Criar</string>
+    <string name="clear">Limpar</string>
+    <string name="spaces">Espaços</string>
+    <string name="workspaces">Espaços de trabalho</string>
 </resources>

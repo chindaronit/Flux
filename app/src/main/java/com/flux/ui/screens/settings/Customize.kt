@@ -139,8 +139,8 @@ fun Customize(
             }
             item {
                 SettingOption(
-                    title = "Mode",
-                    description = "Normal • Compact",
+                    title = stringResource(R.string.mode_title),
+                    description = stringResource(R.string.mode_description),
                     icon = Icons.Rounded.ViewCompactAlt,
                     radius = shapeManager(radius = settings.data.cornerRadius, isLast = true),
                     actionType = ActionType.CUSTOM,
@@ -157,8 +157,8 @@ fun Customize(
                 Spacer(Modifier.height(12.dp))
 
                 SettingOption(
-                    title = "System Time Format",
-                    description = "Automatically adapts to system time format",
+                    title = stringResource(R.string.system_time_format_title),
+                    description = stringResource(R.string.system_time_format_description),
                     icon = Icons.Filled.AutoMode,
                     radius = shapeManager(
                         radius = settings.data.cornerRadius,

@@ -112,9 +112,11 @@ fun NotesScreen(
     var isActionButtonExpanded by remember { mutableStateOf(false) }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     var filterState by remember { mutableStateOf(FilterState()) }
-    val labelMap = remember(allLabels) {
-        allLabels.associateBy { it.labelId }
-    }
+    val labelMap = remember(allLabels) { allLabels.associateBy { it.labelId } }
+    val sortByLabel = stringResource(R.string.sort_by)
+    val labelName = stringResource(R.string.labels)
+    val viewLabel = stringResource(R.string.view)
+    val pinnedLabel = stringResource(R.string.pinned)
 
     val allNotes = state.allNotes
         .filter { note->
@@ -235,21 +237,21 @@ fun NotesScreen(
                             modifier = buttonModifier,
                             onClick = { importLauncher.launch(arrayOf("text/markdown", "text/plain")) },
                             icon = { Icon(Icons.Outlined.Download, contentDescription = null) },
-                            text = { Text("Import") }
+                            text = { Text(stringResource(R.string.Import)) }
                         )
 
                         ExtendedFloatingActionButton(
                             modifier = buttonModifier,
                             onClick = { navController.navigate(NavRoutes.NoteDetails.withArgs(workspaceId, "")) },
                             icon = { Icon(Icons.Outlined.Create, contentDescription = null) },
-                            text = { Text("Create") }
+                            text = { Text(stringResource(R.string.create)) }
                         )
 
                         ExtendedFloatingActionButton(
                             modifier = buttonModifier,
                             onClick = { isActionButtonExpanded = false },
                             icon = { Icon(Icons.Outlined.Clear, contentDescription = null) },
-                            text = { Text("Clear") }
+                            text = { Text(stringResource(R.string.clear)) }
                         )
                     }
                 }
@@ -411,14 +413,14 @@ fun NotesScreen(
             onDismiss = { isToolsSheetVisible = false },
         ) { single, multi ->
             filterState = FilterState(
-                sort = single["Sort By"],
-                view = single["View"],
-                pinned = single["Pinned"],
-                selectedLabelIds = multi["Labels"] ?: emptySet()
+                sort = single[sortByLabel],
+                view = single[viewLabel],
+                pinned = single[pinnedLabel],
+                selectedLabelIds = multi[labelName] ?: emptySet()
             )
 
-            if(isGridView && single["View"]=="list" || !isGridView && single["View"]=="grid"){
-                onSettingChange(SettingEvents.UpdateSettings(settings.data.copy(isGridView=(single["View"]=="grid"))))
+            if(isGridView && single[viewLabel]=="list" || !isGridView && single[viewLabel]=="grid"){
+                onSettingChange(SettingEvents.UpdateSettings(settings.data.copy(isGridView=(single[viewLabel]=="grid"))))
             }
         }
     }

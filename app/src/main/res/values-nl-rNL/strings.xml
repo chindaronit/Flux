@@ -376,4 +376,111 @@
     <string name="target">Doel</string>
     <string name="start">Start</string>
     <string name="progress_tracker">Voortgangsvolger</string>
+
+    <!-- values-nl/strings.xml -->
+
+    <string name="system_time_format_title">Systeemtijdnotatie</string>
+    <string name="system_time_format_description">Past zich automatisch aan de systeemtijdnotatie aan</string>
+
+    <string name="mode_title">Modus</string>
+    <string name="mode_description">Normaal • Compact</string>
+
+    <string name="made_in_india">Gemaakt in India</string>
+
+    <string name="compact_mode">Compacte modus</string>
+    <string name="default_mode">Standaardmodus</string>
+
+    <string name="select_mode">Selecteer modus</string>
+
+    <string name="no_options_available">Geen opties beschikbaar</string>
+
+    <string name="current_habit_status">Huidige gewoonte-status</string>
+
+    <string name="goal">Doel</string>
+    <string name="completion">Voltooiing</string>
+
+    <string name="decrement">Verlagen</string>
+    <string name="increment">Verhogen</string>
+    <string name="log_time">Tijd registreren</string>
+
+    <string name="current_streak">Huidig %1$d</string>
+
+    <string name="habit_type_simple">Eenvoudig</string>
+    <string name="habit_type_timed">Getimed</string>
+    <string name="habit_type_counter">Teller</string>
+
+    <string name="type">Type</string>
+
+    <string name="remind_at">Herinner om</string>
+
+    <string name="timer">Timer</string>
+
+    <string name="active_from">Actief vanaf</string>
+    <string name="active_until">Actief tot</string>
+
+    <string name="notify_every">Herinner elke</string>
+
+    <string name="unit">Eenheid</string>
+
+    <string name="this_year">Dit jaar</string>
+
+    <string name="reminder_time">Herinneringstijd</string>
+
+    <string name="end_time_greater_than_start">
+    Eindtijd moet groter zijn dan starttijd
+</string>
+
+    <string name="unit_optional">Eenheid (Optioneel)</string>
+
+    <string name="from">Van</string>
+    <string name="to">Tot</string>
+
+    <string name="remind_every">Herinner elke</string>
+
+    <string name="habit_reminder_count">
+    Gewoonte herinnert %1$d keer per dag.
+</string>
+
+    <string name="duration">Duur</string>
+
+    <string name="future_journal_entries_not_allowed">
+    Toekomstige journaalvermeldingen zijn niet toegestaan
+</string>
+
+    <string name="empty_no_data_found">Leeg! Geen gegevens gevonden</string>
+    <string name="oops_no_language_found">Oeps! Geen taal gevonden</string>
+
+    <string name="marked_done">Gemarkeerd als voltooid</string>
+    <string name="failed">Mislukt</string>
+
+    <string name="category_others">Overige</string>
+    <string name="category_default">Standaard</string>
+    <string name="category_food">Voedsel</string>
+    <string name="category_emoji">Emoji</string>
+    <string name="category_finance_analytics">Financiën - Analyse</string>
+    <string name="journal_heat_map">Journal warmtekaart</string>
+
+    <string name="selected_spaces">Geselecteerde ruimtes</string>
+    <string name="available_spaces">Beschikbare ruimtes</string>
+    <string name="other_available">Andere beschikbaar</string>
+    <string name="passkey">Toegangssleutel</string>
+    <string name="icon">Pictogram</string>
+    <string name="latest">Nieuwste</string>
+    <string name="oldest">Oudste</string>
+    <string name="filter_by_date">Filteren op datum</string>
+    <string name="labels">Labels</string>
+    <string name="date">Datum</string>
+
+    <string name="view">Weergave</string>
+    <string name="list_view">Lijstweergave</string>
+    <string name="grid_view">Rasterweergave</string>
+    <string name="pinned">Vastgezet</string>
+    <string name="unpinned">Niet vastgezet</string>
+    <string name="sort_by">Sorteren op</string>
+
+    <string name="Import">Importeren</string>
+    <string name="create">Aanmaken</string>
+    <string name="clear">Wissen</string>
+    <string name="spaces">Ruimtes</string>
+    <string name="workspaces">Werkruimtes</string>
 </resources>

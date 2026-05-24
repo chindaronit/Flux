@@ -339,7 +339,7 @@ fun JournalHeatMap(
 
     HeatMapCard(
         radius,
-        "Journal Heat Map",
+        stringResource(R.string.journal_heat_map),
         "",
         boxSize,
         5,

@@ -86,6 +86,8 @@ import java.time.ZoneId
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
+import com.flux.R
 import com.flux.data.model.LabelModel
 import com.flux.navigation.NavRoutes
 import com.flux.ui.common.DatePickerModal
@@ -188,6 +190,7 @@ fun EditJournal(
 
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
+    val futureDateNotAllowed = stringResource(R.string.future_journal_entries_not_allowed)
 
     LaunchedEffect(isReadView) {
         keyboardController?.hide()
@@ -424,12 +427,11 @@ fun EditJournal(
                 val today = LocalDate.now()
 
                 when {
-
                     // future date not allowed
                     selectedLocalDate.isAfter(today) -> {
                         Toast.makeText(
                             context,
-                            "Future journal entries are not allowed",
+                            futureDateNotAllowed,
                             Toast.LENGTH_SHORT
                         ).show()
                     }

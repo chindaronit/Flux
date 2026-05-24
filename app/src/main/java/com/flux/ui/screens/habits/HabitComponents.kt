@@ -217,7 +217,7 @@ fun CountedHabitStatus(
         ) {
 
             Text(
-                "Current Habit Status",
+                stringResource(R.string.current_habit_status),
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.SemiBold
                 ),
@@ -251,19 +251,19 @@ fun CountedHabitStatus(
 
                     HabitInfoComponent(
                         Icons.Outlined.IncompleteCircle,
-                        "Current",
+                        stringResource(R.string.current),
                         currentCount.toString()
                     )
 
                     HabitInfoComponent(
                         Icons.Default.TrackChanges,
-                        "Goal",
+                        stringResource(R.string.goal),
                         goal.toString()
                     )
 
                     HabitInfoComponent(
                         Icons.Default.Percent,
-                        "Completion",
+                        stringResource(R.string.completion),
                         completionPercentage.toString()
                     )
                 }
@@ -310,7 +310,7 @@ fun CountedHabitStatus(
                             tint = MaterialTheme.colorScheme.primary
                         )
 
-                        Text("Decrement")
+                        Text(stringResource(R.string.decrement))
                     }
                 }
 
@@ -347,7 +347,7 @@ fun CountedHabitStatus(
                             tint = MaterialTheme.colorScheme.primary
                         )
 
-                        Text("Increment")
+                        Text(stringResource(R.string.increment))
                     }
                 }
             }
@@ -395,7 +395,7 @@ fun TimedHabitStatus (
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                "Current Habit Status",
+                stringResource(R.string.current_habit_status),
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
@@ -419,17 +419,17 @@ fun TimedHabitStatus (
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     HabitInfoComponent(
                         Icons.Outlined.IncompleteCircle,
-                        "Current",
+                        stringResource(R.string.current),
                         formatDuration(timeSpent)
                     )
                     HabitInfoComponent(
                         Icons.Default.TrackChanges,
-                        "Goal",
+                        stringResource(R.string.goal),
                         formatDuration(goal)
                     )
                     HabitInfoComponent(
                         Icons.Default.Percent,
-                        "Completion",
+                        stringResource(R.string.completion),
                         completionPercentage.toString()
                     )
                 }
@@ -475,7 +475,7 @@ fun TimedHabitStatus (
                     verticalAlignment = Alignment.CenterVertically
                 ){
                     Icon(Icons.Default.Add, null)
-                    Text("Log time")
+                    Text(stringResource(R.string.log_time))
                 }
             }
         }
@@ -492,7 +492,7 @@ fun NumberPickerRow(
 ) {
     Row(modifier, horizontalArrangement = Arrangement.SpaceEvenly) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("Hours", color = MaterialTheme.colorScheme.primary)
+            Text(stringResource(R.string.hours), color = MaterialTheme.colorScheme.primary)
             NumberPicker(
                 range = 0..23,
                 selected = hours,
@@ -508,7 +508,7 @@ fun NumberPickerRow(
         )
 
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("Minutes", color = MaterialTheme.colorScheme.primary)
+            Text(stringResource(R.string.minutes), color = MaterialTheme.colorScheme.primary)
             NumberPicker(
                 range = 0..59,
                 selected = minutes,
@@ -767,13 +767,13 @@ fun HabitDetailedInfo(
                         else ->  Icons.Default.Timer
                     }
                     val habitTypeText = when (habit.habitConfig) {
-                        is HabitConfig.Timed -> "Timed"
-                        is HabitConfig.Counted -> "Counter"
-                        else -> "Simple"
+                        is HabitConfig.Timed -> stringResource(R.string.habit_type_timed)
+                        is HabitConfig.Counted -> stringResource(R.string.habit_type_counter)
+                        else -> stringResource(R.string.habit_type_simple)
                     }
                     HabitInfoComponent(
                         habitTypeIcon,
-                        "Type",
+                        stringResource(R.string.type),
                         habitTypeText
                     )
                 }
@@ -782,7 +782,7 @@ fun HabitDetailedInfo(
                     item {
                         HabitInfoComponent(
                             Icons.Outlined.NotificationsActive,
-                            "Remind at",
+                            stringResource(R.string.remind_at),
                             convertMillisToTime(habit.startDateTime)
                         )
                     }
@@ -792,7 +792,7 @@ fun HabitDetailedInfo(
                     item {
                         HabitInfoComponent(
                             Icons.Outlined.Timer,
-                            "Timer",
+                            stringResource(R.string.timer),
                             formatDuration(habit.habitConfig.durationMillis)
                         )
                     }
@@ -802,7 +802,7 @@ fun HabitDetailedInfo(
                     item {
                         HabitInfoComponent(
                             Icons.Outlined.Circle,
-                            "Active from",
+                            stringResource(R.string.active_from),
                             convertMillisToTime(habit.habitConfig.activeStartTime)
                         )
                     }
@@ -810,7 +810,7 @@ fun HabitDetailedInfo(
                     item {
                         HabitInfoComponent(
                             Icons.Outlined.StopCircle,
-                            "Active uptil",
+                            stringResource(R.string.active_until),
                             convertMillisToTime(habit.habitConfig.activeEndTime)
                         )
                     }
@@ -818,7 +818,7 @@ fun HabitDetailedInfo(
                     item {
                         HabitInfoComponent(
                             Icons.Outlined.NotificationsActive,
-                            "Notify Every",
+                            stringResource(R.string.notify_every),
                             formatDuration(habit.habitConfig.intervalMillis)
                         )
                     }
@@ -826,7 +826,7 @@ fun HabitDetailedInfo(
                     item {
                         HabitInfoComponent(
                             Icons.Default.TrackChanges,
-                            "Goal",
+                            stringResource(R.string.goal),
                             habit.habitConfig.goal.toString()
                         )
                     }
@@ -835,7 +835,7 @@ fun HabitDetailedInfo(
                         item {
                             HabitInfoComponent(
                                 Icons.Default.AcUnit,
-                                "Unit",
+                                stringResource(R.string.unit),
                                 habit.habitConfig.unit
                             )
                         }
@@ -933,7 +933,7 @@ fun SingleHabitHeatMap(
 
     HeatMapCard(
         radius,
-        "This Year",
+        stringResource(R.string.this_year),
         "",
         boxSize,
         2,
@@ -1963,33 +1963,19 @@ private fun getCompletedDates(
 
     return when (habitConfig) {
 
-        is HabitConfig.Simple -> {
-
-            instances
-                .map { it.instanceDate }
-                .toSet()
-        }
+        is HabitConfig.Simple -> { instances.map { it.instanceDate }.toSet() }
 
         is HabitConfig.Counted -> {
-
             instances
                 .filter { instance ->
-
-                    val count =
-                        instance.count ?: 0
-
+                    val count = instance.count
                     count >= habitConfig.goal
                 }
                 .map { it.instanceDate }
                 .toSet()
         }
 
-        is HabitConfig.Timed -> {
-
-            instances
-                .map { it.instanceDate }
-                .toSet()
-        }
+        is HabitConfig.Timed -> { instances.map { it.instanceDate }.toSet() }
     }
 }
 
@@ -2110,9 +2096,9 @@ fun HabitConfigCard(
     onClick: () -> Unit
 ){
     val title = when(config) {
-        is HabitConfig.Simple -> "Simple"
-        is HabitConfig.Counted -> "Counter"
-        is HabitConfig.Timed -> "Timed"
+        is HabitConfig.Simple -> stringResource(R.string.habit_type_simple)
+        is HabitConfig.Counted -> stringResource(R.string.habit_type_counter)
+        is HabitConfig.Timed -> stringResource(R.string.habit_type_timed)
     }
 
     val icon = when(config) {

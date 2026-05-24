@@ -1,6 +1,7 @@
 package com.flux.ui.screens.journal
 
 import android.annotation.SuppressLint
+import android.content.Context
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -54,9 +55,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorProducer
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.flux.R
 import com.flux.data.model.LabelModel
 import com.flux.other.parseMarkdownContent
 import com.flux.ui.common.CategoryRow
@@ -187,25 +191,25 @@ fun TimelineBody(
     }
 }
 
-fun buildFilterCategories(labels: List<LabelModel>, date: Long?): List<FilterCategory> {
+fun buildFilterCategories(context: Context,labels: List<LabelModel>, date: Long?): List<FilterCategory> {
     return listOf(
         FilterCategory(
-            name = "Sort By",
+            name = context.getString(R.string.sort_by),
             options = listOf(
-                FilterOption("latest", "Latest"),
-                FilterOption("oldest", "Oldest")
+                FilterOption("latest", context.getString(R.string.latest)),
+                FilterOption("oldest", context.getString(R.string.oldest))
             ),
             type = SelectionType.SINGLE
         ),
         FilterCategory(
-            name = "Date",
+            name = context.getString(R.string.date),
             options = listOf(
-                FilterOption("date", "Filter by Date", date)
+                FilterOption("date", context.getString(R.string.filter_by_date), date)
             ),
             type = SelectionType.DATE
         ),
         FilterCategory(
-            name = "Labels",
+            name = context.getString(R.string.labels),
             options = labels.map {
                 FilterOption(it.labelId, it.value)
             },
@@ -230,16 +234,19 @@ fun JournalFilterSheet(
 ) {
 
     var showDatePicker by remember { mutableStateOf(false) }
-
+    val context = LocalContext.current
     val maxHeight = LocalConfiguration.current.screenHeightDp.dp * 0.4f
     val categories = remember(labels) {
-        buildFilterCategories(labels, filterState.selectedDate)
+        buildFilterCategories(context, labels, filterState.selectedDate)
     }
     var selectedCategory by remember { mutableStateOf(categories.first()) }
+    val sortByLabel = stringResource(R.string.sort_by)
+    val labelName = stringResource(R.string.labels)
+    val viewLabel = stringResource(R.string.view)
 
     val singleSelections = remember(filterState) {
         mutableStateMapOf<String, String>().apply {
-            filterState.sort?.let { put("Sort By", it) }
+            filterState.sort?.let { put(sortByLabel, it) }
         }
     }
 
@@ -254,7 +261,7 @@ fun JournalFilterSheet(
                 .forEach { category ->
                     val list = mutableStateListOf<String>()
 
-                    if (category.name == "Labels") {
+                    if (category.name == labelName) {
                         list.addAll(filterState.selectedLabelIds)
                     }
 
@@ -311,7 +318,7 @@ fun JournalFilterSheet(
                                     .padding(24.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text("No options available")
+                                Text(stringResource(R.string.no_options_available))
                             }
                         }
                     }
@@ -379,12 +386,12 @@ fun JournalFilterSheet(
                     modifier = Modifier.weight(1f),
                     onClick = {
                         singleSelections.clear()
-                        singleSelections["View"] = "grid"
+                        singleSelections[viewLabel] = "grid"
                         multiSelections.values.forEach { it.clear() }
                         selectedDate.value = null
                     }
                 ) {
-                    Text("Reset")
+                    Text(stringResource(R.string.reset))
                 }
 
                 Button(
@@ -398,7 +405,7 @@ fun JournalFilterSheet(
                         onDismiss()
                     }
                 ) {
-                    Text("Apply")
+                    Text(stringResource(R.string.Confirm))
                 }
             }
 

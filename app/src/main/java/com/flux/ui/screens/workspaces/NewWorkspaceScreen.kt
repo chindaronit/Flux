@@ -138,7 +138,7 @@ fun NewWorkspaceScreen(
             HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
 
             Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween){
-                Text("Icon", style = MaterialTheme.typography.bodyLarge)
+                Text(stringResource(R.string.icon), style = MaterialTheme.typography.bodyLarge)
                 IconButton(
                     { isSheetVisible = true },
                     colors = IconButtonDefaults.iconButtonColors(
@@ -155,7 +155,7 @@ fun NewWorkspaceScreen(
 
             passkey?.let {
                 Row(Modifier.fillMaxWidth().padding(8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween){
-                    Text("Passkey", style = MaterialTheme.typography.bodyLarge)
+                    Text(stringResource(R.string.passkey), style = MaterialTheme.typography.bodyLarge)
 
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         if(it.isNotBlank()) Text("****")
@@ -172,13 +172,13 @@ fun NewWorkspaceScreen(
 
             if(isNew){
                 HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
-                if(selectedSpaces.isNotEmpty()) Text("Selected spaces")
+                if(selectedSpaces.isNotEmpty()) Text(stringResource(R.string.selected_spaces))
                 FlowRow(Modifier.fillMaxWidth().padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     selectedSpaces.forEach { space ->
                         CompactCard(space.icon, space.title) { selectedSpacesId.remove(space.id) }
                     }
                 }
-                if(otherSpaces.isNotEmpty()) Text(if(selectedSpaces.isEmpty()) "Available Spaces" else "Other available")
+                if(otherSpaces.isNotEmpty()) Text(if(selectedSpaces.isEmpty()) stringResource(R.string.available_spaces) else stringResource(R.string.other_available))
                 FlowRow(Modifier.fillMaxWidth().padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     otherSpaces.forEach { space ->
                         CompactCard(space.icon, space.title) { selectedSpacesId.add(space.id) }

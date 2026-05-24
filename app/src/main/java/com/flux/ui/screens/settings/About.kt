@@ -49,7 +49,7 @@ fun About(navController: NavController, radius: Int) {
                 SingleSettingOption(
                     radius,
                     stringResource(R.string.app_name),
-                    description = "Made In India",
+                    description = stringResource(R.string.made_in_india),
                     leadingIcon = SettingIcon.Resource(R.mipmap.ic_launcher_foreground),
                     trailingIcon = SettingIcon.Resource(R.drawable.india),
                     textStyle = MaterialTheme.typography.titleLarge,

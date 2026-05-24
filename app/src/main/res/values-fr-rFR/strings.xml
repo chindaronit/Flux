@@ -377,4 +377,112 @@
     <string name="target">Objectif</string>
     <string name="start">Début</string>
     <string name="progress_tracker">Suivi de progression</string>
+
+    <!-- values-fr/strings.xml -->
+
+    <string name="system_time_format_title">Format de l\'heure système</string>
+    <string name="system_time_format_description">S’adapte automatiquement au format horaire du système</string>
+
+    <string name="mode_title">Mode</string>
+    <string name="mode_description">Normal • Compact</string>
+
+    <string name="made_in_india">Fabriqué en Inde</string>
+
+    <string name="compact_mode">Mode compact</string>
+    <string name="default_mode">Mode par défaut</string>
+
+    <string name="select_mode">Sélectionner le mode</string>
+
+    <string name="no_options_available">Aucune option disponible</string>
+
+    <string name="current_habit_status">État actuel de l’habitude</string>
+
+    <string name="goal">Objectif</string>
+    <string name="completion">Achèvement</string>
+
+    <string name="decrement">Diminuer</string>
+    <string name="increment">Augmenter</string>
+    <string name="log_time">Enregistrer le temps</string>
+
+    <string name="current_streak">Actuel %1$d</string>
+
+    <string name="habit_type_simple">Simple</string>
+    <string name="habit_type_timed">Minuté</string>
+    <string name="habit_type_counter">Compteur</string>
+
+    <string name="type">Type</string>
+
+    <string name="remind_at">Rappeler à</string>
+
+    <string name="timer">Minuteur</string>
+
+    <string name="active_from">Actif à partir de</string>
+    <string name="active_until">Actif jusqu’à</string>
+
+    <string name="notify_every">Notifier chaque</string>
+
+    <string name="unit">Unité</string>
+
+    <string name="this_year">Cette année</string>
+
+    <string name="reminder_time">Heure du rappel</string>
+
+    <string name="end_time_greater_than_start">
+    L’heure de fin doit être supérieure à l’heure de début
+</string>
+
+    <string name="unit_optional">Unité (Optionnel)</string>
+
+    <string name="from">De</string>
+    <string name="to">À</string>
+
+    <string name="remind_every">Rappeler chaque</string>
+
+    <string name="habit_reminder_count">
+    L’habitude rappellera %1$d fois par jour.
+</string>
+
+    <string name="duration">Durée</string>
+
+    <string name="future_journal_entries_not_allowed">
+    Les entrées de journal futures ne sont pas autorisées
+</string>
+
+    <string name="empty_no_data_found">Vide ! Aucune donnée trouvée</string>
+    <string name="oops_no_language_found">Oups ! Aucune langue trouvée</string>
+
+    <string name="marked_done">Marqué comme terminé</string>
+    <string name="failed">Échoué</string>
+
+    <string name="category_others">Autres</string>
+    <string name="category_default">Par défaut</string>
+    <string name="category_food">Nourriture</string>
+    <string name="category_emoji">Emoji</string>
+    <string name="category_finance_analytics">Finance - Analytique</string>
+    <string name="journal_heat_map">Carte thermique du journal</string>
+
+    <string name="selected_spaces">Espaces sélectionnés</string>
+    <string name="available_spaces">Espaces disponibles</string>
+    <string name="other_available">Autres disponibles</string>
+    <string name="passkey">Clé d’accès</string>
+    <string name="icon">Icône</string>
+    <string name="latest">Le plus récent</string>
+    <string name="oldest">Le plus ancien</string>
+    <string name="filter_by_date">Filtrer par date</string>
+    <string name="labels">Étiquettes</string>
+    <string name="date">Date</string>
+
+    <string name="view">Vue</string>
+    <string name="list_view">Vue en liste</string>
+    <string name="grid_view">Vue en grille</string>
+    <string name="pinned">Épinglé</string>
+    <string name="unpinned">Non épinglé</string>
+    <string name="sort_by">Trier par</string>
+
+    <string name="Import">Importer</string>
+    <string name="create">Créer</string>
+    <string name="clear">Effacer</string>
+    <string name="spaces">Espaces</string>
+    <string name="workspaces">Espaces de travail</string>
+
 </resources>

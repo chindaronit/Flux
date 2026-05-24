@@ -107,6 +107,8 @@ fun JournalScreen(
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     var filterState by remember { mutableStateOf(FilterState()) }
     val labelMap = remember(allLabels) { allLabels.associateBy { it.labelId } }
+    val sortByLabel = stringResource(R.string.sort_by)
+    val labelName = stringResource(R.string.labels)
 
     val allEntries = state.data
         .filter { it.workspaceId==workspaceId }
@@ -225,21 +227,21 @@ fun JournalScreen(
                             modifier = buttonModifier,
                             onClick = { importLauncher.launch(arrayOf("text/markdown", "text/plain")) },
                             icon = { Icon(Icons.Outlined.Download, contentDescription = null) },
-                            text = { Text("Import") }
+                            text = { Text(stringResource(R.string.Import)) }
                         )
 
                         ExtendedFloatingActionButton(
                             modifier = buttonModifier,
                             onClick = { navController.navigate(NavRoutes.EditJournal.withArgs(workspaceId, "", System.currentTimeMillis())) },
                             icon = { Icon(Icons.Outlined.Create, contentDescription = null) },
-                            text = { Text("Create") }
+                            text = { Text(stringResource(R.string.create)) }
                         )
 
                         ExtendedFloatingActionButton(
                             modifier = buttonModifier,
                             onClick = { isActionButtonExpanded = false },
                             icon = { Icon(Icons.Outlined.Clear, contentDescription = null) },
-                            text = { Text("Clear") }
+                            text = { Text(stringResource(R.string.clear)) }
                         )
                     }
                 }
@@ -336,8 +338,8 @@ fun JournalScreen(
             onDismiss = { isToolsSheetVisible = false },
         ) { single, multi, date ->
             filterState = FilterState(
-                sort = single["Sort By"],
-                selectedLabelIds = multi["Labels"] ?: emptySet(),
+                sort = single[sortByLabel],
+                selectedLabelIds = multi[labelName] ?: emptySet(),
                 selectedDate = date
             )
         }

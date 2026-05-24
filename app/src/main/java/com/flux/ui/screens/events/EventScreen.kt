@@ -14,8 +14,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CalendarViewDay
+import androidx.compose.material.icons.filled.CalendarViewMonth
 import androidx.compose.material.icons.filled.Event
-import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -49,6 +50,7 @@ import com.flux.ui.common.EmptyEvents
 import com.flux.ui.common.SpaceSearchBar
 import com.flux.ui.common.SpaceTopBar
 import com.flux.ui.common.SpacesMenu
+import com.flux.ui.events.SettingEvents
 import com.flux.ui.events.TaskEvents
 import com.flux.ui.screens.workspaces.SpacesToolBar
 import com.flux.ui.state.EventState
@@ -72,6 +74,7 @@ fun EventScreen(
     onRemoveCover: () -> Unit,
     onDeleteWorkspace: () -> Unit,
     onToggleLock: () -> Unit,
+    onSettingEvents: (SettingEvents) -> Unit,
     onEvent: (TaskEvents) -> Unit
 ){
     val context = LocalContext.current
@@ -172,6 +175,7 @@ fun EventScreen(
                                     workspace,
                                     onSpaceChange
                                 ) { showSpacesMenu = false }
+
                                 Row {
                                     IconButton({ showSearchBar = true }) {
                                         Icon(
@@ -180,9 +184,12 @@ fun EventScreen(
                                             tint = MaterialTheme.colorScheme.primary
                                         )
                                     }
-                                    IconButton({ showSearchBar = true }) {
+
+                                    IconButton({ onSettingEvents(SettingEvents.UpdateSettings(
+                                        settings.data.copy(isCalendarMonthlyView = !isMonthlyView)))
+                                    }) {
                                         Icon(
-                                            Icons.Default.FilterList,
+                                            if (isMonthlyView) Icons.Default.CalendarViewDay else Icons.Default.CalendarViewMonth,
                                             null,
                                             tint = MaterialTheme.colorScheme.primary
                                         )

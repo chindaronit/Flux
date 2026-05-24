@@ -439,7 +439,7 @@ fun SimpleConfigItems(startDateTime: Long, is24HourFormat: Boolean, onClick: (Lo
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(Icons.Default.AlarmAdd, null)
-            Text("Reminder Time")
+            Text(stringResource(R.string.reminder_time))
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(startDateTime.toFormattedTime(is24HourFormat))
@@ -465,6 +465,7 @@ fun CountedConfigItems(
     var showActiveTimePicker by remember { mutableStateOf(false) }
     var isChangingActiveStartTime by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val toastLabel = stringResource(R.string.end_time_greater_than_start)
 
     val count = remember(activeStartTime, activeEndTime, intervalMillis) {
         if (intervalMillis > 0) { ((activeEndTime - activeStartTime) / intervalMillis) + 1 } else 1
@@ -494,7 +495,7 @@ fun CountedConfigItems(
                 }
                 else {
                     if(it<activeStartTime){
-                        Toast.makeText(context, "End Time Should be greater than Start Time", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, toastLabel, Toast.LENGTH_SHORT).show()
                     }
                     else {
                         onChange(config.copy(activeEndTime = it))
@@ -518,7 +519,7 @@ fun CountedConfigItems(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(Icons.Default.TrackChanges, null)
-                Text("Goal")
+                Text(stringResource(R.string.goal))
             }
 
             Row(
@@ -566,7 +567,7 @@ fun CountedConfigItems(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(Icons.Default.AcUnit, null)
-                Text("Unit (Optional)")
+                Text(stringResource(R.string.unit_optional))
             }
 
             TextField(
@@ -594,7 +595,7 @@ fun CountedConfigItems(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(Icons.Outlined.Circle, null)
-                Text("From")
+                Text(stringResource(R.string.from))
             }
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -622,7 +623,7 @@ fun CountedConfigItems(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(Icons.Outlined.StopCircle, null)
-                Text("To")
+                Text(stringResource(R.string.to))
             }
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -650,7 +651,7 @@ fun CountedConfigItems(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(Icons.Default.NotificationsActive, null)
-                Text("Remind Every")
+                Text(stringResource(R.string.remind_every))
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(formatDuration(intervalMillis))
@@ -676,7 +677,7 @@ fun CountedConfigItems(
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary
                 )
-                Text("Habit will remind for $count times in a day.")
+                Text(stringResource(R.string.habit_reminder_count, count))
             }
         }
     }
@@ -728,7 +729,7 @@ fun TimedConfigItems(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(Icons.Default.AlarmAdd, null)
-                Text("Reminder Time")
+                Text(stringResource(R.string.reminder_time))
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(startDateTime.toFormattedTime(is24HourFormat))
@@ -750,7 +751,7 @@ fun TimedConfigItems(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(Icons.Default.Timer, null)
-                Text("Duration")
+                Text(stringResource(R.string.duration))
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(formatDuration(durationMillis))

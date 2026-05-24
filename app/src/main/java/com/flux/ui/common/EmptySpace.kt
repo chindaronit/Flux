@@ -12,9 +12,7 @@ import androidx.compose.material.icons.filled.AutoStories
 import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.EventAvailable
 import androidx.compose.material.icons.filled.HourglassEmpty
-import androidx.compose.material.icons.filled.QuestionMark
 import androidx.compose.material.icons.filled.TaskAlt
-import androidx.compose.material.icons.filled.Workspaces
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -66,22 +64,6 @@ fun EmptyHabits() {
     ) {
         Icon(Icons.Default.EventAvailable, null, modifier = Modifier.size(48.dp))
         Text(stringResource(R.string.Empty_Habits))
-    }
-}
-
-@Composable
-fun EmptySpaces() {
-    Column(
-        modifier = Modifier.fillMaxWidth().padding(top = 24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Icon(
-            imageVector = Icons.Default.Workspaces,
-            contentDescription = null,
-            modifier = Modifier.size(48.dp)
-        )
-        Text(stringResource(R.string.Empty_Workspace))
     }
 }
 
@@ -145,7 +127,7 @@ fun EmptyProgressItems() {
             contentDescription = null,
             modifier = Modifier.size(48.dp)
         )
-        Text("Empty! No Data Found")
+        Text(stringResource(R.string.empty_no_data_found))
     }
 }
 
@@ -161,6 +143,22 @@ fun EmptyLanguage() {
             contentDescription = null,
             modifier = Modifier.size(48.dp)
         )
-        Text("Oops! No Language Found")
+        Text(stringResource(R.string.oops_no_language_found))
+    }
+}
+
+@Composable
+fun EmptyValue() {
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(top = 24.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(
+            imageVector = Icons.Default.HourglassEmpty,
+            contentDescription = null,
+            modifier = Modifier.size(48.dp)
+        )
+        Text(stringResource(R.string.empty_no_data_found))
     }
 }

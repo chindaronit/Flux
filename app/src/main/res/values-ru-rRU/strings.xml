@@ -376,4 +376,111 @@
     <string name="target">Цель</string>
     <string name="start">Начало</string>
     <string name="progress_tracker">Трекер прогресса</string>
+
+    <!-- values-ru/strings.xml -->
+
+    <string name="system_time_format_title">Формат системного времени</string>
+    <string name="system_time_format_description">Автоматически адаптируется к системному формату времени</string>
+
+    <string name="mode_title">Режим</string>
+    <string name="mode_description">Обычный • Компактный</string>
+
+    <string name="made_in_india">Сделано в Индии</string>
+
+    <string name="compact_mode">Компактный режим</string>
+    <string name="default_mode">Режим по умолчанию</string>
+
+    <string name="select_mode">Выбрать режим</string>
+
+    <string name="no_options_available">Нет доступных вариантов</string>
+
+    <string name="current_habit_status">Текущий статус привычки</string>
+
+    <string name="goal">Цель</string>
+    <string name="completion">Завершение</string>
+
+    <string name="decrement">Уменьшить</string>
+    <string name="increment">Увеличить</string>
+    <string name="log_time">Записать время</string>
+
+    <string name="current_streak">Текущий %1$d</string>
+
+    <string name="habit_type_simple">Простой</string>
+    <string name="habit_type_timed">С таймером</string>
+    <string name="habit_type_counter">Счётчик</string>
+
+    <string name="type">Тип</string>
+
+    <string name="remind_at">Напомнить в</string>
+
+    <string name="timer">Таймер</string>
+
+    <string name="active_from">Активно с</string>
+    <string name="active_until">Активно до</string>
+
+    <string name="notify_every">Напоминать каждые</string>
+
+    <string name="unit">Единица</string>
+
+    <string name="this_year">Этот год</string>
+
+    <string name="reminder_time">Время напоминания</string>
+
+    <string name="end_time_greater_than_start">
+    Время окончания должно быть больше времени начала
+</string>
+
+    <string name="unit_optional">Единица (Необязательно)</string>
+
+    <string name="from">От</string>
+    <string name="to">До</string>
+
+    <string name="remind_every">Напоминать каждые</string>
+
+    <string name="habit_reminder_count">
+    Привычка будет напоминать %1$d раз в день.
+</string>
+
+    <string name="duration">Длительность</string>
+
+    <string name="future_journal_entries_not_allowed">
+    Будущие записи журнала не разрешены
+</string>
+
+    <string name="empty_no_data_found">Пусто! Данные не найдены</string>
+    <string name="oops_no_language_found">Упс! Язык не найден</string>
+
+    <string name="marked_done">Отмечено как выполнено</string>
+    <string name="failed">Не удалось</string>
+
+    <string name="category_others">Другое</string>
+    <string name="category_default">По умолчанию</string>
+    <string name="category_food">Еда</string>
+    <string name="category_emoji">Эмодзи</string>
+    <string name="category_finance_analytics">Финансы - Аналитика</string>
+    <string name="journal_heat_map">Тепловая карта журнала</string>
+
+    <string name="selected_spaces">Выбранные пространства</string>
+    <string name="available_spaces">Доступные пространства</string>
+    <string name="other_available">Другие доступные</string>
+    <string name="passkey">Ключ доступа</string>
+    <string name="icon">Иконка</string>
+    <string name="latest">Последние</string>
+    <string name="oldest">Самые старые</string>
+    <string name="filter_by_date">Фильтр по дате</string>
+    <string name="labels">Метки</string>
+    <string name="date">Дата</string>
+
+    <string name="view">Вид</string>
+    <string name="list_view">Список</string>
+    <string name="grid_view">Сетка</string>
+    <string name="pinned">Закреплено</string>
+    <string name="unpinned">Не закреплено</string>
+    <string name="sort_by">Сортировать по</string>
+
+    <string name="Import">Импорт</string>
+    <string name="create">Создать</string>
+    <string name="clear">Очистить</string>
+    <string name="spaces">Пространства</string>
+    <string name="workspaces">Рабочие пространства</string>
 </resources>

@@ -36,7 +36,7 @@ import java.util.UUID
 
 @Database(
     entities = [EventModel::class, LabelModel::class, EventInstanceModel::class, SettingsModel::class, NotesModel::class, HabitModel::class, HabitInstanceModel::class, WorkspaceModel::class, TodoModel::class, JournalModel::class, ProgressBoardModel::class],
-    version = 11,
+    version = 8,
     exportSchema = false
 )
 @TypeConverters(Converter::class)
@@ -302,23 +302,18 @@ val MIGRATION_7_8 = object : Migration(7, 8) {
             db.safeExec("DROP TABLE HabitModel")
             db.safeExec("ALTER TABLE HabitModel_new RENAME TO HabitModel")
         }
-    }
-}
 
-val Migration_8_9 = object : Migration(8, 9){
-    override fun migrate(db: SupportSQLiteDatabase) {
-        db.safeExec("ALTER TABLE HabitInstanceModel ADD COLUMN completed INTEGER NOT NULL DEFAULT 0")
-        db.safeExec("ALTER TABLE HabitInstanceModel ADD COLUMN timeSpent INTEGER NOT NULL DEFAULT 0")
-        db.safeExec("ALTER TABLE HabitInstanceModel ADD COLUMN isRunning INTEGER NOT NULL DEFAULT 0")
-        db.safeExec("ALTER TABLE HabitInstanceModel ADD COLUMN count INTEGER NOT NULL DEFAULT 0")
-    }
-}
+        if (!db.columnExists("HabitInstanceModel", "timeSpent"))
+            db.safeExec("ALTER TABLE HabitInstanceModel ADD COLUMN timeSpent INTEGER NOT NULL DEFAULT 0")
 
-val MIGRATION_9_10 = object : Migration(9, 10) {
-    override fun migrate(db: SupportSQLiteDatabase) {
+        if (!db.columnExists("HabitInstanceModel", "isRunning"))
+            db.safeExec("ALTER TABLE HabitInstanceModel ADD COLUMN isRunning INTEGER NOT NULL DEFAULT 0")
+
+        if (!db.columnExists("HabitInstanceModel", "count"))
+            db.safeExec("ALTER TABLE HabitInstanceModel ADD COLUMN count INTEGER NOT NULL DEFAULT 0")
 
         if (!db.tableExists("WorkspaceModel_new")) {
-            db.execSQL("""
+            db.safeExec("""
                 CREATE TABLE WorkspaceModel_new (
                     workspaceId TEXT NOT NULL PRIMARY KEY,
                     title TEXT NOT NULL,
@@ -332,7 +327,7 @@ val MIGRATION_9_10 = object : Migration(9, 10) {
                 )
             """.trimIndent())
 
-            db.execSQL("""
+            db.safeExec("""
                 INSERT INTO WorkspaceModel_new (
                     workspaceId, title, description, colorInd,
                     cover, icon, passKey, isPinned, selectedSpaces
@@ -345,14 +340,11 @@ val MIGRATION_9_10 = object : Migration(9, 10) {
                 FROM WorkspaceModel
             """.trimIndent())
 
-            db.execSQL("DROP TABLE WorkspaceModel")
-            db.execSQL("ALTER TABLE WorkspaceModel_new RENAME TO WorkspaceModel")
+            db.safeExec("DROP TABLE WorkspaceModel")
+            db.safeExec("ALTER TABLE WorkspaceModel_new RENAME TO WorkspaceModel")
         }
-    }
-}
 
-val MIGRATION_10_11 = object : Migration(10, 11) {
-    override fun migrate(db: SupportSQLiteDatabase) {
-        db.safeExec("ALTER TABLE JournalModel ADD COLUMN labels TEXT NOT NULL DEFAULT '[]'")
+        if (!db.columnExists("JournalModel", "labels"))
+            db.safeExec("ALTER TABLE JournalModel ADD COLUMN labels TEXT NOT NULL DEFAULT '[]'")
     }
 }

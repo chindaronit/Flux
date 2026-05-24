@@ -26,10 +26,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.flux.R
 import com.flux.ui.common.BasicScaffold
 import com.flux.ui.events.SettingEvents
 import com.flux.ui.state.Settings
@@ -41,7 +43,7 @@ fun Mode(
     onSettingsEvents: (SettingEvents) -> Unit
 ){
     BasicScaffold(
-        title = "Mode",
+        title = stringResource(R.string.mode_title),
         onBackClicked = { navController.popBackStack() }
     ) { innerPadding ->
         LazyColumn(
@@ -138,7 +140,7 @@ fun Mode(
                         .fillMaxWidth()
                         .padding(16.dp)) {
                         Text(
-                            "Select Mode",
+                            stringResource(R.string.select_mode),
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Bold,
                             fontSize = 20.sp
@@ -167,7 +169,7 @@ fun Mode(
                                             horizontalArrangement = Arrangement.spacedBy(4.dp)
                                         ) {
                                             Icon(Icons.AutoMirrored.Filled.List, null)
-                                            Text("Default Mode")
+                                            Text(stringResource(R.string.default_mode))
                                         }
                                     }
                                 )
@@ -192,7 +194,7 @@ fun Mode(
                                             horizontalArrangement = Arrangement.spacedBy(4.dp)
                                         ) {
                                             Icon(Icons.Default.ViewCompactAlt, null)
-                                            Text("Compact Mode")
+                                            Text(stringResource(R.string.select_mode))
                                         }
                                     }
                                 )

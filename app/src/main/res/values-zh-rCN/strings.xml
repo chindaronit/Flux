@@ -185,7 +185,6 @@
     <string name="enterPasskey">输入密码</string>
     <string name="Remove_Cover">移除封面</string>
     <string name="Search_Here">在此搜索…</string>
-    <string name="current">当前</string>
     <string name="add">添加</string>
     <string name="workspace_deleted">工作区已删除</string>
 
@@ -382,4 +381,112 @@
     <string name="target">目标</string>
     <string name="start">开始</string>
     <string name="progress_tracker">进度追踪</string>
+
+    <!-- values-zh/strings.xml -->
+
+    <string name="system_time_format_title">系统时间格式</string>
+    <string name="system_time_format_description">自动适应系统时间格式</string>
+
+    <string name="mode_title">模式</string>
+    <string name="mode_description">普通 • 紧凑</string>
+
+    <string name="made_in_india">印度制造</string>
+
+    <string name="compact_mode">紧凑模式</string>
+    <string name="default_mode">默认模式</string>
+
+    <string name="select_mode">选择模式</string>
+
+    <string name="no_options_available">没有可用选项</string>
+
+    <string name="current_habit_status">当前习惯状态</string>
+
+    <string name="current">当前</string>
+    <string name="goal">目标</string>
+    <string name="completion">完成度</string>
+
+    <string name="decrement">减少</string>
+    <string name="increment">增加</string>
+    <string name="log_time">记录时间</string>
+
+    <string name="current_streak">当前 %1$d</string>
+
+    <string name="habit_type_simple">简单</string>
+    <string name="habit_type_timed">计时</string>
+    <string name="habit_type_counter">计数器</string>
+
+    <string name="type">类型</string>
+
+    <string name="remind_at">提醒时间</string>
+
+    <string name="timer">计时器</string>
+
+    <string name="active_from">开始时间</string>
+    <string name="active_until">结束时间</string>
+
+    <string name="notify_every">提醒间隔</string>
+
+    <string name="unit">单位</string>
+
+    <string name="this_year">今年</string>
+
+    <string name="reminder_time">提醒时间</string>
+
+    <string name="end_time_greater_than_start">
+    结束时间必须大于开始时间
+</string>
+
+    <string name="unit_optional">单位（可选）</string>
+
+    <string name="from">从</string>
+    <string name="to">到</string>
+
+    <string name="remind_every">每隔提醒</string>
+
+    <string name="habit_reminder_count">
+    习惯每天会提醒 %1$d 次。
+</string>
+
+    <string name="duration">持续时间</string>
+
+    <string name="future_journal_entries_not_allowed">
+    不允许未来的日记条目
+</string>
+
+    <string name="empty_no_data_found">空！未找到数据</string>
+    <string name="oops_no_language_found">哎呀！未找到语言</string>
+
+    <string name="marked_done">已标记完成</string>
+    <string name="failed">失败</string>
+
+    <string name="category_others">其他</string>
+    <string name="category_default">默认</string>
+    <string name="category_food">食物</string>
+    <string name="category_emoji">表情符号</string>
+    <string name="category_finance_analytics">金融 - 分析</string>
+    <string name="journal_heat_map">日志热力图</string>
+
+    <string name="selected_spaces">已选择的空间</string>
+    <string name="available_spaces">可用空间</string>
+    <string name="other_available">其他可用</string>
+    <string name="passkey">通行密钥</string>
+    <string name="icon">图标</string>
+    <string name="latest">最新</string>
+    <string name="oldest">最旧</string>
+    <string name="filter_by_date">按日期筛选</string>
+    <string name="labels">标签</string>
+    <string name="date">日期</string>
+
+    <string name="view">视图</string>
+    <string name="list_view">列表视图</string>
+    <string name="grid_view">网格视图</string>
+    <string name="pinned">已固定</string>
+    <string name="unpinned">未固定</string>
+    <string name="sort_by">排序方式</string>
+
+    <string name="Import">导入</string>
+    <string name="create">创建</string>
+    <string name="clear">清除</string>
+    <string name="spaces">空间</string>
+    <string name="workspaces">工作区</string>
 </resources>

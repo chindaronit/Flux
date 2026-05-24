@@ -16,6 +16,7 @@ import android.os.Build
 import android.provider.Settings
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.compose.ui.res.stringResource
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
@@ -65,7 +66,8 @@ object MarkDoneHandler {
         val itemId = intent.getStringExtra("itemId") ?: return
         val itemType = intent.getStringExtra("itemType") ?: return
         val workspaceId = intent.getStringExtra("workspaceId") ?: return
-
+        val markedDone = context.getString(R.string.marked_done)
+        val failed = context.getString(R.string.failed)
         val notificationId = (itemId + itemType).hashCode()
 
         CoroutineScope(Dispatchers.IO).launch {
@@ -95,12 +97,12 @@ object MarkDoneHandler {
                 }
 
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(context, "Marked Done", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, markedDone, Toast.LENGTH_SHORT).show()
                 }
 
             } catch (_: Exception) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(context, "Failed", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, failed, Toast.LENGTH_LONG).show()
                 }
             }
         }

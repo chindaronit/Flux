@@ -1,5 +1,6 @@
 package com.flux.ui.screens.search
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -54,6 +55,7 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -82,6 +84,7 @@ import com.flux.ui.common.EmptyJournal
 import com.flux.ui.common.EmptyNotes
 import com.flux.ui.common.EmptyProgressItems
 import com.flux.ui.common.EmptyTodoList
+import com.flux.ui.common.EmptyValue
 import com.flux.ui.common.GeneralSearchBar
 import com.flux.ui.common.MultiOptionRow
 import com.flux.ui.common.SearchFilterCategory
@@ -233,6 +236,8 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
     val completedItems = boardItems.filter { it.status == 2 }
     var selectedProgressBoardItem by remember { mutableStateOf<ProgressBoardModel?>(null) }
     var selectedSpace by remember { mutableIntStateOf(1) }
+    val workspacesLabel = stringResource(R.string.workspaces)
+    val spacesLabel = stringResource(R.string.spaces)
 
     LaunchedEffect(query) {
         if(query.isNotBlank() && expandedTODOIds.value.isEmpty()){
@@ -273,40 +278,43 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
                         ),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        item {
-                            LazyRow(
-                                modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                items(selectedSpaces){ space->
-                                    FilterChip(
-                                        onClick = { selectedSpace = space.id },
-                                        label = { Text(space.title) },
-                                        selected = selectedSpace == space.id,
-                                        leadingIcon = {
-                                            Icon(
-                                                imageVector = if (selectedSpace == space.id) Icons.Filled.Done else space.icon,
-                                                contentDescription = "Done icon",
-                                                modifier = Modifier.size(FilterChipDefaults.IconSize)
-                                            )
-                                        },
-                                    )
+                        if(selectedSpaces.isEmpty()){ item { EmptyValue() } }
+                        else {
+                            item {
+                                LazyRow(
+                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    items(selectedSpaces){ space->
+                                        FilterChip(
+                                            onClick = { selectedSpace = space.id },
+                                            label = { Text(space.title) },
+                                            selected = selectedSpace == space.id,
+                                            leadingIcon = {
+                                                Icon(
+                                                    imageVector = if (selectedSpace == space.id) Icons.Filled.Done else space.icon,
+                                                    contentDescription = "Done icon",
+                                                    modifier = Modifier.size(FilterChipDefaults.IconSize)
+                                                )
+                                            },
+                                        )
+                                    }
                                 }
                             }
-                        }
 
-                        when(selectedSpace.absoluteValue) {
-                            1 -> searchedNotes(navController, radius, notes, labels)
-                            2 -> searchedTodo(navController, radius, expandedTODOIds.value, todoLists, { id->
-                                expandedTODOIds.value =
-                                    if (id in expandedTODOIds.value) expandedTODOIds.value - id
-                                    else expandedTODOIds.value + id
+                            when(selectedSpace.absoluteValue) {
+                                1 -> searchedNotes(navController, radius, notes, labels)
+                                2 -> searchedTodo(navController, radius, expandedTODOIds.value, todoLists, { id->
+                                    expandedTODOIds.value =
+                                        if (id in expandedTODOIds.value) expandedTODOIds.value - id
+                                        else expandedTODOIds.value + id
                                 }, viewModels.todoViewModel::onEvent)
-                            3 -> searchedEvent(navController, radius, is24HourFormat,pendingTasks, completedTasks, selectedDate, selectedMonth, isMonthlyView, monthlyEventCount, viewModels.eventViewModel::onEvent)
-                            4 -> searchedJournal(navController, radius, journals, labels)
-                            5 -> searchedHabits(navController, radius, is24HourFormat, currentHabits, pastHabits, states.habitState.allInstances, viewModels.habitViewModel::onEvent)
-                            7 -> searchedProgressBoard(radius, notStartedItems, inProgressItems, completedItems) { selectedProgressBoardItem = it }
-                            else -> searchedNotes(navController, radius, notes, labels)
+                                3 -> searchedEvent(navController, radius, is24HourFormat,pendingTasks, completedTasks, selectedDate, selectedMonth, isMonthlyView, monthlyEventCount, viewModels.eventViewModel::onEvent)
+                                4 -> searchedJournal(navController, radius, journals, labels)
+                                5 -> searchedHabits(navController, radius, is24HourFormat, currentHabits, pastHabits, states.habitState.allInstances, viewModels.habitViewModel::onEvent)
+                                7 -> searchedProgressBoard(radius, notStartedItems, inProgressItems, completedItems) { selectedProgressBoardItem = it }
+                                else -> searchedNotes(navController, radius, notes, labels)
+                            }
                         }
                     }
                     BottomBar(
@@ -338,8 +346,8 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
         ) { map ->
 
             filterState = FilterState(
-                selectedWorkspaceIds = map["WORKSPACES"] ?: emptySet(),
-                selectedSpacesIds = map["SPACES"] ?: emptySet()
+                selectedWorkspaceIds = map[workspacesLabel] ?: emptySet(),
+                selectedSpacesIds = map[spacesLabel] ?: emptySet()
             )
         }
     }
@@ -582,15 +590,15 @@ fun LazyListScope.searchedTodo(
     }
 }
 
-fun buildSearchFilterCategories(workspaces: List<WorkspaceModel>, spaces: List<Space>): List<SearchFilterCategory> {
+fun buildSearchFilterCategories(context: Context, workspaces: List<WorkspaceModel>, spaces: List<Space>): List<SearchFilterCategory> {
     return listOf(
         SearchFilterCategory(
-            name = "WORKSPACES",
+            name = context.getString(R.string.workspaces),
             options = workspaces.map { SearchFilterOption(it.workspaceId, it.title) },
             type = SelectionType.MULTIPLE
         ),
         SearchFilterCategory(
-            name = "SPACES",
+            name = context.getString(R.string.spaces),
             options = spaces.map { SearchFilterOption(it.id.toString(), it.title) },
             type = SelectionType.MULTIPLE
         )
@@ -612,10 +620,13 @@ fun FilterSheet(
     onDismiss: () -> Unit = {},
     onApply: (Map<String, Set<String>>) -> Unit
 ) {
+    val context = LocalContext.current
     val maxHeight = LocalConfiguration.current.screenHeightDp.dp * 0.4f
     val categories = remember(workspaces, spaces) {
-        buildSearchFilterCategories(workspaces, spaces)
+        buildSearchFilterCategories(context, workspaces, spaces)
     }
+    val workspacesLabel = stringResource(R.string.workspaces)
+    val spacesLabel = stringResource(R.string.spaces)
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -630,8 +641,8 @@ fun FilterSheet(
                 mutableStateMapOf<String, SnapshotStateList<String>>().apply {
                     categories.forEach { category ->
                         val selected = when (category.name) {
-                            "WORKSPACES" -> filterState.selectedWorkspaceIds
-                            "SPACES"     -> filterState.selectedSpacesIds
+                            workspacesLabel -> filterState.selectedWorkspaceIds
+                            spacesLabel     -> filterState.selectedSpacesIds
                             else         -> emptySet()
                         }
                         put(category.name, mutableStateListOf<String>().apply { addAll(selected) })
@@ -677,7 +688,7 @@ fun FilterSheet(
                                         .fillMaxWidth()
                                         .padding(24.dp),
                                     contentAlignment = Alignment.Center
-                                ) { Text("No options available") }
+                                ) { Text(stringResource(R.string.no_options_available)) }
                             }
                         }
 
@@ -712,8 +723,14 @@ fun FilterSheet(
                 ) {
                     OutlinedButton(
                         modifier = Modifier.weight(1f),
-                        onClick = { multiSelections.values.forEach { it.clear() } }
-                    ) { Text("Reset") }
+                        onClick = {
+                            categories.forEach { category ->
+                                val list = multiSelections[category.name] ?: return@forEach
+                                list.clear()
+                                list.addAll(category.options.map { it.id })
+                            }
+                        }
+                    ) { Text(stringResource(R.string.reset)) }
 
                     Button(
                         modifier = Modifier.weight(2f),
@@ -721,7 +738,7 @@ fun FilterSheet(
                             onApply(multiSelections.mapValues { it.value.toSet() })
                             onDismiss()
                         }
-                    ) { Text("Apply") }
+                    ) { Text(stringResource(R.string.Confirm)) }
                 }
 
                 Spacer(Modifier.navigationBarsPadding())
