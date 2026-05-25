@@ -133,4 +133,7 @@ dependencies {
     implementation(libs.commonmark.ext.yaml.front.matter)
     implementation(libs.commonmark)
     implementation(libs.flexmarkHtml2mdConverter)
+
+    // draggable list
+    implementation(libs.reorderable)
 }

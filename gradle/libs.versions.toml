@@ -13,6 +13,7 @@ activityCompose = "1.13.0"
 composeBom = "2026.03.00"
 coreSplashscreen = "1.2.0"
 navigationCompose = "2.9.7"
+reorderable = "3.1.0"
 room = "2.8.4"
 coilCompose = "2.7.0"
 
@@ -76,6 +77,7 @@ androidx-compose-foundation-layout = { group = "androidx.compose.foundation", na
 androidx-compose-adaptive = { group = "androidx.compose.material3.adaptive", name = "adaptive", version.ref = "adaptive" }
 androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
 androidx-navigation-common-ktx = { group = "androidx.navigation", name = "navigation-common-ktx", version.ref = "navigationCommonKtx" }
+reorderable = { module = "sh.calvin.reorderable:reorderable", version.ref = "reorderable" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

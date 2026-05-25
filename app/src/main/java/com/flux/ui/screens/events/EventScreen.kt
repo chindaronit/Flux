@@ -153,8 +153,9 @@ fun EventScreen(
                     .fillMaxSize()
                     .padding(innerPadding)
                     .padding(12.dp)
-                    .nestedScroll(scrollBehavior.nestedScrollConnection))
-                {
+                    .nestedScroll(scrollBehavior.nestedScrollConnection),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     item {
                         if(showSearchBar){ SpaceSearchBar(query, { query=it }, { showSearchBar=false }) }
                         else {
