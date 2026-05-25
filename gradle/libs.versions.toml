@@ -1,5 +1,5 @@
 [versions]
-agp = "9.0.1"
+agp = "9.2.1"
 flexmarkHtml2mdConverter = "0.64.8"
 kotlin = "2.3.20"
 ksp = "2.3.6"
