@@ -67,6 +67,7 @@ import com.flux.data.model.JournalModel
 import com.flux.data.model.LabelModel
 import com.flux.data.model.NotesModel
 import com.flux.data.model.ProgressBoardModel
+import com.flux.data.model.RecurrenceRule
 import com.flux.data.model.Space
 import com.flux.data.model.TodoModel
 import com.flux.data.model.WorkspaceModel
@@ -306,9 +307,15 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
                             when(selectedSpace.absoluteValue) {
                                 1 -> searchedNotes(navController, radius, notes, labels)
                                 2 -> searchedTodo(navController, radius, context, expandedTODOIds.value, todoLists, { id->
-                                    expandedTODOIds.value =
-                                        if (id in expandedTODOIds.value) expandedTODOIds.value - id
-                                        else expandedTODOIds.value + id
+                                    val todoItem = todoLists.first { it.id == id }
+                                    val workspaceId = todoItem.workspaceId
+
+                                    if(todoItem.recurrence is RecurrenceRule.NONE){
+                                        expandedTODOIds.value =
+                                            if (id in expandedTODOIds.value) expandedTODOIds.value - id
+                                            else expandedTODOIds.value + id
+                                    }
+                                    else{ navController.navigate(NavRoutes.TodoDetail.withArgs(workspaceId, id)) }
                                 }, viewModels.todoViewModel::onEvent)
                                 3 -> searchedEvent(navController, radius, is24HourFormat,pendingTasks, completedTasks, selectedDate, selectedMonth, isMonthlyView, monthlyEventCount, viewModels.eventViewModel::onEvent)
                                 4 -> searchedJournal(navController, radius, journals, labels)
