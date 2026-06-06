@@ -369,15 +369,15 @@ val MIGRATION_8_9 = object : Migration(8, 9) {
 
         // 2. Copy existing data, coercing any nulls
         db.safeExec("""
-            INSERT INTO TodoModel_new
-            SELECT 
-                id,
-                COALESCE(workspaceId, ''),
-                COALESCE(title, ''),
-                COALESCE(items, '[]'),
-                COALESCE(startDateTime, ${System.currentTimeMillis()}),
-                COALESCE(recurrence, '{"type":"NONE"}')
-            FROM TodoModel
+            INSERT INTO TodoModel_new (id, workspaceId, title, items, startDateTime, recurrence)
+                SELECT 
+                    id,
+                    COALESCE(workspaceId, ''),
+                    COALESCE(title, ''),
+                    COALESCE(items, '[]'),
+                    ${System.currentTimeMillis()},   
+                    '{"type":"NONE"}'                
+                FROM TodoModel
         """.trimIndent())
 
         // 3. Swap tables
