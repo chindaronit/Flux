@@ -354,16 +354,40 @@ val MIGRATION_7_8 = object : Migration(7, 8) {
 
 val MIGRATION_8_9 = object : Migration(8, 9) {
     override fun migrate(db: SupportSQLiteDatabase) {
-        if (!db.columnExists("TodoModel", "recurrence"))
-            db.safeExec("ALTER TABLE TodoModel ADD COLUMN recurrence TEXT NOT NULL DEFAULT '{\"type\":\"NONE\"}'")
 
-        if(!db.columnExists("TodoModel", "startDateTime"))
-            db.safeExec("ALTER TABLE TodoModel ADD COLUMN startDateTime INTEGER DEFAULT 0")
+        // 1. Create corrected TodoModel table with proper constraints
+        db.safeExec("""
+            CREATE TABLE TodoModel_new (
+                id TEXT NOT NULL PRIMARY KEY,
+                workspaceId TEXT NOT NULL DEFAULT '',
+                title TEXT NOT NULL DEFAULT '',
+                items TEXT NOT NULL DEFAULT '[]',
+                startDateTime INTEGER NOT NULL DEFAULT ${System.currentTimeMillis()},
+                recurrence TEXT NOT NULL DEFAULT '{"type":"NONE"}'
+            )
+        """.trimIndent())
 
+        // 2. Copy existing data, coercing any nulls
+        db.safeExec("""
+            INSERT INTO TodoModel_new
+            SELECT 
+                id,
+                COALESCE(workspaceId, ''),
+                COALESCE(title, ''),
+                COALESCE(items, '[]'),
+                COALESCE(startDateTime, ${System.currentTimeMillis()}),
+                COALESCE(recurrence, '{"type":"NONE"}')
+            FROM TodoModel
+        """.trimIndent())
+
+        // 3. Swap tables
+        db.safeExec("DROP TABLE TodoModel")
+        db.safeExec("ALTER TABLE TodoModel_new RENAME TO TodoModel")
+
+        // 4. Create TodoInstance table
         if (!db.tableExists("TodoInstance")) {
-            db.safeExec(
-                """
-                CREATE TABLE  TodoInstance (
+            db.safeExec("""
+                CREATE TABLE TodoInstance (
                     id TEXT NOT NULL PRIMARY KEY,
                     todoId TEXT NOT NULL,
                     instanceDate INTEGER NOT NULL,
@@ -371,16 +395,14 @@ val MIGRATION_8_9 = object : Migration(8, 9) {
                     items TEXT NOT NULL DEFAULT '[]',
                     FOREIGN KEY (todoId) REFERENCES TodoModel(id) ON DELETE CASCADE
                 )
-            """.trimIndent()
-            )
+            """.trimIndent())
         }
 
-        db.safeExec(
-            """
+        // 5. Create unique index on TodoInstance
+        db.safeExec("""
             CREATE UNIQUE INDEX IF NOT EXISTS 
             index_TodoInstance_todoId_instanceDate
             ON TodoInstance(todoId, instanceDate)
-            """.trimIndent()
-        )
+        """.trimIndent())
     }
 }
