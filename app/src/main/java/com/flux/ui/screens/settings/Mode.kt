@@ -1,6 +1,5 @@
 package com.flux.ui.screens.settings
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -146,59 +145,57 @@ fun Mode(
                             fontSize = 20.sp
                         )
                         Spacer(Modifier.height(12.dp))
-                        AnimatedVisibility(visible = !settings.data.dynamicTheme) {
-                            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                                SegmentedButton(
-                                    shape = SegmentedButtonDefaults.itemShape(
-                                        index = 0,
-                                        count = 2
-                                    ),
-                                    onClick = {
-                                        onSettingsEvents(
-                                            SettingEvents.UpdateSettings(
-                                                settings.data.copy(
-                                                    workspaceGridColumns = 1
-                                                )
+                        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                            SegmentedButton(
+                                shape = SegmentedButtonDefaults.itemShape(
+                                    index = 0,
+                                    count = 2
+                                ),
+                                onClick = {
+                                    onSettingsEvents(
+                                        SettingEvents.UpdateSettings(
+                                            settings.data.copy(
+                                                workspaceGridColumns = 1
                                             )
                                         )
-                                    },
-                                    selected = settings.data.workspaceGridColumns==1,
-                                    label = {
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                        ) {
-                                            Icon(Icons.AutoMirrored.Filled.List, null)
-                                            Text(stringResource(R.string.default_mode))
-                                        }
+                                    )
+                                },
+                                selected = settings.data.workspaceGridColumns == 1,
+                                label = {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        Icon(Icons.AutoMirrored.Filled.List, null)
+                                        Text(stringResource(R.string.default_mode))
                                     }
-                                )
-                                SegmentedButton(
-                                    shape = SegmentedButtonDefaults.itemShape(
-                                        index = 1,
-                                        count = 2
-                                    ),
-                                    onClick = {
-                                        onSettingsEvents(
-                                            SettingEvents.UpdateSettings(
-                                                settings.data.copy(
-                                                    workspaceGridColumns = 2
-                                                )
+                                }
+                            )
+                            SegmentedButton(
+                                shape = SegmentedButtonDefaults.itemShape(
+                                    index = 1,
+                                    count = 2
+                                ),
+                                onClick = {
+                                    onSettingsEvents(
+                                        SettingEvents.UpdateSettings(
+                                            settings.data.copy(
+                                                workspaceGridColumns = 2
                                             )
                                         )
-                                    },
-                                    selected = settings.data.workspaceGridColumns==2,
-                                    label = {
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                        ) {
-                                            Icon(Icons.Default.ViewCompactAlt, null)
-                                            Text(stringResource(R.string.select_mode))
-                                        }
+                                    )
+                                },
+                                selected = settings.data.workspaceGridColumns == 2,
+                                label = {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        Icon(Icons.Default.ViewCompactAlt, null)
+                                        Text(stringResource(R.string.select_mode))
                                     }
-                                )
-                            }
+                                }
+                            )
                         }
                     }
                 }

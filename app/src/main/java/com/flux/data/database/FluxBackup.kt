@@ -9,6 +9,7 @@ import com.flux.data.model.LabelModel
 import com.flux.data.model.NotesModel
 import com.flux.data.model.ProgressBoardModel
 import com.flux.data.model.SettingsModel
+import com.flux.data.model.TodoInstance
 import com.flux.data.model.TodoModel
 import com.flux.data.model.WorkspaceModel
 import kotlinx.serialization.Serializable
@@ -18,6 +19,7 @@ data class FluxBackup(
     val workspaces: List<WorkspaceModel> = emptyList(),
     val notes: List<NotesModel> = emptyList(),
     val todos: List<TodoModel> = emptyList(),
+    val todoInstances: List<TodoInstance> = emptyList(),
     val habits: List<HabitModel> = emptyList(),
     val habitInstances: List<HabitInstanceModel> = emptyList(),
     val journals: List<JournalModel> = emptyList(),

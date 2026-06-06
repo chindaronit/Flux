@@ -5,7 +5,7 @@ import android.content.Intent
 import com.flux.other.ReminderReceiver
 import kotlinx.serialization.json.Json
 
-enum class ReminderType { EVENT, HABIT }
+enum class ReminderType { EVENT, HABIT, TODO }
 
 data class ScheduleRequest(
     val itemId: String,
@@ -44,13 +44,6 @@ data class ScheduleRequest(
     }
 }
 
-private const val DAY_MILLIS =
-    24L * 60L * 60L * 1000L
-
-private fun Int.minutesToMillis(): Long {
-    return this * 60L * 1000L
-}
-
 fun HabitModel.toScheduleRequest() = ScheduleRequest(
     itemId = id,
     itemType = ReminderType.HABIT,
@@ -73,6 +66,18 @@ fun EventModel.toScheduleRequest() = ScheduleRequest(
     startDateTime = startDateTime,
     endDateTime = endDateTime,
     notificationOffset = notificationOffset,
+    workspaceId = workspaceId
+)
+
+fun TodoModel.toScheduleRequest() = ScheduleRequest(
+    itemId = id,
+    itemType = ReminderType.TODO,
+    title = title,
+    description = "",
+    recurrence = recurrence,
+    startDateTime = startDateTime,
+    endDateTime = -1L,
+    notificationOffset = 0L,
     workspaceId = workspaceId
 )
 

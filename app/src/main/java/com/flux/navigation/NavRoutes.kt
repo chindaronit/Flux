@@ -31,6 +31,7 @@ import com.flux.ui.screens.settings.Privacy
 import com.flux.ui.screens.settings.Settings
 import com.flux.ui.screens.settings.StorageSelectionScreen
 import com.flux.ui.screens.settings.Themes
+import com.flux.ui.screens.todo.NewTodoList
 import com.flux.ui.screens.todo.TodoDetail
 import com.flux.ui.screens.workspaces.NewWorkspaceScreen
 import com.flux.ui.screens.workspaces.WorkspaceDetails
@@ -50,6 +51,7 @@ sealed class NavRoutes(val route: String) {
     data object NewHabit : NavRoutes("workspace/habit/new") // new habit
     data object EventDetails : NavRoutes("workspace/event/details") //  event detail
     data object TodoDetail : NavRoutes("workspace/todo/details") // TodoList
+    data object NewTodoList : NavRoutes("workspace/todo/newTodo") // TodoList
     data object EditJournal : NavRoutes("workspace/journal/edit") // Journal
     data object NewEvent : NavRoutes("workspace/event/edit") // new event
     data object Analytics : NavRoutes("Analytics")
@@ -146,8 +148,18 @@ val TodoScreens =
         NavRoutes.TodoDetail.route + "/{workspaceId}" + "/{listId}" to { navController, listId, workspaceId, states, viewModel ->
             TodoDetail(
                 navController,
-                states.todoState.allLists.find { it.id == listId }
-                    ?: TodoModel(workspaceId = workspaceId),
+                states.settings.data.cornerRadius,
+                states.todoState.allLists.first { it.id==listId },
+                states.todoState.allInstances.filter { it.workspaceId==workspaceId && it.todoId==listId },
+                workspaceId,
+                viewModel.todoViewModel::onEvent
+            )
+        },
+        NavRoutes.NewTodoList.route + "/{workspaceId}" + "/{listId}" to { navController, listId, workspaceId, states, viewModel ->
+            NewTodoList(
+                navController,
+                states.settings.data.is24HourFormat,
+                states.todoState.allLists.find { it.id == listId } ?: TodoModel(workspaceId = workspaceId),
                 workspaceId,
                 viewModel.todoViewModel::onEvent
             )

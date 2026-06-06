@@ -484,5 +484,7 @@
     <string name="clear">Effacer</string>
     <string name="spaces">Espaces</string>
     <string name="workspaces">Espaces de travail</string>
+    <string name="item_removed">Élément supprimé</string>
+    <string name="undo">Annuler</string>
 
 </resources>

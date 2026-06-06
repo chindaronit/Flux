@@ -33,6 +33,7 @@ class BackupWorker(
             val notesDao = DataModule.provideNotesDao(fluxDatabase)
             val workspaceDao = DataModule.provideWorkspaceDao(fluxDatabase)
             val todoDao = DataModule.provideTodoDao(fluxDatabase)
+            val todoInstanceDao = DataModule.provideTodoInstanceDao(fluxDatabase)
             val habitDao = DataModule.provideHabitDao(fluxDatabase)
             val habitInstanceDao = DataModule.provideHabitInstanceDao(fluxDatabase)
             val journalDao = DataModule.provideJournalDao(fluxDatabase)
@@ -52,6 +53,7 @@ class BackupWorker(
                     workspaces = workspaceDao.getAll(),
                     notes = notesDao.loadAllNotes(),
                     todos = todoDao.loadAllLists(),
+                    todoInstances = todoInstanceDao.loadAllInstances(),
                     habits = habitDao.loadAllHabits(),
                     habitInstances = habitInstanceDao.loadAllInstances(),
                     journals = journalDao.loadAllEntries(),

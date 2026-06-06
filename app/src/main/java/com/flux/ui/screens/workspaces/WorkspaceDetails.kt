@@ -162,7 +162,7 @@ fun removeSpaceData(
 ) {
     when (spaceId) {
         1 -> viewModels.notesViewModel.onEvent(NotesEvents.DeleteAllWorkspaceNotes(workspaceId))
-        2 -> viewModels.todoViewModel.onEvent(TodoEvents.DeleteAllWorkspaceLists(workspaceId))
+        2 -> viewModels.todoViewModel.onEvent(TodoEvents.DeleteAllWorkspaceLists(context, workspaceId))
         3 -> viewModels.eventViewModel.onEvent(TaskEvents.DeleteAllWorkspaceEvents(workspaceId, context))
         4 -> viewModels.journalViewModel.onEvent(JournalEvents.DeleteWorkspaceEntries(workspaceId))
         5 -> viewModels.habitViewModel.onEvent(HabitEvents.DeleteAllWorkspaceHabits(workspaceId, context))

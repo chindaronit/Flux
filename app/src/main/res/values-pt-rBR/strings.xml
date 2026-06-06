@@ -483,4 +483,6 @@
     <string name="clear">Limpar</string>
     <string name="spaces">Espaços</string>
     <string name="workspaces">Espaços de trabalho</string>
+    <string name="item_removed">Item removido</string>
+    <string name="undo">Desfazer</string>
 </resources>

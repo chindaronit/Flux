@@ -13,6 +13,7 @@ import com.flux.data.dao.NotesDao
 import com.flux.data.dao.ProgressBoardDao
 import com.flux.data.dao.SettingsDao
 import com.flux.data.dao.TodoDao
+import com.flux.data.dao.TodoInstanceDao
 import com.flux.data.dao.WorkspaceDao
 import com.flux.data.database.FluxDatabase
 import com.flux.data.database.MIGRATION_1_2
@@ -22,6 +23,7 @@ import com.flux.data.database.MIGRATION_4_5
 import com.flux.data.database.MIGRATION_5_6
 import com.flux.data.database.MIGRATION_6_7
 import com.flux.data.database.MIGRATION_7_8
+import com.flux.data.database.MIGRATION_8_9
 import com.flux.other.BackupManager
 import dagger.Module
 import dagger.Provides
@@ -48,7 +50,8 @@ object DataModule {
             MIGRATION_4_5,
             MIGRATION_5_6,
             MIGRATION_6_7,
-            MIGRATION_7_8
+            MIGRATION_7_8,
+            MIGRATION_8_9
         )
         .build()
 
@@ -87,6 +90,10 @@ object DataModule {
     @Singleton
     @Provides
     fun provideTodoDao(db: FluxDatabase): TodoDao = db.todoDao
+
+    @Singleton
+    @Provides
+    fun provideTodoInstanceDao(db: FluxDatabase): TodoInstanceDao = db.todoInstanceDao
 
     @Singleton
     @Provides

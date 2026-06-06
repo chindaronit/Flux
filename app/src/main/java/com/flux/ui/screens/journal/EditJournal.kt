@@ -207,7 +207,7 @@ fun EditJournal(
 
         val hasChanged = newText != journal.text
 
-        if (!hasChanged && currentLabelIds.toList()==journal.labels) return
+        if (!hasChanged && currentLabelIds.toList()==journal.labels && journalDate==journal.dateTime) return
 
         onJournalEvents(
             JournalEvents.UpsertEntry(

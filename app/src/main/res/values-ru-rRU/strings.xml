@@ -483,4 +483,6 @@
     <string name="clear">Очистить</string>
     <string name="spaces">Пространства</string>
     <string name="workspaces">Рабочие пространства</string>
+    <string name="item_removed">Элемент удалён</string>
+    <string name="undo">Отменить</string>
 </resources>

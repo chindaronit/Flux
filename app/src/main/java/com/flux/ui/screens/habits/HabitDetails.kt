@@ -58,7 +58,7 @@ fun HabitDetails(
                     .padding(innerPadding)
                     .padding(16.dp)
                     .fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 item { HabitDetailedInfo(radius, habit, habitInstances) }
                 if(habit.habitConfig is HabitConfig.Counted) {

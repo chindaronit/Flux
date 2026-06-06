@@ -234,5 +234,6 @@ fun isDateAllowedForHabit(recurrence: RecurrenceRule, epochDay: Long): Boolean {
         is RecurrenceRule.Once -> true
         is RecurrenceRule.Monthly -> true
         is RecurrenceRule.Yearly -> true
+        else -> false
     }
 }

@@ -272,6 +272,8 @@ fun NewEvent(
                             }
                         }
                     }
+
+                    else -> {}
                 }
             }
             HorizontalDivider(Modifier.fillMaxWidth())

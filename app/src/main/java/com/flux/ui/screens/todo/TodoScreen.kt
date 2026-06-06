@@ -27,10 +27,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.flux.R
+import com.flux.data.model.RecurrenceRule
 import com.flux.data.model.WorkspaceModel
 import com.flux.navigation.Loader
 import com.flux.navigation.NavRoutes
@@ -58,6 +60,7 @@ fun TodoScreen(
     onToggleLock: () -> Unit,
     onEvent: (TodoEvents) -> Unit
 ){
+    val context = LocalContext.current
     val workspaceId = workspace.workspaceId
     val isLoading = state.isLoading
     val radius = settings.data.cornerRadius
@@ -92,7 +95,7 @@ fun TodoScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton({ navController.navigate(NavRoutes.TodoDetail.withArgs(workspaceId, "")) }) {
+            FloatingActionButton({ navController.navigate(NavRoutes.NewTodoList.withArgs(workspaceId, "")) }) {
                 Icon(Icons.Default.AddTask, null)
             }
         }
@@ -157,12 +160,18 @@ fun TodoScreen(
                             navController = navController,
                             radius = radius,
                             item = todoItem,
+                            context = context,
                             workspaceId = workspaceId,
                             isExpanded = todoItem.id in expandedTODOIds.value,
                             onExpandToggle = { id->
-                                expandedTODOIds.value =
-                                    if (id in expandedTODOIds.value) expandedTODOIds.value - id
-                                    else expandedTODOIds.value + id
+                                if(todoItem.recurrence is RecurrenceRule.NONE){
+                                    expandedTODOIds.value =
+                                        if (id in expandedTODOIds.value) expandedTODOIds.value - id
+                                        else expandedTODOIds.value + id
+                                }
+                                else{
+                                    navController.navigate(NavRoutes.TodoDetail.withArgs(workspaceId, id))
+                                }
                             },
                             onTodoEvents = onEvent
                         )

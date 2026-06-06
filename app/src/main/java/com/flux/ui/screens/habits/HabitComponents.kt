@@ -1214,14 +1214,13 @@ fun HabitCalendarCard(
 
     )
     val today = LocalDate.now()
-    val habitStartDate =
-        Instant.ofEpochMilli(startDateTime).atZone(ZoneId.systemDefault()).toLocalDate()
-    val habitEndEpochDay = if (endDateTime == -1L) null
-    else Instant.ofEpochMilli(endDateTime)
+    val habitStartDate = Instant.ofEpochMilli(startDateTime).atZone(ZoneId.systemDefault()).toLocalDate()
+    val habitEndEpochDay = if (endDateTime == -1L) null else Instant.ofEpochMilli(endDateTime)
         .atZone(ZoneId.systemDefault())
         .toLocalDate()
         .toEpochDay()
     val locale = LocalLocale.current.platformLocale
+
     Card(
         modifier = Modifier
             .fillMaxWidth()

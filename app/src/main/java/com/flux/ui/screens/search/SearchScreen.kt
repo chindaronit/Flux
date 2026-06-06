@@ -122,6 +122,7 @@ import kotlin.math.absoluteValue
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen(navController: NavController, states: States, viewModels: ViewModels){
+    val context = LocalContext.current
     var query by rememberSaveable { mutableStateOf("") }
     val allSpaces = getSpacesList().filter { it.id!=6 }
     val lockedWorkspace = states.workspaceState.allWorkspaces.filter { it.passKey?.isNotBlank()==true }.map { it.workspaceId }
@@ -304,7 +305,7 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
 
                             when(selectedSpace.absoluteValue) {
                                 1 -> searchedNotes(navController, radius, notes, labels)
-                                2 -> searchedTodo(navController, radius, expandedTODOIds.value, todoLists, { id->
+                                2 -> searchedTodo(navController, radius, context, expandedTODOIds.value, todoLists, { id->
                                     expandedTODOIds.value =
                                         if (id in expandedTODOIds.value) expandedTODOIds.value - id
                                         else expandedTODOIds.value + id
@@ -571,6 +572,7 @@ fun LazyListScope.searchedProgressBoard(
 fun LazyListScope.searchedTodo(
     navController: NavController,
     radius: Int,
+    context: Context,
     expandedTODOIds: Set<String>,
     todoList: List<TodoModel>,
     onExpandToggle: (String) -> Unit,
@@ -582,6 +584,7 @@ fun LazyListScope.searchedTodo(
             navController = navController,
             radius = radius,
             item = todoItem,
+            context = context,
             workspaceId = todoItem.workspaceId,
             isExpanded = todoItem.id in expandedTODOIds,
             onExpandToggle = onExpandToggle,

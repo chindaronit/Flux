@@ -16,7 +16,6 @@ import android.os.Build
 import android.provider.Settings
 import android.widget.Toast
 import androidx.annotation.RequiresApi
-import androidx.compose.ui.res.stringResource
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
@@ -120,6 +119,7 @@ object NotificationDispatcher {
         ensureChannel(context)
 
         val isHabit = request.itemType == ReminderType.HABIT
+        val isEvent = request.itemType == ReminderType.EVENT
 
         val doneIntent = Intent(context, ReminderReceiver::class.java).apply {
             action = ACTION_MARK_DONE
@@ -142,16 +142,23 @@ object NotificationDispatcher {
             .setContentTitle(request.title)
             .setContentText(request.description)
             .setSmallIcon(
-                if (isHabit) R.drawable.calendar_check
-                else R.drawable.check_list
+                if (isHabit) R.drawable.routine
+                else if(isEvent) R.drawable.calendar_check
+                else  R.drawable.to_do_list
             )
             .setPriority(NotificationCompat.PRIORITY_HIGH)
 
         // persistent notification
         builder.setOngoing(true).setAutoCancel(false)
+        if (request.itemType != ReminderType.TODO) {
+            builder.addAction(
+                R.drawable.check_list,
+                "Done",
+                donePendingIntent
+            )
+        }
 
-        val notification = builder.addAction(R.drawable.check_list, "Done", donePendingIntent).build()
-
+        val notification = builder.build()
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         manager.notify((request.itemId + request.itemType.name).hashCode(), notification)
     }

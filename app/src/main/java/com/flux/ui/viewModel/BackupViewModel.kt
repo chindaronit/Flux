@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flux.data.database.FluxBackup
 import com.flux.data.database.FluxDatabase
+import com.flux.data.model.RecurrenceRule
 import com.flux.data.model.SettingsModel
 import com.flux.data.model.toScheduleRequest
 import com.flux.data.repository.SettingsRepository
@@ -86,6 +87,7 @@ class BackupViewModel @Inject constructor(
             workspaces = db.workspaceDao.getAll(),
             notes = db.notesDao.loadAllNotes(),
             todos = db.todoDao.loadAllLists(),
+            todoInstances = db.todoInstanceDao.loadAllInstances(),
             habits = db.habitDao.loadAllHabits(),
             habitInstances = db.habitInstanceDao.loadAllInstances(),
             journals = db.journalDao.loadAllEntries(),
@@ -127,7 +129,15 @@ class BackupViewModel @Inject constructor(
 
         // --- Todos ---
         backup.todos.forEach { todo ->
-            if (!db.todoDao.exists(todo.id)) db.todoDao.upsertList(todo)
+            if (!db.todoDao.exists(todo.id)) {
+                if(todo.recurrence== RecurrenceRule.Weekly) scheduleNextReminder(context, todo.toScheduleRequest())
+                db.todoDao.upsertList(todo)
+            }
+        }
+
+        backup.todoInstances.forEach { instance ->
+            if (!db.todoInstanceDao.exists(instance.todoId, instance.instanceDate))
+                db.todoInstanceDao.upsertTodoInstance(instance)
         }
 
         // --- Habits ---

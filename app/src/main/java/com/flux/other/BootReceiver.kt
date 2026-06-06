@@ -3,11 +3,13 @@ package com.flux.other
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import com.flux.data.model.RecurrenceRule
 import com.flux.data.model.ScheduleRequest
 import com.flux.data.model.isLive
 import com.flux.data.model.toScheduleRequest
 import com.flux.data.repository.EventRepository
 import com.flux.data.repository.HabitRepository
+import com.flux.data.repository.TodoRepository
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
@@ -53,11 +55,13 @@ class BootReceiver : BroadcastReceiver() {
 
         val habitRepo = entryPoint.habitRepository()
         val eventRepo = entryPoint.eventRepository()
+        val todoRepo = entryPoint.todoRepository()
 
         val habits = habitRepo.loadAllHabits().filter { it.isLive() }.map { it.toScheduleRequest() }
         val events = eventRepo.loadAllEvents().filter { it.isLive() }.map { it.toScheduleRequest() }
+        val todos =  todoRepo.loadAllLists().filter { it.recurrence is RecurrenceRule.Weekly }.map { it.toScheduleRequest() }
 
-        return habits + events
+        return habits + events + todos
     }
 }
 
@@ -66,4 +70,5 @@ class BootReceiver : BroadcastReceiver() {
 interface ReceiverEntryPoint {
     fun habitRepository(): HabitRepository
     fun eventRepository(): EventRepository
+    fun todoRepository(): TodoRepository
 }

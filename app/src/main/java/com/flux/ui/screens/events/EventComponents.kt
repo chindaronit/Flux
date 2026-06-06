@@ -374,6 +374,8 @@ fun getRecurrenceText(context: Context, repeat: RecurrenceRule, startDateTime: L
                 localDate.format(DateTimeFormatter.ofPattern("MMM dd"))
             )
         }
+
+        else -> ""
     }
 }
 

@@ -34,6 +34,8 @@ fun getNextOccurrence(rule: RecurrenceRule, startDateTime: Long): Long? {
         is RecurrenceRule.Yearly -> {
             findNextYearlyOccurrence(startDateTime, now)
         }
+
+        else -> null
     }
 }
 

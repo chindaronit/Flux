@@ -303,9 +303,7 @@ fun NewHabit(
                             ) {
                                 Text(
                                     text = day,
-                                    modifier = Modifier
-                                        .padding(6.dp)
-                                        .fillMaxWidth(),
+                                    modifier = Modifier.padding(6.dp).fillMaxWidth(),
                                     textAlign = TextAlign.Center
                                 )
                             }

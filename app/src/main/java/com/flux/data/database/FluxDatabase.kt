@@ -15,6 +15,7 @@ import com.flux.data.dao.NotesDao
 import com.flux.data.dao.ProgressBoardDao
 import com.flux.data.dao.SettingsDao
 import com.flux.data.dao.TodoDao
+import com.flux.data.dao.TodoInstanceDao
 import com.flux.data.dao.WorkspaceDao
 import com.flux.data.model.Converter
 import com.flux.data.model.EventInstanceModel
@@ -26,6 +27,7 @@ import com.flux.data.model.LabelModel
 import com.flux.data.model.NotesModel
 import com.flux.data.model.ProgressBoardModel
 import com.flux.data.model.SettingsModel
+import com.flux.data.model.TodoInstance
 import com.flux.data.model.TodoModel
 import com.flux.data.model.WorkspaceModel
 import com.google.gson.Gson
@@ -35,8 +37,8 @@ import kotlinx.serialization.json.Json
 import java.util.UUID
 
 @Database(
-    entities = [EventModel::class, LabelModel::class, EventInstanceModel::class, SettingsModel::class, NotesModel::class, HabitModel::class, HabitInstanceModel::class, WorkspaceModel::class, TodoModel::class, JournalModel::class, ProgressBoardModel::class],
-    version = 8,
+    entities = [EventModel::class, LabelModel::class, EventInstanceModel::class, SettingsModel::class, NotesModel::class, HabitModel::class, HabitInstanceModel::class, WorkspaceModel::class, TodoModel::class, JournalModel::class, ProgressBoardModel::class, TodoInstance::class],
+    version = 9,
     exportSchema = false
 )
 @TypeConverters(Converter::class)
@@ -52,6 +54,7 @@ abstract class FluxDatabase : RoomDatabase() {
     abstract val todoDao: TodoDao
     abstract val labelDao: LabelDao
     abstract val progressBoardDao: ProgressBoardDao
+    abstract val todoInstanceDao: TodoInstanceDao
 }
 
 private fun SupportSQLiteDatabase.safeExec(sql: String) {
@@ -346,5 +349,38 @@ val MIGRATION_7_8 = object : Migration(7, 8) {
 
         if (!db.columnExists("JournalModel", "labels"))
             db.safeExec("ALTER TABLE JournalModel ADD COLUMN labels TEXT NOT NULL DEFAULT '[]'")
+    }
+}
+
+val MIGRATION_8_9 = object : Migration(8, 9) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        if (!db.columnExists("TodoModel", "recurrence"))
+            db.safeExec("ALTER TABLE TodoModel ADD COLUMN recurrence TEXT NOT NULL DEFAULT '{\"type\":\"NONE\"}'")
+
+        if(!db.columnExists("TodoModel", "startDateTime"))
+            db.safeExec("ALTER TABLE TodoModel ADD COLUMN startDateTime INTEGER DEFAULT 0")
+
+        if (!db.tableExists("TodoInstance")) {
+            db.safeExec(
+                """
+                CREATE TABLE  TodoInstance (
+                    id TEXT NOT NULL PRIMARY KEY,
+                    todoId TEXT NOT NULL,
+                    instanceDate INTEGER NOT NULL,
+                    workspaceId TEXT NOT NULL,
+                    items TEXT NOT NULL DEFAULT '[]',
+                    FOREIGN KEY (todoId) REFERENCES TodoModel(id) ON DELETE CASCADE
+                )
+            """.trimIndent()
+            )
+        }
+
+        db.safeExec(
+            """
+            CREATE UNIQUE INDEX IF NOT EXISTS 
+            index_TodoInstance_todoId_instanceDate
+            ON TodoInstance(todoId, instanceDate)
+            """.trimIndent()
+        )
     }
 }

@@ -481,5 +481,7 @@
     <string name="clear">Clear</string>
     <string name="spaces">Spaces</string>
     <string name="workspaces">Workspaces</string>
+    <string name="item_removed">Item removed</string>
+    <string name="undo">Undo</string>
 
 </resources>

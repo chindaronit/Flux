@@ -481,5 +481,7 @@
     <string name="clear">Limpiar</string>
     <string name="spaces">Espacios</string>
     <string name="workspaces">Espacios de trabajo</string>
+    <string name="item_removed">Elemento eliminado</string>
+    <string name="undo">Deshacer</string>
 
 </resources>

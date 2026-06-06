@@ -5,6 +5,9 @@ import kotlinx.serialization.Serializable
 @Serializable
 sealed class RecurrenceRule {
     @Serializable
+    object NONE: RecurrenceRule()
+
+    @Serializable
     object Once : RecurrenceRule()
 
     @Serializable

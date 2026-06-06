@@ -106,6 +106,7 @@ fun RecurrenceRule.label(): String = when (this) {
     is RecurrenceRule.Weekly  -> stringResource(R.string.Weekly)
     is RecurrenceRule.Monthly -> stringResource(R.string.Monthly)
     is RecurrenceRule.Yearly  -> stringResource(R.string.Yearly)
+    else -> ""
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -277,6 +278,8 @@ fun RecurrenceBottomSheet(
                                 }
                             }
                         }
+
+                        else -> {}
                     }
                 }
 
@@ -334,5 +337,7 @@ fun RecurrenceBottomSheet(
                     }
                 }
             }
+
+            else -> {}
         } as Long
     }

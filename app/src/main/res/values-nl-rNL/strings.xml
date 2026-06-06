@@ -483,4 +483,6 @@
     <string name="clear">Wissen</string>
     <string name="spaces">Ruimtes</string>
     <string name="workspaces">Werkruimtes</string>
+    <string name="item_removed">Item verwijderd</string>
+    <string name="undo">Ongedaan maken</string>
 </resources>

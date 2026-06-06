@@ -1,0 +1,7 @@
+feat:
+    1. Added Undo in Todo Item removal
+    2. Draggable Items to reorder in todo.
+    3. Reminder in Todo Items to remind and analyse the list.
+fix:
+    1. Dated Journal entry bug
+    2. Create Button Text overflow in note/journal.

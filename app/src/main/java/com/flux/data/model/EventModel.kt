@@ -73,5 +73,7 @@ fun EventModel.occursOn(date: LocalDate): Boolean {
                     date.dayOfMonth == eventStart.dayOfMonth &&
                     date.month == eventStart.month
         }
+
+        else -> return false
     }
 }

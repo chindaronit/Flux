@@ -221,7 +221,7 @@ fun JournalScreen(
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                         horizontalAlignment = Alignment.End
                     ) {
-                        val buttonModifier = Modifier.width(120.dp)
+                        val buttonModifier = Modifier.width(140.dp)
 
                         ExtendedFloatingActionButton(
                             modifier = buttonModifier,

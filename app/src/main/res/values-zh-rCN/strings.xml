@@ -489,4 +489,6 @@
     <string name="clear">清除</string>
     <string name="spaces">空间</string>
     <string name="workspaces">工作区</string>
+    <string name="item_removed">项目已删除</string>
+    <string name="undo">撤销</string>
 </resources>

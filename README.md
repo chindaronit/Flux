@@ -47,16 +47,9 @@
 
 ---
 
-## 💬 Contact Me
-
-- 📧 **Email:** ronitchinda100@gmail.com
-- 📸 **Instagram:** [@chinda.ronit](https://www.instagram.com/chinda_ronit/)
-
----
-
 ## 🌎 Translations
 
-English, Hindi, French, Portugal (Brazil), Russian, German, Spanish, Dutch
+English, Hindi, French, Portugal (Brazil), Russian, German, Spanish, Dutch, Chinese (Simple)
 
 ## 🔎 Technical Details
 
@@ -101,7 +94,9 @@ an issue. If you want to contribute code directly to this project, you can creat
 
 <div align="center">
 
-## Thanks to all contributors
+## Credits.
+
+[![Stargazers over time](https://starchart.cc/chindaronit/Flux.svg?variant=adaptive)](https://starchart.cc/chindaronit/Flux)
 
 <a href="https://github.com/chindaronit/Flux/graphs/contributors">
 <img src="https://contrib.rocks/image?repo=chindaronit/Flux" width="200"/>

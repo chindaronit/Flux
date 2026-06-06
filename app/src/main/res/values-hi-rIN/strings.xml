@@ -483,4 +483,6 @@
     <string name="clear">साफ़ करें</string>
     <string name="spaces">स्पेस</string>
     <string name="workspaces">वर्कस्पेस</string>
+    <string name="item_removed">आइटम हटा दिया गया</string>
+    <string name="undo">पूर्ववत करें</string>
 </resources>
