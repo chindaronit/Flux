@@ -483,5 +483,13 @@
     <string name="workspaces">Espacios de trabajo</string>
     <string name="item_removed">Elemento eliminado</string>
     <string name="undo">Deshacer</string>
+    <string name="notes_preview">Vista previa de notas</string>
+    <string name="change_preview_setting_for_notes">Cambiar la configuración de vista previa de las notas</string>
+    <string name="change_height">Cambiar altura</string>
+    <string name="normal">Normal</string>
+    <string name="elongated">Alargado</string>
+    <string name="video">Vídeo</string>
+    <string name="audio">Audio</string>
+    <string name="compact">Compacto</string>
 
 </resources>

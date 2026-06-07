@@ -27,6 +27,7 @@ import com.flux.ui.screens.settings.Data
 import com.flux.ui.screens.settings.Editor
 import com.flux.ui.screens.settings.Languages
 import com.flux.ui.screens.settings.Mode
+import com.flux.ui.screens.settings.NotesPreviewSetting
 import com.flux.ui.screens.settings.Privacy
 import com.flux.ui.screens.settings.Settings
 import com.flux.ui.screens.settings.StorageSelectionScreen
@@ -68,6 +69,7 @@ sealed class NavRoutes(val route: String) {
     data object Backup : NavRoutes("setting/backup")
     data object Editor : NavRoutes("setting/editor")
     data object Mode : NavRoutes("setting/mode")
+    data object NotesPreview : NavRoutes("setting/editor/notesPreview")
 
     fun withArgs(vararg args: Any): String {
         return buildString {
@@ -219,6 +221,9 @@ val SettingsScreens =
         },
         NavRoutes.Mode.route to { navController, _, states, viewModels ->
             Mode(navController, states.settings, viewModels.settingsViewModel::onEvent)
+        },
+        NavRoutes.NotesPreview.route to { navController, _, states, viewModels ->
+            NotesPreviewSetting(navController, states.settings, viewModels.settingsViewModel::onEvent)
         }
     )
 

@@ -28,5 +28,6 @@ data class SettingsModel(
     val isLineNumbersVisible: Boolean = false,
     val startWithReadView: Boolean = false,
     val storageRootUri: String? = null,
-    val backupFrequency: Int = 0
+    val backupFrequency: Int = 0,
+    val notesPreviewMode: Int = 1
 )

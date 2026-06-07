@@ -13,6 +13,7 @@ import androidx.compose.material.icons.automirrored.filled.ChromeReaderMode
 import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.FormatListNumbered
 import androidx.compose.material.icons.filled.Spellcheck
+import androidx.compose.material.icons.rounded.FontDownload
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -29,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.flux.R
+import com.flux.navigation.NavRoutes
 import com.flux.ui.common.BasicScaffold
 import com.flux.ui.events.SettingEvents
 import com.flux.ui.state.Settings
@@ -87,6 +89,21 @@ fun Editor(
                             )
                         )
                     }
+                )
+            }
+
+            item {
+                Spacer(Modifier.height(12.dp))
+                SettingOption(
+                    title = "Notes Preview",
+                    description = "Change Preview Setting for notes",
+                    icon = Icons.Rounded.FontDownload,
+                    radius = shapeManager(
+                        radius = settings.data.cornerRadius,
+                        isBoth = true
+                    ),
+                    actionType = ActionType.CUSTOM,
+                    onCustomClick = { navController.navigate(NavRoutes.NotesPreview.route) }
                 )
             }
 

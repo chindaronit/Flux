@@ -485,4 +485,13 @@
     <string name="workspaces">Werkruimtes</string>
     <string name="item_removed">Item verwijderd</string>
     <string name="undo">Ongedaan maken</string>
+
+    <string name="notes_preview">Notitievoorbeeld</string>
+    <string name="change_preview_setting_for_notes">Voorbeeldinstellingen voor notities wijzigen</string>
+    <string name="change_height">Hoogte wijzigen</string>
+    <string name="normal">Normaal</string>
+    <string name="elongated">Verlengd</string>
+    <string name="video">Video</string>
+    <string name="audio">Audio</string>
+    <string name="compact">Compact</string>
 </resources>

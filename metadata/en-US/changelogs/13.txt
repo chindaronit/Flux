@@ -1,0 +1,7 @@
+feat:
+    1. Notes Preview Mode to adjust notes height
+src:
+    1. Improved Markdown Render in preview mode for media, links and codeblocks
+fix:
+    1. Progress Tracker date bug.
+    2. Automatically detect line break in editor

@@ -478,4 +478,14 @@
     <string name="item_removed">Element entfernt</string>
     <string name="undo">Rückgängig</string>
 
+    <!-- German (de) -->
+    <string name="notes_preview">Notizvorschau</string>
+    <string name="change_preview_setting_for_notes">Vorschaueinstellungen für Notizen ändern</string>
+    <string name="change_height">Höhe ändern</string>
+    <string name="normal">Normal</string>
+    <string name="elongated">Verlängert</string>
+    <string name="video">Video</string>
+    <string name="audio">Audio</string>
+    <string name="compact">Kompakt</string>
+
 </resources>

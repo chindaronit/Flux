@@ -180,6 +180,10 @@ import kotlin.math.cos
 import kotlin.math.sin
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.max
+import com.flux.other.MarkdownBlock
+import com.flux.other.MediaChipsRow
+import com.flux.other.extractMedia
 import com.flux.ui.common.CategoryRow
 import com.flux.ui.common.FilterCategory
 import com.flux.ui.common.FilterOption
@@ -1711,12 +1715,22 @@ fun NotesFilterSheet(
 fun NotesPreviewCard(
     modifier: Modifier = Modifier,
     radius: Int,
+    notesPreviewMode: Int,
     isSelected: Boolean,
     note: NotesModel,
     labels: List<String>,
     onClick: (String) -> Unit,
     onLongPressed: () -> Unit
 ) {
+    // Extract media once — MarkdownBlock will use the cleaned text internally,
+    // and we render the chips ourselves at the bottom of the card.
+    val mediaExtraction = remember(note.description) { extractMedia(note.description) }
+    val maxHeight = when(notesPreviewMode) {
+        0 -> 0.dp
+        1 -> 180.dp
+        else -> 360.dp
+    }
+
     Card(
         colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)),
         modifier = modifier
@@ -1735,6 +1749,7 @@ fun NotesPreviewCard(
                 .fillMaxWidth()
                 .padding(bottom = 8.dp)
         ) {
+            // Title
             Text(
                 text = note.title,
                 style = MaterialTheme.typography.bodyLarge,
@@ -1746,16 +1761,33 @@ fun NotesPreviewCard(
                     .padding(top = 12.dp)
             )
 
-            Text(
-                text = parseMarkdownContent(note.description),
-                style = MaterialTheme.typography.bodyMedium,
-                overflow = TextOverflow.Ellipsis,
-                maxLines = 12,
-                modifier = Modifier
-                    .alpha(0.9f)
-                    .padding(horizontal = 12.dp)
-            )
+            // Description — media already stripped inside MarkdownBlock
+            if(maxHeight!=0.dp){
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = maxHeight)
+                        .padding(horizontal = 12.dp, vertical = 4.dp)
+                ) {
+                    MarkdownBlock(
+                        text = note.description,
+                        onClick = { onClick(note.notesId) },
+                        onLongClick = onLongPressed
+                    )
+                }
 
+                // Media chips pinned here, below the text, above labels
+                if (!mediaExtraction.media.isEmpty) {
+                    MediaChipsRow(
+                        media = mediaExtraction.media,
+                        modifier = Modifier.padding(horizontal = 12.dp),
+                        onClick = { onClick(note.notesId) },
+                        onLongClick = onLongPressed
+                    )
+                }
+            }
+
+            // Labels
             val maxVisibleLabels = 2
             val visibleLabels = labels.take(maxVisibleLabels)
             val extraCount = labels.size - maxVisibleLabels

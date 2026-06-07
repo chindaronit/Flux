@@ -14,6 +14,7 @@ import com.flux.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -101,6 +102,7 @@ fun NotesScreen(
     val isGridView = settings.data.isGridView
     val radius = settings.data.cornerRadius
     val isLoading = state.isLoading
+    val notesPreviewMode = settings.data.notesPreviewMode
     val columns = if(isGridView) 2 else 1
     val selectedNotes = remember { mutableStateListOf<NotesModel>() }
     val importSuccess = stringResource(R.string.import_success)
@@ -275,10 +277,15 @@ fun NotesScreen(
                         columns = StaggeredGridCells.Fixed(columns),
                         verticalItemSpacing = 8.dp,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        contentPadding = PaddingValues(
+                            start = 12.dp,
+                            end = 12.dp,
+                            top = 12.dp,
+                            bottom = 80.dp
+                        ),
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(innerPadding)
-                            .padding(12.dp)
                             .nestedScroll(scrollBehavior.nestedScrollConnection)
                     ) {
                         item(span = StaggeredGridItemSpan.FullLine) {
@@ -354,6 +361,7 @@ fun NotesScreen(
                                 radius = radius,
                                 isSelected = selectedNotes.contains(note),
                                 note = note,
+                                notesPreviewMode = notesPreviewMode,
                                 labels = allLabels.filter { note.labels.contains(it.labelId) }.map { it.value },
                                 onClick = { navController.navigate(NavRoutes.NoteDetails.withArgs(workspaceId, note.notesId)) },
                                 onLongPressed = {
@@ -380,6 +388,7 @@ fun NotesScreen(
                                 radius = radius,
                                 isSelected = selectedNotes.contains(note),
                                 note = note,
+                                notesPreviewMode = notesPreviewMode,
                                 labels = allLabels.filter { note.labels.contains(it.labelId) }.map { it.value },
                                 onClick = { navController.navigate(NavRoutes.NoteDetails.withArgs(workspaceId, note.notesId)) },
                                 onLongPressed = {

@@ -141,6 +141,7 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
             )
         )
     }
+    val notesPreviewMode = states.settings.data.notesPreviewMode
     val radius = states.settings.data.cornerRadius
     val is24HourFormat = states.settings.data.is24HourFormat
     val isMonthlyView = states.settings.data.isCalendarMonthlyView
@@ -305,7 +306,7 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
                             }
 
                             when(selectedSpace.absoluteValue) {
-                                1 -> searchedNotes(navController, radius, notes, labels)
+                                1 -> searchedNotes(navController, notesPreviewMode, radius, notes, labels)
                                 2 -> searchedTodo(navController, radius, context, expandedTODOIds.value, todoLists, { id->
                                     val todoItem = todoLists.first { it.id == id }
                                     val workspaceId = todoItem.workspaceId
@@ -321,7 +322,7 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
                                 4 -> searchedJournal(navController, radius, journals, labels)
                                 5 -> searchedHabits(navController, radius, is24HourFormat, currentHabits, pastHabits, states.habitState.allInstances, viewModels.habitViewModel::onEvent)
                                 7 -> searchedProgressBoard(radius, notStartedItems, inProgressItems, completedItems) { selectedProgressBoardItem = it }
-                                else -> searchedNotes(navController, radius, notes, labels)
+                                else -> {}
                             }
                         }
                     }
@@ -362,13 +363,14 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-fun LazyListScope.searchedNotes(navController: NavController, radius: Int, notes: List<NotesModel>, labels: List<LabelModel>){
+fun LazyListScope.searchedNotes(navController: NavController, notesPreviewMode: Int, radius: Int, notes: List<NotesModel>, labels: List<LabelModel>){
     if (notes.isEmpty()) item { EmptyNotes() }
     items(notes, key = { it.notesId }) { note ->
         NotesPreviewCard(
             radius = radius,
             isSelected = false,
             note = note,
+            notesPreviewMode = notesPreviewMode,
             labels = labels.filter { note.labels.contains(it.labelId) }.map { it.value },
             onClick = { navController.navigate(NavRoutes.NoteDetails.withArgs(note.workspaceId, note.notesId)) },
             onLongPressed = { navController.navigate(NavRoutes.NoteDetails.withArgs(note.workspaceId, note.notesId)) },

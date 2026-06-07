@@ -41,7 +41,7 @@ fun TextFieldBuffer.inlineBrackets() = inlineWrap("[", "]")
 
 fun TextFieldBuffer.inlineBraces() = inlineWrap("{", "}")
 
-fun TextFieldBuffer.inlineCode() = inlineWrap("`")
+fun TextFieldBuffer.inlineCode() = inlineWrap("```", "```")
 
 fun TextFieldBuffer.inlineMath() = inlineWrap("$")
 

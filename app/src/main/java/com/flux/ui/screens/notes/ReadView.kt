@@ -49,7 +49,7 @@ data class MarkdownStyles(
         fun fromColorScheme(colorScheme: ColorScheme) = MarkdownStyles(
             hexTextColor = colorScheme.onSurface.toArgb().toHexColor(),
             hexCodeBackgroundColor = colorScheme.surfaceVariant.toArgb().toHexColor(),
-            hexPreBackgroundColor = colorScheme.surfaceColorAtElevation(1.dp).toArgb().toHexColor(),
+            hexPreBackgroundColor = colorScheme.surfaceVariant.toArgb().toHexColor(),
             hexQuoteBackgroundColor = colorScheme.secondaryContainer.toArgb().toHexColor(),
             hexLinkColor = colorScheme.primary.toArgb().toHexColor(),
             hexBorderColor = colorScheme.outline.toArgb().toHexColor(),

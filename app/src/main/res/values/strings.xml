@@ -484,4 +484,13 @@
     <string name="item_removed">Item removed</string>
     <string name="undo">Undo</string>
 
+    <string name="notes_preview">Notes Preview</string>
+    <string name="change_preview_setting_for_notes">Change Preview Setting for Notes</string>
+    <string name="change_height">Change Height</string>
+    <string name="normal">Normal</string>
+    <string name="elongated">Elongated</string>
+    <string name="video">Video</string>
+    <string name="audio">Audio</string>
+    <string name="compact">Compact</string>
+
 </resources>

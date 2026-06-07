@@ -146,12 +146,39 @@
         }
     </style>
 
-    <!-- Async CSS loading -->
     <link rel="stylesheet" href="file:///android_asset/katex/katex.min.css">
-    <link rel="stylesheet" href="file:///android_asset/prism/prism-theme-light.css"
+
+    <link rel="stylesheet"
+          href="file:///android_asset/prism/prism-theme-light.css"
           id="prism-light-theme">
-    <link rel="stylesheet" href="file:///android_asset/prism/prism-theme-dark.css"
+
+    <link rel="stylesheet"
+          href="file:///android_asset/prism/prism-theme-dark.css"
           id="prism-dark-theme">
+
+    <style>
+        pre {
+            background-color: {{PRE_BACKGROUND}} !important;
+        }
+
+        pre[class*="language-"] {
+            background-color: {{PRE_BACKGROUND}} !important;
+            color: {{TEXT_COLOR}} !important;
+            border-radius: 8px;
+        }
+
+        pre code {
+            background: transparent !important;
+        }
+
+        :not(pre) > code,
+        :not(pre) > code[class*="language-"] {
+            background-color: {{CODE_BACKGROUND}} !important;
+            color: {{TEXT_COLOR}} !important;
+            padding: 4px 4px 2px 4px;
+            border-radius: 4px;
+        }
+    </style>
 </head>
 <body>
 <main>{{CONTENT}}</main>

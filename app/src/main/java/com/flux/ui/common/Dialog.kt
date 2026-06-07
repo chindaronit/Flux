@@ -52,9 +52,11 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 
 fun convertMillisToDate(millis: Long): String {
     val formatter = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+    formatter.timeZone = TimeZone.getDefault()
     return formatter.format(Date(millis))
 }
 
@@ -70,7 +72,16 @@ fun DatePickerModal(
         onDismissRequest = onDismiss,
         confirmButton = {
             TextButton(onClick = {
-                onDateSelected(datePickerState.selectedDateMillis)
+                val normalized = datePickerState.selectedDateMillis?.let { millis ->
+                    Calendar.getInstance().apply {
+                        timeInMillis = millis
+                        set(Calendar.HOUR_OF_DAY, 0)
+                        set(Calendar.MINUTE, 0)
+                        set(Calendar.SECOND, 0)
+                        set(Calendar.MILLISECOND, 0)
+                    }.timeInMillis
+                }
+                onDateSelected(normalized)
                 onDismiss()
             }) {
                 Text(stringResource(R.string.Set))

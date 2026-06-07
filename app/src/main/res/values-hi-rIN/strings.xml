@@ -485,4 +485,12 @@
     <string name="workspaces">वर्कस्पेस</string>
     <string name="item_removed">आइटम हटा दिया गया</string>
     <string name="undo">पूर्ववत करें</string>
+    <string name="notes_preview">नोट्स पूर्वावलोकन</string>
+    <string name="change_preview_setting_for_notes">नोट्स के पूर्वावलोकन की सेटिंग बदलें</string>
+    <string name="change_height">ऊंचाई बदलें</string>
+    <string name="normal">सामान्य</string>
+    <string name="elongated">लंबा</string>
+    <string name="video">वीडियो</string>
+    <string name="audio">ऑडियो</string>
+    <string name="compact">कॉम्पैक्ट</string>
 </resources>

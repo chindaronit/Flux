@@ -239,14 +239,16 @@ data class StyleRanges(
     val markerRanges: List<IntRange>,
     val linkRanges: List<IntRange>,
     val fencedCodeBlockInfoRanges: List<IntRange>,
-    val codeBlockContentRanges: List<IntRange>
+    val codeBlockContentRanges: List<IntRange>,
+    val fenceMarkerRanges: List<IntRange>
 ) {
     companion object {
         val EMPTY = StyleRanges(
             emptyList(), emptyList(), emptyList(),
             emptyList(), emptyList(), emptyList(),
             emptyList(), emptyList(), emptyList(),
-            emptyList(), emptyList(), emptyList()
+            emptyList(), emptyList(), emptyList(),
+            emptyList()
         )
     }
 }

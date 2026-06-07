@@ -485,4 +485,13 @@
     <string name="workspaces">Espaços de trabalho</string>
     <string name="item_removed">Item removido</string>
     <string name="undo">Desfazer</string>
+
+    <string name="notes_preview">Pré-visualização de notas</string>
+    <string name="change_preview_setting_for_notes">Alterar as configurações de pré-visualização das notas</string>
+    <string name="change_height">Alterar altura</string>
+    <string name="normal">Normal</string>
+    <string name="elongated">Alongado</string>
+    <string name="video">Vídeo</string>
+    <string name="audio">Áudio</string>
+    <string name="compact">Compacto</string>
 </resources>

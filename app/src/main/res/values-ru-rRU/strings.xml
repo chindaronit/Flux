@@ -485,4 +485,14 @@
     <string name="workspaces">Рабочие пространства</string>
     <string name="item_removed">Элемент удалён</string>
     <string name="undo">Отменить</string>
+
+    <string name="notes_preview">Предпросмотр заметок</string>
+    <string name="change_preview_setting_for_notes">Изменить настройки предпросмотра заметок</string>
+    <string name="change_height">Изменить высоту</string>
+    <string name="normal">Обычный</string>
+    <string name="elongated">Удлинённый</string>
+    <string name="video">Видео</string>
+    <string name="audio">Аудио</string>
+    <string name="compact">Компактный</string>
+
 </resources>

@@ -486,5 +486,13 @@
     <string name="workspaces">Espaces de travail</string>
     <string name="item_removed">Élément supprimé</string>
     <string name="undo">Annuler</string>
+    <string name="notes_preview">Aperçu des notes</string>
+    <string name="change_preview_setting_for_notes">Modifier les paramètres d’aperçu des notes</string>
+    <string name="change_height">Modifier la hauteur</string>
+    <string name="normal">Normal</string>
+    <string name="elongated">Allongé</string>
+    <string name="video">Vidéo</string>
+    <string name="audio">Audio</string>
+    <string name="compact">Compact</string>
 
 </resources>

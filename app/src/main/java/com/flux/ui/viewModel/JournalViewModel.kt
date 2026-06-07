@@ -88,7 +88,7 @@ class JournalViewModel @Inject constructor(
         YamlFrontMatterExtension.create()
     )
     private var parser: Parser = Parser.builder().extensions(extensions).build()
-    private var renderer: HtmlRenderer = HtmlRenderer.builder().extensions(extensions).build()
+    private var renderer: HtmlRenderer = HtmlRenderer.builder().extensions(extensions).softbreak("<br>\n").build()
     private var lastOutlineContentHash: Int? = null
 
     fun renderMarkdown(markdown: String): String {

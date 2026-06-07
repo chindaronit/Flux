@@ -491,4 +491,12 @@
     <string name="workspaces">工作区</string>
     <string name="item_removed">项目已删除</string>
     <string name="undo">撤销</string>
+    <string name="notes_preview">笔记预览</string>
+    <string name="change_preview_setting_for_notes">更改笔记预览设置</string>
+    <string name="change_height">更改高度</string>
+    <string name="normal">普通</string>
+    <string name="elongated">加长</string>
+    <string name="video">视频</string>
+    <string name="audio">音频</string>
+    <string name="compact">紧凑</string>
 </resources>
