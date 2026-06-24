@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -95,8 +96,8 @@ fun Editor(
             item {
                 Spacer(Modifier.height(12.dp))
                 SettingOption(
-                    title = "Notes Preview",
-                    description = "Change Preview Setting for notes",
+                    title = stringResource(R.string.notes_preview),
+                    description = stringResource(R.string.change_preview_setting_for_notes),
                     icon = Icons.Rounded.FontDownload,
                     radius = shapeManager(
                         radius = settings.data.cornerRadius,
@@ -134,15 +135,14 @@ fun Editor(
                         shape = SegmentedButtonDefaults.itemShape(
                             index = 0,
                             count = 2
-                        ),
-                        modifier = Modifier.weight(1f)
+                        )
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            horizontalArrangement = Arrangement.spacedBy(2.dp)
                         ) {
                             Icon(Icons.AutoMirrored.Filled.ChromeReaderMode, null)
-                            Text(stringResource(R.string.reading_view))
+                            Text(stringResource(R.string.reading_view), maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                     }
 
@@ -158,15 +158,14 @@ fun Editor(
                         shape = SegmentedButtonDefaults.itemShape(
                             index = 1,
                             count = 2
-                        ),
-                        modifier = Modifier.weight(1f)
+                        )
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            horizontalArrangement = Arrangement.spacedBy(2.dp)
                         ) {
                             Icon(Icons.Default.EditNote, null)
-                            Text(stringResource(R.string.editing_view))
+                            Text(stringResource(R.string.editing_view), maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                     }
                 }

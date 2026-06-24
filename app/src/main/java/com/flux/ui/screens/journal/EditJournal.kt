@@ -89,8 +89,18 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import com.flux.R
 import com.flux.data.model.LabelModel
+import com.flux.data.model.NotesModel
+import com.flux.data.model.TodoItem
+import com.flux.data.model.TodoModel
+import com.flux.data.model.WorkspaceModel
 import com.flux.navigation.NavRoutes
+import com.flux.other.ConvertType
+import com.flux.other.DataCopyType
+import com.flux.ui.common.DataCopyDialog
 import com.flux.ui.common.DatePickerModal
+import com.flux.ui.events.NotesEvents
+import com.flux.ui.events.TodoEvents
+import com.flux.ui.events.WorkspaceEvents
 import com.flux.ui.screens.notes.LinkDialog
 import com.flux.ui.screens.notes.ListDialog
 import com.flux.ui.screens.notes.MarkdownEditorRow
@@ -107,6 +117,8 @@ import com.flux.ui.screens.notes.TaskItem
 @Composable
 fun EditJournal(
     navController: NavController,
+    workspaces: List<WorkspaceModel>,
+    workspaceId: String,
     journal: JournalModel,
     outline: HeaderNode,
     aboutJournal: TextState,
@@ -118,7 +130,10 @@ fun EditJournal(
     allLabels: List<LabelModel>,
     journalViewModel: JournalViewModel,
     settingsViewModel: SettingsViewModel,
-    onJournalEvents: (JournalEvents) -> Unit
+    onJournalEvents: (JournalEvents) -> Unit,
+    onNotesEvents: (NotesEvents) -> Unit,
+    onTodoEvents: (TodoEvents) -> Unit,
+    onWorkspaceEvents: (WorkspaceEvents) -> Unit
 ) {
     val textFieldStateSaver = Saver<TextFieldState, String>(
         save = { it.text.toString() },
@@ -131,7 +146,7 @@ fun EditJournal(
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState()
     val hasContent = remember(journal.journalId) { journal.text.isNotBlank() }
-
+    val currentWorkspace = workspaces.find { it.workspaceId == workspaceId }
     val pagerState = rememberPagerState(
         initialPage = if (startWithReadView && hasContent) 1 else 0,
         pageCount = { 2 }
@@ -158,7 +173,14 @@ fun EditJournal(
             addAll(journal.labels)
         }
     }
+    var showDataCopyDialog by remember { mutableStateOf(false) }
+    var showConvertDialog by remember { mutableStateOf(false) }
     val recorder = AudioRecorder(context)
+
+    val cloneString = stringResource(R.string.clone_created_successfully)
+    val contentCopiedString = stringResource(R.string.content_copied)
+    val contentMovedString = stringResource(R.string.content_moved)
+    val successString = stringResource(R.string.success)
 
     val rootPicker =
         rememberLauncherForActivityResult(
@@ -249,7 +271,13 @@ fun EditJournal(
                 onShareNote = { showShareDialog = true },
                 onSaveNote = { showSaveDialog = true },
                 onAddLabel = { showLabelDialog = true },
-                onPrintNote = { printPdf(context as Activity, readWebView, convertMillisToDate(journal.dateTime)+"_"+ convertMillisToTime(journal.dateTime)) }
+                onPrintNote = { printPdf(context as Activity, readWebView, convertMillisToDate(journal.dateTime)+"_"+ convertMillisToTime(journal.dateTime)) },
+                onCloneNote = {
+                    onJournalEvents(JournalEvents.UpsertEntry(JournalModel(text = contentState.text.toString(), workspaceId = workspaceId, labels = currentLabelIds)))
+                    Toast.makeText(context, cloneString, Toast.LENGTH_SHORT).show()
+                },
+                onCopyNote = { showDataCopyDialog = true },
+                onConvertNote = { showConvertDialog = true }
             )
         },
         bottomBar = {
@@ -546,6 +574,82 @@ fun EditJournal(
             onDismissRequest = { showLabelDialog = false },
             onAddLabel = { navController.navigate(NavRoutes.EditLabels.withArgs(journal.workspaceId)) }
         )
+    }
+
+    if(showDataCopyDialog){
+        DataCopyDialog(
+            workspaces.filterNot { it.workspaceId == workspaceId },
+            { dataCopyType, selectedWorkspaces ->
+                if(selectedWorkspaces.isEmpty()) return@DataCopyDialog
+                when(dataCopyType){
+                    DataCopyType.COPY -> {
+                        selectedWorkspaces.forEach { workspace ->
+                            if(!workspace.selectedSpaces.contains(4)){
+                                onWorkspaceEvents(WorkspaceEvents.UpsertSpace(workspace.copy(selectedSpaces = workspace.selectedSpaces + 4)))
+                            }
+                            onJournalEvents(JournalEvents.UpsertEntry(JournalModel(text = contentState.text.toString(), workspaceId = workspace.workspaceId)))
+                        }
+
+                        Toast.makeText(context, contentCopiedString, Toast.LENGTH_SHORT).show()
+                    }
+                    DataCopyType.MOVE -> {
+                        selectedWorkspaces.forEach { workspace ->
+                            if(!workspace.selectedSpaces.contains(4)){
+                                onWorkspaceEvents(WorkspaceEvents.UpsertSpace(workspace.copy(selectedSpaces = workspace.selectedSpaces + 4)))
+                            }
+                            onJournalEvents(JournalEvents.UpsertEntry(JournalModel(text = contentState.text.toString(), workspaceId = workspace.workspaceId)))
+                        }
+
+                        navController.popBackStack()
+                        Toast.makeText(context, contentMovedString, Toast.LENGTH_SHORT).show()
+                        onJournalEvents(JournalEvents.DeleteEntry(journal))
+                    }
+                }
+            }
+        ) { showDataCopyDialog = false }
+    }
+
+    if(showConvertDialog){
+        ConvertJournalDialog ({ type ->
+            when(type){
+                ConvertType.TODO -> {
+                    val todo = TodoModel(
+                        workspaceId = journal.workspaceId,
+                        title = "Journal ${convertMillisToDate(System.currentTimeMillis())}",
+                        items = contentState.text.toString()
+                            .lineSequence()
+                            .map { it.trim() }
+                            .filter { it.isNotEmpty() }
+                            .map { line ->
+                                TodoItem(value = line)
+                            }
+                            .toList()
+                    )
+                    if(!currentWorkspace!!.selectedSpaces.contains(2)){
+                        onWorkspaceEvents(WorkspaceEvents.UpsertSpace(currentWorkspace.copy(selectedSpaces = currentWorkspace.selectedSpaces + 2)))
+                    }
+                    onTodoEvents(TodoEvents.UpsertList(context, false, todo))
+
+                    navController.popBackStack()
+                    onJournalEvents(JournalEvents.DeleteEntry(journal))
+                }
+                ConvertType.NOTE -> {
+                    if(!currentWorkspace!!.selectedSpaces.contains(1)){
+                        onWorkspaceEvents(WorkspaceEvents.UpsertSpace(currentWorkspace.copy(selectedSpaces = currentWorkspace.selectedSpaces + 1)))
+                    }
+                    onNotesEvents(NotesEvents.UpsertNote(NotesModel(title = "Journal ${convertMillisToDate(System.currentTimeMillis())}", description = contentState.text.toString(), workspaceId = workspaceId, labels = currentLabelIds)))
+
+                    navController.popBackStack()
+                    onJournalEvents(JournalEvents.DeleteEntry(journal))
+                }
+                else -> {}
+            }
+
+            Toast.makeText(context, successString, Toast.LENGTH_SHORT).show()
+            showConvertDialog=false
+        }) {
+            showConvertDialog=false
+        }
     }
 
     NotesInfoBottomSheet(

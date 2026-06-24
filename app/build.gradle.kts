@@ -8,14 +8,14 @@ plugins {
 
 android {
     namespace = "com.flux"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.flux"
         minSdk = 29
-        targetSdk = 36
-        versionCode = 13
-        versionName = "3.1.7"
+        targetSdk = 37
+        versionCode = 14
+        versionName = "3.1.8"
     }
 
     dependenciesInfo {
@@ -106,6 +106,7 @@ dependencies {
 
     // Hilt
     ksp(libs.hilt.android.compiler)
+    ksp(libs.kotlinMetadataWorkaround)
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)
 
@@ -121,7 +122,7 @@ dependencies {
     implementation(libs.gson)
     implementation(libs.kotlinx.serialization.json)
 
-    // CommonMark, for markdown rendering and parsing
+    // CommonMark, for Markdown rendering and parsing
     implementation(libs.commonmark.ext.autolink)
     implementation(libs.commonmark.ext.footnotes)
     implementation(libs.commonmark.ext.ins)

@@ -24,6 +24,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.LabelImportant
+import androidx.compose.material.icons.automirrored.outlined.Note
+import androidx.compose.material.icons.outlined.AutoStories
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -60,8 +62,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import com.flux.R
 import com.flux.data.model.LabelModel
+import com.flux.other.ConvertType
 import com.flux.other.parseMarkdownContent
 import com.flux.ui.common.CategoryRow
 import com.flux.ui.common.DateOptionRow
@@ -71,6 +75,7 @@ import com.flux.ui.common.FilterOption
 import com.flux.ui.common.MultiOptionRow
 import com.flux.ui.common.OptionRow
 import com.flux.ui.common.SelectionType
+import com.flux.ui.screens.notes.ExportCard
 import com.flux.ui.screens.settings.shapeManager
 import kotlin.collections.set
 
@@ -423,5 +428,33 @@ fun JournalFilterSheet(
                 showDatePicker = false
             }
         )
+    }
+}
+
+@Composable
+fun ConvertJournalDialog(
+    onConfirm: (ConvertType) -> Unit,
+    onDismiss: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = stringResource(R.string.convert),
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                ExportCard(Icons.AutoMirrored.Outlined.Note, stringResource(R.string.convert_to_todo)) { onConfirm(ConvertType.TODO) }
+                ExportCard(Icons.Outlined.AutoStories, stringResource(R.string.convert_to_note)) { onConfirm(ConvertType.NOTE) }
+            }
+        }
     }
 }

@@ -493,4 +493,31 @@
     <string name="video">वीडियो</string>
     <string name="audio">ऑडियो</string>
     <string name="compact">कॉम्पैक्ट</string>
+
+    <string name="content_copied">सामग्री कॉपी की गई!</string>
+    <string name="content_moved">सामग्री स्थानांतरित की गई!</string>
+    <string name="clone_created_successfully">क्लोन सफलतापूर्वक बनाया गया</string>
+    <string name="days_left">%1$d दिन शेष</string>
+    <string name="one_day_left">1 दिन शेष</string>
+    <string name="one_day_overdue">1 दिन विलंबित</string>
+    <string name="days_overdue">%1$d दिन विलंबित</string>
+    <string name="start_date_after_target_error">प्रारंभ तिथि लक्ष्य तिथि के बाद नहीं हो सकती</string>
+    <string name="target_date_before_start_error">लक्ष्य तिथि प्रारंभ तिथि से पहले नहीं हो सकती</string>
+    <string name="convert">परिवर्तित करें</string>
+    <string name="convert_to_note">नोट में बदलें</string>
+    <string name="convert_to_todo">टू-डू में बदलें</string>
+    <string name="convert_to_journal">जर्नल में बदलें</string>
+    <string name="clone">क्लोन</string>
+    <string name="copy">कॉपी</string>
+    <string name="move">स्थानांतरित करें</string>
+    <string name="select_workspaces">वर्कस्पेस चुनें</string>
+    <string name="turn_on_reminder">इस टू-डू सूची के लिए रिमाइंडर चालू करें!</string>
+    <string name="created">बनाया गया</string>
+    <string name="reminder">रिमाइंडर</string>
+    <string name="scheduled">निर्धारित</string>
+    <string name="true_text">सही</string>
+    <string name="false_text">गलत</string>
+    <string name="off">बंद</string>
+    <string name="completed">पूर्ण</string>
+    <string name="remaining">शेष</string>
 </resources>

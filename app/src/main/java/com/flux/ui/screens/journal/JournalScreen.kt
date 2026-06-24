@@ -70,6 +70,8 @@ import com.flux.ui.state.JournalState
 import com.flux.ui.state.Settings
 import java.time.Instant
 import java.time.ZoneId
+import java.time.format.TextStyle
+import java.util.Locale
 
 data class FilterState(
     val sort: String? = null,
@@ -95,6 +97,7 @@ fun JournalScreen(
 ){
     val workspaceId = workspace.workspaceId
     val isLoading = state.isLoading
+    val is24HoursFormat = settings.data.is24HourFormat
     val radius = settings.data.cornerRadius
     val context = LocalContext.current
     var query by remember { mutableStateOf("") }
@@ -311,7 +314,14 @@ fun JournalScreen(
                     }
                     if(allEntries.isEmpty()) item { EmptyJournal() }
                     items(allEntries) { entry->
-                        JournalCardHeader(convertMillisToDate(entry.dateTime) + ", " + convertMillisToTime(entry.dateTime))
+                        JournalCardHeader("${convertMillisToDay(entry.dateTime)}, ${
+                            convertMillisToDate(entry.dateTime)
+                        }, ${
+                            convertMillisToTime(
+                                entry.dateTime,
+                                is24Hour = is24HoursFormat
+                            )
+                        }")
                         Row(modifier = Modifier.height(IntrinsicSize.Min)) {
                             TimelineBody(isLast = false)
                             JournalPreview(radius, entry.text, allLabels.filter { entry.labels.contains(it.labelId) }) {
@@ -346,3 +356,9 @@ fun JournalScreen(
     }
 }
 
+fun convertMillisToDay(millis: Long): String {
+    return Instant.ofEpochMilli(millis)
+        .atZone(ZoneId.systemDefault())
+        .dayOfWeek
+        .getDisplayName(TextStyle.FULL, Locale.getDefault())
+}

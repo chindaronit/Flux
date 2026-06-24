@@ -1,11 +1,13 @@
 package com.flux.ui.screens.progressBoard
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,7 +21,9 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Timelapse
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -28,6 +32,7 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
@@ -50,6 +55,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -67,6 +73,10 @@ import com.flux.ui.screens.settings.shapeManager
 import com.flux.ui.theme.completed
 import com.flux.ui.theme.failed
 import com.flux.ui.theme.pending
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.temporal.ChronoUnit
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,6 +88,7 @@ fun NewBoardItemSheet(
     onConfirm: (ProgressBoardModel) -> Unit,
     onDelete: (ProgressBoardModel) -> Unit
 ) {
+    val context = LocalContext.current
     val focusRequesterDesc = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
     var selectedStatus by remember(progressBoardItem) { mutableIntStateOf(progressBoardItem.status) }
@@ -90,13 +101,50 @@ fun NewBoardItemSheet(
     var isChangeIcon by remember { mutableStateOf(false) }
     val iconSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var newIcon by remember(progressBoardItem) { mutableIntStateOf(progressBoardItem.icon) }
+    val startDateString = stringResource(R.string.start_date_after_target_error)
+    val targetDateString = stringResource(R.string.target_date_before_start_error)
 
-    if(showDateSelector){
-        DatePickerModal({
-            if (isSelectingStartDate) startDate=it?:-1L
-            else endDate=it?:-1L
-        }) {
-            showDateSelector=false
+    if (showDateSelector) {
+        DatePickerModal(
+            {
+                val selectedDate = it ?: -1L
+
+                if (isSelectingStartDate) {
+
+                    if (
+                        endDate != -1L &&
+                        selectedDate != -1L &&
+                        selectedDate > endDate
+                    ) {
+                        Toast.makeText(
+                            context,
+                            startDateString,
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    } else {
+                        startDate = selectedDate
+                    }
+
+                } else {
+
+                    if (
+                        startDate != -1L &&
+                        selectedDate != -1L &&
+                        selectedDate < startDate
+                    ) {
+                        Toast.makeText(
+                            context,
+                            targetDateString,
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    } else {
+                        endDate = selectedDate
+                    }
+
+                }
+            }
+        ) {
+            showDateSelector = false
         }
     }
 
@@ -266,13 +314,13 @@ fun BoardStatusItem(isSelected: Boolean, status: String, color: Color, onClick: 
         )
     ) {
         Row(
-            Modifier.padding(4.dp),
+            Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .padding(start = 2.dp)
-                    .size(12.dp)
+                    .padding(start = 4.dp)
+                    .size(16.dp)
                     .clip(RoundedCornerShape(50))
                     .then(
                         if (isSelected) {
@@ -365,7 +413,7 @@ fun BoardContainer(
                             ) {
                                 Text(item.title, style = MaterialTheme.typography.bodyMedium)
                             }
-                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                 if (item.startDate != -1L) {
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically,
@@ -386,13 +434,57 @@ fun BoardContainer(
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.spacedBy(2.dp)
                                     ) {
-                                        Icon(Icons.Default.Flag, null, modifier = Modifier
-                                            .size(16.dp)
-                                            .alpha(0.75f))
+                                        Icon(
+                                            Icons.Default.Flag,
+                                            null,
+                                            modifier = Modifier
+                                                .size(16.dp)
+                                                .alpha(0.75f)
+                                        )
+
                                         Text(
                                             convertMillisToDate(item.endDate),
                                             modifier = Modifier.alpha(0.75f),
                                             style = MaterialTheme.typography.labelMedium
+                                        )
+                                    }
+                                }
+
+                                if (item.endDate != -1L && item.status != 2) {
+
+                                    val daysLeft = daysLeft(item.endDate)
+
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(2.dp)
+                                    ) {
+
+                                        Icon(
+                                            imageVector =
+                                                if (daysLeft < 0)
+                                                    Icons.Default.Warning
+                                                else
+                                                    Icons.Default.Schedule,
+                                            contentDescription = null,
+                                            modifier = Modifier
+                                                .size(16.dp)
+                                                .alpha(0.75f)
+                                        )
+
+                                        Text(
+                                            text = when {
+                                                daysLeft > 1 -> stringResource(R.string.days_left, daysLeft)
+                                                daysLeft == 1L -> stringResource(R.string.one_day_left)
+                                                daysLeft == 0L -> stringResource(R.string.Today)
+                                                daysLeft == -1L -> stringResource(R.string.one_day_overdue)
+                                                else -> stringResource(R.string.days_overdue, -daysLeft)
+                                            },
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = when {
+                                                daysLeft < 0 -> MaterialTheme.colorScheme.error
+                                                daysLeft <= 3 -> MaterialTheme.colorScheme.primary
+                                                else -> LocalContentColor.current.copy(alpha = 0.75f)
+                                            }
                                         )
                                     }
                                 }
@@ -403,4 +495,13 @@ fun BoardContainer(
             }
         }
     }
+}
+
+fun daysLeft(targetDate: Long): Long {
+    val today = LocalDate.now()
+    val target = Instant.ofEpochMilli(targetDate)
+        .atZone(ZoneId.systemDefault())
+        .toLocalDate()
+
+    return ChronoUnit.DAYS.between(today, target)
 }

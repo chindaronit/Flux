@@ -3,7 +3,6 @@ package com.flux.ui.common
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -46,6 +45,8 @@ fun HabitScaffold(
     onDeleteClicked: () -> Unit,
     onBackPressed: () -> Unit,
     onEditClicked: () -> Unit,
+    onCopyNote: () -> Unit,
+    onCloneNote: () -> Unit,
     content: @Composable (PaddingValues) -> Unit
 ) {
     Scaffold(
@@ -64,13 +65,11 @@ fun HabitScaffold(
                 },
                 actions = {
                     IconButton(onEditClicked) { Icon(Icons.Default.Edit, null) }
-                    IconButton(onDeleteClicked) {
-                        Icon(
-                            Icons.Default.DeleteOutline,
-                            null,
-                            tint = MaterialTheme.colorScheme.error
-                        )
-                    }
+                    HabitDropdownMenu(
+                        onDeleteClicked,
+                        onCopyNote,
+                        onCloneNote
+                    )
                 }
             )
         },

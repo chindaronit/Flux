@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Note
 import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.AlarmAdd
 import androidx.compose.material.icons.filled.AlarmOff
@@ -32,6 +33,7 @@ import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.Verified
+import androidx.compose.material.icons.outlined.AutoStories
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Circle
 import androidx.compose.material.icons.outlined.Percent
@@ -58,6 +60,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -73,6 +77,7 @@ import com.flux.data.model.TodoItem
 import com.flux.data.model.TodoModel
 import com.flux.data.model.isCompleted
 import com.flux.navigation.NavRoutes
+import com.flux.other.ConvertType
 import com.flux.ui.common.TimePicker
 import com.flux.ui.common.convertMillisToDate
 import com.flux.ui.common.convertMillisToTime
@@ -80,6 +85,7 @@ import com.flux.ui.events.TodoEvents
 import com.flux.ui.screens.analytics.HeatMapCard
 import com.flux.ui.screens.events.toFormattedTime
 import com.flux.ui.screens.habits.HabitInfoComponent
+import com.flux.ui.screens.notes.ExportCard
 import com.flux.ui.screens.settings.shapeManager
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
@@ -461,19 +467,31 @@ fun TodoDetailedInfo(
                 )
             }
 
+            val configuration = LocalConfiguration.current
+            val density = LocalDensity.current
+
+            val columns = when {
+                density.fontScale > 1.5f -> 1
+
+                configuration.screenWidthDp < 360 -> 1
+                configuration.screenWidthDp < 480 -> 2
+
+                else -> 3
+            }
+
             LazyVerticalGrid(
-                columns = GridCells.Fixed(3),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                columns = GridCells.Fixed(columns),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(max = 1000.dp)
-                    .padding(vertical = 12.dp)
+                    .padding(vertical = 8.dp)
             ) {
                 item {
                     HabitInfoComponent(
                         Icons.Default.Create,
-                        "Created",
+                        stringResource(R.string.created),
                         convertMillisToDate(list.startDateTime)
                     )
                 }
@@ -481,8 +499,8 @@ fun TodoDetailedInfo(
                 item {
                     HabitInfoComponent(
                         if(isReminderOn) Icons.Default.AlarmOn else Icons.Default.AlarmOff,
-                        "Reminder",
-                        if (isReminderOn) "On" else "off"
+                        stringResource(R.string.reminder),
+                        if (isReminderOn) stringResource(R.string.on) else stringResource(R.string.off)
                     )
                 }
 
@@ -490,7 +508,7 @@ fun TodoDetailedInfo(
                     item {
                         HabitInfoComponent(
                             Icons.Default.Alarm,
-                            "Remind at",
+                            stringResource(R.string.remind_at),
                             convertMillisToTime(list.startDateTime)
                         )
                     }
@@ -498,8 +516,8 @@ fun TodoDetailedInfo(
                     item {
                         HabitInfoComponent(
                             Icons.Default.DateRange,
-                            "Scheduled",
-                            if(isAllowedToday) "True" else "False"
+                            stringResource(R.string.scheduled),
+                            if(isAllowedToday) stringResource(R.string.true_text) else stringResource(R.string.false_text)
                         )
                     }
                 }
@@ -508,7 +526,7 @@ fun TodoDetailedInfo(
                     item {
                         HabitInfoComponent(
                             Icons.Outlined.CheckCircle,
-                            "Completed",
+                            stringResource(R.string.completed),
                             completedNumber.toString()
                         )
                     }
@@ -516,7 +534,7 @@ fun TodoDetailedInfo(
                     item {
                         HabitInfoComponent(
                             Icons.Outlined.Circle,
-                            "Remaining",
+                            stringResource(R.string.remaining),
                             remainingNumber.toString()
                         )
                     }
@@ -524,7 +542,7 @@ fun TodoDetailedInfo(
                     item {
                         HabitInfoComponent(
                             Icons.Outlined.Percent,
-                            "Completion",
+                            stringResource(R.string.completion),
                             "$completedPercentage%"
                         )
                     }
@@ -605,4 +623,32 @@ fun TodoHeatMap(radius: Int, todoModel: TodoModel, instances: List<TodoInstance>
         weekColumns,
         heatMap.toMap()
     )
+}
+
+@Composable
+fun ConvertTODODialog(
+    onConfirm: (ConvertType) -> Unit,
+    onDismiss: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = stringResource(R.string.convert),
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                ExportCard(Icons.AutoMirrored.Outlined.Note, stringResource(R.string.convert_to_note)) { onConfirm(ConvertType.NOTE) }
+                ExportCard(Icons.Outlined.AutoStories, stringResource(R.string.convert_to_journal)) { onConfirm(ConvertType.JOURNAL) }
+            }
+        }
+    }
 }

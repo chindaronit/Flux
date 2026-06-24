@@ -465,7 +465,7 @@ fun shapeManager(
     isFirst: Boolean = false,
     radius: Int
 ): RoundedCornerShape {
-    val smallerRadius: Dp = (radius / 5).dp
+    val smallerRadius: Dp = (radius / 4).dp
     val defaultRadius: Dp = radius.dp
 
     return when {

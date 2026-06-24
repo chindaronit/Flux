@@ -1,5 +1,8 @@
 package com.flux.ui.screens.todo
 
+import android.app.Activity
+import android.webkit.WebView
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
@@ -8,7 +11,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -29,11 +31,29 @@ import com.flux.data.model.TodoModel
 import com.flux.ui.common.DeleteAlert
 import com.flux.ui.events.TodoEvents
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.flux.R
+import com.flux.data.model.JournalModel
+import com.flux.data.model.NotesModel
 import com.flux.data.model.RecurrenceRule
 import com.flux.data.model.TodoInstance
+import com.flux.data.model.WorkspaceModel
+import com.flux.data.model.toHtml
+import com.flux.data.model.toMarkdown
+import com.flux.data.model.toMarkdownContent
 import com.flux.navigation.NavRoutes
+import com.flux.other.ConvertType
+import com.flux.other.DataCopyType
+import com.flux.other.printPdf
+import com.flux.other.shareTodo
+import com.flux.ui.common.DataCopyDialog
+import com.flux.ui.common.TodoDropdownMenu
+import com.flux.ui.events.JournalEvents
+import com.flux.ui.events.NotesEvents
+import com.flux.ui.events.WorkspaceEvents
 import java.time.LocalDate
+import com.flux.ui.screens.notes.ShareDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,15 +61,38 @@ fun TodoDetail(
     navController: NavController,
     radius: Int,
     list: TodoModel,
+    workspaces: List<WorkspaceModel>,
     instances: List<TodoInstance>,
     workspaceId: String,
-    onTodoEvents: (TodoEvents) -> Unit
+    onTodoEvents: (TodoEvents) -> Unit,
+    onNotesEvents: (NotesEvents) -> Unit,
+    onJournalEvents: (JournalEvents) -> Unit,
+    onWorkspaceEvents: (WorkspaceEvents) -> Unit
 ) {
     val todayEpoch = LocalDate.now().toEpochDay()
     val context = LocalContext.current
+    val currentWorkspace = workspaces.find { it.workspaceId == workspaceId }
     val isReminderOn = list.recurrence is RecurrenceRule.Weekly
+    var showShareDialog by remember { mutableStateOf(false) }
+    var showConvertDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showDataCopyDialog by remember { mutableStateOf(false) }
     val todayInstance = instances.find { it.instanceDate == todayEpoch }
+    val cloneString = stringResource(R.string.clone_created_successfully)
+    val contentCopiedString = stringResource(R.string.content_copied)
+    val contentMovedString = stringResource(R.string.content_moved)
+    val successString = stringResource(R.string.success)
+
+    val webView = WebView(context)
+    webView.settings.javaScriptEnabled = false
+
+    webView.loadDataWithBaseURL(
+        null,
+        if(isReminderOn) todayInstance?.toHtml(list.title) ?: list.toHtml() else list.toHtml(),
+        "text/html",
+        "UTF-8",
+        null
+    )
 
     if (showDeleteDialog) {
         DeleteAlert(
@@ -91,13 +134,19 @@ fun TodoDetail(
                     IconButton({ navController.navigate(NavRoutes.NewTodoList.withArgs(workspaceId, list.id)) }) {
                         Icon(Icons.Default.Edit, null)
                     }
-                    IconButton({ showDeleteDialog = true }) {
-                        Icon(
-                            Icons.Default.DeleteOutline,
-                            null,
-                            tint = MaterialTheme.colorScheme.error
-                        )
-                    }
+
+                    TodoDropdownMenu(
+                        (isReminderOn && isAllowed(todayEpoch) && todayInstance!=null) || !isReminderOn,
+                        { showShareDialog = true },
+                        { printPdf(context as Activity, webView, list.title) },
+                        {
+                            onTodoEvents(TodoEvents.UpsertList(context, false,TodoModel(items = list.items, recurrence = list.recurrence, workspaceId = list.workspaceId, title = "Clone ${list.title}")))
+                            Toast.makeText(context, cloneString, Toast.LENGTH_SHORT).show()
+                        },
+                        { showDataCopyDialog = true },
+                        { showConvertDialog = true },
+                        { showDeleteDialog = true}
+                    )
                 }
             )
         }
@@ -157,13 +206,106 @@ fun TodoDetail(
                     isAllowedToday = false,
                     todayInstance = todayInstance)
                 }
-
                 item{ TodoHeatMap(radius, list, instances) }
 
                 items(list.items) { todoItem ->
                     MaterialListItem(false, todoItem){}
                 }
             }
+        }
+    }
+
+    if (showShareDialog) {
+        ShareDialog(true, {
+            shareTodo(
+                context = context,
+                exportType = it,
+                list = list,
+                readWebView = webView
+            )
+            showShareDialog = false
+        }) { showShareDialog = false }
+    }
+
+    if(showDataCopyDialog){
+        DataCopyDialog(
+            workspaces.filterNot { it.workspaceId == workspaceId },
+            { dataCopyType, selectedWorkspaces ->
+                if(selectedWorkspaces.isEmpty()) return@DataCopyDialog
+                when(dataCopyType){
+                    DataCopyType.COPY -> {
+                        selectedWorkspaces.forEach { workspace ->
+                            if(!workspace.selectedSpaces.contains(2)){
+                                onWorkspaceEvents(WorkspaceEvents.UpsertSpace(workspace.copy(selectedSpaces = workspace.selectedSpaces + 2)))
+                            }
+                            onTodoEvents(TodoEvents.UpsertList(context, false,TodoModel(items = list.items, recurrence = list.recurrence, workspaceId = workspace.workspaceId, title = list.title)))
+                        }
+
+                        Toast.makeText(context, contentCopiedString, Toast.LENGTH_SHORT).show()
+                    }
+                    DataCopyType.MOVE -> {
+                        selectedWorkspaces.forEach { workspace ->
+                            if(!workspace.selectedSpaces.contains(2)){
+                                onWorkspaceEvents(WorkspaceEvents.UpsertSpace(workspace.copy(selectedSpaces = workspace.selectedSpaces + 2)))
+                            }
+                            onTodoEvents(TodoEvents.UpsertList(context, false,TodoModel(items = list.items, recurrence = list.recurrence, workspaceId = workspace.workspaceId, title = list.title)))
+                        }
+
+                        navController.popBackStack()
+                        Toast.makeText(context, contentMovedString, Toast.LENGTH_SHORT).show()
+                        onTodoEvents(TodoEvents.DeleteList(context, list))
+                    }
+                }
+            }
+        ) { showDataCopyDialog = false }
+    }
+
+    if(showConvertDialog){
+        ConvertTODODialog ({
+            when(it){
+                ConvertType.NOTE -> {
+                    if(!currentWorkspace!!.selectedSpaces.contains(1)){
+                        val newSelectedSpaces = currentWorkspace.selectedSpaces + 1
+                        onWorkspaceEvents(WorkspaceEvents.UpsertSpace(currentWorkspace.copy(selectedSpaces = newSelectedSpaces)))
+                    }
+
+                    onNotesEvents(
+                        NotesEvents.UpsertNote(
+                            NotesModel(
+                                title = list.title,
+                                description = list.toMarkdownContent(),
+                                workspaceId = list.workspaceId
+                            )
+                        )
+                    )
+                    navController.popBackStack()
+                    onTodoEvents(TodoEvents.DeleteList(context,list))
+                }
+                ConvertType.JOURNAL -> {
+                    if(!currentWorkspace!!.selectedSpaces.contains(4)){
+                        val newSelectedSpaces = currentWorkspace.selectedSpaces + 4
+                        onWorkspaceEvents(WorkspaceEvents.UpsertSpace(currentWorkspace.copy(selectedSpaces = newSelectedSpaces)))
+                    }
+
+                    onJournalEvents(
+                        JournalEvents.UpsertEntry(
+                            JournalModel(
+                                text = list.toMarkdown(),
+                                workspaceId = list.workspaceId
+                            )
+                        )
+                    )
+
+                    navController.popBackStack()
+                    onTodoEvents(TodoEvents.DeleteList(context,list))
+                }
+                else -> {}
+            }
+
+            Toast.makeText(context, successString, Toast.LENGTH_SHORT).show()
+            showConvertDialog=false
+        }) {
+            showConvertDialog=false
         }
     }
 }

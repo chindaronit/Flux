@@ -40,10 +40,19 @@
 
 ## 🎉 Features
 
-- 📝 **Sleek, Minimalistic Design** with Material You (Material 3)
-- 🌟 **Workspace Templates**: Organize tasks with custom workspaces
-- 🔐 **Biometric App Lock** for privacy
-- 🚀 **Frequent Updates & Improvements**
+* ✨ **Modern Material You Design** built with Material 3 for a clean and intuitive experience.
+* 🗂️ **Flexible Workspaces** with customizable templates to organize notes, tasks, journals, habits, and events according to your workflow.
+* 📝 **Rich Markdown Editor** with support for formatting, code blocks, tables, LaTeX, Mermaid diagrams, and more.
+* ✅ **Advanced Task Management** with recurring tasks, reminders, progress tracking, and completion analytics.
+* 📔 **Daily Journals & Notes** designed for capturing ideas, reflections, and long-form content.
+* 📅 **Integrated Calendar & Events** to manage schedules and important dates in one place.
+* 🔥 **Habit Tracking & Analytics** with insights, statistics, and visual progress monitoring.
+* 🖼️ **Media Support** for attaching images and organizing content alongside text.
+* 🔒 **Privacy-Focused Security** with optional biometric app lock and screen protection.
+* 📴 **Offline-First Architecture** powered by local storage for fast and reliable access.
+* 🎨 **Highly Customizable Experience** with themes, workspace organization, and personalized layouts.
+* 🌍 **Open Source & Community Driven** under GPL-3.0 with frequent updates and continuous improvements.
+* 🚀 **Built with Jetpack Compose** for a fast, smooth, and native Android experience.
 
 ---
 
@@ -57,7 +66,7 @@ English, Hindi, French, Portugal (Brazil), Russian, German, Spanish, Dutch, Chin
 - **Build Tool**: Gradle with Kotlin DSL
 - **Android Version**: The application targets Android SDK version 36 and is compatible with devices
   running Android SDK version 29 and above.
-- **Kotlin Version**: 2.2.10.
+- **Kotlin Version**: 2.4.0
 - **Java Version**: JVM Target 11.
 
 ## 🛠️ Architecture
@@ -66,15 +75,19 @@ English, Hindi, French, Portugal (Brazil), Russian, German, Spanish, Dutch, Chin
 
 ## 📚 Libraries and Frameworks
 
-- **Compose**: A modern toolkit for building native Android UI.
-- **Hilt**: A dependency injection library for Android.
-- **KSP (Kotlin Symbol Processing API)**: Enhances Kotlin compilation with additional metadata
-  processing.
-- **Room**: A persistence library providing an abstraction layer over SQLite.
-- **Compose Navigation**: Simplifies the implementation of navigation between screens.
-- **Material Icons**: Provides Material Design icons for consistent visual elements.
-- **CommonMark**: For markdown parsing and rendering.
-- **Flexmark HTML to Markdown Converter**: Converts HTML to Markdown.
+- 🎨 Modern Material You Interface — Material 3 design language, clean and intuitive UX.
+- 🗂️ Customizable Workspaces — templates for notes, tasks, journals, habits, and events.
+- 📝 Powerful Markdown Editor — tables, code blocks, LaTeX equations, Mermaid diagrams, and advanced formatting.
+- 📋 Comprehensive Task Management — recurring tasks, reminders, progress tracking, and completion analytics.
+- 📔 Notes & Journaling — capture ideas, daily reflections, and long-form content.
+- 📅 Calendar & Event Planning — manage schedules, deadlines, and important dates.
+- 📊 Habit Tracking & Insights — statistics and visual progress analytics.
+- 🖼️ Media Support — attach and organize images alongside your content.
+- 🔐 Privacy-First Design — biometric app lock and screen protection.
+- ✈️ Offline-First Architecture — fast, reliable access without requiring an internet connection.
+- ⚙️ Personalized Experience — theme customization and flexible workspace organization.
+- 🔓 Open Source — licensed under GPL-3.0, with active development and regular updates.
+- 🤖 Built with Jetpack Compose — smooth, modern, native Android experience.
 
 ## 📦 Installation
 

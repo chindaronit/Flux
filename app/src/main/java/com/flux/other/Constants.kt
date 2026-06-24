@@ -67,12 +67,24 @@ object Constants {
     }
 }
 
-enum class  ExportType {
+enum class ExportType {
     TXT,
     MARKDOWN,
     HTML,
     IMAGE,
     PDF
+}
+
+enum class ConvertType {
+    NOTE,
+    TODO,
+    JOURNAL,
+    EVENT
+}
+
+enum class DataCopyType {
+    COPY,
+    MOVE
 }
 
 object Properties {

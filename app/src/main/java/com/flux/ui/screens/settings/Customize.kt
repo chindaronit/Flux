@@ -222,35 +222,50 @@ fun Customize(
 }
 
 @Composable
-fun OnRadiusClicked(settings: Settings, onExit: (Int) -> Unit) {
-    val minimalRadius = 5
-    val settingsRadius = settings.data.cornerRadius
-    var sliderPosition by remember { mutableFloatStateOf(((settingsRadius - minimalRadius).toFloat() / 30)) }
-    val realRadius: Int = (((sliderPosition * 100).toInt()) / 3) + minimalRadius
+fun OnRadiusClicked(
+    settings: Settings,
+    onExit: (Int) -> Unit
+) {
+
+    var sliderPosition by remember {
+        mutableFloatStateOf(
+            settings.data.cornerRadius
+                .coerceIn(5, 44)
+                .toFloat()
+        )
+    }
+
+    val realRadius = sliderPosition.toInt()
 
     @Composable
-    fun example(shape: RoundedCornerShape) {
+    fun Example(shape: RoundedCornerShape) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(32.dp, 3.dp, 32.dp, 1.dp)
+                .padding(horizontal = 32.dp, vertical = 3.dp)
                 .background(
-                    shape = shape,
-                    color = MaterialTheme.colorScheme.surfaceContainerHigh
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    shape = shape
                 )
-                .height(62.dp),
+                .height(62.dp)
         )
     }
-    Dialog(onDismissRequest = { onExit(realRadius) }) {
+
+    Dialog(
+        onDismissRequest = {
+            onExit(realRadius)
+        }
+    ) {
         Column(
             modifier = Modifier
                 .background(
                     color = MaterialTheme.colorScheme.surfaceContainerLow,
-                    shape = RoundedCornerShape(realRadius / 3)
+                    shape = RoundedCornerShape((realRadius / 3).dp)
                 )
                 .fillMaxWidth()
                 .fillMaxSize(0.38f)
         ) {
+
             Text(
                 text = stringResource(R.string.Select_radius),
                 textAlign = TextAlign.Center,
@@ -259,14 +274,50 @@ fun OnRadiusClicked(settings: Settings, onExit: (Int) -> Unit) {
                     .fillMaxWidth()
                     .padding(top = 16.dp, bottom = 16.dp)
             )
-            example(shapeManager(radius = realRadius, isFirst = true))
-            example(shapeManager(radius = realRadius))
-            example(shapeManager(radius = realRadius, isLast = true))
+
+            Example(
+                shapeManager(
+                    radius = realRadius,
+                    isFirst = true
+                )
+            )
+
+            Example(
+                shapeManager(
+                    radius = realRadius
+                )
+            )
+
+            Example(
+                shapeManager(
+                    radius = realRadius,
+                    isLast = true
+                )
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            Text(
+                text = "$realRadius",
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.titleMedium
+            )
+
             Slider(
                 value = sliderPosition,
-                modifier = Modifier.padding(32.dp, 16.dp, 32.dp, 16.dp),
-                colors = SliderDefaults.colors(inactiveTrackColor = MaterialTheme.colorScheme.surfaceContainerHigh),
-                onValueChange = { newValue -> sliderPosition = newValue }
+                onValueChange = {
+                    sliderPosition = it
+                },
+                valueRange = 5f..44f,
+                steps = 38,
+                modifier = Modifier.padding(
+                    horizontal = 32.dp,
+                    vertical = 16.dp
+                ),
+                colors = SliderDefaults.colors(
+                    inactiveTrackColor = MaterialTheme.colorScheme.surfaceContainerHigh
+                )
             )
         }
     }

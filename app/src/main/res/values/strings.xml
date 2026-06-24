@@ -493,4 +493,31 @@
     <string name="audio">Audio</string>
     <string name="compact">Compact</string>
 
+    <string name="content_copied">Content Copied!</string>
+    <string name="content_moved">Content Moved!</string>
+    <string name="clone_created_successfully">Clone created successfully</string>
+    <string name="days_left">%1$d days left</string>
+    <string name="one_day_left">1 day left</string>
+    <string name="one_day_overdue">1 day overdue</string>
+    <string name="days_overdue">%1$d days overdue</string>
+    <string name="start_date_after_target_error">Start date cannot be after target date</string>
+    <string name="target_date_before_start_error">Target date cannot be before start date</string>
+    <string name="convert">Convert</string>
+    <string name="convert_to_note">Convert to Note</string>
+    <string name="convert_to_todo">Convert to Todo</string>
+    <string name="convert_to_journal">Convert to Journal</string>
+    <string name="clone">Clone</string>
+    <string name="copy">Copy</string>
+    <string name="move">Move</string>
+    <string name="select_workspaces">Select Workspaces</string>
+    <string name="turn_on_reminder">Turn on the reminder to remind about this to-do list!</string>
+    <string name="created">Created</string>
+    <string name="reminder">Reminder</string>
+    <string name="scheduled">Scheduled</string>
+    <string name="true_text">True</string>
+    <string name="false_text">False</string>
+    <string name="off">Off</string>
+    <string name="completed">Completed</string>
+    <string name="remaining">Remaining</string>
+
 </resources>

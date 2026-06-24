@@ -2,16 +2,22 @@ package com.flux.other
 
 import android.app.Activity
 import android.content.Context
+import android.content.ContextWrapper
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
 import android.webkit.WebView
 import androidx.activity.result.ActivityResultLauncher
 import android.graphics.Canvas
+import android.os.Handler
+import android.os.Looper
 import android.print.PrintAttributes
 import android.print.PrintManager
 import android.util.Log
 import android.view.View
+import android.view.ViewGroup
+import android.webkit.WebViewClient
+import android.widget.FrameLayout
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
@@ -62,7 +68,11 @@ import org.commonmark.parser.IncludeSourceSpans
 import org.commonmark.parser.Parser
 import androidx.core.net.toUri
 import com.flux.data.model.EventModel
+import com.flux.data.model.TodoModel
 import com.flux.data.model.occursOn
+import com.flux.data.model.toHtml
+import com.flux.data.model.toMarkdown
+import com.flux.data.model.toText
 import org.commonmark.ext.gfm.tables.TablesExtension
 import java.time.LocalDate
 import java.time.YearMonth
@@ -262,6 +272,203 @@ fun shareNote(
 
         ExportType.PDF -> {}
     }
+}
+
+fun shareTodo(
+    context: Context,
+    exportType: ExportType,
+    list: TodoModel,
+    readWebView: WebView?
+) {
+    when (exportType) {
+
+        ExportType.TXT -> {
+            shareTodoText(
+                context,
+                list.toText(),
+                "text/plain"
+            )
+        }
+
+        ExportType.MARKDOWN -> {
+            shareTodoText(
+                context,
+                list.toMarkdown(),
+                "text/markdown"
+            )
+        }
+
+        ExportType.HTML -> {
+            shareTodoText(
+                context,
+                list.toHtml(),
+                "text/html"
+            )
+        }
+
+        ExportType.IMAGE -> {
+            val activity = context.findActivity()
+            exportHtmlAsImage(activity, list.toHtml()) { uri ->
+                shareImageUri(context, uri)
+            }
+        }
+
+        ExportType.PDF -> {
+            readWebView?.let {
+                createWebPrintJob(
+                    it,
+                    context as? Activity,
+                    list.title
+                )
+            }
+        }
+    }
+}
+
+fun exportHtmlAsImage(
+    activity: Activity,
+    html: String,
+    widthDp: Int = 480,
+    onResult: (Uri) -> Unit
+) {
+    val tag = "ExportHtmlAsImage"
+
+    val density = activity.resources.displayMetrics.density
+    val widthPx = (widthDp * density).toInt()
+
+    val rootView = activity.window.decorView as ViewGroup
+    val mainHandler = Handler(Looper.getMainLooper())
+
+    val webView = WebView(activity).apply {
+        settings.javaScriptEnabled = true
+        layoutParams = FrameLayout.LayoutParams(widthPx, FrameLayout.LayoutParams.WRAP_CONTENT)
+        translationX = 10000f
+    }
+    rootView.addView(webView)
+
+    webView.webViewClient = object : WebViewClient() {
+
+        override fun onPageStarted(view: WebView, url: String?, favicon: Bitmap?) {
+        }
+
+        override fun onPageFinished(view: WebView, url: String?) {
+
+            mainHandler.postDelayed({
+
+                view.evaluateJavascript(
+                    """
+                    (function() {
+                        var children = document.body.children;
+                        if (children.length === 0) return '0';
+                        var last = children[children.length - 1];
+                        var rect = last.getBoundingClientRect();
+                        var bottomWithPadding = rect.bottom + 32; 
+                        return (bottomWithPadding * $density).toString();
+                    })()
+                    """.trimIndent()
+                ) { result ->
+
+                    val contentHeightPx = result
+                        ?.trim()
+                        ?.removeSurrounding("\"")
+                        ?.toFloatOrNull()
+                        ?.toInt()
+                        ?.coerceAtLeast(100)
+                        ?: 0
+
+                    if (contentHeightPx <= 0) {
+                        rootView.removeView(view)
+                        return@evaluateJavascript
+                    }
+
+                    mainHandler.post {
+                        // Force WebView to exactly contentHeightPx
+                        view.layoutParams = FrameLayout.LayoutParams(widthPx, contentHeightPx)
+                        view.measure(
+                            View.MeasureSpec.makeMeasureSpec(widthPx, View.MeasureSpec.EXACTLY),
+                            View.MeasureSpec.makeMeasureSpec(contentHeightPx, View.MeasureSpec.EXACTLY)
+                        )
+                        view.layout(0, 0, widthPx, contentHeightPx)
+
+                        view.post {
+                            try {
+                                val bitmap = createBitmap(widthPx, contentHeightPx)
+                                val canvas = Canvas(bitmap)
+                                canvas.clipRect(0, 0, widthPx, contentHeightPx)
+                                view.draw(canvas)
+
+                                rootView.removeView(view)
+
+                                Thread {
+                                    try {
+                                        val uri = saveBitmapAndGetUri(activity, bitmap)
+                                        mainHandler.post { onResult(uri) }
+                                    } catch (e: Exception) {
+                                        Log.e(tag, "❌ Failed to save bitmap: ${e.message}", e)
+                                    }
+                                }.start()
+                            } catch (e: Exception) {
+                                Log.e(tag, "❌ Exception during bitmap drawing: ${e.message}", e)
+                                rootView.removeView(view)
+                            }
+                        }
+
+                        Log.d(tag, "contentHeightPx = $contentHeightPx, density = $density")
+                    }
+                }
+            }, 300)
+        }
+
+        override fun onReceivedError(
+            view: WebView,
+            request: android.webkit.WebResourceRequest?,
+            error: android.webkit.WebResourceError?
+        ) {
+            Log.e(tag, "❌ onReceivedError | url=${request?.url} | error=${error?.description}")
+        }
+    }
+
+    webView.loadDataWithBaseURL(null, html, "text/html", "UTF-8", null)
+}
+
+fun saveBitmapAndGetUri(context: Context, bitmap: Bitmap): Uri {
+    val cacheDir = File(context.cacheDir, "shared_images").apply { mkdirs() }
+    val file = File(cacheDir, "html_${System.currentTimeMillis()}.png")
+    FileOutputStream(file).use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+    return FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+}
+
+fun shareImageUri(context: Context, uri: Uri) {
+    val intent = Intent(Intent.ACTION_SEND).apply {
+        type = "image/png"
+        putExtra(Intent.EXTRA_STREAM, uri)
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+    context.startActivity(Intent.createChooser(intent, "Share image via"))
+}
+
+fun Context.findActivity(): Activity {
+    var ctx = this
+    while (ctx is ContextWrapper) {
+        if (ctx is Activity) return ctx
+        ctx = ctx.baseContext
+    }
+    throw IllegalStateException("Activity not found")
+}
+
+private fun shareTodoText(
+    context: Context,
+    text: String,
+    mimeType: String
+) {
+    val intent = Intent(Intent.ACTION_SEND).apply {
+        type = mimeType
+        putExtra(Intent.EXTRA_TEXT, text)
+    }
+
+    context.startActivity(
+        Intent.createChooser(intent, null)
+    )
 }
 
 private fun shareAsText(

@@ -1,5 +1,6 @@
 package com.flux.ui.screens.events
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,7 +15,6 @@ import androidx.compose.material.icons.filled.Pending
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.SportsScore
 import androidx.compose.material.icons.filled.Verified
-import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material.icons.outlined.Pending
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -48,9 +48,14 @@ import androidx.navigation.NavController
 import com.flux.R
 import com.flux.data.model.EventModel
 import com.flux.data.model.RecurrenceRule
+import com.flux.data.model.WorkspaceModel
 import com.flux.navigation.NavRoutes
+import com.flux.other.DataCopyType
+import com.flux.ui.common.DataCopyDialog
 import com.flux.ui.common.DeleteAlert
+import com.flux.ui.common.EventDropdownMenu
 import com.flux.ui.events.TaskEvents
+import com.flux.ui.events.WorkspaceEvents
 import com.flux.ui.state.Settings
 import java.time.ZoneId
 import java.time.Instant
@@ -60,12 +65,14 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun EventDetails(
     navController: NavController,
+    workspaces: List<WorkspaceModel>,
     workspaceId: String,
     event: EventModel,
     isPending: Boolean,
     instanceDate: Long,
     settings: Settings,
-    onTaskEvents: (TaskEvents) -> Unit
+    onTaskEvents: (TaskEvents) -> Unit,
+    onWorkspaceEvents: (WorkspaceEvents) -> Unit
 ) {
     var title by remember { mutableStateOf(event.title) }
     var description by remember { mutableStateOf(event.description) }
@@ -75,6 +82,10 @@ fun EventDetails(
     val context = LocalContext.current
     val time = event.startDateTime.toFormattedTime(settings.data.is24HourFormat)
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showDataCopyDialog by remember { mutableStateOf(false) }
+    val cloneString = stringResource(R.string.clone_created_successfully)
+    val contentCopiedString = stringResource(R.string.content_copied)
+    val contentMovedString = stringResource(R.string.content_moved)
 
     if(showDeleteDialog){
         DeleteAlert({
@@ -111,13 +122,17 @@ fun EventDetails(
                             contentDescription = "Edit"
                         )
                     }
-                    IconButton({ showDeleteDialog=true }) {
-                        Icon(
-                            Icons.Outlined.DeleteOutline,
-                            null,
-                            tint = MaterialTheme.colorScheme.error
-                        )
-                    }
+                    EventDropdownMenu(
+                        {showDeleteDialog=true},
+                        {showDataCopyDialog=true},
+                        {
+                            onTaskEvents(TaskEvents.UpsertTask(
+                                context,
+                                EventModel(title = "Clone $title", description = description, recurrence = event.recurrence, endDateTime = event.endDateTime, notificationOffset = event.notificationOffset, workspaceId = event.workspaceId)
+                            ))
+                            Toast.makeText(context, cloneString, Toast.LENGTH_SHORT).show()
+                        },
+                    )
                 }
             )
         },
@@ -184,6 +199,46 @@ fun EventDetails(
                 }
             }
         }
+    }
+
+    if(showDataCopyDialog){
+        DataCopyDialog(
+            workspaces.filterNot { it.workspaceId == workspaceId },
+            { dataCopyType, selectedWorkspaces ->
+                if(selectedWorkspaces.isEmpty()) return@DataCopyDialog
+                when(dataCopyType){
+                    DataCopyType.COPY -> {
+                        selectedWorkspaces.forEach { workspace ->
+                            if(!workspace.selectedSpaces.contains(3)){
+                                onWorkspaceEvents(WorkspaceEvents.UpsertSpace(workspace.copy(selectedSpaces = workspace.selectedSpaces + 3)))
+                            }
+                            onTaskEvents(TaskEvents.UpsertTask(
+                                context,
+                                EventModel(title = title, description = description, recurrence = event.recurrence, endDateTime = event.endDateTime, notificationOffset = event.notificationOffset, workspaceId = workspace.workspaceId)
+                            ))
+                        }
+
+                        Toast.makeText(context, contentCopiedString, Toast.LENGTH_SHORT).show()
+                    }
+                    DataCopyType.MOVE -> {
+                        selectedWorkspaces.forEach { workspace ->
+                            if(!workspace.selectedSpaces.contains(3)){
+                                onWorkspaceEvents(WorkspaceEvents.UpsertSpace(workspace.copy(selectedSpaces = workspace.selectedSpaces + 3)))
+                            }
+
+                            onTaskEvents(TaskEvents.UpsertTask(
+                                context,
+                                EventModel(title = title, description = description, recurrence = event.recurrence, endDateTime = event.endDateTime, notificationOffset = event.notificationOffset, workspaceId = workspace.workspaceId)
+                            ))
+                        }
+
+                        navController.popBackStack()
+                        Toast.makeText(context, contentMovedString, Toast.LENGTH_SHORT).show()
+                        onTaskEvents(TaskEvents.DeleteTask(event, context))
+                    }
+                }
+            }
+        ) { showDataCopyDialog = false }
     }
 }
 

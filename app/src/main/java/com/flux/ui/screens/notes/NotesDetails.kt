@@ -3,6 +3,7 @@ package com.flux.ui.screens.notes
 import android.app.Activity
 import android.net.Uri
 import android.webkit.WebView
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -71,8 +72,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastJoinToString
 import androidx.navigation.NavController
 import com.flux.R
+import com.flux.data.model.JournalModel
 import com.flux.data.model.LabelModel
 import com.flux.data.model.NotesModel
+import com.flux.data.model.TodoItem
+import com.flux.data.model.TodoModel
+import com.flux.data.model.WorkspaceModel
 import com.flux.navigation.NavRoutes
 import com.flux.other.Constants
 import com.flux.other.HeaderNode
@@ -91,12 +96,19 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import com.flux.other.AudioRecorder
+import com.flux.other.ConvertType
+import com.flux.other.DataCopyType
+import com.flux.ui.common.DataCopyDialog
 import com.flux.ui.common.convertMillisToTime
+import com.flux.ui.events.JournalEvents
+import com.flux.ui.events.TodoEvents
+import com.flux.ui.events.WorkspaceEvents
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun NoteDetails(
     navController: NavController,
+    workspaces: List<WorkspaceModel>,
     outline: HeaderNode,
     aboutNotes: TextState,
     workspaceId: String,
@@ -109,7 +121,10 @@ fun NoteDetails(
     allLabels: List<LabelModel>,
     settingsViewModel: SettingsViewModel,
     notesViewModel: NotesViewModel,
-    onNotesEvents: (NotesEvents) -> Unit
+    onNotesEvents: (NotesEvents) -> Unit,
+    onJournalEvents: (JournalEvents) -> Unit,
+    onTodoEvents: (TodoEvents) -> Unit,
+    onWorkspaceEvents: (WorkspaceEvents) -> Unit
 ) {
     val textFieldStateSaver = Saver<TextFieldState, String>(
         save = { it.text.toString() },
@@ -140,14 +155,21 @@ fun NoteDetails(
     var showListDialog by rememberSaveable { mutableStateOf(false) }
     var showAudioRecorder by rememberSaveable { mutableStateOf(false) }
     var showSelectLabels by rememberSaveable { mutableStateOf(false) }
+    var showDataCopyDialog by remember { mutableStateOf(false) }
+    var showConvertDialog by remember { mutableStateOf(false) }
     var isPinned by rememberSaveable(note.notesId) { mutableStateOf(note.isPinned) }
     val noteLabelIds = rememberSaveable {
         mutableStateListOf<String>().apply {
             addAll(note.labels)
         }
     }
+    val currentWorkspace = workspaces.find { it.workspaceId == workspaceId }
     val isReadView by remember { derivedStateOf { pagerState.currentPage == 1 } }
     var readWebView by remember { mutableStateOf<WebView?>(null) }
+    val cloneString = stringResource(R.string.clone_created_successfully)
+    val contentCopiedString = stringResource(R.string.content_copied)
+    val contentMovedString = stringResource(R.string.content_moved)
+    val successString = stringResource(R.string.success)
 
     LaunchedEffect(searchState.searchWord, contentState.text) {
         withContext(Dispatchers.Default) {
@@ -255,7 +277,13 @@ fun NoteDetails(
                         settingsViewModel = settingsViewModel,
                         rootPicker = rootPicker
                     ) { showSaveNotesDialog = true } },
-                onPrintNote = { printPdf(context as Activity, readWebView, titleState.text.toString()) }
+                onPrintNote = { printPdf(context as Activity, readWebView, titleState.text.toString()) },
+                onCloneNote = {
+                    onNotesEvents(NotesEvents.UpsertNote(NotesModel(title = "Clone ${titleState.text}", description = contentState.text.toString(), workspaceId = workspaceId, labels = noteLabelIds)))
+                    Toast.makeText(context, cloneString, Toast.LENGTH_SHORT).show()
+                },
+                onConvertNote = { showConvertDialog = true },
+                onCopyNote = { showDataCopyDialog = true }
             )
         },
         bottomBar = {
@@ -487,9 +515,87 @@ fun NoteDetails(
         }
     }
 
+    if(showDataCopyDialog){
+        DataCopyDialog(
+            workspaces.filterNot { it.workspaceId == workspaceId },
+            { dataCopyType, selectedWorkspaces ->
+                if(selectedWorkspaces.isEmpty()) return@DataCopyDialog
+                when(dataCopyType){
+                    DataCopyType.COPY -> {
+                        selectedWorkspaces.forEach { workspace ->
+                            if(!workspace.selectedSpaces.contains(1)){
+                                onWorkspaceEvents(WorkspaceEvents.UpsertSpace(workspace.copy(selectedSpaces = workspace.selectedSpaces + 1)))
+                            }
+                            onNotesEvents(NotesEvents.UpsertNote(NotesModel(title = titleState.text.toString(), description = contentState.text.toString(), workspaceId = workspace.workspaceId)))
+                        }
+
+                        Toast.makeText(context, contentCopiedString, Toast.LENGTH_SHORT).show()
+                    }
+                    DataCopyType.MOVE -> {
+                        selectedWorkspaces.forEach { workspace ->
+                            if(!workspace.selectedSpaces.contains(1)){
+                                onWorkspaceEvents(WorkspaceEvents.UpsertSpace(workspace.copy(selectedSpaces = workspace.selectedSpaces + 1)))
+                            }
+                            onNotesEvents(NotesEvents.UpsertNote(NotesModel(title = titleState.text.toString(), description = contentState.text.toString(), workspaceId = workspace.workspaceId)))
+                        }
+
+                        navController.popBackStack()
+                        Toast.makeText(context, contentMovedString, Toast.LENGTH_SHORT).show()
+                        onNotesEvents(NotesEvents.DeleteNote(note))
+                    }
+                }
+            }
+        ) { showDataCopyDialog = false }
+    }
+
     if(showAudioRecorder){
         RecordAudioDialog(context, recorder, {onNotesEvents(NotesEvents.ImportAudio(context, it!!, contentState))}) {
             showAudioRecorder=false
+        }
+    }
+
+    if(showConvertDialog){
+        ConvertNotesDialog ({ type ->
+            when(type){
+                ConvertType.TODO -> {
+                    val todo = TodoModel(
+                        workspaceId = note.workspaceId,
+                        title = titleState.text.toString(),
+                        items = contentState.text.toString()
+                            .lineSequence()
+                            .map { it.trim() }
+                            .filter { it.isNotEmpty() }
+                            .map { line ->
+                                TodoItem(
+                                    value = line
+                                )
+                            }
+                            .toList()
+                    )
+                    if(!currentWorkspace!!.selectedSpaces.contains(2)){
+                        onWorkspaceEvents(WorkspaceEvents.UpsertSpace(currentWorkspace.copy(selectedSpaces = currentWorkspace.selectedSpaces + 2)))
+                    }
+                    onTodoEvents(TodoEvents.UpsertList(context, false, todo))
+
+                    navController.popBackStack()
+                    onNotesEvents(NotesEvents.DeleteNote(note))
+                }
+                ConvertType.JOURNAL -> {
+                    if(!currentWorkspace!!.selectedSpaces.contains(4)){
+                        onWorkspaceEvents(WorkspaceEvents.UpsertSpace(currentWorkspace.copy(selectedSpaces = currentWorkspace.selectedSpaces + 4)))
+                    }
+                    onJournalEvents(JournalEvents.UpsertEntry(JournalModel(text = contentState.text.toString(), workspaceId = workspaceId, labels = noteLabelIds)))
+
+                    navController.popBackStack()
+                    onNotesEvents(NotesEvents.DeleteNote(note))
+                }
+                else -> {}
+            }
+
+            Toast.makeText(context, successString, Toast.LENGTH_SHORT).show()
+            showConvertDialog=false
+        }) {
+            showConvertDialog=false
         }
     }
 

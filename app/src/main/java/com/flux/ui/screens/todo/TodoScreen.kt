@@ -44,6 +44,7 @@ import com.flux.ui.events.TodoEvents
 import com.flux.ui.screens.workspaces.SpacesToolBar
 import com.flux.ui.state.Settings
 import com.flux.ui.state.TodoState
+import kotlin.collections.sortedBy
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,7 +72,8 @@ fun TodoScreen(
             it.title.contains(query, ignoreCase = true) ||
             it.items.any { item -> item.value.contains(query, ignoreCase = true) }
         )
-    }
+    }.sortedBy { it.startDateTime }
+
     var showSearchBar by remember { mutableStateOf(false) }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val expandedTODOIds = rememberSaveable(workspaceId) { mutableStateOf<Set<String>>(emptySet()) }

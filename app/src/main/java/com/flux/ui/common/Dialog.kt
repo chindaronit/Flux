@@ -1,6 +1,7 @@
 package com.flux.ui.common
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -9,9 +10,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
@@ -21,12 +25,16 @@ import androidx.compose.material.icons.filled.FontDownload
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -36,17 +44,24 @@ import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.flux.R
+import com.flux.data.model.WorkspaceModel
+import com.flux.other.DataCopyType
+import com.flux.other.icons
+import com.flux.ui.screens.settings.CircleWrapper
 import com.flux.ui.theme.FONTS
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -269,4 +284,123 @@ fun FontDialog(
             }
         }
     }
+}
+
+@Composable
+fun DataCopyDialog(
+    workspaces: List<WorkspaceModel>,
+    onConfirm: (DataCopyType, List<WorkspaceModel>) -> Unit,
+    onDismiss: () -> Unit
+){
+    val selectedWorkspaces = remember { mutableStateListOf<WorkspaceModel>() }
+    var selectedType by remember { mutableStateOf(DataCopyType.COPY) }
+
+    AlertDialog(
+        icon = {
+            SingleChoiceSegmentedButtonRow {
+                SegmentedButton(
+                    shape = SegmentedButtonDefaults.itemShape(
+                        index = 0,
+                        count = 2
+                    ),
+                    onClick = {
+                        selectedType = DataCopyType.COPY
+                        selectedWorkspaces.clear()
+                    },
+                    selected = selectedType == DataCopyType.COPY,
+                    label = { Text("Copy") }
+                )
+
+                SegmentedButton(
+                    shape = SegmentedButtonDefaults.itemShape(
+                        index = 1,
+                        count = 2
+                    ),
+                    onClick = {
+                        selectedType = DataCopyType.MOVE
+                        selectedWorkspaces.clear()
+                    },
+                    selected = selectedType == DataCopyType.MOVE,
+                    label = { Text("Move") }
+                )
+            }
+        },
+        title = {
+            Text("Select Workspaces")
+        },
+        text = {
+            LazyColumn (Modifier
+                .fillMaxWidth()
+                .heightIn(max = 300.dp)) {
+                items(workspaces) { workspace->
+                    val isChecked = selectedWorkspaces.contains(workspace)
+                    Card(
+                        Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(50))
+                            .padding(vertical = 2.dp)
+                            .clickable {
+                                if (isChecked) {
+                                    selectedWorkspaces.remove(workspace)
+                                } else {
+                                    if(selectedType== DataCopyType.MOVE) if(selectedWorkspaces.isNotEmpty()) selectedWorkspaces.clear()
+                                    selectedWorkspaces.add(workspace)
+                                }
+                            },
+                        shape = RoundedCornerShape(50)
+                    ) {
+                        Row(
+                            Modifier
+                                .padding(vertical = 6.dp, horizontal = 8.dp)
+                                .fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                CircleWrapper(color = MaterialTheme.colorScheme.primary) {
+                                    Icon(
+                                        icons[workspace.icon],
+                                        null,
+                                        tint = MaterialTheme.colorScheme.onPrimary
+                                    )
+                                }
+                                Text(
+                                    text = workspace.title,
+                                    overflow = TextOverflow.Ellipsis,
+                                    maxLines = 1,
+                                    modifier = Modifier.width(150.dp)
+                                )
+                            }
+                            Checkbox(checked = isChecked, onCheckedChange = {
+                                if (isChecked) {
+                                    selectedWorkspaces.remove(workspace)
+                                } else {
+                                    if(selectedType== DataCopyType.MOVE) if(selectedWorkspaces.isNotEmpty()) selectedWorkspaces.clear()
+                                    selectedWorkspaces.add(workspace)
+                                }
+                            })
+                        }
+                    }
+                }
+            }
+
+        },
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = {
+                onConfirm(selectedType, selectedWorkspaces.toList())
+                onDismiss()
+            }) {
+                Text("Confirm")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Dismiss")
+            }
+        }
+    )
 }

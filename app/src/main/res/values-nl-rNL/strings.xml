@@ -494,4 +494,31 @@
     <string name="video">Video</string>
     <string name="audio">Audio</string>
     <string name="compact">Compact</string>
+
+    <string name="content_copied">Inhoud gekopieerd!</string>
+    <string name="content_moved">Inhoud verplaatst!</string>
+    <string name="clone_created_successfully">Kloon succesvol aangemaakt</string>
+    <string name="days_left">Nog %1$d dagen</string>
+    <string name="one_day_left">Nog 1 dag</string>
+    <string name="one_day_overdue">1 dag te laat</string>
+    <string name="days_overdue">%1$d dagen te laat</string>
+    <string name="start_date_after_target_error">De startdatum mag niet na de einddatum liggen</string>
+    <string name="target_date_before_start_error">De einddatum mag niet vóór de startdatum liggen</string>
+    <string name="convert">Converteren</string>
+    <string name="convert_to_note">Omzetten naar notitie</string>
+    <string name="convert_to_todo">Omzetten naar takenlijst</string>
+    <string name="convert_to_journal">Omzetten naar dagboek</string>
+    <string name="clone">Klonen</string>
+    <string name="copy">Kopiëren</string>
+    <string name="move">Verplaatsen</string>
+    <string name="select_workspaces">Werkruimten selecteren</string>
+    <string name="turn_on_reminder">Schakel de herinnering in voor deze takenlijst!</string>
+    <string name="created">Aangemaakt</string>
+    <string name="reminder">Herinnering</string>
+    <string name="scheduled">Gepland</string>
+    <string name="true_text">Waar</string>
+    <string name="false_text">Onwaar</string>
+    <string name="off">Uit</string>
+    <string name="completed">Voltooid</string>
+    <string name="remaining">Resterend</string>
 </resources>

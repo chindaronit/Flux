@@ -494,5 +494,32 @@
     <string name="video">Видео</string>
     <string name="audio">Аудио</string>
     <string name="compact">Компактный</string>
+\
+    <string name="content_copied">Содержимое скопировано!</string>
+    <string name="content_moved">Содержимое перемещено!</string>
+    <string name="clone_created_successfully">Клон успешно создан</string>
+    <string name="days_left">Осталось %1$d дней</string>
+    <string name="one_day_left">Остался 1 день</string>
+    <string name="one_day_overdue">Просрочка 1 день</string>
+    <string name="days_overdue">Просрочка %1$d дней</string>
+    <string name="start_date_after_target_error">Дата начала не может быть позже целевой даты</string>
+    <string name="target_date_before_start_error">Целевая дата не может быть раньше даты начала</string>
+    <string name="convert">Преобразовать</string>
+    <string name="convert_to_note">Преобразовать в заметку</string>
+    <string name="convert_to_todo">Преобразовать в задачу</string>
+    <string name="convert_to_journal">Преобразовать в дневник</string>
+    <string name="clone">Клонировать</string>
+    <string name="copy">Копировать</string>
+    <string name="move">Переместить</string>
+    <string name="select_workspaces">Выбрать рабочие пространства</string>
+    <string name="turn_on_reminder">Включите напоминание для этого списка задач!</string>
+    <string name="created">Создано</string>
+    <string name="reminder">Напоминание</string>
+    <string name="scheduled">Запланировано</string>
+    <string name="true_text">Истина</string>
+    <string name="false_text">Ложь</string>
+    <string name="off">Выкл</string>
+    <string name="completed">Завершено</string>
+    <string name="remaining">Осталось</string>
 
 </resources>

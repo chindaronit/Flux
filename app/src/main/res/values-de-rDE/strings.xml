@@ -488,4 +488,31 @@
     <string name="audio">Audio</string>
     <string name="compact">Kompakt</string>
 
+    <string name="content_copied">Inhalt kopiert!</string>
+    <string name="content_moved">Inhalt verschoben!</string>
+    <string name="clone_created_successfully">Klon erfolgreich erstellt</string>
+    <string name="days_left">Noch %1$d Tage</string>
+    <string name="one_day_left">Noch 1 Tag</string>
+    <string name="one_day_overdue">1 Tag überfällig</string>
+    <string name="days_overdue">%1$d Tage überfällig</string>
+    <string name="start_date_after_target_error">Das Startdatum darf nicht nach dem Zieldatum liegen</string>
+    <string name="target_date_before_start_error">Das Zieldatum darf nicht vor dem Startdatum liegen</string>
+    <string name="convert">Konvertieren</string>
+    <string name="convert_to_note">In Notiz umwandeln</string>
+    <string name="convert_to_todo">In Aufgabenliste umwandeln</string>
+    <string name="convert_to_journal">In Journal umwandeln</string>
+    <string name="clone">Klonen</string>
+    <string name="copy">Kopieren</string>
+    <string name="move">Verschieben</string>
+    <string name="select_workspaces">Arbeitsbereiche auswählen</string>
+    <string name="turn_on_reminder">Aktiviere die Erinnerung für diese Aufgabenliste!</string>
+    <string name="created">Erstellt</string>
+    <string name="reminder">Erinnerung</string>
+    <string name="scheduled">Geplant</string>
+    <string name="true_text">Wahr</string>
+    <string name="false_text">Falsch</string>
+    <string name="off">Aus</string>
+    <string name="completed">Abgeschlossen</string>
+    <string name="remaining">Verbleibend</string>
+
 </resources>

@@ -1,0 +1,9 @@
+feat:
+1. Content copy/move to another workspaces
+2. Various export options in todo
+3. Clone a data point
+4. Responsive UI for various display size.
+5. Day addition in journal timeline with 24-hour format support
+
+fix:
+1. text overflow at various places

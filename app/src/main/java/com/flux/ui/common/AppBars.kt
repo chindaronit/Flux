@@ -94,6 +94,9 @@ fun NoteDetailsTopBar(
     onShareNote: () -> Unit,
     onSaveNote: () -> Unit,
     onPrintNote: () -> Unit,
+    onConvertNote: () ->Unit,
+    onCopyNote: () -> Unit,
+    onCloneNote: () -> Unit
 ) {
     CenterAlignedTopAppBar(
         title = {
@@ -132,7 +135,7 @@ fun NoteDetailsTopBar(
         actions = {
             if(!isReadView){ IconButton({onSearchClick()}) { Icon(if(isSearching) Icons.Default.SearchOff else Icons.Default.Search, null) } }
             IconButton({onOutlineClicked()}) { Icon(Icons.Default.Summarize, null) }
-            DropdownMenuWithDetails(isPinned, onTogglePinned, onAddLabel, onAboutClicked, onShareNote, onSaveNote, onPrintNote, onDelete) }
+            DropdownMenuWithDetails(isPinned, onTogglePinned, onAddLabel, onAboutClicked, onShareNote, onSaveNote, onPrintNote, onConvertNote, onCopyNote, onCloneNote, onDelete) }
     )
 }
 
@@ -152,6 +155,9 @@ fun JournalDetailsTopBar(
     onShareNote: () -> Unit,
     onSaveNote: () -> Unit,
     onPrintNote: () -> Unit,
+    onConvertNote: () ->Unit,
+    onCopyNote: () -> Unit,
+    onCloneNote: () -> Unit
 ) {
     CenterAlignedTopAppBar(
         title = {
@@ -190,7 +196,7 @@ fun JournalDetailsTopBar(
         actions = {
             if(!isReadView){ IconButton({onSearchClick()}) { Icon(if(isSearching) Icons.Default.SearchOff else Icons.Default.Search, null) } }
             IconButton({onOutlineClicked()}) { Icon(Icons.Default.Summarize, null) }
-            JournalDropdownMenu(onAddLabel, onAboutClicked, onShareNote, onSaveNote, onPrintNote, onDelete)
+            JournalDropdownMenu(onAddLabel, onAboutClicked, onShareNote, onSaveNote, onPrintNote, onDelete, onConvertNote, onCopyNote, onCloneNote)
         }
     )
 }
@@ -357,9 +363,9 @@ fun SpaceTopBar(
     val titleSectionHeightDp = 12.dp + titleRowDp + if (hasDescription) 2.dp + bodyLineHeightDp else 0.dp
 
     val expandedHeightDp = if (hasCover)
-        coverHeightDp + titleSectionHeightDp + statusBarHeight - 32.dp
+        coverHeightDp + titleSectionHeightDp + statusBarHeight - 24.dp
     else
-        toolbarHeight + titleSectionHeightDp + 24.dp
+        toolbarHeight + titleSectionHeightDp + 28.dp
 
     val expandedPx  = with(density) { expandedHeightDp.toPx() }
     val collapsedPx = with(density) { toolbarHeight.toPx() }

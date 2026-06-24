@@ -56,7 +56,6 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
@@ -114,10 +113,8 @@ import java.time.ZoneId
 import java.time.format.TextStyle
 import kotlin.collections.filter
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -125,9 +122,11 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import com.flux.data.model.isCounted
 import com.flux.data.model.isLive
@@ -162,7 +161,9 @@ fun TimerDialog(
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(shape = RoundedCornerShape(24.dp)) {
-            Column(Modifier.padding(16.dp).fillMaxWidth()) {
+            Column(Modifier
+                .padding(16.dp)
+                .fillMaxWidth()) {
                 NumberPickerRow(Modifier.fillMaxWidth(), hours, minutes, { hours = it }) {
                     minutes = it
                 }
@@ -213,6 +214,7 @@ fun CountedHabitStatus(
             Modifier
                 .fillMaxWidth()
                 .padding(vertical = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
 
@@ -230,25 +232,26 @@ fun CountedHabitStatus(
                 Modifier
                     .fillMaxWidth()
                     .padding(top = 8.dp),
-                horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-
-                CircularProgressIndicator(
-                    progress = { completion },
-                    modifier = Modifier.size(120.dp),
-                    color = MaterialTheme.colorScheme.primary,
-                    strokeWidth = 12.dp,
-                    trackColor = MaterialTheme.colorScheme.primary.copy(0.35f),
-                    strokeCap = StrokeCap.Round,
-                )
-
-                Spacer(modifier = Modifier.width(12.dp))
+                Box(
+                    modifier = Modifier.weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        progress = { completion },
+                        modifier = Modifier.size(120.dp),
+                        color = MaterialTheme.colorScheme.primary,
+                        strokeWidth = 12.dp,
+                        trackColor = MaterialTheme.colorScheme.primary.copy(0.35f),
+                        strokeCap = StrokeCap.Round,
+                    )
+                }
 
                 Column(
+                    modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-
                     HabitInfoComponent(
                         Icons.Outlined.IncompleteCircle,
                         stringResource(R.string.current),
@@ -270,85 +273,57 @@ fun CountedHabitStatus(
             }
 
             Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-
                 FilledTonalButton(
                     onClick = {
-
                         val count = maxOf(currentCount - 1, 0)
-
-                        val newInstance = HabitInstanceModel(
-                            instanceDate = todayEpoch,
-                            habitId = habit.id,
-                            workspaceId = habit.workspaceId,
-                            count = count
-                        )
-
-                        onHabitEvents(
-                            HabitEvents.UpdateInstance(
-                                newInstance,
-                                habit.habitConfig
-                            )
-                        )
+                        val newInstance = HabitInstanceModel( instanceDate = todayEpoch, habitId = habit.id, workspaceId = habit.workspaceId, count = count )
+                        onHabitEvents( HabitEvents.UpdateInstance( newInstance, habit.habitConfig ) )
                     },
-                    modifier = Modifier.weight(0.5f)
+                    modifier = Modifier.weight(1f)
                 ) {
+                    Icon(
+                        Icons.Default.Remove,
+                        null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
 
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    Spacer(Modifier.width(4.dp))
 
-                        Icon(
-                            Icons.Default.Remove,
-                            null,
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-
-                        Text(stringResource(R.string.decrement))
-                    }
+                    Text(
+                        text = stringResource(R.string.decrement),
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
                 }
 
                 FilledTonalButton(
                     onClick = {
-
                         val count = currentCount + 1
-
-                        val newInstance = HabitInstanceModel(
-                            instanceDate = todayEpoch,
-                            habitId = habit.id,
-                            workspaceId = habit.workspaceId,
-                            count = count
-                        )
-
-                        onHabitEvents(
-                            HabitEvents.UpdateInstance(
-                                newInstance,
-                                habit.habitConfig
-                            )
-                        )
+                        val newInstance = HabitInstanceModel( instanceDate = todayEpoch, habitId = habit.id, workspaceId = habit.workspaceId, count = count )
+                        onHabitEvents( HabitEvents.UpdateInstance( newInstance, habit.habitConfig ) )
                     },
-                    modifier = Modifier.weight(0.5f)
+                    modifier = Modifier.weight(1f)
                 ) {
+                    Icon(
+                        Icons.Default.Add,
+                        null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
 
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    Spacer(Modifier.width(4.dp))
 
-                        Icon(
-                            Icons.Default.Add,
-                            null,
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-
-                        Text(stringResource(R.string.increment))
-                    }
+                    Text(
+                        text = stringResource(R.string.increment),
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
                 }
             }
         }
@@ -403,7 +378,9 @@ fun TimedHabitStatus (
             )
 
             Row(
-                Modifier.fillMaxWidth().padding(top = 8.dp),
+                Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -450,7 +427,9 @@ fun TimedHabitStatus (
                 }
             }
 
-            NumberPickerRow(Modifier.fillMaxWidth().padding(horizontal = 32.dp), hours, minutes, {hours=it}) { minutes=it }
+            NumberPickerRow(Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 32.dp), hours, minutes, {hours=it}) { minutes=it }
 
             FilledTonalButton(
                 {
@@ -464,7 +443,9 @@ fun TimedHabitStatus (
                     )
                     onHabitEvents(HabitEvents.UpdateInstance(newInstance, habit.habitConfig))
                 },
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp),
                 colors = ButtonDefaults.filledTonalButtonColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     contentColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -645,7 +626,9 @@ fun TimedHabitDialog(
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(shape = RoundedCornerShape(24.dp)) {
-            Column(Modifier.padding(16.dp).fillMaxWidth()) {
+            Column(Modifier
+                .padding(16.dp)
+                .fillMaxWidth()) {
                 SingleChoiceSegmentedButtonRow(modifier = Modifier.padding(vertical = 6.dp)) {
                     options.forEachIndexed { index, label ->
                         SegmentedButton(
@@ -662,7 +645,9 @@ fun TimedHabitDialog(
                 }
 
                 NumberPickerRow(
-                    Modifier.fillMaxWidth().padding(horizontal = 32.dp),
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 32.dp),
                     hours,
                     minutes,
                     { hours=it }
@@ -728,10 +713,22 @@ fun HabitDetailedInfo(
                 )
             }
 
+            val configuration = LocalConfiguration.current
+            val density = LocalDensity.current
+
+            val columns = when {
+                density.fontScale > 1.5f -> 1
+
+                configuration.screenWidthDp < 360 -> 1
+                configuration.screenWidthDp < 480 -> 2
+
+                else -> 3
+            }
+
             LazyVerticalGrid(
-                columns = GridCells.Fixed(3),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                columns = GridCells.Fixed(columns),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(max = 1000.dp)
@@ -847,22 +844,47 @@ fun HabitDetailedInfo(
 }
 
 @Composable
-fun HabitInfoComponent(icon: ImageVector, title: String, description: String){
+fun HabitInfoComponent(
+    icon: ImageVector,
+    title: String,
+    description: String
+) {
+
     Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
+
         CircleWrapper(MaterialTheme.colorScheme.primaryContainer) {
             Icon(
-                icon,
-                null,
-                modifier = Modifier.size(18.dp),
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
                 tint = MaterialTheme.colorScheme.onPrimaryContainer
             )
         }
-        Column {
-            Text(title, modifier = Modifier.alpha(0.85f), style = MaterialTheme.typography.labelMedium)
-            Text(description, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.labelMedium)
+
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+
+            Text(
+                text = title,
+                style = MaterialTheme.typography.labelMedium,
+                modifier = Modifier.alpha(0.85f),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            Spacer(Modifier.height(2.dp))
+
+            Text(
+                text = description,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold
+            )
         }
     }
 }
@@ -967,7 +989,7 @@ fun HabitDateCard(
 
     Card(
         modifier = modifier,
-        shape = shapeManager(radius = radius * 2),
+        shape = shapeManager(radius = radius),
         colors = CardDefaults.cardColors(
             containerColor = containerColor,
             contentColor = contentColor
@@ -981,13 +1003,13 @@ fun HabitDateCard(
         ) {
             Text(
                 day.uppercase(),
-                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.ExtraLight),
+                style = MaterialTheme.typography.labelMedium,
                 modifier = Modifier.alpha(0.95f)
             )
             Text(
                 date.toString(),
-                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.ExtraLight),
-                modifier = Modifier.alpha(0.95f)
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.ExtraLight),
+                modifier = Modifier.alpha(0.85f)
             )
         }
     }
@@ -1140,7 +1162,7 @@ fun OtherConfigCard(
     val text = if (isTimed) { formatDuration(instance?.timeSpent ?: 0L) } else { (instance?.count ?: 0).toString() }
     Card(
         modifier = modifier,
-        shape = shapeManager(radius = radius * 2),
+        shape = shapeManager(radius = radius),
         colors = CardDefaults.cardColors(
             containerColor = containerColor,
             contentColor = contentColor
@@ -1150,25 +1172,24 @@ fun OtherConfigCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 4.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row{
                 Text(
                     "$date, ",
-                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.ExtraLight),
+                    style = MaterialTheme.typography.labelMedium,
                     modifier = Modifier.alpha(0.95f)
                 )
 
                 Text(
                     day.uppercase(),
-                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.ExtraLight),
+                    style = MaterialTheme.typography.labelMedium,
                     modifier = Modifier.alpha(0.95f)
                 )
             }
             Text(
                 text,
-                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.ExtraLight),
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.ExtraLight),
                 modifier = Modifier.alpha(0.85f)
             )
         }
@@ -1274,14 +1295,14 @@ fun HabitCalendarCard(
             }
 
             // Days of week row
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Row(Modifier.fillMaxWidth().padding(bottom = 6.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                 daysOfWeek.forEach {
                     Text(
                         text = it,
                         modifier = Modifier.weight(1f),
                         textAlign = TextAlign.Center,
                         color = MaterialTheme.colorScheme.primary,
-                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold)
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
                     )
                 }
             }
@@ -1422,7 +1443,7 @@ fun WeeklyHabitAnalyticsCard(
         stringResource(R.string.sunday_short)
     )
 
-    val dayStatus = daysOfWeek.mapIndexed { index, _ ->
+    val dayStatus = List(daysOfWeek.size) { index ->
         val date = startOfWeek.plusDays(index.toLong())
         val epoch = date.toEpochDay()
 
@@ -2107,7 +2128,9 @@ fun HabitConfigCard(
     }
 
     Card(
-        modifier = Modifier.clip(RoundedCornerShape(50)).padding(horizontal = 2.dp),
+        modifier = Modifier
+            .clip(RoundedCornerShape(50))
+            .padding(horizontal = 2.dp),
         shape = RoundedCornerShape(50),
         onClick = onClick,
         colors = CardDefaults.cardColors(

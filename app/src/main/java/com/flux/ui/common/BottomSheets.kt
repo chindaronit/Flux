@@ -41,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.flux.R
 import com.flux.data.model.RecurrenceRule
@@ -220,33 +221,44 @@ fun RecurrenceBottomSheet(
                                 stringResource(R.string.saturday_short),
                                 stringResource(R.string.sunday_short)
                             )
-                            Row (
+
+                            FlowRow(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(vertical = 8.dp)
+                                    .padding(6.dp),
+                                horizontalArrangement = Arrangement.spacedBy(2.dp),
+                                verticalArrangement = Arrangement.spacedBy(2.dp),
+                                maxItemsInEachRow = 7
                             ) {
                                 weekdays.forEachIndexed { index, day ->
                                     val isSelected = index in rule.daysOfWeek
+
                                     Card(
-                                        onClick = {
-                                            val newDays = rule.daysOfWeek.toMutableList()
-                                            if (index in newDays) newDays.remove(index) else newDays.add(index)
-                                            tempRule = rule.copy(daysOfWeek = newDays)
-                                        },
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .padding(horizontal = 2.dp),
+                                        onClick = {},
                                         colors = CardDefaults.cardColors(
-                                            containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceColorAtElevation(8.dp),
-                                            contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+                                            containerColor =
+                                                if (isSelected)
+                                                    MaterialTheme.colorScheme.primary
+                                                else
+                                                    MaterialTheme.colorScheme.surfaceColorAtElevation(8.dp),
+
+                                            contentColor =
+                                                if (isSelected)
+                                                    MaterialTheme.colorScheme.onPrimary
+                                                else
+                                                    MaterialTheme.colorScheme.onSurface
                                         )
                                     ) {
                                         Text(
                                             text = day,
-                                            modifier = Modifier
-                                                .padding(6.dp)
-                                                .fillMaxWidth(),
-                                            textAlign = TextAlign.Center
+                                            textAlign = TextAlign.Center,
+                                            maxLines = 1,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            overflow = TextOverflow.Ellipsis,
+                                            modifier = Modifier.padding(
+                                                horizontal = 12.dp,
+                                                vertical = 8.dp
+                                            )
                                         )
                                     }
                                 }

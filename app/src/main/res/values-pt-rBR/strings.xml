@@ -494,4 +494,31 @@
     <string name="video">Vídeo</string>
     <string name="audio">Áudio</string>
     <string name="compact">Compacto</string>
+
+    <string name="content_copied">Conteúdo copiado!</string>
+    <string name="content_moved">Conteúdo movido!</string>
+    <string name="clone_created_successfully">Clone criado com sucesso</string>
+    <string name="days_left">Faltam %1$d dias</string>
+    <string name="one_day_left">Falta 1 dia</string>
+    <string name="one_day_overdue">1 dia de atraso</string>
+    <string name="days_overdue">%1$d dias de atraso</string>
+    <string name="start_date_after_target_error">A data de início não pode ser posterior à data final</string>
+    <string name="target_date_before_start_error">A data final não pode ser anterior à data de início</string>
+    <string name="convert">Converter</string>
+    <string name="convert_to_note">Converter para nota</string>
+    <string name="convert_to_todo">Converter para tarefa</string>
+    <string name="convert_to_journal">Converter para diário</string>
+    <string name="clone">Clonar</string>
+    <string name="copy">Copiar</string>
+    <string name="move">Mover</string>
+    <string name="select_workspaces">Selecionar espaços de trabalho</string>
+    <string name="turn_on_reminder">Ative o lembrete para esta lista de tarefas!</string>
+    <string name="created">Criado</string>
+    <string name="reminder">Lembrete</string>
+    <string name="scheduled">Agendado</string>
+    <string name="true_text">Verdadeiro</string>
+    <string name="false_text">Falso</string>
+    <string name="off">Desligado</string>
+    <string name="completed">Concluído</string>
+    <string name="remaining">Restante</string>
 </resources>

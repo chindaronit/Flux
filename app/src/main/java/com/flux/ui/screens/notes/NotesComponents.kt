@@ -53,6 +53,7 @@ import androidx.compose.material.icons.automirrored.outlined.FormatListBulleted
 import androidx.compose.material.icons.automirrored.outlined.Label
 import androidx.compose.material.icons.automirrored.outlined.LabelImportant
 import androidx.compose.material.icons.automirrored.outlined.List
+import androidx.compose.material.icons.automirrored.outlined.Note
 import androidx.compose.material.icons.filled.Abc
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -73,6 +74,7 @@ import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.outlined.AddChart
 import androidx.compose.material.icons.outlined.AudioFile
+import androidx.compose.material.icons.outlined.AutoStories
 import androidx.compose.material.icons.outlined.CheckBox
 import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.DataArray
@@ -166,7 +168,6 @@ import com.flux.other.AudioRecorder
 import com.flux.other.Constants
 import com.flux.other.ExportType
 import com.flux.other.HeaderNode
-import com.flux.other.parseMarkdownContent
 import com.flux.ui.screens.settings.ActionType
 import com.flux.ui.screens.settings.CircleWrapper
 import com.flux.ui.screens.settings.SettingOption
@@ -180,7 +181,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.max
+import com.flux.other.ConvertType
 import com.flux.other.MarkdownBlock
 import com.flux.other.MediaChipsRow
 import com.flux.other.extractMedia
@@ -191,6 +192,7 @@ import com.flux.ui.common.MultiOptionRow
 import com.flux.ui.common.OptionRow
 import com.flux.ui.common.SelectionType
 import kotlin.collections.filter
+import kotlin.time.Duration.Companion.milliseconds
 
 // ------------- Dialogs -------------
 @Composable
@@ -435,6 +437,34 @@ fun ShareDialog(
 
                 // HTML Export
                 ExportCard(Icons.Default.Code, stringResource(R.string.html)) { onConfirm(ExportType.HTML) }
+            }
+        }
+    }
+}
+
+@Composable
+fun ConvertNotesDialog(
+    onConfirm: (ConvertType) -> Unit,
+    onDismiss: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = stringResource(R.string.convert),
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                ExportCard(Icons.AutoMirrored.Outlined.Note, stringResource(R.string.convert_to_todo)) { onConfirm(ConvertType.TODO) }
+                ExportCard(Icons.Outlined.AutoStories, stringResource(R.string.convert_to_journal)) { onConfirm(ConvertType.JOURNAL) }
             }
         }
     }
@@ -1045,7 +1075,7 @@ fun StudioRecorderUI(
 
             elapsedMs = System.currentTimeMillis() - start
 
-            delay(50)
+            delay(50.milliseconds)
         }
     }
 

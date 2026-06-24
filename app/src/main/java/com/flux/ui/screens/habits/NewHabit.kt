@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -68,6 +69,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.flux.R
@@ -273,11 +275,14 @@ fun NewHabit(
                 }
 
                 item {
-                    Row(
-                        Modifier
+                    FlowRow(
+                        modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 8.dp)
-                    ) {
+                            .padding(6.dp),
+                        horizontalArrangement = Arrangement.spacedBy(2.dp),
+                        verticalArrangement = Arrangement.spacedBy(2.dp),
+                        maxItemsInEachRow = 7
+                    )  {
                         weekdays.forEachIndexed { index, day ->
                             val isSelected = selectedDays.contains(index)
                             Card(
@@ -291,20 +296,30 @@ fun NewHabit(
                                         selectedDays.add(index)
                                     }
                                 },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(horizontal = 2.dp),
                                 colors = CardDefaults.cardColors(
-                                    containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceColorAtElevation(
-                                        6.dp
-                                    ),
-                                    contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+                                    containerColor =
+                                        if (isSelected)
+                                            MaterialTheme.colorScheme.primary
+                                        else
+                                            MaterialTheme.colorScheme.surfaceColorAtElevation(8.dp),
+
+                                    contentColor =
+                                        if (isSelected)
+                                            MaterialTheme.colorScheme.onPrimary
+                                        else
+                                            MaterialTheme.colorScheme.onSurface
                                 )
                             ) {
                                 Text(
                                     text = day,
-                                    modifier = Modifier.padding(6.dp).fillMaxWidth(),
-                                    textAlign = TextAlign.Center
+                                    textAlign = TextAlign.Center,
+                                    maxLines = 1,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.padding(
+                                        horizontal = 12.dp,
+                                        vertical = 8.dp
+                                    )
                                 )
                             }
                         }

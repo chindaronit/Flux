@@ -21,15 +21,12 @@ import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -219,21 +216,21 @@ fun NotesPreviewSetting(
                             shape = SegmentedButtonDefaults.itemShape(0, 3),
                             onClick = { onSettingsEvents(SettingEvents.UpdateSettings(settings.data.copy(notesPreviewMode = 0))) },
                             selected = notesPreviewMode == 0,
-                            label = { Text(stringResource(R.string.compact)) }
+                            label = { Text(stringResource(R.string.compact), maxLines = 1, overflow = TextOverflow.Ellipsis) }
                         )
 
                         SegmentedButton(
                             shape = SegmentedButtonDefaults.itemShape(1, 3),
                             onClick = { onSettingsEvents(SettingEvents.UpdateSettings(settings.data.copy(notesPreviewMode = 1))) },
                             selected = notesPreviewMode == 1,
-                            label = { Text(stringResource(R.string.normal)) }
+                            label = { Text(stringResource(R.string.normal), maxLines = 1, overflow = TextOverflow.Ellipsis) }
                         )
 
                         SegmentedButton(
                             shape = SegmentedButtonDefaults.itemShape(2, 3),
                             onClick = { onSettingsEvents(SettingEvents.UpdateSettings(settings.data.copy(notesPreviewMode = 2))) },
                             selected = notesPreviewMode == 2,
-                            label = { Text(stringResource(R.string.elongated)) }
+                            label = { Text(stringResource(R.string.elongated), maxLines = 1, overflow = TextOverflow.Ellipsis) }
                         )
                     }
                 }

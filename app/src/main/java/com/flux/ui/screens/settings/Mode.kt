@@ -10,12 +10,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.ViewCompactAlt
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.SegmentedButton
@@ -27,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -161,15 +158,7 @@ fun Mode(
                                     )
                                 },
                                 selected = settings.data.workspaceGridColumns == 1,
-                                label = {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                    ) {
-                                        Icon(Icons.AutoMirrored.Filled.List, null)
-                                        Text(stringResource(R.string.default_mode))
-                                    }
-                                }
+                                label = { Text(stringResource(R.string.default_mode), maxLines = 1, overflow = TextOverflow.Ellipsis) }
                             )
                             SegmentedButton(
                                 shape = SegmentedButtonDefaults.itemShape(
@@ -186,15 +175,7 @@ fun Mode(
                                     )
                                 },
                                 selected = settings.data.workspaceGridColumns == 2,
-                                label = {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                    ) {
-                                        Icon(Icons.Default.ViewCompactAlt, null)
-                                        Text(stringResource(R.string.select_mode))
-                                    }
-                                }
+                                label = { Text(stringResource(R.string.compact_mode), maxLines = 1, overflow = TextOverflow.Ellipsis) }
                             )
                         }
                     }

@@ -55,6 +55,7 @@ import com.flux.ui.events.TaskEvents
 import com.flux.ui.screens.workspaces.SpacesToolBar
 import com.flux.ui.state.EventState
 import com.flux.ui.state.Settings
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
@@ -89,6 +90,12 @@ fun EventScreen(
     val datedEvents = state.datedEvents
         .filter { it.workspaceId==workspaceId }
         .filter { it.title.contains(query, ignoreCase = true) }
+        .sortedBy {
+            Instant.ofEpochMilli(it.startDateTime)
+                .atZone(ZoneId.systemDefault())
+                .toLocalTime()
+                .toSecondOfDay()
+        }
     val monthlyEventCount = computeMonthlyEventDates(state.allEvent.filter { it.workspaceId == workspaceId }, selectedMonth)
     val allEventInstances = state.allEventInstances
     var showSearchBar by remember { mutableStateOf(false) }
@@ -154,7 +161,7 @@ fun EventScreen(
                     .padding(innerPadding)
                     .padding(12.dp)
                     .nestedScroll(scrollBehavior.nestedScrollConnection),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     item {
                         if(showSearchBar){ SpaceSearchBar(query, { query=it }, { showSearchBar=false }) }
@@ -206,12 +213,14 @@ fun EventScreen(
                                 onMonthChange = { onEvent(TaskEvents.ChangeMonth(it)) },
                                 onDateChange = { onEvent(TaskEvents.ChangeDate(it)) }
                             )
+                            Spacer(Modifier.height(6.dp))
                         }
                     } else {
                         item {
                             DailyViewCalendar(selectedMonth, selectedDate){
                                 onEvent(TaskEvents.ChangeDate(it))
                             }
+                            Spacer(Modifier.height(6.dp))
                         }
                     }
                     if(datedEvents.isEmpty()) item { EmptyEvents() }

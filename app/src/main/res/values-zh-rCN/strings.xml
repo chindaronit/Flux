@@ -499,4 +499,31 @@
     <string name="video">视频</string>
     <string name="audio">音频</string>
     <string name="compact">紧凑</string>
+
+    <string name="content_copied">内容已复制！</string>
+    <string name="content_moved">内容已移动！</string>
+    <string name="clone_created_successfully">克隆创建成功</string>
+    <string name="days_left">剩余 %1$d 天</string>
+    <string name="one_day_left">剩余 1 天</string>
+    <string name="one_day_overdue">逾期 1 天</string>
+    <string name="days_overdue">逾期 %1$d 天</string>
+    <string name="start_date_after_target_error">开始日期不能晚于目标日期</string>
+    <string name="target_date_before_start_error">目标日期不能早于开始日期</string>
+    <string name="convert">转换</string>
+    <string name="convert_to_note">转换为笔记</string>
+    <string name="convert_to_todo">转换为待办事项</string>
+    <string name="convert_to_journal">转换为日记</string>
+    <string name="clone">克隆</string>
+    <string name="copy">复制</string>
+    <string name="move">移动</string>
+    <string name="select_workspaces">选择工作区</string>
+    <string name="turn_on_reminder">为此待办事项列表开启提醒！</string>
+    <string name="created">已创建</string>
+    <string name="reminder">提醒</string>
+    <string name="scheduled">已计划</string>
+    <string name="true_text">真</string>
+    <string name="false_text">假</string>
+    <string name="off">关</string>
+    <string name="completed">已完成</string>
+    <string name="remaining">剩余</string>
 </resources>

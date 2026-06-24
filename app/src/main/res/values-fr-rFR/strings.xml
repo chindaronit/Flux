@@ -495,4 +495,31 @@
     <string name="audio">Audio</string>
     <string name="compact">Compact</string>
 
+    <string name="content_copied">Contenu copié !</string>
+    <string name="content_moved">Contenu déplacé !</string>
+    <string name="clone_created_successfully">Clone créé avec succès</string>
+    <string name="days_left">%1$d jours restants</string>
+    <string name="one_day_left">1 jour restant</string>
+    <string name="one_day_overdue">1 jour de retard</string>
+    <string name="days_overdue">%1$d jours de retard</string>
+    <string name="start_date_after_target_error">La date de début ne peut pas être après la date cible</string>
+    <string name="target_date_before_start_error">La date cible ne peut pas être avant la date de début</string>
+    <string name="convert">Convertir</string>
+    <string name="convert_to_note">Convertir en note</string>
+    <string name="convert_to_todo">Convertir en tâche</string>
+    <string name="convert_to_journal">Convertir en journal</string>
+    <string name="clone">Cloner</string>
+    <string name="copy">Copier</string>
+    <string name="move">Déplacer</string>
+    <string name="select_workspaces">Sélectionner des espaces de travail</string>
+    <string name="turn_on_reminder">Activez le rappel pour cette liste de tâches !</string>
+    <string name="created">Créé</string>
+    <string name="reminder">Rappel</string>
+    <string name="scheduled">Planifié</string>
+    <string name="true_text">Vrai</string>
+    <string name="false_text">Faux</string>
+    <string name="off">Désactivé</string>
+    <string name="completed">Terminé</string>
+    <string name="remaining">Restant</string>
+
 </resources>
