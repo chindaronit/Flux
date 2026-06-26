@@ -2,15 +2,87 @@ package com.flux.navigation
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.navArgument
+import com.flux.ui.common.BottomBar
+import com.flux.ui.common.WorkspaceDropdownTopBar
 import com.flux.ui.state.States
 import com.flux.ui.viewModel.ViewModels
+
+/**
+ * Global scaffold wrapper that provides workspace dropdown top bar
+ * and bottom bar on every main screen.
+ *
+ * @param showTopBar When true, shows the WorkspaceDropdownTopBar.
+ *                   Set to false for screens that have their own top bar (e.g., NotesScreen).
+ */
+@Composable
+fun WorkspaceScaffold(
+    states: States,
+    viewModels: ViewModels,
+    navController: NavHostController,
+    workspaceId: String = "",
+    showTopBar: Boolean = true,
+    showBottomBar: Boolean = false,
+    showBackButton: Boolean = false,
+    actions: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit = {},
+    content: @Composable () -> Unit
+) {
+    val allWorkspaces = states.workspaceState.allWorkspaces
+    val currentWorkspace = allWorkspaces.find { it.workspaceId == workspaceId }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        if (showTopBar) {
+            WorkspaceDropdownTopBar(
+                currentWorkspace = currentWorkspace,
+                allWorkspaces = allWorkspaces,
+                onWorkspaceSelected = { ws ->
+                    if (ws.workspaceId != workspaceId) {
+                        navController.navigate(NavRoutes.WorkspaceHome.withArgs(ws.workspaceId)) {
+                            popUpTo(NavRoutes.WorkspaceHome.route) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+                },
+                onNewWorkspace = {
+                    navController.navigate(NavRoutes.NewWorkspace.withArgs(""))
+                },
+                showBackButton = showBackButton,
+                onBackPressed = { navController.popBackStack() },
+                actions = actions
+            )
+        }
+
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surfaceContainerLow)
+        ) {
+            content()
+        }
+
+        if (showBottomBar) {
+            BottomBar(
+                modifier = Modifier.padding(bottom = 16.dp),
+                navController = navController,
+                currentWorkspaceId = workspaceId
+            )
+        }
+    }
+}
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
@@ -37,13 +109,23 @@ fun AppNavHost(navController: NavHostController, snackbarHostState: SnackbarHost
                 val notesId = entry.arguments?.getString("notesId") ?: ""
                 val workspaceId = entry.arguments?.getString("workspaceId") ?: ""
 
-                screen(
-                    navController,
-                    notesId,
-                    workspaceId,
-                    states,
-                    viewModels
-                )
+                WorkspaceScaffold(
+                    states = states,
+                    viewModels = viewModels,
+                    navController = navController,
+                    workspaceId = workspaceId,
+                    showTopBar = false,
+                    showBackButton = true,
+                    showBottomBar = false
+                ) {
+                    screen(
+                        navController,
+                        notesId,
+                        workspaceId,
+                        states,
+                        viewModels
+                    )
+                }
             }
         }
 
@@ -95,14 +177,24 @@ fun AppNavHost(navController: NavHostController, snackbarHostState: SnackbarHost
                 val workspaceId = entry.arguments?.getString("workspaceId") ?: ""
                 val journalDateTime = entry.arguments?.getLong("journalDateTime") ?: 0L
 
-                screen(
-                    navController,
-                    journalId,
-                    journalDateTime,
-                    workspaceId,
-                    states,
-                    viewModels
-                )
+                WorkspaceScaffold(
+                    states = states,
+                    viewModels = viewModels,
+                    navController = navController,
+                    workspaceId = workspaceId,
+                    showTopBar = false,
+                    showBackButton = true,
+                    showBottomBar = false
+                ) {
+                    screen(
+                        navController,
+                        journalId,
+                        journalDateTime,
+                        workspaceId,
+                        states,
+                        viewModels
+                    )
+                }
             }
         }
 
@@ -127,13 +219,23 @@ fun AppNavHost(navController: NavHostController, snackbarHostState: SnackbarHost
                 val listId = entry.arguments?.getString("listId") ?: ""
                 val workspaceId = entry.arguments?.getString("workspaceId") ?: ""
 
-                screen(
-                    navController,
-                    listId,
-                    workspaceId,
-                    states,
-                    viewModels
-                )
+                WorkspaceScaffold(
+                    states = states,
+                    viewModels = viewModels,
+                    navController = navController,
+                    workspaceId = workspaceId,
+                    showTopBar = false,
+                    showBackButton = true,
+                    showBottomBar = false
+                ) {
+                    screen(
+                        navController,
+                        listId,
+                        workspaceId,
+                        states,
+                        viewModels
+                    )
+                }
             }
         }
 
@@ -158,24 +260,45 @@ fun AppNavHost(navController: NavHostController, snackbarHostState: SnackbarHost
                 val habitId = entry.arguments?.getString("habitId") ?: ""
                 val workspaceId = entry.arguments?.getString("workspaceId") ?: ""
 
-                screen(
-                    navController,
-                    habitId,
-                    workspaceId,
-                    states,
-                    viewModels
-                )
+                WorkspaceScaffold(
+                    states = states,
+                    viewModels = viewModels,
+                    navController = navController,
+                    workspaceId = workspaceId,
+                    showTopBar = false,
+                    showBackButton = true,
+                    showBottomBar = false
+                ) {
+                    screen(
+                        navController,
+                        habitId,
+                        workspaceId,
+                        states,
+                        viewModels
+                    )
+                }
             }
         }
 
         SettingsScreens.forEach { (route, screen) ->
             animatedComposable(route) {
-                screen(
-                    navController,
-                    snackbarHostState,
-                    states,
-                    viewModels
-                )
+                val wsId = states.workspaceState.allWorkspaces.firstOrNull()?.workspaceId ?: ""
+                WorkspaceScaffold(
+                    states = states,
+                    viewModels = viewModels,
+                    navController = navController,
+                    workspaceId = wsId,
+                    showTopBar = true,
+                    showBackButton = true,
+                    showBottomBar = false
+                ) {
+                    screen(
+                        navController,
+                        snackbarHostState,
+                        states,
+                        viewModels
+                    )
+                }
             }
         }
 
@@ -216,13 +339,23 @@ fun AppNavHost(navController: NavHostController, snackbarHostState: SnackbarHost
                 val instanceDate = entry.arguments?.getLong("instanceDate") ?: 0L
                 val eventDate = entry.arguments?.getLong("eventDate") ?: 0L
 
-                screen(navController,
-                    states,
-                    viewModels,
-                    eventId,
-                    workspaceId,
-                    instanceDate,
-                    eventDate)
+                WorkspaceScaffold(
+                    states = states,
+                    viewModels = viewModels,
+                    navController = navController,
+                    workspaceId = workspaceId,
+                    showTopBar = false,
+                    showBackButton = true,
+                    showBottomBar = false
+                ) {
+                    screen(navController,
+                        states,
+                        viewModels,
+                        eventId,
+                        workspaceId,
+                        instanceDate,
+                        eventDate)
+                }
             }
         }
 
@@ -239,12 +372,22 @@ fun AppNavHost(navController: NavHostController, snackbarHostState: SnackbarHost
             bottomSlideComposable(route, arguments) { entry ->
                 val workspaceId = entry.arguments?.getString("workspaceId") ?: ""
 
-                screen(
-                    navController,
-                    states,
-                    viewModels,
-                    workspaceId
-                )
+                WorkspaceScaffold(
+                    states = states,
+                    viewModels = viewModels,
+                    navController = navController,
+                    workspaceId = workspaceId,
+                    showTopBar = false,
+                    showBackButton = true,
+                    showBottomBar = false
+                ) {
+                    screen(
+                        navController,
+                        states,
+                        viewModels,
+                        workspaceId
+                    )
+                }
             }
         }
 
@@ -260,25 +403,47 @@ fun AppNavHost(navController: NavHostController, snackbarHostState: SnackbarHost
 
             animatedComposable(route, arguments) { entry ->
                 val id = entry.arguments?.getString("workspaceId") ?: ""
-                screen(
-                    navController,
-                    snackbarHostState,
-                    states,
-                    viewModels,
-                    id
-                )
+
+                val isListRoute = route == NavRoutes.Workspace.route
+                WorkspaceScaffold(
+                    states = states,
+                    viewModels = viewModels,
+                    navController = navController,
+                    workspaceId = id,
+                    showTopBar = isListRoute,  // only show top bar on selection grid
+                    showBackButton = !isListRoute,
+                    showBottomBar = true
+                ) {
+                    screen(
+                        navController,
+                        snackbarHostState,
+                        states,
+                        viewModels,
+                        id
+                    )
+                }
             }
         }
 
         SearchScreens.forEach { (route, screen) ->
             animatedComposable(route) {
-                screen(
-                    navController,
-                    states,
-                    viewModels
-                )
+                val wsId = states.workspaceState.allWorkspaces.firstOrNull()?.workspaceId ?: ""
+                WorkspaceScaffold(
+                    states = states,
+                    viewModels = viewModels,
+                    navController = navController,
+                    workspaceId = wsId,
+                    showTopBar = true,
+                    showBackButton = true,
+                    showBottomBar = false
+                ) {
+                    screen(
+                        navController,
+                        states,
+                        viewModels
+                    )
+                }
             }
         }
     }
 }
-

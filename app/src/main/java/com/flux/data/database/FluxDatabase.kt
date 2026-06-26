@@ -38,7 +38,7 @@ import java.util.UUID
 
 @Database(
     entities = [EventModel::class, LabelModel::class, EventInstanceModel::class, SettingsModel::class, NotesModel::class, HabitModel::class, HabitInstanceModel::class, WorkspaceModel::class, TodoModel::class, JournalModel::class, ProgressBoardModel::class, TodoInstance::class],
-    version = 10,
+    version = 11,
     exportSchema = false
 )
 @TypeConverters(Converter::class)
@@ -411,5 +411,12 @@ val MIGRATION_9_10 = object : Migration(9, 10) {
     override fun migrate(db: SupportSQLiteDatabase) {
         if (!db.columnExists("SettingsModel", "notesPreviewMode"))
             db.safeExec("ALTER TABLE SettingsModel ADD COLUMN notesPreviewMode INTEGER NOT NULL DEFAULT 1")
+    }
+}
+
+val MIGRATION_10_11 = object : Migration(10, 11) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        if (!db.columnExists("SettingsModel", "defaultWorkspaceId"))
+            db.safeExec("ALTER TABLE SettingsModel ADD COLUMN defaultWorkspaceId TEXT")
     }
 }

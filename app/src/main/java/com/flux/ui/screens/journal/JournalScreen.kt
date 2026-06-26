@@ -93,6 +93,9 @@ fun JournalScreen(
     onRemoveCover: () -> Unit,
     onDeleteWorkspace: () -> Unit,
     onToggleLock: () -> Unit,
+    allWorkspaces: List<WorkspaceModel> = emptyList(),
+    onWorkspaceSelected: (WorkspaceModel) -> Unit = {},
+    onNewWorkspace: () -> Unit = {},
     onEvent: (JournalEvents) -> Unit
 ){
     val workspaceId = workspace.workspaceId
@@ -199,17 +202,15 @@ fun JournalScreen(
         topBar = {
             SpaceTopBar(
                 scrollBehavior = scrollBehavior,
-                title            = workspace.title,
-                description      = workspace.description,
-                cover            = workspace.cover,
-                icon             = workspace.icon,
-                isLocked         = workspace.passKey!=null,
-                onBackPressed    = { navController.popBackStack() },
-                onAddCover       = onAddCover,
-                onRemoveCover    = onRemoveCover,
-                onToggleLock     = onToggleLock,
+                workspace = workspace,
+                allWorkspaces = allWorkspaces,
+                onAddCover = onAddCover,
+                onRemoveCover = onRemoveCover,
+                onEditWorkspace = { navController.navigate(NavRoutes.NewWorkspace.withArgs(workspaceId)) },
                 onDeleteWorkspace = onDeleteWorkspace,
-                onEditWorkspace   = { navController.navigate(NavRoutes.NewWorkspace.withArgs(workspaceId)) }
+                onToggleLock = onToggleLock,
+                onWorkspaceSelected = onWorkspaceSelected,
+                onNewWorkspace = onNewWorkspace
             )
         },
         floatingActionButton = {

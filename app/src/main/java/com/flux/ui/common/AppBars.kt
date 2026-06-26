@@ -332,161 +332,43 @@ fun CompactCard(icon: ImageVector, title: String, onClick: () -> Unit){
 @Composable
 fun SpaceTopBar(
     scrollBehavior: TopAppBarScrollBehavior,
-    title: String,
-    description: String,
-    cover: String,
-    icon: Int,
-    isLocked: Boolean = false,
+    workspace: com.flux.data.model.WorkspaceModel,
+    allWorkspaces: List<com.flux.data.model.WorkspaceModel>,
+    spaceTitle: String = "",
     onAddCover: () -> Unit,
     onRemoveCover: () -> Unit,
     onEditWorkspace: () -> Unit,
-    onBackPressed: () -> Unit,
     onDeleteWorkspace: () -> Unit,
-    onToggleLock: () -> Unit
+    onToggleLock: () -> Unit,
+    onWorkspaceSelected: (com.flux.data.model.WorkspaceModel) -> Unit,
+    onNewWorkspace: () -> Unit,
 ) {
-    val hasCover = cover.isNotBlank()
-    val hasDescription = description.isNotBlank()
-    val density = LocalDensity.current
-
-    val statusBarHeight  = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-    val coverHeightDp    = 180.dp
-    val toolbarContentDp = 48.dp
-    val toolbarHeight    = toolbarContentDp + statusBarHeight
-
-    // Derive title section height purely from typography — no measurement callback needed.
-    // Layout: vertical padding (6dp top + 6dp bottom) + icon/title row + optional (2dp spacer + description row)
-    val titleStyle        = MaterialTheme.typography.titleLarge
-    val bodyStyle         = MaterialTheme.typography.bodyMedium
-    val titleLineHeightDp = with(density) { titleStyle.lineHeight.toDp() }
-    val bodyLineHeightDp  = with(density) { bodyStyle.lineHeight.toDp() }
-    val titleRowDp        = maxOf(24.dp, titleLineHeightDp) // Icon default size is 24.dp
-    val titleSectionHeightDp = 12.dp + titleRowDp + if (hasDescription) 2.dp + bodyLineHeightDp else 0.dp
-
-    val expandedHeightDp = if (hasCover)
-        coverHeightDp + titleSectionHeightDp + statusBarHeight - 24.dp
-    else
-        toolbarHeight + titleSectionHeightDp + 28.dp
-
-    val expandedPx  = with(density) { expandedHeightDp.toPx() }
-    val collapsedPx = with(density) { toolbarHeight.toPx() }
-
-    SideEffect {
-        val limit = collapsedPx - expandedPx
-        if (scrollBehavior.state.heightOffsetLimit != limit) {
-            scrollBehavior.state.heightOffsetLimit = limit
-        }
-    }
-
-    val fraction            = scrollBehavior.state.collapsedFraction
-    val currentHeight       = lerp(expandedHeightDp, toolbarHeight, fraction)
-    val coverAlpha          = (1f - fraction * 1.5f).coerceIn(0f, 1f)
-    val expandedTitleAlpha  = (1f - fraction * 2f).coerceIn(0f, 1f)
-    val collapsedTitleAlpha = ((fraction - 0.5f) * 2f).coerceIn(0f, 1f)
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(currentHeight)
-            .background(MaterialTheme.colorScheme.surfaceContainerLow)
-    ) {
-        // ── Cover + title/description stacked flush ───────────────────
-        Column(Modifier.fillMaxWidth()) {
-            if (hasCover) {
-                AsyncImage(
-                    model = cover,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(lerp(coverHeightDp, 0.dp, fraction))
-                        .alpha(coverAlpha)
-                )
-            } else {
-                Spacer(Modifier.height(toolbarHeight))
-            }
-
-            // Title + description — always visible, fades on scroll
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .alpha(expandedTitleAlpha)
-                    .background(MaterialTheme.colorScheme.surfaceContainerLow)
-                    .padding(horizontal = 12.dp, vertical = 6.dp),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
-            ) {
-                Row(
-                    Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(icons[icon], null)
-                    Text(
-                        text = title,
-                        style = titleStyle,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-                if (hasDescription) {
-                    Text(
-                        text = description,
-                        style = bodyStyle,
-                        fontWeight = FontWeight.ExtraLight,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
-        }
-
-        // ── Toolbar — overlaid, always on top ─────────────────────────
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(toolbarHeight)
-                .padding(top = statusBarHeight, start = 8.dp, end = 8.dp)
-                .align(Alignment.TopStart),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            IconButton(
-                onClick = onBackPressed,
-                colors = IconButtonDefaults.iconButtonColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                    contentColor = MaterialTheme.colorScheme.onSurface
-                )
-            ) { Icon(Icons.AutoMirrored.Default.ArrowBack, null) }
-
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 8.dp)
-                    .alpha(collapsedTitleAlpha)
-            ) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                if (hasDescription) {
-                    Text(
-                        text = description,
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.ExtraLight,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
-
+    CenterAlignedTopAppBar(
+        scrollBehavior = scrollBehavior,
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+        ),
+        title = {
+            Text(
+                text = spaceTitle.ifEmpty { workspace.title },
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        },
+        navigationIcon = {
+            WorkspaceDropdownTrigger(
+                currentWorkspace = workspace,
+                allWorkspaces = allWorkspaces,
+                onWorkspaceSelected = onWorkspaceSelected,
+                onNewWorkspace = onNewWorkspace
+            )
+        },
+        actions = {
             WorkspaceMore(
-                isCoverAdded = hasCover,
-                isLocked = isLocked,
+                isCoverAdded = workspace.cover.isNotBlank(),
+                isLocked = workspace.passKey != null,
                 onDelete = onDeleteWorkspace,
                 onEditDetails = onEditWorkspace,
                 onRemoveCover = onRemoveCover,
@@ -494,7 +376,7 @@ fun SpaceTopBar(
                 onToggleLock = onToggleLock
             )
         }
-    }
+    )
 }
 
 sealed class Destination(
@@ -509,7 +391,7 @@ sealed class Destination(
 }
 
 @Composable
-fun BottomBar(modifier: Modifier, navController: NavController) {
+fun BottomBar(modifier: Modifier, navController: NavController, currentWorkspaceId: String = "") {
     val screens = listOf(Destination.Home, Destination.Search, Destination.Settings)
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
@@ -530,7 +412,8 @@ fun BottomBar(modifier: Modifier, navController: NavController) {
                 BottomBarCard(
                     screen = screen,
                     currentDestination = currentDestination,
-                    navController = navController
+                    navController = navController,
+                    currentWorkspaceId = currentWorkspaceId
                 )
             }
         }
@@ -549,7 +432,8 @@ fun BottomBar(modifier: Modifier, navController: NavController) {
 fun BottomBarCard(
     screen: Destination,
     currentDestination: NavDestination?,
-    navController: NavController
+    navController: NavController,
+    currentWorkspaceId: String = ""
 ){
     val selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true
 
@@ -558,7 +442,18 @@ fun BottomBarCard(
 
     Card(
         modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp),
-        onClick = { if (currentDestination?.route != screen.route) { navController.navigate(screen.route) } },
+        onClick = {
+            if (currentDestination?.route != screen.route) {
+                val route = if (screen.route == NavRoutes.Workspace.route && currentWorkspaceId.isNotBlank()) {
+                    NavRoutes.WorkspaceHome.withArgs(currentWorkspaceId)
+                } else {
+                    screen.route
+                }
+                navController.navigate(route) {
+                    launchSingleTop = true
+                }
+            }
+        },
         colors = CardDefaults.cardColors(
             containerColor = containerColor,
             contentColor = contentColor

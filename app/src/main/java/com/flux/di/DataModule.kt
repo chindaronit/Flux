@@ -25,6 +25,7 @@ import com.flux.data.database.MIGRATION_6_7
 import com.flux.data.database.MIGRATION_7_8
 import com.flux.data.database.MIGRATION_8_9
 import com.flux.data.database.MIGRATION_9_10
+import com.flux.data.database.MIGRATION_10_11
 import com.flux.other.BackupManager
 import dagger.Module
 import dagger.Provides
@@ -53,7 +54,8 @@ object DataModule {
             MIGRATION_6_7,
             MIGRATION_7_8,
             MIGRATION_8_9,
-            MIGRATION_9_10
+            MIGRATION_9_10,
+            MIGRATION_10_11
         )
         .build()
 

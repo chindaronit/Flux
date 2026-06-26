@@ -219,6 +219,17 @@ UI (Composable) → ViewModel (state + effects) → Repository → DAO → Room 
 - Data flows one way: DB → DAO → Repository → ViewModel → UI
 - UI events flow: User action → ViewModel event → Repository → DAO
 
+### Workspace Layout (Global Top Bar)
+
+There is **no separate workspace selection screen**. Instead:
+- On app launch, the last-opened workspace opens directly (auto-saved to `SettingsModel.defaultWorkspaceId`).
+- A **global workspace dropdown** is available on all pages:
+  - **Workspace detail screens** (Notes, Todo, Events, etc.): `SpaceTopBar` shows workspace dropdown + actions.
+  - **Settings & Search**: `WorkspaceDropdownTopBar` (from `WorkspaceScaffold`) provides the dropdown.
+- Switching workspaces via dropdown navigates to `WorkspaceHome/{newId}`.
+- The bottom bar has Home (↔ workspace detail), Search, and Settings.
+- The old workspace selection grid (`WorkspaceHomeScreen`) still exists as fallback but auto-redirects to the last/default workspace.
+
 ---
 
 ## Build & Run

@@ -76,6 +76,9 @@ fun EventScreen(
     onDeleteWorkspace: () -> Unit,
     onToggleLock: () -> Unit,
     onSettingEvents: (SettingEvents) -> Unit,
+    allWorkspaces: List<WorkspaceModel> = emptyList(),
+    onWorkspaceSelected: (WorkspaceModel) -> Unit = {},
+    onNewWorkspace: () -> Unit = {},
     onEvent: (TaskEvents) -> Unit
 ){
     val context = LocalContext.current
@@ -118,18 +121,16 @@ fun EventScreen(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         topBar = {
             SpaceTopBar(
-                scrollBehavior   = scrollBehavior,
-                title            = workspace.title,
-                description      = workspace.description,
-                cover            = workspace.cover,
-                icon             = workspace.icon,
-                isLocked         = workspace.passKey!=null,
-                onBackPressed    = { navController.popBackStack() },
-                onAddCover       = onAddCover,
-                onRemoveCover    = onRemoveCover,
-                onToggleLock     = onToggleLock,
+                scrollBehavior = scrollBehavior,
+                workspace = workspace,
+                allWorkspaces = allWorkspaces,
+                onAddCover = onAddCover,
+                onRemoveCover = onRemoveCover,
+                onEditWorkspace = { navController.navigate(NavRoutes.NewWorkspace.withArgs(workspaceId)) },
                 onDeleteWorkspace = onDeleteWorkspace,
-                onEditWorkspace   = { navController.navigate(NavRoutes.NewWorkspace.withArgs(workspaceId)) }
+                onToggleLock = onToggleLock,
+                onWorkspaceSelected = onWorkspaceSelected,
+                onNewWorkspace = onNewWorkspace
             )
         },
         floatingActionButton = {

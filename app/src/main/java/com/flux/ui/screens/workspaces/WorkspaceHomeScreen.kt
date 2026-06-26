@@ -14,14 +14,12 @@ import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Workspaces
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -34,16 +32,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.flux.R
 import com.flux.data.model.WorkspaceModel
 import com.flux.navigation.NavRoutes
 import com.flux.ui.events.WorkspaceEvents
-import com.flux.R
-import com.flux.ui.common.BottomBar
-import com.flux.ui.common.SelectedToolBarRow
 import com.flux.ui.state.States
 import com.flux.ui.viewModel.ViewModels
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WorkspaceHomeScreen(
     snackbarHostState: SnackbarHostState,
@@ -58,6 +53,24 @@ fun WorkspaceHomeScreen(
     val wrongPassKeyLabel = stringResource(R.string.Wrong_Passkey)
     val selectedWorkspace = remember { mutableStateListOf<WorkspaceModel>() }
     var lockedWorkspace by remember { mutableStateOf<WorkspaceModel?>(null) }
+
+    // Auto-navigate to default workspace if set
+    val defaultWsId = states.settings.data.defaultWorkspaceId
+    LaunchedEffect(defaultWsId, allSpaces) {
+        if (defaultWsId != null) {
+            val ws = allSpaces.find { it.workspaceId == defaultWsId }
+            if (ws != null) {
+                if (ws.passKey != null) {
+                    lockedWorkspace = ws
+                } else {
+                    navController.navigate(NavRoutes.WorkspaceHome.withArgs(ws.workspaceId)) {
+                        popUpTo(NavRoutes.Workspace.route) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
+            }
+        }
+    }
 
     lockedWorkspace?.let {
         SetPasskeyDialog(onConfirmRequest = { passkey ->
@@ -76,134 +89,98 @@ fun WorkspaceHomeScreen(
         }
     }
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-        topBar = {
-            if (selectedWorkspace.isNotEmpty()) {
-                Box(Modifier.padding(top = 42.dp)){
-                    SelectedToolBarRow (
-                        false,
-                        selectedWorkspace.size,
-                        selectedWorkspace.containsAll(allSpaces),
-                        selectedWorkspace.all { it.isPinned },
-                        onTogglePin = { viewModels.workspaceViewModel.onEvent(WorkspaceEvents.UpsertSpaces(selectedWorkspace.toList())) },
-                        onToggleSelection = {
-                            if (selectedWorkspace.containsAll(allSpaces)){ selectedWorkspace.clear() }
-                            else {
-                                selectedWorkspace.clear()
-                                selectedWorkspace.addAll(allSpaces)
-                            }
-                        },
-                        onClear = { selectedWorkspace.clear() }
-                    )
-                }
-            }
-        },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { innerPadding ->
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .padding(innerPadding)) {
-
-            if (allSpaces.isEmpty()) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(top = 24.dp),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Workspaces,
-                        contentDescription = null,
-                        modifier = Modifier.size(48.dp)
-                    )
-                    Text(stringResource(R.string.Empty_Workspace))
-                }
-            }
-
-            val vSpacing = when (gridColumns) {
-                1 -> 12.dp
-                2 -> 16.dp
-                else -> 10.dp
-            }
-            LazyVerticalStaggeredGrid(
-                columns = StaggeredGridCells.Fixed(gridColumns),
+    Box(modifier = Modifier.fillMaxSize()) {
+        if (allSpaces.isEmpty()) {
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(1.dp),
-                verticalItemSpacing = vSpacing,
-                contentPadding = PaddingValues(
-                    top = 16.dp,
-                    bottom = 64.dp
-                )
+                    .padding(top = 24.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                Icon(
+                    imageVector = Icons.Default.Workspaces,
+                    contentDescription = null,
+                    modifier = Modifier.size(48.dp)
+                )
+                Text(stringResource(R.string.Empty_Workspace))
+            }
+        }
 
-                if (allSpaces.any { it.isPinned }) {
-                    item(span = StaggeredGridItemSpan.FullLine) {
-                        Text(
-                            stringResource(R.string.Pinned),
-                            color = MaterialTheme.colorScheme.primary,
-                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
-                            modifier = Modifier.padding(vertical = 8.dp)
-                        )
-                    }
-                }
-
-                items(allSpaces.filter { it.isPinned }) { space ->
-                    WorkspaceCard(
-                        gridColumns = gridColumns,
-                        iconIndex = space.icon,
-                        radius = radius,
-                        isLocked = space.passKey != null,
-                        cover = space.cover,
-                        title = space.title,
-                        description = space.description,
-                        isSelected = selectedWorkspace.contains(space),
-                        onClick = { handleWorkspaceClick(space) },
-                        onLongPressed = {
-                            if (selectedWorkspace.contains(space)) selectedWorkspace.remove(space)
-                            else selectedWorkspace.add(space)
-                        }
-                    )
-                }
-
-                if (allSpaces.any { it.isPinned }) {
-                    item(span = StaggeredGridItemSpan.FullLine) {
-                        Text(
-                            stringResource(R.string.Others),
-                            modifier = Modifier.padding(vertical = 8.dp),
-                            color = MaterialTheme.colorScheme.primary,
-                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold)
-                        )
-                    }
-                }
-
-                items(allSpaces.filter { !it.isPinned }) { space ->
-                    WorkspaceCard(
-                        gridColumns = gridColumns,
-                        iconIndex = space.icon,
-                        radius = radius,
-                        isLocked = space.passKey != null,
-                        cover = space.cover,
-                        title = space.title,
-                        description = space.description,
-                        isSelected = selectedWorkspace.contains(space),
-                        onClick = { handleWorkspaceClick(space) },
-                        onLongPressed = {
-                            if (selectedWorkspace.contains(space)) selectedWorkspace.remove(space)
-                            else selectedWorkspace.add(space)
-                        }
+        val vSpacing = when (gridColumns) {
+            1 -> 12.dp
+            2 -> 16.dp
+            else -> 10.dp
+        }
+        LazyVerticalStaggeredGrid(
+            columns = StaggeredGridCells.Fixed(gridColumns),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(1.dp),
+            verticalItemSpacing = vSpacing,
+            contentPadding = PaddingValues(
+                top = 16.dp,
+                bottom = 64.dp
+            )
+        ) {
+            if (allSpaces.any { it.isPinned }) {
+                item(span = StaggeredGridItemSpan.FullLine) {
+                    Text(
+                        stringResource(R.string.Pinned),
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
+                        modifier = Modifier.padding(vertical = 8.dp)
                     )
                 }
             }
-            BottomBar(
-                navController = navController,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 16.dp)
-            )
+
+            items(allSpaces.filter { it.isPinned }) { space ->
+                WorkspaceCard(
+                    gridColumns = gridColumns,
+                    iconIndex = space.icon,
+                    radius = radius,
+                    isLocked = space.passKey != null,
+                    cover = space.cover,
+                    title = space.title,
+                    description = space.description,
+                    isSelected = selectedWorkspace.contains(space),
+                    onClick = { handleWorkspaceClick(space) },
+                    onLongPressed = {
+                        if (selectedWorkspace.contains(space)) selectedWorkspace.remove(space)
+                        else selectedWorkspace.add(space)
+                    }
+                )
+            }
+
+            if (allSpaces.any { it.isPinned }) {
+                item(span = StaggeredGridItemSpan.FullLine) {
+                    Text(
+                        stringResource(R.string.Others),
+                        modifier = Modifier.padding(vertical = 8.dp),
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold)
+                    )
+                }
+            }
+
+            items(allSpaces.filter { !it.isPinned }) { space ->
+                WorkspaceCard(
+                    gridColumns = gridColumns,
+                    iconIndex = space.icon,
+                    radius = radius,
+                    isLocked = space.passKey != null,
+                    cover = space.cover,
+                    title = space.title,
+                    description = space.description,
+                    isSelected = selectedWorkspace.contains(space),
+                    onClick = { handleWorkspaceClick(space) },
+                    onLongPressed = {
+                        if (selectedWorkspace.contains(space)) selectedWorkspace.remove(space)
+                        else selectedWorkspace.add(space)
+                    }
+                )
+            }
         }
     }
 }

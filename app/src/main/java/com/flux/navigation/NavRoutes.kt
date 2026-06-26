@@ -206,8 +206,13 @@ val JournalScreens =
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 val SettingsScreens =
     mapOf<String, @Composable (navController: NavController, snackbarHostState: SnackbarHostState, states: States, viewModels: ViewModels) -> Unit>(
-        NavRoutes.Settings.route to { navController, _, states, _ ->
-            Settings(navController, states.settings)
+        NavRoutes.Settings.route to { navController, _, states, viewModels ->
+            Settings(
+                navController = navController,
+                settings = states.settings,
+                onSettingsEvent = viewModels.settingsViewModel::onEvent,
+                workspaces = states.workspaceState.allWorkspaces
+            )
         },
         NavRoutes.Privacy.route to { navController, _, states, viewModels ->
             Privacy(navController, states.settings, viewModels.settingsViewModel::onEvent)

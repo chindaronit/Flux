@@ -25,6 +25,7 @@ import androidx.navigation.NavController
 import com.flux.R
 import com.flux.data.model.WorkspaceModel
 import com.flux.navigation.NavRoutes
+import com.flux.data.model.WorkspaceModel
 import com.flux.ui.common.SpaceTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -32,11 +33,14 @@ import com.flux.ui.common.SpaceTopBar
 fun EmptyWorkspace(
     navController: NavController,
     workspace: WorkspaceModel,
+    allWorkspaces: List<WorkspaceModel> = emptyList(),
     onShowSpaceBottomSheet: () -> Unit,
     onAddCover: () -> Unit,
     onRemoveCover: () -> Unit,
     onDeleteWorkspace: () -> Unit,
     onToggleLock: () -> Unit,
+    onWorkspaceSelected: (WorkspaceModel) -> Unit = {},
+    onNewWorkspace: () -> Unit = {},
 ){
     val workspaceId = workspace.workspaceId
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
@@ -45,18 +49,16 @@ fun EmptyWorkspace(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         topBar = {
             SpaceTopBar(
-                scrollBehavior   = scrollBehavior,
-                title            = workspace.title,
-                description      = workspace.description,
-                cover            = workspace.cover,
-                icon             = workspace.icon,
-                isLocked = workspace.passKey!=null,
-                onBackPressed = { navController.popBackStack() },
+                scrollBehavior = scrollBehavior,
+                workspace = workspace,
+                allWorkspaces = allWorkspaces,
                 onAddCover = onAddCover,
                 onRemoveCover = onRemoveCover,
-                onToggleLock = onToggleLock,
+                onEditWorkspace = { navController.navigate(NavRoutes.NewWorkspace.withArgs(workspaceId)) },
                 onDeleteWorkspace = onDeleteWorkspace,
-                onEditWorkspace = { navController.navigate(NavRoutes.NewWorkspace.withArgs(workspaceId)) }
+                onToggleLock = onToggleLock,
+                onWorkspaceSelected = onWorkspaceSelected,
+                onNewWorkspace = onNewWorkspace
             )
         }
     ) { innerPadding ->

@@ -9,6 +9,7 @@ import androidx.annotation.RequiresApi
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -20,15 +21,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import com.flux.data.model.WorkspaceModel
 import com.flux.data.model.getSpacesList
+import com.flux.navigation.NavRoutes
 import com.flux.other.ensureStorageRoot
 import com.flux.ui.common.DeleteAlert
 import com.flux.ui.events.HabitEvents
 import com.flux.ui.events.JournalEvents
 import com.flux.ui.events.NotesEvents
+import com.flux.ui.events.ProgressBoardEvents
+import com.flux.ui.events.SettingEvents
 import com.flux.ui.events.TaskEvents
 import com.flux.ui.events.TodoEvents
 import com.flux.ui.events.WorkspaceEvents
-import com.flux.ui.events.ProgressBoardEvents
 import com.flux.ui.screens.analytics.AnalyticScreen
 import com.flux.ui.screens.events.EventScreen
 import com.flux.ui.screens.habits.HabitScreen
@@ -71,10 +74,20 @@ fun WorkspaceDetails(
             viewModels.settingsViewModel.saveRootUri(uri)
         }
 
+    // Save this workspace as last opened
+    LaunchedEffect(workspaceId) {
+        viewModels.settingsViewModel.onEvent(
+            SettingEvents.UpdateSettings(
+                states.settings.data.copy(defaultWorkspaceId = workspaceId)
+            )
+        )
+    }
+
     SpaceMapper(
         navController = navController,
         workspace = workspace,
         spaceId = selectedSpaceId.intValue,
+        allWorkspaces = states.workspaceState.allWorkspaces,
         states = states,
         viewModels = viewModels,
         onAddCover = {
@@ -94,6 +107,17 @@ fun WorkspaceDetails(
         },
         onSpaceChange = { selectedSpaceId.intValue = it },
         onShowSpaceBottomSheet = { showBottomSheet = true },
+        onWorkspaceSelected = { ws ->
+            if (ws.workspaceId != workspace.workspaceId) {
+                navController.navigate(NavRoutes.WorkspaceHome.withArgs(ws.workspaceId)) {
+                    popUpTo(NavRoutes.WorkspaceHome.route) { inclusive = true }
+                    launchSingleTop = true
+                }
+            }
+        },
+        onNewWorkspace = {
+            navController.navigate(NavRoutes.NewWorkspace.withArgs(""))
+        }
     )
 
     if (isPasskeyDialogVisible) {
@@ -176,6 +200,7 @@ fun SpaceMapper(
     navController: NavController,
     workspace: WorkspaceModel,
     spaceId: Int,
+    allWorkspaces: List<WorkspaceModel>,
     states: States,
     viewModels: ViewModels,
     onAddCover: () -> Unit,
@@ -184,6 +209,8 @@ fun SpaceMapper(
     onToggleLock: () -> Unit,
     onSpaceChange: (Int) -> Unit,
     onShowSpaceBottomSheet: () -> Unit,
+    onWorkspaceSelected: (WorkspaceModel) -> Unit = {},
+    onNewWorkspace: () -> Unit = {},
 ) {
     when (spaceId) {
         1 -> NotesScreen(
@@ -192,6 +219,7 @@ fun SpaceMapper(
             states.labelState.allLabels.filter { it.workspaceId==workspace.workspaceId },
             states.settings,
             workspace,
+            allWorkspaces,
             onShowSpaceBottomSheet,
             onSpaceChange,
             onAddCover,
@@ -199,7 +227,9 @@ fun SpaceMapper(
             onDeleteWorkspace,
             onToggleLock,
             viewModels.notesViewModel::onEvent,
-            viewModels.settingsViewModel::onEvent
+            viewModels.settingsViewModel::onEvent,
+            onWorkspaceSelected,
+            onNewWorkspace
         )
 
         2 -> TodoScreen(
@@ -207,13 +237,16 @@ fun SpaceMapper(
             states.todoState,
             states.settings,
             workspace,
+            allWorkspaces,
             onShowSpaceBottomSheet,
             onSpaceChange,
             onAddCover,
             onRemoveCover,
             onDeleteWorkspace,
             onToggleLock,
-            viewModels.todoViewModel::onEvent
+            viewModels.todoViewModel::onEvent,
+            onWorkspaceSelected,
+            onNewWorkspace
         )
 
         3 -> EventScreen(
@@ -221,6 +254,7 @@ fun SpaceMapper(
             states.eventState,
             states.settings,
             workspace,
+            allWorkspaces,
             onShowSpaceBottomSheet,
             onSpaceChange,
             onAddCover,
@@ -228,7 +262,9 @@ fun SpaceMapper(
             onDeleteWorkspace,
             onToggleLock,
             viewModels.settingsViewModel::onEvent,
-            viewModels.eventViewModel::onEvent
+            viewModels.eventViewModel::onEvent,
+            onWorkspaceSelected,
+            onNewWorkspace
         )
 
         4 -> JournalScreen(
@@ -236,6 +272,7 @@ fun SpaceMapper(
             states.journalState,
             states.settings,
             workspace,
+            allWorkspaces,
             states.labelState.allLabels.filter { it.workspaceId==workspace.workspaceId },
             onShowSpaceBottomSheet,
             onSpaceChange,
@@ -243,7 +280,9 @@ fun SpaceMapper(
             onRemoveCover,
             onDeleteWorkspace,
             onToggleLock,
-            viewModels.journalViewModel::onEvent
+            viewModels.journalViewModel::onEvent,
+            onWorkspaceSelected,
+            onNewWorkspace
         )
 
         5 -> HabitScreen(
@@ -251,26 +290,32 @@ fun SpaceMapper(
             states.habitState,
             states.settings,
             workspace,
+            allWorkspaces,
             onShowSpaceBottomSheet,
             onSpaceChange,
             onAddCover,
             onRemoveCover,
             onDeleteWorkspace,
             onToggleLock,
-            viewModels.habitViewModel::onEvent
+            viewModels.habitViewModel::onEvent,
+            onWorkspaceSelected,
+            onNewWorkspace
         )
 
         6 -> AnalyticScreen(
             navController,
             states,
             workspace,
+            allWorkspaces,
             workspace.selectedSpaces,
             onShowSpaceBottomSheet,
             onSpaceChange,
             onAddCover,
             onRemoveCover,
             onDeleteWorkspace,
-            onToggleLock
+            onToggleLock,
+            onWorkspaceSelected,
+            onNewWorkspace
         )
 
         7 -> ProgressTrackerScreen(
@@ -278,24 +323,30 @@ fun SpaceMapper(
             states.progressBoardState,
             states.settings,
             workspace,
+            allWorkspaces,
             onShowSpaceBottomSheet,
             onSpaceChange,
             onAddCover,
             onRemoveCover,
             onDeleteWorkspace,
             onToggleLock,
-            viewModels.progressBoardViewModel::onEvent
+            viewModels.progressBoardViewModel::onEvent,
+            onWorkspaceSelected,
+            onNewWorkspace
         )
 
         else -> {
             EmptyWorkspace(
                 navController,
                 workspace,
+                allWorkspaces,
                 onShowSpaceBottomSheet,
                 onAddCover,
                 onRemoveCover,
                 onDeleteWorkspace,
-                onToggleLock
+                onToggleLock,
+                onWorkspaceSelected,
+                onNewWorkspace
             )
         }
     }

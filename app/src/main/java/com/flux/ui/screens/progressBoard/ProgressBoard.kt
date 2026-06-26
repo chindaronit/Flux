@@ -61,6 +61,9 @@ fun ProgressTrackerScreen(
     onRemoveCover: () -> Unit,
     onDeleteWorkspace: () -> Unit,
     onToggleLock: () -> Unit,
+    allWorkspaces: List<WorkspaceModel> = emptyList(),
+    onWorkspaceSelected: (WorkspaceModel) -> Unit = {},
+    onNewWorkspace: () -> Unit = {},
     onEvent: (ProgressBoardEvents) -> Unit
 ){
     val workspaceId = workspace.workspaceId
@@ -88,17 +91,15 @@ fun ProgressTrackerScreen(
         topBar = {
             SpaceTopBar(
                 scrollBehavior = scrollBehavior,
-                title            = workspace.title,
-                description      = workspace.description,
-                cover            = workspace.cover,
-                icon             = workspace.icon,
-                isLocked = workspace.passKey!=null,
-                onBackPressed = { navController.popBackStack() },
+                workspace = workspace,
+                allWorkspaces = allWorkspaces,
                 onAddCover = onAddCover,
                 onRemoveCover = onRemoveCover,
-                onToggleLock = onToggleLock,
+                onEditWorkspace = { navController.navigate(NavRoutes.NewWorkspace.withArgs(workspaceId)) },
                 onDeleteWorkspace = onDeleteWorkspace,
-                onEditWorkspace = { navController.navigate(NavRoutes.NewWorkspace.withArgs(workspaceId)) }
+                onToggleLock = onToggleLock,
+                onWorkspaceSelected = onWorkspaceSelected,
+                onNewWorkspace = onNewWorkspace
             )
         },
         floatingActionButton = {

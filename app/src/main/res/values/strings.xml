@@ -520,4 +520,15 @@
     <string name="completed">Completed</string>
     <string name="remaining">Remaining</string>
 
+    <!-- Workspace Top Bar -->
+    <string name="Select_Workspace">Select Workspace</string>
+    <string name="New_Workspace">New Workspace</string>
+    <string name="Workspace">Workspace</string>
+
+    <!-- Settings - Default Workspace -->
+    <string name="Default_Workspace">Default Workspace</string>
+    <string name="Default_Workspace_desc">Auto-open this workspace on launch</string>
+    <string name="No_Default_Workspace">No default — show workspace list</string>
+
+
 </resources>
