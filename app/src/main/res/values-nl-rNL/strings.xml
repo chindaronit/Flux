@@ -521,4 +521,18 @@
     <string name="off">Uit</string>
     <string name="completed">Voltooid</string>
     <string name="remaining">Resterend</string>
+
+    <string name="habit_achievement">Gewoonteprestatie</string>
+    <string name="consistency">Consistentie</string>
+    <string name="percent">Procent</string>
+    <string name="keep_it_going">Ga zo door!</string>
+    <string name="longest_streak">Langste reeks</string>
+    <string name="personal_best">Persoonlijk record</string>
+    <string name="last_30_days">Afgelopen 30 dagen</string>
+    <string name="tracked_by_flux">Bijgehouden door @Flux</string>
+    <string name="available_on_fdroid_izzyondroid">Beschikbaar op F-Droid, IzzyOnDroid</string>
+    <string name="share_achievement">Prestatie delen</string>
+    <string name="not_scheduled">Niet gepland</string>
+    <string name="missed">Gemist</string>
+    <string name="pick_a_todo">Kies een taak</string>
 </resources>

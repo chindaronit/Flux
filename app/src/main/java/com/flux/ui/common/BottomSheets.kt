@@ -234,7 +234,15 @@ fun RecurrenceBottomSheet(
                                     val isSelected = index in rule.daysOfWeek
 
                                     Card(
-                                        onClick = {},
+                                        onClick = {
+                                            val newDays = rule.daysOfWeek.toMutableList()
+                                            if (index in newDays) {
+                                                newDays.remove(index)
+                                            } else {
+                                                newDays.add(index)
+                                            }
+                                            tempRule = rule.copy(daysOfWeek = newDays)
+                                        },
                                         colors = CardDefaults.cardColors(
                                             containerColor =
                                                 if (isSelected)

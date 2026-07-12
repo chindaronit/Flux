@@ -21,6 +21,9 @@ interface TodoInstanceDao {
     @Query("DELETE FROM TodoInstance WHERE workspaceId = :workspaceId")
     suspend fun deleteAllWorkspaceInstance(workspaceId: String)
 
+    @Query("SELECT * FROM TodoInstance WHERE instanceDate = :date and todoId = :todoId")
+    fun observeInstanceForDate(todoId: String, date: Long): Flow<List<TodoInstance>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertTodoInstance(instance: TodoInstance)
 

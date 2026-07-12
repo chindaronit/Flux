@@ -644,7 +644,8 @@ fun EventDropdownMenu(
 fun HabitDropdownMenu(
     onDelete: () -> Unit,
     onCopyNote: () -> Unit,
-    onCloneNote: () -> Unit
+    onCloneNote: () -> Unit,
+    onShare: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -660,7 +661,7 @@ fun HabitDropdownMenu(
             onDismissRequest = { expanded = false }
         ) {
             DropdownMenuItem(
-                text = { Text("Clone") },
+                text = { Text(stringResource(R.string.clone)) },
                 leadingIcon = { Icon(Icons.Outlined.ControlPointDuplicate, contentDescription = null) },
                 onClick = {
                     expanded = false
@@ -669,11 +670,20 @@ fun HabitDropdownMenu(
             )
             HorizontalDivider()
             DropdownMenuItem(
-                text = { Text("Copy") },
+                text = { Text(stringResource(R.string.copy)) },
                 leadingIcon = { Icon(Icons.Outlined.ContentCopy, contentDescription = null) },
                 onClick = {
                     expanded = false
                     onCopyNote()
+                }
+            )
+            HorizontalDivider()
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.share)) },
+                leadingIcon = { Icon(Icons.Outlined.Share, contentDescription = null) },
+                onClick = {
+                    expanded = false
+                    onShare()
                 }
             )
             HorizontalDivider()

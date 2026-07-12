@@ -19,10 +19,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -43,7 +39,7 @@ class HabitViewModel @Inject constructor(private val repository: HabitRepository
         mutex.withLock { _state.value = reducer(_state.value) }
     }
 
-    private suspend fun reduce(event: HabitEvents) {
+    private fun reduce(event: HabitEvents) {
         when (event) {
             is HabitEvents.DeleteHabit -> deleteHabit(event.habit, event.context)
             is HabitEvents.UpsertHabit -> upsertHabit(event.context, event.habit)

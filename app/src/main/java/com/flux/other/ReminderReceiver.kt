@@ -142,9 +142,9 @@ object NotificationDispatcher {
             .setContentTitle(request.title)
             .setContentText(request.description)
             .setSmallIcon(
-                if (isHabit) R.drawable.routine
-                else if(isEvent) R.drawable.calendar_check
-                else  R.drawable.to_do_list
+                if (isHabit) R.drawable.alarm
+                else if(isEvent) R.drawable.event
+                else  R.drawable.task
             )
             .setPriority(NotificationCompat.PRIORITY_HIGH)
 

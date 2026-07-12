@@ -14,8 +14,8 @@ android {
         applicationId = "com.flux"
         minSdk = 29
         targetSdk = 37
-        versionCode = 14
-        versionName = "3.1.8"
+        versionCode = 15
+        versionName = "3.1.9"
     }
 
     dependenciesInfo {
@@ -87,6 +87,7 @@ kotlin {
 
 dependencies {
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.glance.appwidget)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.activity.compose)
@@ -103,6 +104,7 @@ dependencies {
     implementation(libs.androidx.compose.adaptive)
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.navigation.common.ktx)
+    implementation(libs.material)
 
     // Hilt
     ksp(libs.hilt.android.compiler)

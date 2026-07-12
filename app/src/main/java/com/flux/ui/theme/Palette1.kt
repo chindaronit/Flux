@@ -8,6 +8,15 @@ val completed = Color(0xFF009B44)
 val failed = Color(0xFFBE0000)
 val pending = Color(0xFFFFD600)
 
+val trophyGold = Color(0xFFF7C32E)
+val orangeAccent = Color(0xFFFF8C32)
+val flameOrange = Color(0xFFFF6B2D)
+val flameYellow = Color(0xFFFFC94A)
+
+
+
+
+
 private val primaryLight = Color(0xFF006A65)
 private val onPrimaryLight = Color(0xFFFFFFFF)
 private val primaryContainerLight = Color(0xFF9DF2EA)

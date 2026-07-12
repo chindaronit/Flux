@@ -47,6 +47,7 @@ fun HabitScaffold(
     onEditClicked: () -> Unit,
     onCopyNote: () -> Unit,
     onCloneNote: () -> Unit,
+    onShare: () -> Unit,
     content: @Composable (PaddingValues) -> Unit
 ) {
     Scaffold(
@@ -68,7 +69,8 @@ fun HabitScaffold(
                     HabitDropdownMenu(
                         onDeleteClicked,
                         onCopyNote,
-                        onCloneNote
+                        onCloneNote,
+                        onShare
                     )
                 }
             )

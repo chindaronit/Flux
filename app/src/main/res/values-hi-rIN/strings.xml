@@ -520,4 +520,19 @@
     <string name="off">बंद</string>
     <string name="completed">पूर्ण</string>
     <string name="remaining">शेष</string>
+
+    <string name="habit_achievement">आदत की उपलब्धि</string>
+    <string name="consistency">निरंतरता</string>
+    <string name="percent">प्रतिशत</string>
+    <string name="keep_it_going">इसी तरह जारी रखें!</string>
+    <string name="longest_streak">सबसे लंबी श्रृंखला</string>
+    <string name="personal_best">सर्वश्रेष्ठ रिकॉर्ड</string>
+    <string name="last_30_days">पिछले 30 दिन</string>
+    <string name="tracked_by_flux">\@Flux द्वारा ट्रैक किया गया</string>
+    <string name="available_on_fdroid_izzyondroid">F-Droid, IzzyOnDroid पर उपलब्ध</string>
+    <string name="share_achievement">उपलब्धि साझा करें</string>
+    <string name="not_scheduled">निर्धारित नहीं</string>
+    <string name="missed">छूट गया</string>
+    <string name="pick_a_todo">एक टूडू चुनें</string>
+
 </resources>

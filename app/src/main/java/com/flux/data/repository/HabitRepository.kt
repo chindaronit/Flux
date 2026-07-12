@@ -2,6 +2,7 @@ package com.flux.data.repository
 
 import com.flux.data.model.HabitInstanceModel
 import com.flux.data.model.HabitModel
+import com.flux.data.model.HabitWithStatus
 import kotlinx.coroutines.flow.Flow
 
 interface HabitRepository {
@@ -12,6 +13,9 @@ interface HabitRepository {
     suspend fun deleteInstance(habitInstance: HabitInstanceModel)
     suspend fun upsertHabitInstance(habitInstance: HabitInstanceModel)
     suspend fun loadAllHabits(): List<HabitModel>
+    suspend fun loadAllHabitsInstances(): List<HabitInstanceModel>
+    suspend fun toggleHabit(habit: HabitModel, currentlyCompleted: Boolean)
+    fun observeTodayHabitStatuses(): Flow<List<HabitWithStatus>>
     fun loadHabitData(): Flow<List<HabitModel>>
     fun loadHabitInstanceData(): Flow<List<HabitInstanceModel>>
 }

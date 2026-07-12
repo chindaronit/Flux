@@ -520,4 +520,18 @@
     <string name="completed">Completed</string>
     <string name="remaining">Remaining</string>
 
+    <string name="habit_achievement">Habit Achievement</string>
+    <string name="consistency">Consistency</string>
+    <string name="percent">Percent</string>
+    <string name="keep_it_going">Keep it going!</string>
+    <string name="longest_streak">Longest Streak</string>
+    <string name="personal_best">Personal Best</string>
+    <string name="last_30_days">Last 30 Days</string>
+    <string name="tracked_by_flux">Tracked By @Flux</string>
+    <string name="available_on_fdroid_izzyondroid">Available on F-Droid, IzzyOnDroid</string>
+    <string name="share_achievement">Share Achievement</string>
+    <string name="not_scheduled">Not Scheduled</string>
+    <string name="missed">Missed</string>
+    <string name="pick_a_todo">Pick a Todo</string>
+
 </resources>

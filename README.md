@@ -16,6 +16,8 @@
 
 [<img src=".github/get-github.png" alt="Get it on GitHub" height="55">](https://github.com/chindaronit/Flux/releases/)
 [<img src=".github/get_f_droid.png" alt="Get it on f-droid" height="55">](https://f-droid.org/packages/com.flux/)
+[<img src=".github/IzzyOnDroid.png" alt="Get it on IzzyOnDroid" height="55">](https://apt.izzysoft.de/fdroid/index/apk/com.flux)
+
 
 ---
 
@@ -72,23 +74,7 @@ English, Hindi, French, Portugal (Brazil), Russian, German, Spanish, Dutch, Chin
 ## 🛠️ Architecture
 
 - **MVI**: Model View ViewModel
-
-## 📚 Libraries and Frameworks
-
-- 🎨 Modern Material You Interface — Material 3 design language, clean and intuitive UX.
-- 🗂️ Customizable Workspaces — templates for notes, tasks, journals, habits, and events.
-- 📝 Powerful Markdown Editor — tables, code blocks, LaTeX equations, Mermaid diagrams, and advanced formatting.
-- 📋 Comprehensive Task Management — recurring tasks, reminders, progress tracking, and completion analytics.
-- 📔 Notes & Journaling — capture ideas, daily reflections, and long-form content.
-- 📅 Calendar & Event Planning — manage schedules, deadlines, and important dates.
-- 📊 Habit Tracking & Insights — statistics and visual progress analytics.
-- 🖼️ Media Support — attach and organize images alongside your content.
-- 🔐 Privacy-First Design — biometric app lock and screen protection.
-- ✈️ Offline-First Architecture — fast, reliable access without requiring an internet connection.
-- ⚙️ Personalized Experience — theme customization and flexible workspace organization.
-- 🔓 Open Source — licensed under GPL-3.0, with active development and regular updates.
-- 🤖 Built with Jetpack Compose — smooth, modern, native Android experience.
-
+- 
 ## 📦 Installation
 
 To build and run this application, you need to install the latest version of Android Studio. Then,

@@ -22,6 +22,9 @@ interface HabitInstanceDao {
     @Query("SELECT * FROM HabitInstanceModel WHERE habitId = :habitId AND instanceDate = :date LIMIT 1")
     suspend fun getHabitInstance(habitId: String, date: Long): HabitInstanceModel?
 
+    @Query("SELECT * FROM HabitInstanceModel WHERE instanceDate = :date")
+    fun loadInstancesForDate(date: Long): Flow<List<HabitInstanceModel>>
+
     @Delete
     suspend fun deleteInstance(habitInstance: HabitInstanceModel)
 

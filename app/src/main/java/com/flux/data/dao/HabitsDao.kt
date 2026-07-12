@@ -22,6 +22,18 @@ interface HabitsDao {
     @Query("DELETE FROM HabitModel WHERE workspaceId = :workspaceId")
     suspend fun deleteAllWorkspaceHabit(workspaceId: String)
 
+    @Query("""
+        SELECT * FROM HabitModel
+        WHERE workspaceId IN (:workspaceIds)
+        AND (endDateTime = -1 OR endDateTime > :todayEpoch)
+        AND startDateTime <= :todayEndMillis
+    """)
+    fun loadCandidateHabits(
+        workspaceIds: List<String>,
+        todayEpoch: Long,
+        todayEndMillis: Long,
+    ): Flow<List<HabitModel>>
+
     @Query("SELECT * FROM HabitModel")
     fun loadHabitData(): Flow<List<HabitModel>>
 

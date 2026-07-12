@@ -1,0 +1,8 @@
+feat:
+1. Share achievement in habits
+2. Widgets in habits and todo list.
+
+fix:
+1. weekly option selection bug.
+
+closes #104 #105

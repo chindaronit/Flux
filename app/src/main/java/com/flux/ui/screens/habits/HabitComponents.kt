@@ -1,7 +1,6 @@
 package com.flux.ui.screens.habits
 
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -114,18 +113,29 @@ import java.time.format.TextStyle
 import kotlin.collections.filter
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.layer.drawLayer
+import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import com.flux.data.model.isCounted
@@ -137,6 +147,17 @@ import com.flux.ui.common.SelectionType
 import com.flux.ui.screens.settings.CircleWrapper
 import com.flux.ui.screens.settings.shapeManager
 import androidx.compose.ui.platform.LocalLocale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.Dp
+import com.flux.data.model.HabitAchievementStats
+import com.flux.data.model.isActiveOn
+import com.flux.other.saveBitmapAndGetUri
+import com.flux.other.shareImageUri
+import com.flux.ui.theme.completed
+import com.flux.ui.theme.flameOrange
+import com.flux.ui.theme.trophyGold
+import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 fun toMillis(hours: Int, minutes: Int): Long =
     (hours * 60L * 60_000L) + (minutes * 60_000L)
@@ -2195,4 +2216,636 @@ fun buildFilterCategories(recurrence: RecurrenceRule): List<FilterCategory> {
             type = SelectionType.SINGLE
         )
     )
+}
+
+@Composable
+fun AchievementCard(
+    stats: HabitAchievementStats,
+    habit: HabitModel
+) {
+    Card(
+        modifier = Modifier.padding(8.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp),
+        ),
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
+        Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Row(
+                    verticalAlignment = Alignment.Top,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    CircleWrapper(color = MaterialTheme.colorScheme.primary, size = 0.dp) {
+                        Icon(
+                            painter = painterResource(R.mipmap.ic_launcher_foreground),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(40.dp)
+                        )
+                    }
+
+                    Column(horizontalAlignment = Alignment.Start) {
+                        Text(
+                            "Flux",
+                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            stringResource(R.string.habit_achievement),
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+                }
+                Text(
+                    convertMillisToDate(System.currentTimeMillis()),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(horizontalAlignment = Alignment.Start) {
+                    Text(
+                        stats.habitTitle,
+                        maxLines = 1,
+                        modifier = Modifier.widthIn(max = 280.dp),
+                        overflow = TextOverflow.Ellipsis,
+                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.SemiBold),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    if(stats.habitDescription.isNotBlank()){
+                        Text(
+                            stats.habitDescription,
+                            maxLines = 2,
+                            modifier = Modifier.widthIn(max = 280.dp),
+                            overflow = TextOverflow.Ellipsis,
+                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.ExtraLight)
+                        )
+                    }
+
+                }
+
+                Icon(
+                    painterResource(R.drawable.calendar),
+                    contentDescription = null,
+                    modifier = Modifier.size(48.dp),
+                    tint = Color.Unspecified
+                )
+            }
+            Spacer(Modifier.height(16.dp))
+
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Card(
+                    Modifier.weight(1f),
+                    colors = CardDefaults.cardColors(
+                        MaterialTheme.colorScheme.surfaceColorAtElevation(
+                            12.dp
+                        )
+                    ),
+                    elevation = CardDefaults.cardElevation(4.dp)
+                ) {
+                    Row(Modifier.fillMaxWidth().padding(8.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            painterResource(R.drawable.approved),
+                            contentDescription = null,
+                            modifier = Modifier.size(36.dp),
+                            tint = Color.Unspecified
+                        )
+
+                        Column(
+                            Modifier.weight(1f),
+                            horizontalAlignment = Alignment.Start,
+                            verticalArrangement = Arrangement.Top
+                        ) {
+                            Text(
+                                stringResource(R.string.completion),
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.ExtraLight),
+                                modifier = Modifier.alpha(0.75f)
+                            )
+
+                            Text(
+                                stats.totalCompletions.toString(),
+                                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                                color = completed
+                            )
+                            Text(
+                                stringResource(R.string.days),
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                                color = completed
+                            )
+                        }
+                    }
+                }
+
+                Card(
+                    Modifier.weight(1f),
+                    colors = CardDefaults.cardColors(
+                        MaterialTheme.colorScheme.surfaceColorAtElevation(
+                            12.dp
+                        )
+                    ),
+                    elevation = CardDefaults.cardElevation(4.dp)
+                ) {
+                    Row(Modifier.fillMaxWidth().padding(8.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            painterResource(R.drawable.consistency),
+                            contentDescription = null,
+                            modifier = Modifier.size(36.dp),
+                            tint = Color.Unspecified
+                        )
+
+                        Column(
+                            Modifier.weight(1f),
+                            horizontalAlignment = Alignment.Start,
+                            verticalArrangement = Arrangement.Top
+                        ) {
+                            Text(
+                                stringResource(R.string.consistency),
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.ExtraLight),
+                                modifier = Modifier.alpha(0.75f)
+                            )
+
+                            Text(
+                                "${stats.consistencyPercent} %",
+                                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.primary
+                            )
+
+                            Text(
+                                stringResource(R.string.percent),
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                }
+            }
+
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Card(
+                    Modifier.weight(1f),
+                    colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceColorAtElevation(12.dp)),
+                    elevation = CardDefaults.cardElevation(4.dp)
+                ) {
+                    Row(Modifier.fillMaxWidth().padding(8.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            painterResource(R.drawable.fire),
+                            contentDescription = null,
+                            modifier = Modifier.size(36.dp),
+                            tint = Color.Unspecified
+                        )
+
+                        Column(
+                            Modifier.weight(1f),
+                            horizontalAlignment = Alignment.Start,
+                            verticalArrangement = Arrangement.Top
+                        ) {
+                            Text(
+                                stringResource(R.string.current_streak),
+                                style = MaterialTheme.typography.labelSmall,
+                                modifier = Modifier.alpha(0.75f)
+                            )
+
+                            Text(
+                                stats.currentStreak.toString(),
+                                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                                color = flameOrange
+                            )
+
+                            Text(
+                                stringResource(R.string.keep_it_going),
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                                color = flameOrange
+                            )
+                        }
+                    }
+                }
+
+                Card(
+                    Modifier.weight(1f),
+                    colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceColorAtElevation(12.dp)),
+                    elevation = CardDefaults.cardElevation(4.dp)
+                ) {
+                    Row(Modifier.fillMaxWidth().padding(8.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            painterResource(R.drawable.trophy_star),
+                            contentDescription = null,
+                            tint = Color.Unspecified,
+                            modifier = Modifier.size(36.dp)
+                        )
+
+                        Column(
+                            Modifier.weight(1f),
+                            horizontalAlignment = Alignment.Start,
+                            verticalArrangement = Arrangement.Top
+                        ) {
+                            Text(
+                                stringResource(R.string.longest_streak),
+                                style = MaterialTheme.typography.labelSmall,
+                                modifier = Modifier.alpha(0.75f)
+                            )
+
+                            Text(
+                                stats.longestStreak.toString(),
+                                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                                color = trophyGold
+                            )
+
+                            Text(
+                                stringResource(R.string.personal_best),
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                                modifier = Modifier.alpha(0.75f),
+                                color = trophyGold
+                            )
+                        }
+                    }
+                }
+            }
+
+            Last30DaysHeatMapCard(
+                title = stringResource(R.string.last_30_days),
+                boxSize = 16.dp,
+                habit = habit,
+                heatMap = stats.heatMapData
+            )
+        }
+    }
+}
+
+private fun calculateConsistencyPercent(
+    habit: HabitModel,
+    instances: List<HabitInstanceModel>
+): Int {
+
+    val habitStart = Instant.ofEpochMilli(habit.startDateTime)
+        .atZone(ZoneId.systemDefault())
+        .toLocalDate()
+
+    val today = LocalDate.now()
+
+    val habitEnd = when {
+        habit.endDateTime == -1L -> today
+        else -> {
+            val end = Instant.ofEpochMilli(habit.endDateTime)
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate()
+
+            minOf(end, today)
+        }
+    }
+
+    val instanceMap = instances.associateBy { it.instanceDate }
+
+    var scheduledDays = 0
+    var completedDays = 0
+
+    var date = habitStart
+
+    while (!date.isAfter(habitEnd)) {
+
+        if (habit.recurrence.isActiveOn(date, habitStart)) {
+
+            scheduledDays++
+
+            val instance = instanceMap[date.toEpochDay()]
+
+            if (instance?.isCompleted(habit) == true) {
+                completedDays++
+            }
+        }
+
+        date = date.plusDays(1)
+    }
+
+    return if (scheduledDays == 0) {
+        100
+    } else {
+        ((completedDays * 100f) / scheduledDays).roundToInt()
+    }
+}
+
+fun computeAchievementStats(
+    habit: HabitModel,
+    instances: List<HabitInstanceModel>
+): HabitAchievementStats {
+
+    val totalCompletions = instances.filter { it.isCompleted(habit) }.size
+    val consistencyPercent = calculateConsistencyPercent(habit, instances)
+    val streakData = calculateStreaks(habit.recurrence, habit.startDateTime, habit.habitConfig, instances)
+    val today = LocalDate.now()
+    val rangeStart = today.minusDays(29)
+
+    val heatMapData = instances
+        .asSequence()
+        .filter { LocalDate.ofEpochDay(it.instanceDate) >= rangeStart }
+        .groupBy { LocalDate.ofEpochDay(it.instanceDate) }
+        .mapValues { (_, instancesForDay) ->
+            instancesForDay.count { instance ->
+                instance.isCompleted(habit)
+            }
+        }
+
+    return HabitAchievementStats(
+        habitTitle = habit.title,
+        habitDescription = habit.description,
+        currentStreak = streakData.currentStreak,
+        longestStreak = streakData.bestStreak,
+        consistencyPercent = consistencyPercent,
+        totalCompletions = totalCompletions,
+        heatMapData = heatMapData
+    )
+}
+
+@Composable
+fun ShareCard(
+    content: @Composable (BoxScope.()->Unit)
+){
+    Card(Modifier.fillMaxWidth().padding(4.dp)){
+        Column {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(4.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color(0x857149FD))
+                    .drawBehind {
+                        // Vivid purple (top-left)
+                        drawRect(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    Color(0x4DAC89FC),
+                                    Color(0x77D3C4FD),
+                                    Color.Transparent
+                                ),
+                                center = Offset(size.width * 0.15f, size.height * 0.1f),
+                                radius = size.width * 0.9f
+                            )
+                        )
+
+                        // Hot pink / magenta (right side)
+                        drawRect(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    Color(0x79FF81BD),
+                                    Color(0x72FFC7E2),
+                                    Color.Transparent
+                                ),
+                                center = Offset(size.width * 0.95f, size.height * 0.35f),
+                                radius = size.width * 0.85f
+                            )
+                        )
+
+                        // Electric blue (bottom-left)
+                        drawRect(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    Color(0x83609BFF),
+                                    Color(0x7898C0FF),
+                                    Color.Transparent
+                                ),
+                                center = Offset(size.width * 0.1f, size.height * 0.9f),
+                                radius = size.width * 0.9f
+                            )
+                        )
+
+                        // Warm orange glow (bottom-right) — picks up the yellow tint from your reference
+                        drawRect(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    Color(0x78FAAD2D),
+                                    Color(0x78FFBF6F),
+                                    Color.Transparent
+                                ),
+                                center = Offset(size.width * 0.9f, size.height * 0.95f),
+                                radius = size.width * 0.8f
+                            )
+                        )
+                    },
+                content = content
+            )
+
+            Column(modifier = Modifier.padding(12.dp)) {
+                Text(
+                    stringResource(R.string.tracked_by_flux),
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                    color = MaterialTheme.colorScheme.primary.copy(0.75f)
+                )
+                Text(
+                    stringResource(R.string.available_on_fdroid_izzyondroid),
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.ExtraLight),
+                    color = MaterialTheme.colorScheme.primary.copy(0.75f)
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ShareAchievementSheet(
+    habit: HabitModel,
+    stats: HabitAchievementStats,
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val graphicsLayer = rememberGraphicsLayer()
+
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        LazyColumn (
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            item{
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(stringResource(R.string.share_achievement), style = MaterialTheme.typography.titleLarge)
+                    IconButton(onDismiss) {
+                        Icon(Icons.Default.Close, null)
+                    }
+                }
+                Spacer(Modifier.height(12.dp))
+            }
+            item{
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .drawWithContent {
+                            graphicsLayer.record { this@drawWithContent.drawContent() }
+                            drawLayer(graphicsLayer)
+                        }
+                ) {
+                    ShareCard { AchievementCard(stats, habit) }
+                }
+
+                Spacer(Modifier.height(8.dp))
+            }
+
+            item{
+                FilledTonalButton (
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    onClick = {
+                        scope.launch {
+                            val bitmap = graphicsLayer.toImageBitmap().asAndroidBitmap()
+                            val uri = saveBitmapAndGetUri(context, bitmap)
+                            shareImageUri(context, uri)
+                        }
+                    }
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Icon(Icons.Default.Share, null)
+                        Text(stringResource(R.string.share))
+                    }
+                }
+
+                Spacer(Modifier.height(16.dp))
+            }
+        }
+    }
+}
+
+@Composable
+fun Last30DaysHeatMapCard(
+    title: String,
+    boxSize: Dp = 8.dp,
+    habit: HabitModel,
+    heatMap: Map<LocalDate, Int>
+) {
+    val today = remember { LocalDate.now() }
+
+    val habitStartDate = remember(habit.startDateTime) {
+        Instant.ofEpochMilli(habit.startDateTime)
+            .atZone(ZoneId.systemDefault())
+            .toLocalDate()
+    }
+
+    val habitEndDate = remember(habit.endDateTime) {
+        if (habit.endDateTime == -1L) null
+        else Instant.ofEpochMilli(habit.endDateTime)
+            .atZone(ZoneId.systemDefault())
+            .toLocalDate()
+    }
+
+    val dayColumns = remember(today, heatMap) {
+        (29 downTo 0).map { today.minusDays(it.toLong()) }.chunked(7)
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(12.dp),
+        ),
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                title,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.primary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                dayColumns.forEach { column ->
+                    column.forEach { date ->
+                        val isCompleted = (heatMap[date] ?: 0) > 0
+                        val isWithinRange = date >= habitStartDate &&
+                                (habitEndDate == null || date <= habitEndDate)
+                        val isScheduled = isWithinRange &&
+                                habit.recurrence.isActiveOn(date, habitStartDate)
+
+                        val color = when {
+                            isCompleted -> MaterialTheme.colorScheme.primary
+                            isScheduled -> MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) // active, missed
+                            else -> MaterialTheme.colorScheme.primaryFixedDim.copy(alpha = 0.4f) // not scheduled
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .size(boxSize)
+                                .background(color, RoundedCornerShape(3.dp))
+                        )
+                    }
+                }
+            }
+
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth().padding(top = 6.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(12.dp)
+                            .clip(RoundedCornerShape(50))
+                            .background(MaterialTheme.colorScheme.primary)
+                    )
+                    Text(
+                        stringResource(R.string.completed),
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(4.dp)
+                    )
+                }
+                Spacer(Modifier.width(8.dp))
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(12.dp)
+                            .clip(RoundedCornerShape(50))
+                            .background(MaterialTheme.colorScheme.primaryFixedDim.copy(alpha = 0.4f))
+                    )
+                    Text(
+                        stringResource(R.string.not_scheduled),
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(4.dp)
+                    )
+                }
+                Spacer(Modifier.width(8.dp))
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(12.dp)
+                            .clip(RoundedCornerShape(50))
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
+                    )
+                    Text(
+                        stringResource(R.string.missed),
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(4.dp)
+                    )
+                }
+            }
+        }
+    }
 }

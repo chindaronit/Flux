@@ -13,5 +13,7 @@ class WorkspaceRepositoryImpl @Inject constructor(
     override suspend fun upsertWorkspace(workspace: WorkspaceModel) { return withContext(Dispatchers.IO) { dao.upsertWorkspace(workspace) } }
     override suspend fun upsertWorkspaces(spaces: List<WorkspaceModel>) { return withContext(Dispatchers.IO) { dao.upsertWorkspaces(spaces) } }
     override suspend fun deleteWorkspace(workspace: WorkspaceModel) { return withContext(Dispatchers.IO) { dao.deleteWorkspace(workspace) } }
+    override suspend fun loadData(): List<WorkspaceModel> { return withContext(Dispatchers.IO) { dao.getAll() } }
+    override fun observePublicWorkspaceIds(): Flow<List<String>> { return dao.observePublicWorkspaceIds() }
     override fun loadAllWorkspaces(): Flow<List<WorkspaceModel>> { return dao.loadAllWorkspaces() }
 }

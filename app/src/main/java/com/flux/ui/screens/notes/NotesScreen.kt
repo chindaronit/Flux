@@ -61,7 +61,7 @@ import com.flux.data.model.WorkspaceModel
 import com.flux.navigation.Loader
 import com.flux.navigation.NavRoutes
 import com.flux.ui.common.DeleteAlert
-import com.flux.ui.common.EmptyNotes
+import com.flux.ui.common.EmptyData
 import com.flux.ui.common.SelectedToolBarRow
 import com.flux.ui.common.SpaceSearchBar
 import com.flux.ui.common.SpaceTopBar
@@ -346,7 +346,7 @@ fun NotesScreen(
                                 )
                             }
                         }
-                        if (allNotes.isEmpty()) item(span = StaggeredGridItemSpan.FullLine) { EmptyNotes() }
+                        if (allNotes.isEmpty()) item(span = StaggeredGridItemSpan.FullLine) { EmptyData() }
                         if(showLabels) {
                             item(span = StaggeredGridItemSpan.FullLine) {
                                 Text(

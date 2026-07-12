@@ -40,7 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.os.LocaleListCompat
 import androidx.navigation.NavController
 import com.flux.R
-import com.flux.ui.common.EmptyLanguage
+import com.flux.ui.common.EmptyData
 import com.flux.ui.common.GeneralSearchBar
 import com.flux.ui.state.Settings
 import org.xmlpull.v1.XmlPullParser
@@ -93,7 +93,7 @@ fun Languages(navController: NavController, settings: Settings) {
                 .filter { it.first.contains(query, ignoreCase = true) }
 
             if(filteredLanguages.isEmpty()){
-                item { EmptyLanguage() }
+                item { EmptyData() }
             }
 
             itemsIndexed(filteredLanguages) { index, (displayName, languageCode) ->

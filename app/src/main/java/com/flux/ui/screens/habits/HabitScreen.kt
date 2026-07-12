@@ -46,7 +46,7 @@ import com.flux.other.canScheduleReminder
 import com.flux.other.isNotificationPermissionGranted
 import com.flux.other.openAppNotificationSettings
 import com.flux.other.requestExactAlarmPermission
-import com.flux.ui.common.EmptyHabits
+import com.flux.ui.common.EmptyData
 import com.flux.ui.common.SpaceSearchBar
 import com.flux.ui.common.SpaceTopBar
 import com.flux.ui.common.SpacesMenu
@@ -159,7 +159,7 @@ fun HabitScreen(
                             }
                         }
                     }
-                    if(allHabits.isEmpty())  item { EmptyHabits() }
+                    if(allHabits.isEmpty())  item { EmptyData() }
                     items(currentHabits) { habit ->
                         val habitInstances = allInstances.filter { it.habitId == habit.id }
                         HabitPreviewCard(

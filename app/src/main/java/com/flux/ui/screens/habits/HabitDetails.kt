@@ -44,6 +44,7 @@ fun HabitDetails(
 ) {
     val context = LocalContext.current
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showShareAchievementDialog by remember { mutableStateOf(false) }
     val todayEpoch = LocalDate.now().toEpochDay()
     val todayInstance = habitInstances.firstOrNull { it.instanceDate == todayEpoch }
     val isAllowedByRecurrence = isDateAllowedForHabit(habit.recurrence, todayEpoch)
@@ -70,6 +71,7 @@ fun HabitDetails(
             onHabitEvents(HabitEvents.UpsertHabit(context, HabitModel(workspaceId = habit.workspaceId, habitConfig = habit.habitConfig, title = "Clone ${habit.title}", description = habit.description, endDateTime = habit.endDateTime, notificationOffset = habit.notificationOffset, recurrence = habit.recurrence)))
             Toast.makeText(context, cloneString, Toast.LENGTH_SHORT).show()
         },
+        onShare = { showShareAchievementDialog = true },
         onCopyNote = { showDataCopyDialog=true },
         content = { innerPadding ->
             LazyColumn(
@@ -130,5 +132,9 @@ fun HabitDetails(
                 }
             }
         ) { showDataCopyDialog = false }
+    }
+
+    if(showShareAchievementDialog){
+        ShareAchievementSheet(habit,computeAchievementStats(habit, habitInstances), onDismiss = { showShareAchievementDialog = false })
     }
 }

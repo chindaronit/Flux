@@ -522,4 +522,19 @@
     <string name="completed">Terminé</string>
     <string name="remaining">Restant</string>
 
+
+    <string name="habit_achievement">Réussite de l\'habitude</string>
+    <string name="consistency">Régularité</string>
+    <string name="percent">Pourcentage</string>
+    <string name="keep_it_going">Continuez comme ça !</string>
+    <string name="longest_streak">Plus longue série</string>
+    <string name="personal_best">Record personnel</string>
+    <string name="last_30_days">30 derniers jours</string>
+    <string name="tracked_by_flux">Suivi par @Flux</string>
+    <string name="available_on_fdroid_izzyondroid">Disponible sur F-Droid, IzzyOnDroid</string>
+    <string name="share_achievement">Partager le résultat</string>
+    <string name="not_scheduled">Non planifié</string>
+    <string name="missed">Manqué</string>
+    <string name="pick_a_todo">Choisir une tâche</string>
+
 </resources>

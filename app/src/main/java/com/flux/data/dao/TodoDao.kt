@@ -19,6 +19,12 @@ interface TodoDao {
     @Delete
     suspend fun deleteList(list: TodoModel)
 
+    @Query("SELECT * FROM TodoModel WHERE workspaceId IN (:workspaceIds)")
+    fun observePublicTodos(workspaceIds: List<String>): Flow<List<TodoModel>>
+
+    @Query("SELECT * FROM TodoModel WHERE id = (:todoId)")
+    fun observeTodoList(todoId: String): Flow<TodoModel?>
+
     @Query("DELETE FROM TodoModel WHERE workspaceId = :workspaceId")
     fun deleteAllWorkspaceLists(workspaceId: String)
 

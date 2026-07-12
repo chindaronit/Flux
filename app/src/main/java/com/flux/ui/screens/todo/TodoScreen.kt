@@ -36,7 +36,7 @@ import com.flux.data.model.RecurrenceRule
 import com.flux.data.model.WorkspaceModel
 import com.flux.navigation.Loader
 import com.flux.navigation.NavRoutes
-import com.flux.ui.common.EmptyTodoList
+import com.flux.ui.common.EmptyData
 import com.flux.ui.common.SpaceSearchBar
 import com.flux.ui.common.SpaceTopBar
 import com.flux.ui.common.SpacesMenu
@@ -156,7 +156,7 @@ fun TodoScreen(
                         }
                     }
 
-                    if(allList.isEmpty()) item { EmptyTodoList() }
+                    if(allList.isEmpty()) item { EmptyData() }
                     items(allList, key = { it.id }) { todoItem ->
                         TodoExpandableCard(
                             navController = navController,

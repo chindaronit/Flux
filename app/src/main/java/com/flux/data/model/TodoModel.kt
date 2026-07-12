@@ -6,7 +6,9 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.util.UUID
 import kotlinx.serialization.Serializable
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 
 @Serializable
 @Entity
@@ -54,6 +56,9 @@ data class TodoInstance(
 fun TodoInstance.isCompleted(): Boolean {
     return items.all { it.isChecked }
 }
+
+fun TodoModel.startDateAsLocalDate(zoneId: ZoneId): LocalDate =
+    Instant.ofEpochMilli(startDateTime).atZone(zoneId).toLocalDate()
 
 fun TodoModel.toHtml(): String {
     val itemsHtml = items.joinToString("\n") { item ->
@@ -207,5 +212,25 @@ fun TodoModel.toText(): String {
             val check = if (item.isChecked) "☑" else "☐"
             append("- $check ${item.value}\n")
         }
+    }
+}
+
+sealed class TodoDisplayItem {
+    abstract val todoId: String
+    abstract val title: String
+    abstract val items: List<TodoItem>
+
+    /** No recurrence — the TodoModel itself is the source of truth. */
+    data class Static(val todo: TodoModel) : TodoDisplayItem() {
+        override val todoId get() = todo.id
+        override val title get() = todo.title
+        override val items get() = todo.items
+    }
+
+    /** Recurring and active today — items come from today's instance. */
+    data class Recurring(val todo: TodoModel, val instance: TodoInstance) : TodoDisplayItem() {
+        override val todoId get() = todo.id
+        override val title get() = todo.title
+        override val items get() = instance.items
     }
 }

@@ -33,7 +33,7 @@ import androidx.navigation.NavController
 import com.flux.R
 import com.flux.data.model.LabelModel
 import com.flux.navigation.Loader
-import com.flux.ui.common.EmptyLabels
+import com.flux.ui.common.EmptyData
 import com.flux.ui.events.LabelEvents
 import com.flux.ui.screens.notes.AddLabelDialog
 
@@ -96,7 +96,7 @@ fun EditLabels(
     ) { innerPadding ->
         when {
             isLoading -> Loader()
-            allLabels.isEmpty() -> EmptyLabels()
+            allLabels.isEmpty() -> EmptyData()
             else -> {
                 LazyColumn(
                     modifier = Modifier

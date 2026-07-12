@@ -52,6 +52,38 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
+        <receiver android:name=".widgets.habits.HabitWidgetReceiver"
+            android:exported="true"
+            android:label="Habits Widget">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/habit_widget"/>
+        </receiver>
+
+        <receiver
+            android:name=".widgets.todo.TodoWidgetReceiver"
+            android:exported="true"
+            android:label="Todo Widget">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/todo_widget" />
+        </receiver>
+
+        <activity
+            android:name=".widgets.todo.TodoWidgetConfigActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Flux">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
     </application>
 
 </manifest>

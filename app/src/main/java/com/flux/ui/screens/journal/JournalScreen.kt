@@ -58,7 +58,7 @@ import com.flux.data.model.LabelModel
 import com.flux.data.model.WorkspaceModel
 import com.flux.navigation.Loader
 import com.flux.navigation.NavRoutes
-import com.flux.ui.common.EmptyJournal
+import com.flux.ui.common.EmptyData
 import com.flux.ui.common.SpaceSearchBar
 import com.flux.ui.common.SpaceTopBar
 import com.flux.ui.common.SpacesMenu
@@ -312,7 +312,7 @@ fun JournalScreen(
                             }
                         }
                     }
-                    if(allEntries.isEmpty()) item { EmptyJournal() }
+                    if(allEntries.isEmpty()) item { EmptyData() }
                     items(allEntries) { entry->
                         JournalCardHeader("${convertMillisToDay(entry.dateTime)}, ${
                             convertMillisToDate(entry.dateTime)

@@ -79,13 +79,7 @@ import com.flux.navigation.NavRoutes
 import com.flux.other.computeMonthlyEventDates
 import com.flux.ui.common.BottomBar
 import com.flux.ui.common.CategoryRow
-import com.flux.ui.common.EmptyEvents
-import com.flux.ui.common.EmptyHabits
-import com.flux.ui.common.EmptyJournal
-import com.flux.ui.common.EmptyNotes
-import com.flux.ui.common.EmptyProgressItems
-import com.flux.ui.common.EmptyTodoList
-import com.flux.ui.common.EmptyValue
+import com.flux.ui.common.EmptyData
 import com.flux.ui.common.GeneralSearchBar
 import com.flux.ui.common.MultiOptionRow
 import com.flux.ui.common.SearchFilterCategory
@@ -281,7 +275,7 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
                         ),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        if(selectedSpaces.isEmpty()){ item { EmptyValue() } }
+                        if(selectedSpaces.isEmpty()){ item { EmptyData() } }
                         else {
                             item {
                                 LazyRow(
@@ -364,7 +358,7 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
 
 @OptIn(ExperimentalMaterial3Api::class)
 fun LazyListScope.searchedNotes(navController: NavController, notesPreviewMode: Int, radius: Int, notes: List<NotesModel>, labels: List<LabelModel>){
-    if (notes.isEmpty()) item { EmptyNotes() }
+    if (notes.isEmpty()) item { EmptyData() }
     items(notes, key = { it.notesId }) { note ->
         NotesPreviewCard(
             radius = radius,
@@ -381,7 +375,7 @@ fun LazyListScope.searchedNotes(navController: NavController, notesPreviewMode: 
 
 @OptIn(ExperimentalMaterial3Api::class)
 fun LazyListScope.searchedJournal(navController: NavController, radius: Int, allEntries: List<JournalModel>, labels: List<LabelModel>){
-    if(allEntries.isEmpty()) item { EmptyJournal() }
+    if(allEntries.isEmpty()) item { EmptyData() }
     items(allEntries, key = { it.journalId }) { journal ->
         JournalCardHeader(convertMillisToDate(journal.dateTime) + ", " + convertMillisToTime(journal.dateTime))
         Row(modifier = Modifier.height(IntrinsicSize.Min)) {
@@ -412,7 +406,7 @@ fun LazyListScope.searchedHabits(
     instances: List<HabitInstanceModel>,
     onEvent: (HabitEvents) -> Unit
 ) {
-    if((currentHabits+pastHabits).isEmpty())  item { EmptyHabits() }
+    if((currentHabits+pastHabits).isEmpty())  item { EmptyData() }
     items(currentHabits) { habit ->
         val habitInstances = instances.filter { it.habitId == habit.id }
         HabitPreviewCard(
@@ -498,7 +492,7 @@ fun LazyListScope.searchedEvent(
         }
     }
 
-    if((pendingTasks + completedTasks).isEmpty()) item { EmptyEvents() }
+    if((pendingTasks + completedTasks).isEmpty()) item { EmptyData() }
     if (pendingTasks.isNotEmpty()) {
         items(pendingTasks) { task ->
             EventCard(
@@ -539,7 +533,7 @@ fun LazyListScope.searchedProgressBoard(
     completedItems: List<ProgressBoardModel>,
     onSelectProgressBoardItem: (ProgressBoardModel) -> Unit
 ) {
-    if((notStartedItems + inProgressItems + completedItems).isEmpty()) item { EmptyProgressItems() }
+    if((notStartedItems + inProgressItems + completedItems).isEmpty()) item { EmptyData() }
     if (notStartedItems.isNotEmpty()) {
         item {
             BoardContainer(
@@ -587,7 +581,7 @@ fun LazyListScope.searchedTodo(
     onExpandToggle: (String) -> Unit,
     onEvent: (TodoEvents) -> Unit
 ) {
-    if(todoList.isEmpty()) item { EmptyTodoList() }
+    if(todoList.isEmpty()) item { EmptyData() }
     items(todoList, key = { it.id }) { todoItem ->
         TodoExpandableCard(
             navController = navController,

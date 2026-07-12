@@ -526,4 +526,18 @@
     <string name="off">关</string>
     <string name="completed">已完成</string>
     <string name="remaining">剩余</string>
+
+    <string name="habit_achievement">习惯成就</string>
+    <string name="consistency">坚持率</string>
+    <string name="percent">百分比</string>
+    <string name="keep_it_going">继续保持！</string>
+    <string name="longest_streak">最长连续记录</string>
+    <string name="personal_best">个人最佳</string>
+    <string name="last_30_days">最近30天</string>
+    <string name="tracked_by_flux">由 @Flux 追踪</string>
+    <string name="available_on_fdroid_izzyondroid">可在 F-Droid、IzzyOnDroid 获取</string>
+    <string name="share_achievement">分享成就</string>
+    <string name="not_scheduled">未安排</string>
+    <string name="missed">已错过</string>
+    <string name="pick_a_todo">选择待办事项</string>
 </resources>

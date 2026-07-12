@@ -126,8 +126,8 @@ val FONTS = listOf(
 
 @Composable
 fun FluxTheme(
-    settings: Settings,
-    onSettingEvents: (SettingEvents) -> Unit,
+    settings: Settings = Settings(),
+    onSettingEvents: (SettingEvents) -> Unit = {},
     content: @Composable () -> Unit
 ) {
     val data = settings.data

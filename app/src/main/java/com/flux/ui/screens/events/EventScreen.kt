@@ -46,7 +46,7 @@ import com.flux.other.computeMonthlyEventDates
 import com.flux.other.isNotificationPermissionGranted
 import com.flux.other.openAppNotificationSettings
 import com.flux.other.requestExactAlarmPermission
-import com.flux.ui.common.EmptyEvents
+import com.flux.ui.common.EmptyData
 import com.flux.ui.common.SpaceSearchBar
 import com.flux.ui.common.SpaceTopBar
 import com.flux.ui.common.SpacesMenu
@@ -223,7 +223,7 @@ fun EventScreen(
                             Spacer(Modifier.height(6.dp))
                         }
                     }
-                    if(datedEvents.isEmpty()) item { EmptyEvents() }
+                    if(datedEvents.isEmpty()) item { EmptyData() }
                     if (pendingTasks.isNotEmpty()) {
                         items(pendingTasks) { task ->
                             EventCard(

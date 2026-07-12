@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.TrackChanges
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -35,7 +34,7 @@ import com.flux.data.model.ProgressBoardModel
 import com.flux.data.model.WorkspaceModel
 import com.flux.navigation.Loader
 import com.flux.navigation.NavRoutes
-import com.flux.ui.common.EmptyProgressItems
+import com.flux.ui.common.EmptyData
 import com.flux.ui.common.SpaceSearchBar
 import com.flux.ui.common.SpaceTopBar
 import com.flux.ui.common.SpacesMenu
@@ -151,7 +150,7 @@ fun ProgressTrackerScreen(
                             }
                         }
                     }
-                    if(boardItems.isEmpty()) item { EmptyProgressItems() }
+                    if(boardItems.isEmpty()) item { EmptyData() }
                     if (notStartedItems.isNotEmpty()) {
                         item {
                             BoardContainer(

@@ -522,4 +522,18 @@
     <string name="completed">Завершено</string>
     <string name="remaining">Осталось</string>
 
+    <string name="habit_achievement">Достижение привычки</string>
+    <string name="consistency">Последовательность</string>
+    <string name="percent">Процент</string>
+    <string name="keep_it_going">Так держать!</string>
+    <string name="longest_streak">Самая длинная серия</string>
+    <string name="personal_best">Личный рекорд</string>
+    <string name="last_30_days">Последние 30 дней</string>
+    <string name="tracked_by_flux">Отслеживается @Flux</string>
+    <string name="available_on_fdroid_izzyondroid">Доступно в F-Droid, IzzyOnDroid</string>
+    <string name="share_achievement">Поделиться достижением</string>
+    <string name="not_scheduled">Не запланировано</string>
+    <string name="missed">Пропущено</string>
+    <string name="pick_a_todo">Выбрать задачу</string>
+
 </resources>
