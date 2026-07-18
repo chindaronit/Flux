@@ -1,5 +1,7 @@
 package com.flux.ui.screens.todo
 
+import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -15,7 +17,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Alarm
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Menu
@@ -28,6 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
@@ -81,7 +83,6 @@ fun NewTodoList(
     val deleteQueue = remember {
         Channel<Pair<Int, TodoItem>>(Channel.UNLIMITED)
     }
-
     // True = normal editing mode (locked ordering)
     // False = reorder mode (unlocked ordering, drag handles visible)
     var isReordering by remember { mutableStateOf(false) }
@@ -113,13 +114,48 @@ fun NewTodoList(
 
             val result = snackbarHostState.showSnackbar(
                 message = itemRemovedLabel,
-                actionLabel = undoLabel
+                actionLabel = undoLabel,
+                duration = SnackbarDuration.Short
             )
 
             if (result == SnackbarResult.ActionPerformed) {
                 val insertIndex = index.coerceAtMost(itemList.size)
                 itemList.add(insertIndex, removedItem)
             }
+        }
+    }
+
+    fun saveTodoIfPossible(): Boolean {
+        val hasContent = title.isNotBlank() || itemList.isNotEmpty()
+
+        if (!hasContent) { return true }
+
+        if (title.isBlank()) {
+            Toast.makeText(context, "Title is Required", Toast.LENGTH_SHORT).show()
+            return false
+        }
+
+        onTodoEvents(
+            TodoEvents.UpsertList(
+                context,
+                list.recurrence is RecurrenceRule.Weekly && recurrence is RecurrenceRule.NONE,
+                list.copy(
+                    title = title,
+                    items = itemList.toList(),
+                    workspaceId = workspaceId,
+                    recurrence = recurrence,
+                    startDateTime = reminderTime
+                )
+            )
+        )
+
+        return true
+    }
+
+    BackHandler {
+        if (saveTodoIfPossible()) {
+            isReordering = false
+            navController.popBackStack()
         }
     }
 
@@ -154,7 +190,12 @@ fun NewTodoList(
                     )
                 },
                 navigationIcon = {
-                    IconButton({ navController.popBackStack() }) {
+                    IconButton({
+                        if (saveTodoIfPossible()) {
+                            isReordering = false
+                            navController.popBackStack()
+                        }
+                    }) {
                         Icon(Icons.AutoMirrored.Default.ArrowBack, null)
                     }
                 },
@@ -168,28 +209,6 @@ fun NewTodoList(
                     IconButton(onClick = { isReordering = !isReordering }) {
                         Icon(if(!isReordering) Icons.Default.Lock else Icons.Default.LockOpen, null)
                     }
-
-                    // ✓ in edit mode: persist everything to ViewModel
-                    IconButton(
-                        enabled = title.isNotBlank(),
-                        onClick = {
-                            onTodoEvents(
-                                TodoEvents.UpsertList(
-                                    context,
-                                    list.recurrence is RecurrenceRule.Weekly && recurrence is RecurrenceRule.NONE,
-                                    list.copy(
-                                        title = title,
-                                        items = itemList.toList(),
-                                        workspaceId = workspaceId,
-                                        recurrence = recurrence,
-                                        startDateTime = reminderTime
-                                    )
-                                )
-                            )
-                            isReordering = false
-                            navController.popBackStack()
-                        }
-                    ) { Icon(Icons.Default.Check, null) }
                 }
             )
         }

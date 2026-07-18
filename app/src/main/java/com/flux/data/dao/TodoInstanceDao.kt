@@ -1,9 +1,8 @@
 package com.flux.data.dao
 
 import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Upsert
 import com.flux.data.model.TodoInstance
 import kotlinx.coroutines.flow.Flow
 
@@ -24,7 +23,7 @@ interface TodoInstanceDao {
     @Query("SELECT * FROM TodoInstance WHERE instanceDate = :date and todoId = :todoId")
     fun observeInstanceForDate(todoId: String, date: Long): Flow<List<TodoInstance>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun upsertTodoInstance(instance: TodoInstance)
 
     @Query("DELETE FROM TodoInstance WHERE todoId = :listId")

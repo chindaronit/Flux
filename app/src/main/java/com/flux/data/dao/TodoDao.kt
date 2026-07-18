@@ -2,9 +2,8 @@ package com.flux.data.dao
 
 import androidx.room.Dao
 import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Upsert
 import com.flux.data.model.TodoModel
 import kotlinx.coroutines.flow.Flow
 
@@ -13,7 +12,7 @@ interface TodoDao {
     @Query("SELECT EXISTS(SELECT 1 FROM TodoModel WHERE  id = :id)")
     suspend fun exists(id: String): Boolean
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun upsertList(list: TodoModel)
 
     @Delete

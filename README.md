@@ -81,7 +81,7 @@ English, Hindi, French, Portugal (Brazil), Russian, German, Spanish, Dutch, Chin
 ## 🛠️ Architecture
 
 - **MVI**: Model View ViewModel
-- 
+ 
 ## 📦 Installation
 
 To build and run this application, you need to install the latest version of Android Studio. Then,
@@ -98,12 +98,10 @@ In Android Studio, select `Run > Run 'app'` to start the application.
 Any form of contribution is welcome! If you find a bug or have a new feature request, please create
 an issue. If you want to contribute code directly to this project, you can create a pull request.
 
+
+## Credits
+
 <div align="center">
-
-## Credits.
-
-[![Stargazers over time](https://starchart.cc/chindaronit/Flux.svg?variant=adaptive)](https://starchart.cc/chindaronit/Flux)
-
 <a href="https://github.com/chindaronit/Flux/graphs/contributors">
 <img src="https://contrib.rocks/image?repo=chindaronit/Flux" width="200"/>
 </a>
