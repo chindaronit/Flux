@@ -112,6 +112,7 @@ fun NoteDetails(
     outline: HeaderNode,
     aboutNotes: TextState,
     workspaceId: String,
+    fontNumber: Int,
     isDarkMode: Boolean,
     isLintValid: Boolean,
     isLineNumbersVisible: Boolean,
@@ -438,6 +439,7 @@ fun NoteDetails(
                             scrollState = scrollState,
                             rootUri = rootUri,
                             isAppInDarkMode = isDarkMode,
+                            fontNumber = fontNumber,
                             onWebViewReady = { readWebView = it }
                         )
                     }

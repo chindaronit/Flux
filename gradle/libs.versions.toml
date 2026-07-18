@@ -1,6 +1,5 @@
 [versions]
 agp = "9.2.1"
-flexmarkHtml2mdConverter = "0.64.8"
 kotlin = "2.4.0"
 ksp = "2.3.9"
 kotlinxSerializationJson = "1.11.0"
@@ -12,7 +11,6 @@ lifecycleRuntimeKtx = "2.11.0"
 activityCompose = "1.13.0"
 composeBom = "2026.06.01"
 coreSplashscreen = "1.2.0"
-material = "1.14.0"
 navigationCompose = "2.9.8"
 reorderable = "3.1.0"
 room = "2.8.4"
@@ -51,7 +49,6 @@ androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 
 # Hilt (Dependency Injection)
-flexmarkHtml2mdConverter = { module = "com.vladsch.flexmark:flexmark-html2md-converter",  version.ref = "flexmarkHtml2mdConverter" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hilt" }
@@ -80,7 +77,6 @@ androidx-compose-foundation-layout = { group = "androidx.compose.foundation", na
 androidx-compose-adaptive = { group = "androidx.compose.material3.adaptive", name = "adaptive", version.ref = "adaptive" }
 androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
 androidx-navigation-common-ktx = { group = "androidx.navigation", name = "navigation-common-ktx", version.ref = "navigationCommonKtx" }
-material = { module = "com.google.android.material:material", version.ref = "material" }
 reorderable = { module = "sh.calvin.reorderable:reorderable", version.ref = "reorderable" }
 androidx-glance-appwidget = { group = "androidx.glance", name = "glance-appwidget", version.ref = "glanceAppwidget" }
 

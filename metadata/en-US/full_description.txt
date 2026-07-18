@@ -1,21 +1,10 @@
-Flux is a lightweight, offline-first productivity app that brings your notes, tasks, journals, habits, and events together in one organized workspace. Designed with Material 3, it delivers a clean, modern experience that helps you stay focused without unnecessary complexity.
+Flux is a lightweight, offline-first productivity app. Whether you're planning your day, documenting ideas, tracking habits, or managing projects, Flux provides the tools you need while keeping your workflow simple and distraction-free.
 
-Whether you're planning your day, documenting ideas, tracking habits, or managing projects, Flux provides the tools you need while keeping your workflow simple and distraction-free.
+✨ Features
 
-### ✨ Features
-
-* 📝 **Rich Markdown Editor** with support for checklists, tables, code blocks, LaTeX, Mermaid diagrams, and image attachments.
-* 🗂️ **Customizable Workspaces** to organize notes, journals, tasks, habits, and events the way you work.
-* ✅ **Task Management** with recurring tasks, reminders, progress tracking, and productivity insights.
-* 📔 **Daily Journals** for capturing thoughts, ideas, and memories.
-* 📅 **Calendar & Events** to manage schedules and important dates.
-* 🔥 **Habit Tracker** with statistics, streaks, and visual analytics.
-* 🎨 **Material You Design** built with Material 3, supporting dynamic colors and a polished Android experience.
-* 🔒 **Privacy First** with optional biometric app lock and screen protection.
-* 📴 **Offline-First** architecture for fast, reliable access to your data anytime.
-* ⚡ **Native Performance** built with Kotlin and Jetpack Compose.
-* 🌍 **Open Source** under the GPL-3.0 license with regular updates and community-driven improvements.
-
-Flux is built for people who want a fast, beautiful, and privacy-focused productivity app that keeps everything in one place.
-
-**Stay organized. Stay focused. Stay in Flux.**
+* 📝 Rich Markdown Editor
+* 🗂️ Customizable Workspaces to organize.
+* ✅ Task Management & Habit Tracker with productivity insights.
+* 📅 Calendar & Events to manage schedules and important dates.
+* 🎨 Material You Design built with Material 3.
+* 📴 Offline-First architecture.

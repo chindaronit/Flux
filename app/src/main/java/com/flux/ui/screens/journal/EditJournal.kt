@@ -122,6 +122,7 @@ fun EditJournal(
     journal: JournalModel,
     outline: HeaderNode,
     aboutJournal: TextState,
+    fontNumber: Int,
     isDarkMode: Boolean,
     isLintValid: Boolean,
     isLineNumbersVisible: Boolean,
@@ -430,6 +431,7 @@ fun EditJournal(
                             scrollState = scrollState,
                             rootUri = rootUri,
                             isAppInDarkMode = isDarkMode,
+                            fontNumber = fontNumber,
                             onWebViewReady = { readWebView = it }
                         )
                     }

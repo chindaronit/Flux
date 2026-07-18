@@ -32,7 +32,6 @@ import com.flux.data.model.TodoModel
 import com.flux.data.model.WorkspaceModel
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import com.vladsch.flexmark.html2md.converter.FlexmarkHtmlConverter
 import kotlinx.serialization.json.Json
 import java.util.UUID
 
@@ -206,29 +205,6 @@ val MIGRATION_3_4 = object : Migration(3, 4) {
             """)
             db.safeExec("DROP TABLE NotesModel")
             db.safeExec("ALTER TABLE NotesModel_new RENAME TO NotesModel")
-        }
-
-        // 5. HTML → Markdown migration
-        val converter = FlexmarkHtmlConverter.builder().build()
-        db.query("SELECT notesId, description FROM NotesModel").use { cursor ->
-            while (cursor.moveToNext()) {
-                val id = cursor.getString(0)
-                val html = cursor.getString(1) ?: continue
-                if (html.contains("<")) {
-                    db.execSQL("UPDATE NotesModel SET description = ? WHERE notesId = ?",
-                        arrayOf(converter.convert(html), id))
-                }
-            }
-        }
-        db.query("SELECT journalId, text FROM JournalModel").use { cursor ->
-            while (cursor.moveToNext()) {
-                val id = cursor.getString(0)
-                val html = cursor.getString(1) ?: continue
-                if (html.contains("<")) {
-                    db.execSQL("UPDATE JournalModel SET text = ? WHERE journalId = ?",
-                        arrayOf(converter.convert(html), id))
-                }
-            }
         }
     }
 }

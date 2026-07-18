@@ -109,6 +109,7 @@ val NotesScreens =
                 states.notesState.outline,
                 states.notesState.textState,
                 workspaceId,
+                states.settings.data.fontNumber,
                 states.settings.data.isDarkMode,
                 states.settings.data.isLintValid,
                 states.settings.data.isLineNumbersVisible,
@@ -187,6 +188,7 @@ val JournalScreens =
                 states.journalState.data.find { it.journalId == journalId } ?: JournalModel(workspaceId = workspaceId, dateTime = journalDateTime),
                 states.journalState.outline,
                 states.journalState.textState,
+                states.settings.data.fontNumber,
                 states.settings.data.isDarkMode,
                 states.settings.data.isLintValid,
                 states.settings.data.isLineNumbersVisible,
@@ -282,6 +284,7 @@ val WorkspaceScreens =
             NewWorkspaceScreen (
                 navController,
                 states.workspaceState.allWorkspaces.find { it.workspaceId==workspaceId }?: WorkspaceModel(),
+                viewModels,
                 viewModels.workspaceViewModel::onEvent
             )
         },

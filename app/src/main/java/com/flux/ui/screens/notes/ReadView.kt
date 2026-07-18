@@ -5,13 +5,13 @@ import android.view.View
 import android.view.ViewGroup
 import android.webkit.JavascriptInterface
 import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebView.enableSlowWholeDocumentDraw
 import android.webkit.WebViewClient
 import androidx.compose.foundation.ScrollState
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -24,7 +24,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
@@ -32,6 +31,9 @@ import com.flux.other.Constants
 import com.flux.other.MediaCache
 import com.flux.other.rememberCustomTabsIntent
 import com.flux.other.toHexColor
+import com.flux.ui.theme.FLUX_WEB_FONTS
+import com.flux.ui.theme.FontResourceMap
+import com.flux.ui.theme.toFontFaceCss
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -43,17 +45,25 @@ data class MarkdownStyles(
     val hexQuoteBackgroundColor: String,
     val hexLinkColor: String,
     val hexBorderColor: String,
-    val backgroundColor: Int
+    val backgroundColor: Int,
+    val fontFamilyCss: String,
+    val fontFaceCss: String      // the generated @font-face block, empty string for SYSTEM
 ) {
     companion object {
-        fun fromColorScheme(colorScheme: ColorScheme) = MarkdownStyles(
+        private val systemFallback =
+            "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif"
+
+        fun fromColorScheme(colorScheme: ColorScheme, fontNumber: Int) = MarkdownStyles(
             hexTextColor = colorScheme.onSurface.toArgb().toHexColor(),
             hexCodeBackgroundColor = colorScheme.surfaceVariant.toArgb().toHexColor(),
             hexPreBackgroundColor = colorScheme.surfaceVariant.toArgb().toHexColor(),
             hexQuoteBackgroundColor = colorScheme.secondaryContainer.toArgb().toHexColor(),
             hexLinkColor = colorScheme.primary.toArgb().toHexColor(),
             hexBorderColor = colorScheme.outline.toArgb().toHexColor(),
-            backgroundColor = colorScheme.surfaceContainerLow.toArgb()
+            backgroundColor = colorScheme.surfaceContainerLow.toArgb(),
+            fontFamilyCss = FLUX_WEB_FONTS.getOrNull(fontNumber)?.let { "'${it.familyName}', $systemFallback" }
+                ?: systemFallback,
+            fontFaceCss = FLUX_WEB_FONTS.getOrNull(fontNumber)?.toFontFaceCss() ?: ""
         )
     }
 }
@@ -62,6 +72,7 @@ data class MarkdownStyles(
 @Composable
 fun ReadView(
     modifier: Modifier = Modifier,
+    fontNumber: Int,
     html: String,
     rootUri: String?,
     scrollState: ScrollState,
@@ -70,7 +81,7 @@ fun ReadView(
 ) {
     val context = LocalContext.current
     val colorScheme = MaterialTheme.colorScheme
-    val markdownStyles = remember(colorScheme) { MarkdownStyles.fromColorScheme(colorScheme) }
+    val markdownStyles = remember(colorScheme, fontNumber) { MarkdownStyles.fromColorScheme(colorScheme, fontNumber) }
     var template by rememberSaveable { mutableStateOf("") }
     val customTabsIntent = rememberCustomTabsIntent()
     val coroutineScope = rememberCoroutineScope()
@@ -177,12 +188,33 @@ fun ReadView(
                         request: WebResourceRequest
                     ): Boolean {
                         val uri = request.url
-                        return if (uri.scheme == "http" || uri.scheme == "https") {
+                        return if (uri.scheme == "http" || uri.scheme == "https" && uri.host != "appassets.flux") {
                             customTabsIntent.launchUrl(it, uri)
                             true
                         } else {
                             false
                         }
+                    }
+
+                    override fun shouldInterceptRequest(
+                        view: WebView?,
+                        request: WebResourceRequest
+                    ): WebResourceResponse? {
+                        val url = request.url
+                        if (url.scheme == "https" && url.host == "appassets.flux" &&
+                            url.path?.startsWith("/fonts/") == true
+                        ) {
+                            val fileName = url.lastPathSegment.orEmpty()
+                            val resId = FontResourceMap.byFileName[fileName]
+                                ?: return super.shouldInterceptRequest(view, request)
+                            return try {
+                                val stream = context.resources.openRawResource(resId)
+                                WebResourceResponse("font/ttf", null, stream)
+                            } catch (_: Exception) {
+                                super.shouldInterceptRequest(view, request)
+                            }
+                        }
+                        return super.shouldInterceptRequest(view, request)
                     }
                 }
                 addJavascriptInterface(
@@ -341,5 +373,7 @@ private fun processHtml(
         .replace("{{QUOTE_BACKGROUND}}", markdownStyles.hexQuoteBackgroundColor)
         .replace("{{LINK_COLOR}}", markdownStyles.hexLinkColor)
         .replace("{{BORDER_COLOR}}", markdownStyles.hexBorderColor)
+        .replace("{{FONT_FACE_CSS}}", markdownStyles.fontFaceCss)
+        .replace("{{FONT_FAMILY}}", markdownStyles.fontFamilyCss)
         .replace("{{COLOR_SCHEME}}", if (isAppInDarkMode) "dark" else "light")
 }

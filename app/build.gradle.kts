@@ -104,7 +104,6 @@ dependencies {
     implementation(libs.androidx.compose.adaptive)
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.navigation.common.ktx)
-    implementation(libs.material)
 
     // Hilt
     ksp(libs.hilt.android.compiler)
@@ -135,7 +134,6 @@ dependencies {
     implementation(libs.commonmark.ext.image.attributes)
     implementation(libs.commonmark.ext.yaml.front.matter)
     implementation(libs.commonmark)
-    implementation(libs.flexmarkHtml2mdConverter)
 
     // draggable list
     implementation(libs.reorderable)
