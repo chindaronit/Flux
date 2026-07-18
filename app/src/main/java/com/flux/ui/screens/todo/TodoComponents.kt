@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -45,6 +46,7 @@ import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -59,9 +61,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -71,24 +75,35 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import com.flux.R
+import com.flux.data.model.ItemConsistency
 import com.flux.data.model.RecurrenceRule
 import com.flux.data.model.TodoInstance
 import com.flux.data.model.TodoItem
 import com.flux.data.model.TodoModel
+import com.flux.data.model.calculateItemConsistency
+import com.flux.data.model.isActiveOn
 import com.flux.data.model.isCompleted
+import com.flux.data.model.startDateAsLocalDate
 import com.flux.navigation.NavRoutes
 import com.flux.other.ConvertType
+import com.flux.ui.common.BarChart
+import com.flux.ui.common.HeatMapCard
 import com.flux.ui.common.TimePicker
+import com.flux.ui.common.WeeklyAnalytics
+import com.flux.ui.common.WeeklyProgressChart
 import com.flux.ui.common.convertMillisToDate
 import com.flux.ui.common.convertMillisToTime
 import com.flux.ui.events.TodoEvents
-import com.flux.ui.screens.analytics.HeatMapCard
 import com.flux.ui.screens.events.toFormattedTime
 import com.flux.ui.screens.habits.HabitInfoComponent
 import com.flux.ui.screens.notes.ExportCard
 import com.flux.ui.screens.settings.shapeManager
+import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.YearMonth
+import java.time.ZoneId
 import java.time.temporal.ChronoUnit
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -167,7 +182,6 @@ private fun TodoHeaderRow(
                 Icon(Icons.Default.Analytics, null)
             }
         }
-
     }
 }
 
@@ -467,14 +481,16 @@ fun TodoDetailedInfo(
                 )
             }
 
-            val configuration = LocalConfiguration.current
+            val windowInfo = LocalWindowInfo.current
             val density = LocalDensity.current
+
+            val screenWidthDp = with(density) { windowInfo.containerSize.width.toDp() }
 
             val columns = when {
                 density.fontScale > 1.5f -> 1
 
-                configuration.screenWidthDp < 360 -> 1
-                configuration.screenWidthDp < 480 -> 2
+                screenWidthDp < 360.dp -> 1
+                screenWidthDp < 480.dp -> 2
 
                 else -> 3
             }
@@ -547,7 +563,6 @@ fun TodoDetailedInfo(
                         )
                     }
                 }
-
             }
         }
     }
@@ -650,5 +665,266 @@ fun ConvertTODODialog(
                 ExportCard(Icons.Outlined.AutoStories, stringResource(R.string.convert_to_journal)) { onConfirm(ConvertType.JOURNAL) }
             }
         }
+    }
+}
+
+@Composable
+fun WeeklyTodoAnalytics(
+    radius: Int,
+    instances: List<TodoInstance>
+) {
+    val today = LocalDate.now()
+    val startOfWeek = today.with(DayOfWeek.MONDAY)
+
+    val instanceMap = remember(instances) {
+        instances.associateBy { it.instanceDate }
+    }
+
+    val daysOfWeek = listOf(
+        stringResource(R.string.monday_short),
+        stringResource(R.string.tuesday_short),
+        stringResource(R.string.wednesday_short),
+        stringResource(R.string.thursday_short),
+        stringResource(R.string.friday_short),
+        stringResource(R.string.saturday_short),
+        stringResource(R.string.sunday_short)
+    )
+
+    val dayStatus = List(daysOfWeek.size) { index ->
+        val date = startOfWeek.plusDays(index.toLong())
+        val epoch = date.toEpochDay()
+
+        val instance = instanceMap[epoch]
+
+        instance?.isCompleted()==true
+    }
+
+    WeeklyAnalytics(radius, dayStatus)
+}
+
+@Composable
+fun TodoWeeklyProgressChart(
+    radius: Int,
+    list: TodoModel,
+    instances: List<TodoInstance>,
+    modifier: Modifier = Modifier,
+    zoneId: ZoneId = ZoneId.systemDefault()
+) {
+    val today = LocalDate.now()
+    val startOfWeek = today.with(DayOfWeek.MONDAY)
+    val weekDays = remember(today) { (0..6).map { startOfWeek.plusDays(it.toLong()) } }
+    val instanceMap = remember(instances) { instances.associateBy { it.instanceDate } }
+    val startDate = remember(list.startDateTime, zoneId) { list.startDateAsLocalDate(zoneId) }
+
+    val percentages = weekDays.map { day ->
+        val isScheduled = list.recurrence.isActiveOn(day, startDate)
+        if (!isScheduled) return@map 0f
+
+        val instance = instanceMap[day.toEpochDay()]
+        if (instance == null || instance.items.isEmpty()) return@map 0f
+
+        val completed = instance.items.count { it.isChecked }
+        val total = instance.items.size
+        (completed.toFloat() / total) * 100f
+    }
+
+    WeeklyProgressChart(
+        radius = radius,
+        modifier = modifier,
+        percentages = percentages
+    )
+}
+
+@Composable
+fun MonthlyHabitAnalyticsCard(
+    radius: Int,
+    list: TodoModel,
+    instances: List<TodoInstance>
+) {
+    val today = LocalDate.now()
+    val currentYearMonth = YearMonth.of(today.year, today.month)
+    val daysInMonth = currentYearMonth.lengthOfMonth()
+
+    val instanceMap = remember(instances) {
+        instances.associateBy { it.instanceDate }
+    }
+
+    val weekRanges = remember(daysInMonth) {
+        val ranges = mutableListOf<IntRange>()
+        var start = 1
+        while (start <= daysInMonth) {
+            val end = minOf(start + 6, daysInMonth)
+            ranges.add(start..end)
+            start = end + 1
+        }
+        ranges
+    }
+
+    val weekCounts = remember(instances, list) {
+        val counts = MutableList(weekRanges.size) { 0 }
+
+        for (day in 1..daysInMonth) {
+            val date = currentYearMonth.atDay(day)
+            val epoch = date.toEpochDay()
+            val instance = instanceMap[epoch]
+            val isCompleted = instance?.isCompleted() == true
+
+            if (isCompleted) {
+                weekRanges.forEachIndexed { index, range ->
+                    if (day in range) {
+                        counts[index]++
+                        return@forEachIndexed
+                    }
+                }
+            }
+        }
+
+        counts
+    }
+
+    val completedDays = weekCounts.sum()
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = shapeManager(radius = radius * 2),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)
+        ),
+        onClick = {}
+    ) {
+        Column(
+            Modifier
+                .fillMaxSize()
+                .padding(12.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.This_Month),
+                style = MaterialTheme.typography.titleMedium,
+            )
+
+            Text(
+                text = stringResource(R.string.completed_habits, completedDays),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(bottom = 24.dp)
+            )
+
+            BarChart(
+                weekCounts = weekCounts,
+                weekLabels = weekRanges.map { "${it.first}-${it.last}" }
+            )
+        }
+    }
+}
+
+@Composable
+fun ItemConsistencyCard(
+    radius: Int,
+    list: TodoModel,
+    instances: List<TodoInstance>,
+    modifier: Modifier = Modifier
+) {
+    val consistencyList = remember(list.items, instances) {
+        list.calculateItemConsistency(instances)
+    }
+    val (activeItems, removedItems) = remember(consistencyList) {
+        consistencyList.partition { !it.isRemoved }
+    }
+    val primaryColor = MaterialTheme.colorScheme.primary
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = shapeManager(radius = radius * 2),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)
+        ),
+        onClick = {}
+    ) {
+        Column(modifier = modifier.padding(12.dp)) {
+            Text(
+                "Item Consistency",
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.primary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp, top = 8.dp)
+            )
+
+            if (consistencyList.isEmpty()) {
+                Text(
+                    "No Data Yet",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp)
+                )
+            } else {
+                activeItems.forEach { item ->
+                    ConsistencyRow(item = item, primaryColor = primaryColor)
+                }
+
+                if (removedItems.isNotEmpty()) {
+                    Text(
+                        "Removed Items",
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 16.dp, bottom = 4.dp)
+                    )
+                    removedItems.forEach { item ->
+                        ConsistencyRow(
+                            item = item,
+                            primaryColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ConsistencyRow(item: ItemConsistency, primaryColor: Color) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = item.label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = if (item.isRemoved)
+                MaterialTheme.colorScheme.onSurfaceVariant
+            else
+                MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        LinearProgressIndicator(
+            progress = { item.percentage },
+            modifier = Modifier
+                .weight(1f)
+                .height(6.dp)
+                .clip(RoundedCornerShape(50)),
+            color = primaryColor,
+            trackColor = primaryColor.copy(alpha = 0.15f)
+        )
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        Text(
+            text = "${(item.percentage * 100).roundToInt()}%",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.widthIn(min = 36.dp),
+            textAlign = TextAlign.End
+        )
     }
 }

@@ -183,7 +183,6 @@ fun TodoDetail(
 
             else if(isAllowed(todayEpoch) && todayInstance!=null) {
                 item{ TodoDetailedInfo(radius, list, isReminderOn = true, isAllowedToday = true, todayInstance) }
-                item{ TodoHeatMap(radius, list, instances) }
 
                 items(todayInstance.items) { todoItem ->
                     MaterialListItem(true, todoItem){
@@ -197,6 +196,12 @@ fun TodoDetail(
                         }
                     }
                 }
+
+                item { ItemConsistencyCard(radius, list, instances) }
+                item { WeeklyTodoAnalytics(radius, instances) }
+                item { TodoWeeklyProgressChart(radius, list, instances) }
+                item { MonthlyHabitAnalyticsCard(radius, list, instances) }
+                item{ TodoHeatMap(radius, list, instances) }
             }
 
             else if(!isAllowed(todayEpoch)){
@@ -206,11 +211,14 @@ fun TodoDetail(
                     isAllowedToday = false,
                     todayInstance = todayInstance)
                 }
-                item{ TodoHeatMap(radius, list, instances) }
-
                 items(list.items) { todoItem ->
                     MaterialListItem(false, todoItem){}
                 }
+                item { ItemConsistencyCard(radius, list, instances) }
+                item { WeeklyTodoAnalytics(radius, instances) }
+                item { TodoWeeklyProgressChart(radius, list, instances) }
+                item { MonthlyHabitAnalyticsCard(radius, list, instances) }
+                item{ TodoHeatMap(radius, list, instances) }
             }
         }
     }

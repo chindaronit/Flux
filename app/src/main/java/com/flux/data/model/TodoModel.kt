@@ -25,6 +25,8 @@ data class TodoModel(
 @Serializable
 data class TodoItem(
     val id: String = UUID.randomUUID().toString(),
+
+
     val value: String = "",
     val isChecked: Boolean = false
 )
@@ -52,6 +54,50 @@ data class TodoInstance(
     val instanceDate: Long = LocalDate.now().toEpochDay(),
     val items: List<TodoItem> = emptyList()
 )
+
+data class ItemConsistency(
+    val itemId: String,
+    val label: String,
+    val checkedCount: Int,
+    val totalCount: Int,
+    val isRemoved: Boolean
+) {
+    val percentage: Float
+        get() = if (totalCount == 0) 0f else checkedCount.toFloat() / totalCount
+}
+
+fun TodoModel.calculateItemConsistency(
+    instances: List<TodoInstance>
+): List<ItemConsistency> {
+    val templateIds = items.map { it.id }.toSet()
+    val labelMap = items.associateBy({ it.id }, { it.value })
+    val counts = mutableMapOf<String, Pair<Int, Int>>() // itemId -> (checkedCount, totalCount)
+
+    instances.forEach { instance ->
+        instance.items.forEach { item ->
+            val (checked, total) = counts.getOrDefault(item.id, 0 to 0)
+            counts[item.id] = (checked + if (item.isChecked) 1 else 0) to (total + 1)
+        }
+    }
+
+    return counts.map { (id, pair) ->
+        ItemConsistency(
+            itemId = id,
+            label = labelMap[id] ?: item(id, instances) ?: "Unknown item",
+            checkedCount = pair.first,
+            totalCount = pair.second,
+            isRemoved = id !in templateIds
+        )
+    }.sortedByDescending { it.percentage }
+}
+
+private fun item(itemId: String, instances: List<TodoInstance>): String? {
+    return instances
+        .sortedByDescending { it.instanceDate }
+        .firstNotNullOfOrNull { instance ->
+            instance.items.firstOrNull { it.id == itemId }?.value
+        }
+}
 
 fun TodoInstance.isCompleted(): Boolean {
     return items.all { it.isChecked }

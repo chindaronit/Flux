@@ -17,6 +17,9 @@ interface TodoInstanceDao {
     @Query("SELECT * FROM TodoInstance")
     fun loadAllInstances(): List<TodoInstance>
 
+    @Query("SELECT * FROM TodoInstance WHERE todoId = :todoId AND instanceDate = :date LIMIT 1")
+    suspend fun loadInstanceForDate(todoId: String, date: Long): TodoInstance?
+
     @Query("DELETE FROM TodoInstance WHERE workspaceId = :workspaceId")
     suspend fun deleteAllWorkspaceInstance(workspaceId: String)
 

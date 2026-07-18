@@ -31,7 +31,23 @@ class TodoRepositoryImpl @Inject constructor(
     }
 
     override suspend fun upsertList(list: TodoModel) {
-        return withContext(Dispatchers.IO) { dao.upsertList(list) }
+        return withContext(Dispatchers.IO) {
+            dao.upsertList(list)
+
+            val todayEpoch = LocalDate.now().toEpochDay()
+            val todayInstance = instanceDao.loadInstanceForDate(list.id, todayEpoch) ?: return@withContext
+
+            val existingById = todayInstance.items.associateBy { it.id }
+            val syncedItems = list.items.map { templateItem ->
+                existingById[templateItem.id]
+                    ?.copy(value = templateItem.value)   // keep isChecked, pick up rename
+                    ?: templateItem.copy(isChecked = false) // newly added item
+            }
+
+            if (syncedItems != todayInstance.items) {
+                instanceDao.upsertTodoInstance(todayInstance.copy(items = syncedItems))
+            }
+        }
     }
 
     override suspend fun deleteList(list: TodoModel) {
