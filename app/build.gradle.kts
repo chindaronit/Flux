@@ -86,6 +86,7 @@ kotlin {
 }
 
 dependencies {
+    implementation(libs.androidx.compose.ui.text)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.glance.appwidget)
     implementation(libs.androidx.material3)

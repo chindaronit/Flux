@@ -535,4 +535,15 @@
     <string name="not_scheduled">Não agendado</string>
     <string name="missed">Perdido</string>
     <string name="pick_a_todo">Escolher uma tarefa</string>
+
+    <string name="list_items">Itens da lista</string>
+    <string name="no_checklist_for_date">Nenhuma lista de verificação para esta data.</string>
+    <string name="tracking_starts_later">Seu acompanhamento começa mais tarde!</string>
+    <string name="removed_items">Itens removidos</string>
+    <string name="no_data_yet">Ainda não há dados</string>
+    <string name="item_consistency">Consistência dos itens</string>
+    <string name="current_streak_text">Sequência atual</string>
+    <string name="drag_horizontally_to_reorder">Arraste horizontalmente para reorganizar</string>
+    <string name="delete_alert">Alerta de exclusão!</string>
+    <string name="delete_spaces_alert">Você está prestes a excluir permanentemente o(s) espaço(s) %1$s e todos os seus dados. Esta ação não pode ser desfeita.</string>
 </resources>

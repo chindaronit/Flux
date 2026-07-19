@@ -181,36 +181,14 @@ fun TodoDetail(
                 }
             }
 
-            else if(isAllowed(todayEpoch) && todayInstance!=null) {
-                item{ TodoDetailedInfo(radius, list, isReminderOn = true, isAllowedToday = true, todayInstance) }
-                item{ TodoHeatMap(radius, list, instances) }
-
-                items(todayInstance.items) { todoItem ->
-                    MaterialListItem(true, todoItem){
-                        val updatedItems = todayInstance.items.map {
-                            if (it.id == todoItem.id) it.copy(isChecked = !it.isChecked)
-                            else it
-                        }
-
-                        if (updatedItems != todayInstance.items) {
-                            onTodoEvents(TodoEvents.UpsertInstance(todayInstance.copy(items = updatedItems)))
-                        }
-                    }
-                }
-            }
-
-            else if(!isAllowed(todayEpoch)){
-                item{
-                    TodoDetailedInfo(radius, list,
-                    isReminderOn = true,
-                    isAllowedToday = false,
-                    todayInstance = todayInstance)
-                }
-                item{ TodoHeatMap(radius, list, instances) }
-
-                items(list.items) { todoItem ->
-                    MaterialListItem(false, todoItem){}
-                }
+            else {
+                item { TodoDetailedInfo(radius, list, isReminderOn = true, isAllowedToday = isAllowed(todayEpoch), todayInstance) }
+                item { TodoCalendarCard(radius, list, instances, onTodoEvents) }
+                item { ItemConsistencyCard(radius, list, instances) }
+                item { WeeklyTodoAnalytics(radius, instances) }
+                item { TodoWeeklyProgressChart(radius,  instances) }
+                item { MonthlyHabitAnalyticsCard(radius, list, instances) }
+                item { TodoHeatMap(radius, list, instances) }
             }
         }
     }
