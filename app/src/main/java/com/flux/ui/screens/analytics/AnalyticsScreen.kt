@@ -14,11 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.Analytics
@@ -46,14 +42,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.flux.R
 import com.flux.data.model.EventInstanceModel
@@ -65,6 +58,7 @@ import com.flux.data.model.WorkspaceModel
 import com.flux.data.model.isCompleted
 import com.flux.data.model.occursOn
 import com.flux.navigation.NavRoutes
+import com.flux.ui.common.HeatMapCard
 import com.flux.ui.common.SpaceTopBar
 import com.flux.ui.common.SpacesMenu
 import com.flux.ui.screens.habits.HabitsWeeklyProgressAnalysis
@@ -408,7 +402,6 @@ fun HabitHeatMap(radius: Int, habits: List<HabitModel>, allHabitInstances: List<
         }.takeIf { it != -1 } ?: 0
     }
 
-
     val todayHabit = allHabitInstances.count { it.instanceDate == today.toEpochDay() }
 
     // Auto-scroll to current month on first composition
@@ -428,137 +421,6 @@ fun HabitHeatMap(radius: Int, habits: List<HabitModel>, allHabitInstances: List<
         weekColumns,
         heatMap.toMap()
     )
-}
-
-@Composable
-fun HeatMapCard(
-    radius: Int,
-    title: String,
-    description: String,
-    boxSize: Dp,
-    intensityParam: Int,
-    lazyListState: LazyListState,
-    weekColumns: List<List<LocalDate?>>,
-    heatMap: Map<LocalDate, Int>
-){
-    Card(
-        onClick = {},
-        modifier = Modifier.fillMaxWidth(),
-        shape = shapeManager(radius = radius*2),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(4.dp)
-        )
-    ) {
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(
-                title,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.primary,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
-            if(description.isNotBlank()){
-                Text(
-                    description,
-                    style = MaterialTheme.typography.labelMedium
-                )
-            }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 12.dp)
-            ) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(2.dp),
-                    modifier = Modifier
-                        .width(boxSize)
-                        .padding(top = 26.dp, end = 2.dp)
-                ) {
-                    DayOfWeek.entries.forEach { day ->
-                        Box(
-                            modifier = Modifier
-                                .width(boxSize + 12.dp)
-                                .height(boxSize),
-                            contentAlignment = Alignment.CenterStart
-                        ) {
-                            Text(text = day.name.take(3), fontSize = 9.sp)
-                        }
-                    }
-                }
-
-                // Combined month + heatmap
-                LazyRow(
-                    state = lazyListState,
-                    horizontalArrangement = Arrangement.spacedBy(2.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    itemsIndexed(weekColumns) { index, columnDates ->
-                        val firstDate = columnDates.firstOrNull()
-                        val month = firstDate?.month
-
-                        // Show month label if this is the first week of the month
-                        val showMonth =
-                            month != null && (index == 0 || weekColumns.getOrNull(index - 1)?.firstOrNull()?.month != month)
-
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(2.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            // Month label on top (only once per month)
-                            Box(
-                                modifier = Modifier.height(24.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                if (showMonth) {
-                                    Text(
-                                        text = firstDate.month.name.take(3),
-                                        fontSize = 9.sp,
-                                        fontWeight = FontWeight.SemiBold
-                                    )
-                                }
-                            }
-
-                            // Heatmap boxes
-                            columnDates.forEach { date ->
-                                if (date != null) {
-                                    val count = heatMap[date] ?: 0
-                                    val intensity =
-                                        (count / if (intensityParam > 0) intensityParam.toFloat() else 2f)
-                                            .coerceIn(0f, 1f)
-                                    val color = lerp(
-                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
-                                        MaterialTheme.colorScheme.primary,
-                                        intensity
-                                    )
-                                    Box(
-                                        modifier = Modifier
-                                            .size(boxSize)
-                                            .background(color, RoundedCornerShape(3.dp)),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            text = date.dayOfMonth.toString(),
-                                            fontSize = 9.sp,
-                                            color = if (intensity > 0.5f)
-                                                MaterialTheme.colorScheme.onPrimary
-                                            else MaterialTheme.colorScheme.onSurface
-                                        )
-                                    }
-                                } else {
-                                    Box(modifier = Modifier.size(boxSize))
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
 }
 
 data class ChartModel(

@@ -106,7 +106,7 @@ fun NewBoardItemSheet(
 
     if (showDateSelector) {
         DatePickerModal(
-            {
+            onDateSelected = {
                 val selectedDate = it ?: -1L
 
                 if (isSelectingStartDate) {

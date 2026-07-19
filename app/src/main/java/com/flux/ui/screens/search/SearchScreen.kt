@@ -54,8 +54,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -112,7 +113,6 @@ import java.time.LocalDate
 import java.time.YearMonth
 import kotlin.collections.minus
 import kotlin.collections.plus
-import kotlin.math.absoluteValue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -232,7 +232,7 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
     val inProgressItems = boardItems.filter { it.status == 1 }
     val completedItems = boardItems.filter { it.status == 2 }
     var selectedProgressBoardItem by remember { mutableStateOf<ProgressBoardModel?>(null) }
-    var selectedSpace by remember { mutableIntStateOf(1) }
+    val selectedSpace = rememberSaveable { mutableIntStateOf(1) }
     val workspacesLabel = stringResource(R.string.workspaces)
     val spacesLabel = stringResource(R.string.spaces)
 
@@ -245,8 +245,8 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
 
     LaunchedEffect(selectedSpaces) {
         val availableIds = selectedSpaces.filter { it.id != 6 }.map { it.id }
-        if (availableIds.isNotEmpty() && selectedSpace !in availableIds) {
-            selectedSpace = availableIds.first()
+        if (availableIds.isNotEmpty() && selectedSpace.intValue !in availableIds) {
+            selectedSpace.intValue = availableIds.first()
         }
     }
 
@@ -284,12 +284,12 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
                                 ) {
                                     items(selectedSpaces){ space->
                                         FilterChip(
-                                            onClick = { selectedSpace = space.id },
+                                            onClick = { selectedSpace.intValue = space.id },
                                             label = { Text(space.title) },
-                                            selected = selectedSpace == space.id,
+                                            selected = selectedSpace.intValue == space.id,
                                             leadingIcon = {
                                                 Icon(
-                                                    imageVector = if (selectedSpace == space.id) Icons.Filled.Done else space.icon,
+                                                    imageVector = if (selectedSpace.intValue == space.id) Icons.Filled.Done else space.icon,
                                                     contentDescription = "Done icon",
                                                     modifier = Modifier.size(FilterChipDefaults.IconSize)
                                                 )
@@ -299,7 +299,7 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
                                 }
                             }
 
-                            when(selectedSpace.absoluteValue) {
+                            when(selectedSpace.intValue) {
                                 1 -> searchedNotes(navController, notesPreviewMode, radius, notes, labels)
                                 2 -> searchedTodo(navController, radius, context, expandedTODOIds.value, todoLists, { id->
                                     val todoItem = todoLists.first { it.id == id }
@@ -627,7 +627,9 @@ fun FilterSheet(
     onApply: (Map<String, Set<String>>) -> Unit
 ) {
     val context = LocalContext.current
-    val maxHeight = LocalConfiguration.current.screenHeightDp.dp * 0.4f
+    val windowInfo = LocalWindowInfo.current
+    val density = LocalDensity.current
+    val maxHeight = with(density) { windowInfo.containerSize.height.toDp() } * 0.4f
     val categories = remember(workspaces, spaces) {
         buildSearchFilterCategories(context, workspaces, spaces)
     }

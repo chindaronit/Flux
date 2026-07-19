@@ -533,4 +533,15 @@
     <string name="missed">Perdido</string>
     <string name="pick_a_todo">Elegir una tarea</string>
 
+    <string name="list_items">Elementos de la lista</string>
+    <string name="no_checklist_for_date">No hay una lista de verificación para esta fecha.</string>
+    <string name="tracking_starts_later">¡El seguimiento comienza más tarde!</string>
+    <string name="removed_items">Elementos eliminados</string>
+    <string name="no_data_yet">Aún no hay datos</string>
+    <string name="item_consistency">Consistencia de los elementos</string>
+    <string name="current_streak_text">Racha actual</string>
+    <string name="drag_horizontally_to_reorder">Arrastra horizontalmente para reordenar</string>
+    <string name="delete_alert">¡Alerta de eliminación!</string>
+    <string name="delete_spaces_alert">Estás a punto de eliminar permanentemente los espacios %1$s con todos sus datos. Esta acción no se puede deshacer.</string>
+
 </resources>

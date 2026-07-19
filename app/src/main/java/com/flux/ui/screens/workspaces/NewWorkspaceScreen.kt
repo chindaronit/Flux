@@ -132,9 +132,8 @@ fun NewWorkspaceScreen(
                 navController.popBackStack()
             },
             onDismissRequest = { showSpaceDeleteWarningDialog = false },
-            dialogTitle = "Delete Alert!",
-            dialogText = "You are about to delete ${removedSpaces.joinToString(", ") { it.title }} " +
-                    "space's with their data permanently, this can't be undone."
+            dialogTitle = stringResource(R.string.delete_alert),
+            dialogText = stringResource(R.string.delete_spaces_alert, removedSpaces.joinToString { it.title })
         )
     }
 
@@ -253,7 +252,7 @@ fun NewWorkspaceScreen(
 
                 if (canDrag) {
                     Text(
-                        "Drag horizontally to reorder",
+                        stringResource(R.string.drag_horizontally_to_reorder),
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Spacer(Modifier.height(8.dp))

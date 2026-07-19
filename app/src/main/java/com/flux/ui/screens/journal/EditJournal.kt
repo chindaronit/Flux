@@ -444,6 +444,7 @@ fun EditJournal(
 
     if(showDateDialog){
         DatePickerModal(
+            initialSelectedDateMillis = journalDate,
             onDateSelected = { selectedDate ->
 
                 if (selectedDate == null) return@DatePickerModal
@@ -457,7 +458,6 @@ fun EditJournal(
                 val today = LocalDate.now()
 
                 when {
-                    // future date not allowed
                     selectedLocalDate.isAfter(today) -> {
                         Toast.makeText(
                             context,
@@ -466,31 +466,27 @@ fun EditJournal(
                         ).show()
                     }
 
-                    // today -> use current exact time
                     selectedLocalDate.isEqual(today) -> {
                         journalDate = now
                     }
 
-                    // past date -> keep selected date but current time
                     else -> {
-
                         val currentTime = Instant.ofEpochMilli(now)
                             .atZone(ZoneId.systemDefault())
                             .toLocalTime()
 
-                        val finalMillis = selectedLocalDate
+                        journalDate = selectedLocalDate
                             .atTime(currentTime)
                             .atZone(ZoneId.systemDefault())
                             .toInstant()
                             .toEpochMilli()
-
-                        journalDate = finalMillis
                     }
                 }
+            },
+            onDismiss = {
+                showDateDialog = false
             }
-        ) {
-            showDateDialog = false
-        }
+        )
     }
 
     if (showLinkDialog) {

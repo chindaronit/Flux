@@ -77,7 +77,6 @@ import com.flux.data.model.isCompleted
 import com.flux.ui.common.convertMillisToDate
 import com.flux.ui.common.convertMillisToTime
 import com.flux.ui.events.HabitEvents
-import com.flux.ui.screens.analytics.HeatMapCard
 import kotlinx.coroutines.flow.distinctUntilChanged
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
@@ -85,23 +84,14 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.automirrored.filled.ArrowBackIos
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.Analytics
-import androidx.compose.material.icons.filled.Pending
-import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Paint
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.style.TextOverflow
 import com.flux.data.model.RecurrenceRule
 import com.flux.ui.screens.events.IconRadioButton
@@ -111,7 +101,6 @@ import java.time.YearMonth
 import java.time.ZoneId
 import java.time.format.TextStyle
 import kotlin.collections.filter
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -131,28 +120,27 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import com.flux.data.model.isCounted
 import com.flux.data.model.isLive
 import com.flux.data.model.isTimed
-import com.flux.ui.common.FilterCategory
-import com.flux.ui.common.FilterOption
-import com.flux.ui.common.SelectionType
 import com.flux.ui.screens.settings.CircleWrapper
 import com.flux.ui.screens.settings.shapeManager
 import androidx.compose.ui.platform.LocalLocale
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import com.flux.data.model.HabitAchievementStats
 import com.flux.data.model.isActiveOn
 import com.flux.other.saveBitmapAndGetUri
 import com.flux.other.shareImageUri
+import com.flux.ui.common.BarChart
+import com.flux.ui.common.HeatMapCard
+import com.flux.ui.common.WeeklyAnalytics
+import com.flux.ui.common.WeeklyProgressChart
 import com.flux.ui.theme.completed
 import com.flux.ui.theme.flameOrange
 import com.flux.ui.theme.trophyGold
@@ -624,69 +612,69 @@ fun NumberPicker(
     }
 }
 
-@Composable
-fun TimedHabitDialog(
-    durationMillis: Long,
-    onDismiss: () -> Unit,
-    onConfirm: (Long) -> Unit
-){
-    val totalMinutes = durationMillis / 60_000L
-    var hours by remember { mutableIntStateOf((totalMinutes / 60).toInt()) }
-    var minutes by remember { mutableIntStateOf((totalMinutes % 60).toInt()) }
-
-    // Prevent invalid state
-    LaunchedEffect(hours, minutes) {
-        if (hours == 0 && minutes == 0) {
-            minutes = 1
-        }
-    }
-
-    var selectedIndex by remember { mutableIntStateOf(0) }
-    val options = listOf("Countdown", "Manual")
-    val icons = listOf(Icons.Default.HourglassTop, Icons.Default.Edit)
-
-    Dialog(onDismissRequest = onDismiss) {
-        Surface(shape = RoundedCornerShape(24.dp)) {
-            Column(Modifier
-                .padding(16.dp)
-                .fillMaxWidth()) {
-                SingleChoiceSegmentedButtonRow(modifier = Modifier.padding(vertical = 6.dp)) {
-                    options.forEachIndexed { index, label ->
-                        SegmentedButton(
-                            shape = SegmentedButtonDefaults.itemShape(
-                                index = index,
-                                count = options.size
-                            ),
-                            onClick = { selectedIndex = index },
-                            selected = index == selectedIndex,
-                            label = { Text(label) },
-                            icon = { Icon(icons[index], null) }
-                        )
-                    }
-                }
-
-                NumberPickerRow(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 32.dp),
-                    hours,
-                    minutes,
-                    { hours=it }
-                ) { minutes=it }
-                Spacer(Modifier.height(16.dp))
-                FilledTonalButton(
-                    onClick = {
-                        onDismiss()
-                        onConfirm(toMillis(hours, minutes))
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(stringResource(R.string.Confirm))
-                }
-            }
-        }
-    }
-}
+//@Composable
+//fun TimedHabitDialog(
+//    durationMillis: Long,
+//    onDismiss: () -> Unit,
+//    onConfirm: (Long) -> Unit
+//){
+//    val totalMinutes = durationMillis / 60_000L
+//    var hours by remember { mutableIntStateOf((totalMinutes / 60).toInt()) }
+//    var minutes by remember { mutableIntStateOf((totalMinutes % 60).toInt()) }
+//
+//    // Prevent invalid state
+//    LaunchedEffect(hours, minutes) {
+//        if (hours == 0 && minutes == 0) {
+//            minutes = 1
+//        }
+//    }
+//
+//    var selectedIndex by remember { mutableIntStateOf(0) }
+//    val options = listOf("Countdown", "Manual")
+//    val icons = listOf(Icons.Default.HourglassTop, Icons.Default.Edit)
+//
+//    Dialog(onDismissRequest = onDismiss) {
+//        Surface(shape = RoundedCornerShape(24.dp)) {
+//            Column(Modifier
+//                .padding(16.dp)
+//                .fillMaxWidth()) {
+//                SingleChoiceSegmentedButtonRow(modifier = Modifier.padding(vertical = 6.dp)) {
+//                    options.forEachIndexed { index, label ->
+//                        SegmentedButton(
+//                            shape = SegmentedButtonDefaults.itemShape(
+//                                index = index,
+//                                count = options.size
+//                            ),
+//                            onClick = { selectedIndex = index },
+//                            selected = index == selectedIndex,
+//                            label = { Text(label) },
+//                            icon = { Icon(icons[index], null) }
+//                        )
+//                    }
+//                }
+//
+//                NumberPickerRow(
+//                    Modifier
+//                        .fillMaxWidth()
+//                        .padding(horizontal = 32.dp),
+//                    hours,
+//                    minutes,
+//                    { hours=it }
+//                ) { minutes=it }
+//                Spacer(Modifier.height(16.dp))
+//                FilledTonalButton(
+//                    onClick = {
+//                        onDismiss()
+//                        onConfirm(toMillis(hours, minutes))
+//                    },
+//                    modifier = Modifier.fillMaxWidth()
+//                ) {
+//                    Text(stringResource(R.string.Confirm))
+//                }
+//            }
+//        }
+//    }
+//}
 
 @Composable
 fun HabitDetailedInfo(
@@ -734,14 +722,16 @@ fun HabitDetailedInfo(
                 )
             }
 
-            val configuration = LocalConfiguration.current
+            val windowInfo = LocalWindowInfo.current
             val density = LocalDensity.current
+
+            val screenWidthDp = with(density) { windowInfo.containerSize.width.toDp() }
 
             val columns = when {
                 density.fontScale > 1.5f -> 1
 
-                configuration.screenWidthDp < 360 -> 1
-                configuration.screenWidthDp < 480 -> 2
+                screenWidthDp < 360.dp -> 1
+                screenWidthDp < 480.dp -> 2
 
                 else -> 3
             }
@@ -1485,63 +1475,7 @@ fun WeeklyHabitAnalyticsCard(
         }
     }
 
-    val completedCount = dayStatus.count { it }
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = shapeManager(radius = radius * 2),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)
-        ),
-        onClick = {}
-    ) {
-        Column(Modifier
-            .fillMaxSize()
-            .padding(12.dp)) {
-            Text(
-                text = stringResource(R.string.This_Week),
-                style = MaterialTheme.typography.titleMedium,
-            )
-
-            Text(
-                text = stringResource(R.string.completed_habits, completedCount),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(bottom = 24.dp)
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                daysOfWeek.forEachIndexed { index, day ->
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Card(
-                            shape = RoundedCornerShape(50),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.primary,
-                                contentColor = if(dayStatus[index]) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
-                            )
-                        ) {
-                            Icon(
-                                imageVector = if (dayStatus[index]) Icons.Default.Verified else Icons.Default.Pending,
-                                contentDescription = null,
-                                modifier = Modifier.padding(4.dp)
-                            )
-                        }
-                        Text(
-                            text = day,
-                            style = MaterialTheme.typography.labelLarge,
-                        )
-                    }
-                }
-            }
-        }
-    }
+    WeeklyAnalytics(radius, dayStatus)
 }
 
 @Composable
@@ -1629,7 +1563,7 @@ fun MonthlyHabitAnalyticsCard(
                 modifier = Modifier.padding(bottom = 24.dp)
             )
 
-            HabitBarChart(
+            BarChart(
                 weekCounts = weekCounts,
                 weekLabels = weekRanges.map { "${it.first}-${it.last}" }
             )
@@ -1716,236 +1650,6 @@ fun HabitsWeeklyProgressAnalysis(
     }
 
     WeeklyProgressChart(radius, modifier, percentages)
-}
-
-@Composable
-fun WeeklyProgressChart(
-    radius: Int,
-    modifier: Modifier = Modifier,
-    percentages: List<Float>
-){
-    val primaryColor = MaterialTheme.colorScheme.primary
-    val primaryAlpha = primaryColor.copy(alpha = 0.4f)
-
-    val today = LocalDate.now()
-    val startOfWeek = today.with(DayOfWeek.MONDAY)
-    val weekDays = (0..6).map { startOfWeek.plusDays(it.toLong()) }
-
-    val dayLabels = listOf(
-        stringResource(R.string.monday_short),
-        stringResource(R.string.tuesday_short),
-        stringResource(R.string.wednesday_short),
-        stringResource(R.string.thursday_short),
-        stringResource(R.string.friday_short),
-        stringResource(R.string.saturday_short),
-        stringResource(R.string.sunday_short)
-    )
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = shapeManager(radius = radius * 2),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)
-        ),
-        onClick = {}
-    ) {
-        Column(modifier = modifier.padding(12.dp)) {
-            Text(
-                stringResource(R.string.weekly_habit_completion),
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.primary,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 24.dp, top = 8.dp)
-            )
-
-            Canvas(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(6.dp)
-                    .height(200.dp)
-            ) {
-                val leftPadding = 32.dp.toPx()
-                val bottomPadding = 32.dp.toPx()
-                val widthPerPoint = (size.width - leftPadding) / (weekDays.size - 1)
-                val height = size.height - bottomPadding
-
-                // Vertical percentage labels
-                for (i in 0..4) {
-                    val y = height - i * height / 4
-                    drawContext.canvas.nativeCanvas.apply {
-                        drawText(
-                            "${i * 25}%",
-                            leftPadding - 14.dp.toPx(),
-                            y,
-                            android.graphics.Paint().apply {
-                                color = primaryColor.toArgb()
-                                textSize = 12.sp.toPx()
-                                textAlign = android.graphics.Paint.Align.RIGHT
-                            }
-                        )
-                    }
-                }
-
-                // Line path
-                val linePath = Path().apply {
-                    percentages.forEachIndexed { index, percentage ->
-                        val x = leftPadding + index * widthPerPoint
-                        val y = height - (percentage / 100f * height)
-                        if (index == 0) moveTo(x, y) else lineTo(x, y)
-                    }
-                }
-
-                // Shadow under line
-                val shadowPath = Path().apply {
-                    addPath(linePath)
-                    lineTo(leftPadding + (weekDays.size - 1) * widthPerPoint, height)
-                    lineTo(leftPadding, height)
-                    close()
-                }
-
-                drawPath(
-                    path = shadowPath,
-                    brush = Brush.verticalGradient(
-                        colors = listOf(primaryAlpha, primaryColor.copy(alpha = 0f)),
-                        startY = 0f,
-                        endY = height
-                    )
-                )
-
-                // Draw line
-                drawPath(
-                    path = linePath,
-                    color = primaryColor,
-                    style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
-                )
-
-                // Draw dots
-                percentages.forEachIndexed { index, percentage ->
-                    val x = leftPadding + index * widthPerPoint
-                    val y = height - (percentage / 100f * height)
-                    drawCircle(
-                        color = primaryColor,
-                        radius = 6.dp.toPx(),
-                        center = Offset(x, y)
-                    )
-                }
-
-                // Draw day labels
-                dayLabels.forEachIndexed { index, day ->
-                    val x = leftPadding + index * widthPerPoint
-                    val y = height + 24.dp.toPx()
-                    drawContext.canvas.nativeCanvas.apply {
-                        drawText(
-                            day,
-                            x,
-                            y,
-                            android.graphics.Paint().apply {
-                                color = primaryColor.toArgb()
-                                textSize = 12.sp.toPx()
-                                textAlign = android.graphics.Paint.Align.CENTER
-                            }
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun HabitBarChart(
-    weekCounts: List<Int>,
-    weekLabels: List<String>,
-    modifier: Modifier = Modifier
-) {
-    val maxDaysPerWeek = 7
-    val yLabels = (maxDaysPerWeek downTo 1).toList()
-    val primaryColor = MaterialTheme.colorScheme.primary
-
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(220.dp)
-            .padding(bottom = 16.dp)
-    ) {
-        // Y-axis labels
-        Box(
-            modifier = Modifier
-                .width(20.dp)
-                .padding(end = 8.dp)
-                .fillMaxHeight()
-        ) {
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                val stepHeight = size.height / maxDaysPerWeek
-                val textPaint = Paint().asFrameworkPaint().apply {
-                    isAntiAlias = true
-                    textSize = 32f
-                    color = primaryColor.toArgb()
-                    textAlign = android.graphics.Paint.Align.RIGHT
-                }
-
-                yLabels.forEach { label ->
-                    val y = size.height - (stepHeight * label)
-                    drawContext.canvas.nativeCanvas.drawText(
-                        label.toString(),
-                        size.width - 10f,
-                        y + 5f,
-                        textPaint
-                    )
-                }
-            }
-        }
-
-        // Bar chart canvas
-        Canvas(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight()
-        ) {
-            val barWidth = size.width / (weekCounts.size * 2 + 1)
-            val stepHeight = size.height / maxDaysPerWeek
-
-            weekCounts.forEachIndexed { index, count ->
-                val barHeight = stepHeight * count
-                val x = barWidth + index * (barWidth + barWidth)
-                val y = size.height - barHeight
-
-                drawRoundRect(
-                    color = primaryColor,
-                    topLeft = Offset(x, y),
-                    size = Size(barWidth, barHeight),
-                    cornerRadius = CornerRadius(x = 16.dp.toPx(), y = 16.dp.toPx())
-                )
-
-                drawIntoCanvas { canvas ->
-                    val paint = Paint().asFrameworkPaint().apply {
-                        isAntiAlias = true
-                        color = primaryColor.toArgb()
-                        textSize = 30f
-                        textAlign = android.graphics.Paint.Align.CENTER
-                    }
-
-                    canvas.nativeCanvas.drawText(
-                        weekLabels[index],
-                        x + barWidth / 2,
-                        size.height + 40f,
-                        paint
-                    )
-                }
-            }
-
-            for (i in 1..maxDaysPerWeek) {
-                val y = size.height - (stepHeight * i)
-                drawLine(
-                    color = Color.Gray.copy(alpha = 0.5f),
-                    start = Offset(0f, y),
-                    end = Offset(size.width, y),
-                    strokeWidth = 0.25.dp.toPx()
-                )
-            }
-        }
-    }
 }
 
 data class StreakData(
@@ -2182,41 +1886,41 @@ fun HabitConfigCard(
     }
 }
 
-fun buildFilterCategories(recurrence: RecurrenceRule): List<FilterCategory> {
-    return listOf(
-        FilterCategory(
-            name = "Sort By",
-            options = listOf(
-                FilterOption("latest", "Latest"),
-                FilterOption("oldest", "Oldest")
-            ),
-            type = SelectionType.SINGLE
-        ),
-        FilterCategory(
-            name = "Recurrence",
-            options = listOf(
-                FilterOption("recurrence", "Occurs On", null, recurrence)
-            ),
-            type = SelectionType.RECURRENCE
-        ),
-        FilterCategory(
-            name = "Type",
-            options = listOf(
-                FilterOption("simple", "Simple"),
-                FilterOption("timed", "Timed")
-            ),
-            type = SelectionType.SINGLE
-        ),
-        FilterCategory(
-            name = "Active",
-            options = listOf(
-                FilterOption("live", "Live"),
-                FilterOption("ended", "Ended")
-            ),
-            type = SelectionType.SINGLE
-        )
-    )
-}
+//fun buildFilterCategories(recurrence: RecurrenceRule): List<FilterCategory> {
+//    return listOf(
+//        FilterCategory(
+//            name = "Sort By",
+//            options = listOf(
+//                FilterOption("latest", "Latest"),
+//                FilterOption("oldest", "Oldest")
+//            ),
+//            type = SelectionType.SINGLE
+//        ),
+//        FilterCategory(
+//            name = "Recurrence",
+//            options = listOf(
+//                FilterOption("recurrence", "Occurs On", null, recurrence)
+//            ),
+//            type = SelectionType.RECURRENCE
+//        ),
+//        FilterCategory(
+//            name = "Type",
+//            options = listOf(
+//                FilterOption("simple", "Simple"),
+//                FilterOption("timed", "Timed")
+//            ),
+//            type = SelectionType.SINGLE
+//        ),
+//        FilterCategory(
+//            name = "Active",
+//            options = listOf(
+//                FilterOption("live", "Live"),
+//                FilterOption("ended", "Ended")
+//            ),
+//            type = SelectionType.SINGLE
+//        )
+//    )
+//}
 
 @Composable
 fun AchievementCard(
@@ -2418,7 +2122,7 @@ fun AchievementCard(
                             verticalArrangement = Arrangement.Top
                         ) {
                             Text(
-                                stringResource(R.string.current_streak),
+                                stringResource(R.string.current_streak_text),
                                 style = MaterialTheme.typography.labelSmall,
                                 modifier = Modifier.alpha(0.75f)
                             )

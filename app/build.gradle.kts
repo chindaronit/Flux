@@ -14,8 +14,8 @@ android {
         applicationId = "com.flux"
         minSdk = 29
         targetSdk = 37
-        versionCode = 15
-        versionName = "3.1.9"
+        versionCode = 16
+        versionName = "3.1.10"
     }
 
     dependenciesInfo {
@@ -86,6 +86,7 @@ kotlin {
 }
 
 dependencies {
+    implementation(libs.androidx.compose.ui.text)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.glance.appwidget)
     implementation(libs.androidx.material3)

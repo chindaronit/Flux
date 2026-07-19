@@ -529,4 +529,15 @@
     <string name="missed">Verpasst</string>
     <string name="pick_a_todo">Todo auswählen</string>
 
+    <string name="list_items">Listenelemente</string>
+    <string name="no_checklist_for_date">Für dieses Datum gibt es keine Checkliste.</string>
+    <string name="tracking_starts_later">Die Nachverfolgung beginnt später!</string>
+    <string name="removed_items">Entfernte Elemente</string>
+    <string name="no_data_yet">Noch keine Daten</string>
+    <string name="item_consistency">Element-Konsistenz</string>
+    <string name="current_streak_text">Aktuelle Serie</string>
+    <string name="drag_horizontally_to_reorder">Zum Neuordnen horizontal ziehen</string>
+    <string name="delete_alert">Löschwarnung!</string>
+    <string name="delete_spaces_alert">Du bist dabei, %1$s Bereich(e) mit allen Daten dauerhaft zu löschen. Dies kann nicht rückgängig gemacht werden.</string>
+
 </resources>
