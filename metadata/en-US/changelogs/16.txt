@@ -1,0 +1,16 @@
+feat:
+    Bug in instance clearance for todo, when reminder time changes.
+    Ability to change order of spaces in workspaces.
+    Added multiple analytics items for todo including:
+        Consistency metrics for items
+        Weekly Item completion card
+        This month completion card
+
+fix:
+    consistency in font family in read View of markdown for notes and journals.
+
+chore:
+    removal of unnecessary libraries to optimize application size.
+
+src:
+    consistency maintenance for TODO to save just like notes

@@ -14,8 +14,8 @@ android {
         applicationId = "com.flux"
         minSdk = 29
         targetSdk = 37
-        versionCode = 15
-        versionName = "3.1.9"
+        versionCode = 16
+        versionName = "3.1.10"
     }
 
     dependenciesInfo {
