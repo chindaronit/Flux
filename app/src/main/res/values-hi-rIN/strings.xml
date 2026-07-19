@@ -535,4 +535,16 @@
     <string name="missed">छूट गया</string>
     <string name="pick_a_todo">एक टूडू चुनें</string>
 
+    <!-- values-hi/strings.xml -->
+    <string name="list_items">सूची आइटम</string>
+    <string name="no_checklist_for_date">इस तिथि के लिए कोई चेकलिस्ट नहीं है।</string>
+    <string name="tracking_starts_later">आपकी ट्रैकिंग बाद में शुरू होगी!</string>
+    <string name="removed_items">हटाए गए आइटम</string>
+    <string name="no_data_yet">अभी तक कोई डेटा नहीं</string>
+    <string name="item_consistency">आइटम निरंतरता</string>
+    <string name="current_streak_text">वर्तमान स्ट्रीक</string>
+    <string name="drag_horizontally_to_reorder">पुनः क्रमित करने के लिए क्षैतिज रूप से खींचें</string>
+    <string name="delete_alert">हटाने की चेतावनी!</string>
+    <string name="delete_spaces_alert">%1$s स्पेस और उनका सारा डेटा स्थायी रूप से हटाया जाएगा। इसे वापस नहीं लाया जा सकता।</string>
+
 </resources>

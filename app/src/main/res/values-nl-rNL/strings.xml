@@ -535,4 +535,15 @@
     <string name="not_scheduled">Niet gepland</string>
     <string name="missed">Gemist</string>
     <string name="pick_a_todo">Kies een taak</string>
+
+    <string name="list_items">Lijstitems</string>
+    <string name="no_checklist_for_date">Geen checklist voor deze datum.</string>
+    <string name="tracking_starts_later">Je tracking begint later!</string>
+    <string name="removed_items">Verwijderde items</string>
+    <string name="no_data_yet">Nog geen gegevens</string>
+    <string name="item_consistency">Itemconsistentie</string>
+    <string name="current_streak_text">Huidige reeks</string>
+    <string name="drag_horizontally_to_reorder">Sleep horizontaal om opnieuw te ordenen</string>
+    <string name="delete_alert">Verwijderingswaarschuwing!</string>
+    <string name="delete_spaces_alert">Je staat op het punt %1$s ruimte(n) met alle gegevens permanent te verwijderen. Dit kan niet ongedaan worden gemaakt.</string>
 </resources>

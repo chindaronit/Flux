@@ -30,6 +30,7 @@ adaptive = "1.2.0"
 foundation = "1.11.4"
 navigationCommonKtx = "2.9.8"
 glanceAppwidget = "1.1.1"
+uiText = "1.11.4"
 
 [libraries]
 androidx-biometric = { module = "androidx.biometric:biometric", version.ref = "biometric" }
@@ -79,6 +80,7 @@ androidx-compose-foundation = { group = "androidx.compose.foundation", name = "f
 androidx-navigation-common-ktx = { group = "androidx.navigation", name = "navigation-common-ktx", version.ref = "navigationCommonKtx" }
 reorderable = { module = "sh.calvin.reorderable:reorderable", version.ref = "reorderable" }
 androidx-glance-appwidget = { group = "androidx.glance", name = "glance-appwidget", version.ref = "glanceAppwidget" }
+androidx-compose-ui-text = { group = "androidx.compose.ui", name = "ui-text", version.ref = "uiText" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

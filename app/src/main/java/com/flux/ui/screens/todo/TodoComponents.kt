@@ -1,6 +1,8 @@
 package com.flux.ui.screens.todo
 
 import android.content.Context
+import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,15 +15,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBackIos
+import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.automirrored.outlined.Note
 import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.AlarmAdd
@@ -61,10 +67,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -81,9 +90,7 @@ import com.flux.data.model.TodoInstance
 import com.flux.data.model.TodoItem
 import com.flux.data.model.TodoModel
 import com.flux.data.model.calculateItemConsistency
-import com.flux.data.model.isActiveOn
 import com.flux.data.model.isCompleted
-import com.flux.data.model.startDateAsLocalDate
 import com.flux.navigation.NavRoutes
 import com.flux.other.ConvertType
 import com.flux.ui.common.BarChart
@@ -96,12 +103,16 @@ import com.flux.ui.common.convertMillisToTime
 import com.flux.ui.events.TodoEvents
 import com.flux.ui.screens.events.toFormattedTime
 import com.flux.ui.screens.habits.HabitInfoComponent
+import com.flux.ui.screens.habits.isDateAllowedForHabit
 import com.flux.ui.screens.notes.ExportCard
 import com.flux.ui.screens.settings.shapeManager
 import java.time.DayOfWeek
+import java.time.Instant
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
 import java.time.temporal.ChronoUnit
 import kotlin.math.roundToInt
 
@@ -239,15 +250,15 @@ fun MaterialListItem(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(50),
         colors = CardDefaults.cardColors(
-            containerColor = if (todoItem.isChecked) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.surfaceContainerHighest
+            containerColor = if (todoItem.isChecked) MaterialTheme.colorScheme.primaryContainer.copy(0.5f) else MaterialTheme.colorScheme.primaryContainer.copy(0.7f)
         ),
         onClick = onToggleCheck
     ) {
         Row (verticalAlignment = Alignment.CenterVertically) {
             IconButton(
                 onToggleCheck, colors = IconButtonDefaults.iconButtonColors(
-                    containerColor = if (todoItem.isChecked) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHighest,
-                    contentColor = if (todoItem.isChecked) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             ) {
                 if (enabled) { Icon(if (todoItem.isChecked) Icons.Default.Verified else Icons.Outlined.Circle, null) }
@@ -410,7 +421,7 @@ fun TodoReminderDialog(
                 }
                 else {
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text("Turn on the reminder to remind about this to-do list!", modifier = Modifier
+                    Text(stringResource(R.string.turn_on_reminder), modifier = Modifier
                         .fillMaxWidth()
                         .align(Alignment.CenterHorizontally))
                     Spacer(modifier = Modifier.height(4.dp))
@@ -705,20 +716,15 @@ fun WeeklyTodoAnalytics(
 @Composable
 fun TodoWeeklyProgressChart(
     radius: Int,
-    list: TodoModel,
     instances: List<TodoInstance>,
     modifier: Modifier = Modifier,
-    zoneId: ZoneId = ZoneId.systemDefault()
 ) {
     val today = LocalDate.now()
     val startOfWeek = today.with(DayOfWeek.MONDAY)
     val weekDays = remember(today) { (0..6).map { startOfWeek.plusDays(it.toLong()) } }
     val instanceMap = remember(instances) { instances.associateBy { it.instanceDate } }
-    val startDate = remember(list.startDateTime, zoneId) { list.startDateAsLocalDate(zoneId) }
 
     val percentages = weekDays.map { day ->
-        val isScheduled = list.recurrence.isActiveOn(day, startDate)
-        if (!isScheduled) return@map 0f
 
         val instance = instanceMap[day.toEpochDay()]
         if (instance == null || instance.items.isEmpty()) return@map 0f
@@ -842,7 +848,7 @@ fun ItemConsistencyCard(
     ) {
         Column(modifier = modifier.padding(12.dp)) {
             Text(
-                "Item Consistency",
+                stringResource(R.string.item_consistency),
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.primary,
                 textAlign = TextAlign.Center,
@@ -853,7 +859,7 @@ fun ItemConsistencyCard(
 
             if (consistencyList.isEmpty()) {
                 Text(
-                    "No Data Yet",
+                    stringResource(R.string.no_data_yet),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -866,7 +872,7 @@ fun ItemConsistencyCard(
 
                 if (removedItems.isNotEmpty()) {
                     Text(
-                        "Removed Items",
+                        stringResource(R.string.removed_items),
                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier
@@ -926,5 +932,236 @@ private fun ConsistencyRow(item: ItemConsistency, primaryColor: Color) {
             modifier = Modifier.widthIn(min = 36.dp),
             textAlign = TextAlign.End
         )
+    }
+}
+
+@Composable
+fun TodoCalendarCard(
+    radius: Int,
+    list: TodoModel,
+    instances: List<TodoInstance>,
+    onTodoEvents: (TodoEvents) -> Unit
+) {
+    val context = LocalContext.current
+    val startDateTime = list.startDateTime
+    val recurrence = list.recurrence
+
+    val todoStartMonth =
+        Instant.ofEpochMilli(startDateTime).atZone(ZoneId.systemDefault()).toLocalDate()
+            .let { YearMonth.of(it.year, it.month) }
+
+    var currentMonth by remember { mutableStateOf(YearMonth.now()) }
+    val currentYearMonth = YearMonth.now()
+    val endOfYear = YearMonth.of(currentYearMonth.year, 12)
+
+    val canGoBack = currentMonth > todoStartMonth
+    val canGoForward = currentMonth < endOfYear
+
+    val daysInMonth = currentMonth.lengthOfMonth()
+    val firstDayOfWeek = currentMonth.atDay(1).dayOfWeek.value % 7
+    val dates = (1..daysInMonth).map { currentMonth.atDay(it) }
+
+    val daysOfWeek = listOf(
+        stringResource(R.string.sunday_short),
+        stringResource(R.string.monday_short),
+        stringResource(R.string.tuesday_short),
+        stringResource(R.string.wednesday_short),
+        stringResource(R.string.thursday_short),
+        stringResource(R.string.friday_short),
+        stringResource(R.string.saturday_short)
+    )
+    val today = LocalDate.now()
+    val todoStartDate = Instant.ofEpochMilli(startDateTime).atZone(ZoneId.systemDefault()).toLocalDate()
+    val locale = LocalLocale.current.platformLocale
+    var selectedDate by remember { mutableStateOf(today) }
+    val selectedInstance = remember(selectedDate, instances) {
+        instances.find { it.instanceDate == selectedDate.toEpochDay() }
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = {},
+        shape = shapeManager(radius = radius * 2),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)
+        )
+    ) {
+        Column(Modifier.padding(16.dp)) {
+            // Month navigation
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = currentMonth.month.getDisplayName(TextStyle.FULL, locale) +
+                            " ${currentMonth.year}",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Row {
+                    IconButton(
+                        onClick = { if (canGoBack) currentMonth = currentMonth.minusMonths(1) },
+                        enabled = canGoBack
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Default.ArrowBackIos,
+                            contentDescription = "Previous Month",
+                            modifier = Modifier
+                                .alpha(if (canGoBack) 0.8f else 0.3f)
+                                .size(16.dp)
+                        )
+                    }
+                    IconButton(
+                        onClick = { if (canGoForward) currentMonth = currentMonth.plusMonths(1) },
+                        enabled = canGoForward
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Default.ArrowForwardIos,
+                            contentDescription = "Next Month",
+                            modifier = Modifier
+                                .alpha(if (canGoForward) 0.8f else 0.3f)
+                                .size(16.dp)
+                        )
+                    }
+                }
+            }
+
+            // Days of week row
+            Row(Modifier.fillMaxWidth().padding(bottom = 6.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                daysOfWeek.forEach {
+                    Text(
+                        text = it,
+                        modifier = Modifier.weight(1f),
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
+                    )
+                }
+            }
+
+            // Calendar grid
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(7),
+                userScrollEnabled = false,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.fillMaxWidth().heightIn(max=330.dp)
+            ) {
+                // Empty cells before 1st day
+                items(firstDayOfWeek) { Box(modifier = Modifier.size(32.dp)) }
+
+                items(dates) { date ->
+                    val epochDay = date.toEpochDay()
+                    val instance = instances.find { it.instanceDate == epochDay }
+                    val isMarked = instance?.isCompleted() ?: false
+                    val isBeforeStart = epochDay < todoStartDate.toEpochDay()
+                    val isAfterToday = epochDay > today.toEpochDay()
+                    val isAllowedByRecurrence = isDateAllowedForHabit(recurrence, epochDay)
+
+                    val backgroundColor = when {
+                        isMarked -> MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                        isAllowedByRecurrence && !isBeforeStart -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                        else -> Color.Transparent
+                    }
+
+                    val textColor = when {
+                        isMarked -> MaterialTheme.colorScheme.onPrimary
+                        isAllowedByRecurrence && !isBeforeStart -> MaterialTheme.colorScheme.onSurface
+                        else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                    }
+
+                    val dateAlpha = when {
+                        isBeforeStart -> 0.2f
+                        isAfterToday -> 0.4f
+                        !isAllowedByRecurrence -> 0.4f
+                        else -> 1f
+                    }
+
+                    val cantMarkFutureDate = stringResource(R.string.cannot_mark_future_dates)
+                    val habitStartsLater = stringResource(R.string.tracking_starts_later)
+                    val notInSchedule = stringResource(R.string.date_not_in_schedule)
+
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(backgroundColor)
+                            .alpha(dateAlpha)
+                            .clickable {
+                                when {
+                                    isAfterToday -> Toast.makeText(
+                                        context,
+                                        cantMarkFutureDate,
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+
+                                    isBeforeStart -> Toast.makeText(
+                                        context,
+                                        habitStartsLater,
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+
+                                    !isAllowedByRecurrence -> {
+                                        selectedDate=date
+                                        Toast.makeText(
+                                            context,
+                                            notInSchedule,
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+
+                                    else -> {
+                                        selectedDate = date
+                                    }
+                                }
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(date.dayOfMonth.toString(), color = textColor)
+                    }
+                }
+            }
+
+            Row(Modifier.fillMaxWidth().padding(vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Checklist, null, tint = MaterialTheme.colorScheme.primary)
+                Text(stringResource(R.string.list_items), color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodyMedium)
+                Spacer(Modifier.weight(1f))
+                Text(DateTimeFormatter.ofPattern("d MMM").format(selectedDate), style = MaterialTheme.typography.bodyMedium)
+            }
+
+            LazyColumn(
+                Modifier.fillMaxWidth().heightIn(max = 400.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                if (selectedInstance == null) {
+                    item {
+                        Text(
+                            stringResource(R.string.no_checklist_for_date),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                } else {
+                    items(selectedInstance.items) { todoItem ->
+                        MaterialListItem(true, todoItem) {
+                            val updatedItems = selectedInstance.items.map {
+                                if (it.id == todoItem.id)
+                                    it.copy(isChecked = !it.isChecked)
+                                else
+                                    it
+                            }
+
+                            onTodoEvents(
+                                TodoEvents.UpsertInstance(
+                                    selectedInstance.copy(items = updatedItems)
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 }

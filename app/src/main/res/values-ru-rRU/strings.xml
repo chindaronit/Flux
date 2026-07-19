@@ -536,4 +536,16 @@
     <string name="missed">Пропущено</string>
     <string name="pick_a_todo">Выбрать задачу</string>
 
+    <!-- values-ru/strings.xml -->
+    <string name="list_items">Элементы списка</string>
+    <string name="no_checklist_for_date">Для этой даты нет контрольного списка.</string>
+    <string name="tracking_starts_later">Отслеживание начнётся позже!</string>
+    <string name="removed_items">Удалённые элементы</string>
+    <string name="no_data_yet">Пока нет данных</string>
+    <string name="item_consistency">Последовательность выполнения</string>
+    <string name="current_streak_text">Текущая серия</string>
+    <string name="drag_horizontally_to_reorder">Перетащите по горизонтали для изменения порядка</string>
+    <string name="delete_alert">Предупреждение об удалении!</string>
+    <string name="delete_spaces_alert">Вы собираетесь навсегда удалить пространство(а) %1$s вместе со всеми данными. Это действие нельзя отменить.</string>
+
 </resources>

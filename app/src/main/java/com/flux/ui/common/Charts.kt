@@ -1,5 +1,6 @@
 package com.flux.ui.common
 
+import android.graphics.Paint
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -34,7 +35,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -80,9 +80,9 @@ fun HeatMapCard(
         ) {
             Text(
                 title,
+                textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.primary,
-                textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
             if(description.isNotBlank()){
@@ -213,13 +213,11 @@ fun WeeklyProgressChart(
     ) {
         Column(modifier = modifier.padding(12.dp)) {
             Text(
-                stringResource(R.string.weekly_habit_completion),
+                stringResource(R.string.This_Week),
+                textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.primary,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 24.dp, top = 8.dp)
+                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
             )
 
             Canvas(
@@ -241,10 +239,10 @@ fun WeeklyProgressChart(
                             "${i * 25}%",
                             leftPadding - 14.dp.toPx(),
                             y,
-                            android.graphics.Paint().apply {
+                            Paint().apply {
                                 color = primaryColor.toArgb()
                                 textSize = 12.sp.toPx()
-                                textAlign = android.graphics.Paint.Align.RIGHT
+                                textAlign = Paint.Align.RIGHT
                             }
                         )
                     }
@@ -303,10 +301,10 @@ fun WeeklyProgressChart(
                             day,
                             x,
                             y,
-                            android.graphics.Paint().apply {
+                            Paint().apply {
                                 color = primaryColor.toArgb()
                                 textSize = 12.sp.toPx()
-                                textAlign = android.graphics.Paint.Align.CENTER
+                                textAlign = Paint.Align.CENTER
                             }
                         )
                     }
@@ -411,11 +409,11 @@ fun BarChart(
         ) {
             Canvas(modifier = Modifier.fillMaxSize()) {
                 val stepHeight = size.height / maxDaysPerWeek
-                val textPaint = Paint().asFrameworkPaint().apply {
+                val textPaint = Paint().apply {
                     isAntiAlias = true
-                    textSize = 32f
                     color = primaryColor.toArgb()
-                    textAlign = android.graphics.Paint.Align.RIGHT
+                    textSize = 30f
+                    textAlign = Paint.Align.CENTER
                 }
 
                 yLabels.forEach { label ->
@@ -452,11 +450,11 @@ fun BarChart(
                 )
 
                 drawIntoCanvas { canvas ->
-                    val paint = Paint().asFrameworkPaint().apply {
+                    val paint = Paint().apply {
                         isAntiAlias = true
                         color = primaryColor.toArgb()
                         textSize = 30f
-                        textAlign = android.graphics.Paint.Align.CENTER
+                        textAlign = Paint.Align.CENTER
                     }
 
                     canvas.nativeCanvas.drawText(

@@ -78,10 +78,13 @@ fun convertMillisToDate(millis: Long): String {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DatePickerModal(
+    initialSelectedDateMillis: Long = System.currentTimeMillis(),
     onDateSelected: (Long?) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val datePickerState = rememberDatePickerState()
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = initialSelectedDateMillis
+    )
 
     DatePickerDialog(
         onDismissRequest = onDismiss,

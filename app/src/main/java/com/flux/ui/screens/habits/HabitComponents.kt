@@ -127,9 +127,6 @@ import androidx.compose.ui.platform.LocalContext
 import com.flux.data.model.isCounted
 import com.flux.data.model.isLive
 import com.flux.data.model.isTimed
-import com.flux.ui.common.FilterCategory
-import com.flux.ui.common.FilterOption
-import com.flux.ui.common.SelectionType
 import com.flux.ui.screens.settings.CircleWrapper
 import com.flux.ui.screens.settings.shapeManager
 import androidx.compose.ui.platform.LocalLocale
@@ -615,69 +612,69 @@ fun NumberPicker(
     }
 }
 
-@Composable
-fun TimedHabitDialog(
-    durationMillis: Long,
-    onDismiss: () -> Unit,
-    onConfirm: (Long) -> Unit
-){
-    val totalMinutes = durationMillis / 60_000L
-    var hours by remember { mutableIntStateOf((totalMinutes / 60).toInt()) }
-    var minutes by remember { mutableIntStateOf((totalMinutes % 60).toInt()) }
-
-    // Prevent invalid state
-    LaunchedEffect(hours, minutes) {
-        if (hours == 0 && minutes == 0) {
-            minutes = 1
-        }
-    }
-
-    var selectedIndex by remember { mutableIntStateOf(0) }
-    val options = listOf("Countdown", "Manual")
-    val icons = listOf(Icons.Default.HourglassTop, Icons.Default.Edit)
-
-    Dialog(onDismissRequest = onDismiss) {
-        Surface(shape = RoundedCornerShape(24.dp)) {
-            Column(Modifier
-                .padding(16.dp)
-                .fillMaxWidth()) {
-                SingleChoiceSegmentedButtonRow(modifier = Modifier.padding(vertical = 6.dp)) {
-                    options.forEachIndexed { index, label ->
-                        SegmentedButton(
-                            shape = SegmentedButtonDefaults.itemShape(
-                                index = index,
-                                count = options.size
-                            ),
-                            onClick = { selectedIndex = index },
-                            selected = index == selectedIndex,
-                            label = { Text(label) },
-                            icon = { Icon(icons[index], null) }
-                        )
-                    }
-                }
-
-                NumberPickerRow(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 32.dp),
-                    hours,
-                    minutes,
-                    { hours=it }
-                ) { minutes=it }
-                Spacer(Modifier.height(16.dp))
-                FilledTonalButton(
-                    onClick = {
-                        onDismiss()
-                        onConfirm(toMillis(hours, minutes))
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(stringResource(R.string.Confirm))
-                }
-            }
-        }
-    }
-}
+//@Composable
+//fun TimedHabitDialog(
+//    durationMillis: Long,
+//    onDismiss: () -> Unit,
+//    onConfirm: (Long) -> Unit
+//){
+//    val totalMinutes = durationMillis / 60_000L
+//    var hours by remember { mutableIntStateOf((totalMinutes / 60).toInt()) }
+//    var minutes by remember { mutableIntStateOf((totalMinutes % 60).toInt()) }
+//
+//    // Prevent invalid state
+//    LaunchedEffect(hours, minutes) {
+//        if (hours == 0 && minutes == 0) {
+//            minutes = 1
+//        }
+//    }
+//
+//    var selectedIndex by remember { mutableIntStateOf(0) }
+//    val options = listOf("Countdown", "Manual")
+//    val icons = listOf(Icons.Default.HourglassTop, Icons.Default.Edit)
+//
+//    Dialog(onDismissRequest = onDismiss) {
+//        Surface(shape = RoundedCornerShape(24.dp)) {
+//            Column(Modifier
+//                .padding(16.dp)
+//                .fillMaxWidth()) {
+//                SingleChoiceSegmentedButtonRow(modifier = Modifier.padding(vertical = 6.dp)) {
+//                    options.forEachIndexed { index, label ->
+//                        SegmentedButton(
+//                            shape = SegmentedButtonDefaults.itemShape(
+//                                index = index,
+//                                count = options.size
+//                            ),
+//                            onClick = { selectedIndex = index },
+//                            selected = index == selectedIndex,
+//                            label = { Text(label) },
+//                            icon = { Icon(icons[index], null) }
+//                        )
+//                    }
+//                }
+//
+//                NumberPickerRow(
+//                    Modifier
+//                        .fillMaxWidth()
+//                        .padding(horizontal = 32.dp),
+//                    hours,
+//                    minutes,
+//                    { hours=it }
+//                ) { minutes=it }
+//                Spacer(Modifier.height(16.dp))
+//                FilledTonalButton(
+//                    onClick = {
+//                        onDismiss()
+//                        onConfirm(toMillis(hours, minutes))
+//                    },
+//                    modifier = Modifier.fillMaxWidth()
+//                ) {
+//                    Text(stringResource(R.string.Confirm))
+//                }
+//            }
+//        }
+//    }
+//}
 
 @Composable
 fun HabitDetailedInfo(
@@ -1889,41 +1886,41 @@ fun HabitConfigCard(
     }
 }
 
-fun buildFilterCategories(recurrence: RecurrenceRule): List<FilterCategory> {
-    return listOf(
-        FilterCategory(
-            name = "Sort By",
-            options = listOf(
-                FilterOption("latest", "Latest"),
-                FilterOption("oldest", "Oldest")
-            ),
-            type = SelectionType.SINGLE
-        ),
-        FilterCategory(
-            name = "Recurrence",
-            options = listOf(
-                FilterOption("recurrence", "Occurs On", null, recurrence)
-            ),
-            type = SelectionType.RECURRENCE
-        ),
-        FilterCategory(
-            name = "Type",
-            options = listOf(
-                FilterOption("simple", "Simple"),
-                FilterOption("timed", "Timed")
-            ),
-            type = SelectionType.SINGLE
-        ),
-        FilterCategory(
-            name = "Active",
-            options = listOf(
-                FilterOption("live", "Live"),
-                FilterOption("ended", "Ended")
-            ),
-            type = SelectionType.SINGLE
-        )
-    )
-}
+//fun buildFilterCategories(recurrence: RecurrenceRule): List<FilterCategory> {
+//    return listOf(
+//        FilterCategory(
+//            name = "Sort By",
+//            options = listOf(
+//                FilterOption("latest", "Latest"),
+//                FilterOption("oldest", "Oldest")
+//            ),
+//            type = SelectionType.SINGLE
+//        ),
+//        FilterCategory(
+//            name = "Recurrence",
+//            options = listOf(
+//                FilterOption("recurrence", "Occurs On", null, recurrence)
+//            ),
+//            type = SelectionType.RECURRENCE
+//        ),
+//        FilterCategory(
+//            name = "Type",
+//            options = listOf(
+//                FilterOption("simple", "Simple"),
+//                FilterOption("timed", "Timed")
+//            ),
+//            type = SelectionType.SINGLE
+//        ),
+//        FilterCategory(
+//            name = "Active",
+//            options = listOf(
+//                FilterOption("live", "Live"),
+//                FilterOption("ended", "Ended")
+//            ),
+//            type = SelectionType.SINGLE
+//        )
+//    )
+//}
 
 @Composable
 fun AchievementCard(
@@ -2125,7 +2122,7 @@ fun AchievementCard(
                             verticalArrangement = Arrangement.Top
                         ) {
                             Text(
-                                stringResource(R.string.current_streak),
+                                stringResource(R.string.current_streak_text),
                                 style = MaterialTheme.typography.labelSmall,
                                 modifier = Modifier.alpha(0.75f)
                             )

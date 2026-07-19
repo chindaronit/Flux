@@ -537,4 +537,15 @@
     <string name="missed">Manqué</string>
     <string name="pick_a_todo">Choisir une tâche</string>
 
+    <string name="list_items">Éléments de la liste</string>
+    <string name="no_checklist_for_date">Aucune liste de contrôle pour cette date.</string>
+    <string name="tracking_starts_later">Le suivi commence plus tard !</string>
+    <string name="removed_items">Éléments supprimés</string>
+    <string name="no_data_yet">Aucune donnée pour le moment</string>
+    <string name="item_consistency">Cohérence des éléments</string>
+    <string name="current_streak_text">Série actuelle</string>
+    <string name="drag_horizontally_to_reorder">Faites glisser horizontalement pour réorganiser</string>
+    <string name="delete_alert">Alerte de suppression !</string>
+    <string name="delete_spaces_alert">Vous êtes sur le point de supprimer définitivement les espaces %1$s avec toutes leurs données. Cette action est irréversible.</string>
+
 </resources>

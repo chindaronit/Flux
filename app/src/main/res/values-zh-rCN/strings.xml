@@ -540,4 +540,15 @@
     <string name="not_scheduled">未安排</string>
     <string name="missed">已错过</string>
     <string name="pick_a_todo">选择待办事项</string>
+
+    <string name="list_items">列表项</string>
+    <string name="no_checklist_for_date">此日期没有清单。</string>
+    <string name="tracking_starts_later">你的追踪将在稍后开始！</string>
+    <string name="removed_items">已移除项目</string>
+    <string name="no_data_yet">暂无数据</string>
+    <string name="item_consistency">项目完成一致性</string>
+    <string name="current_streak_text">当前连续记录</string>
+    <string name="drag_horizontally_to_reorder">水平拖动以重新排序</string>
+    <string name="delete_alert">删除警告！</string>
+    <string name="delete_spaces_alert">你即将永久删除 %1$s 个空间及其所有数据，此操作无法撤销。</string>
 </resources>
