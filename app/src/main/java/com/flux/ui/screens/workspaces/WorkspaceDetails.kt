@@ -20,6 +20,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import com.flux.data.model.WorkspaceModel
 import com.flux.data.model.getSpacesList
+import com.flux.data.model.lockWith
+import com.flux.data.model.removePasskey
 import com.flux.other.ensureStorageRoot
 import com.flux.ui.common.DeleteAlert
 import com.flux.ui.events.HabitEvents
@@ -87,8 +89,8 @@ fun WorkspaceDetails(
         onRemoveCover = { viewModels.workspaceViewModel.onEvent(WorkspaceEvents.UpsertSpace(workspace.copy(cover = ""))) },
         onDeleteWorkspace = { isDeleteDialogVisible = true },
         onToggleLock = {
-            if(workspace.passKey!=null) {
-                viewModels.workspaceViewModel.onEvent(WorkspaceEvents.UpsertSpace(workspace.copy(passKey = null)))
+            if(workspace.isLocked) {
+                viewModels.workspaceViewModel.onEvent(WorkspaceEvents.UpsertSpace(workspace.removePasskey()))
             }
             else { isPasskeyDialogVisible = true }
         },
@@ -99,7 +101,7 @@ fun WorkspaceDetails(
     if (isPasskeyDialogVisible) {
         SetPasskeyDialog(
             onConfirmRequest = {
-                viewModels.workspaceViewModel.onEvent(WorkspaceEvents.UpsertSpace(workspace.copy(passKey = it)))
+                viewModels.workspaceViewModel.onEvent(WorkspaceEvents.UpsertSpace(workspace.lockWith(it)))
             },
             onDismissRequest = { isPasskeyDialogVisible = false }
         )

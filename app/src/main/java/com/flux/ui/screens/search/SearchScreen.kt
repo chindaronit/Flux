@@ -120,7 +120,7 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
     val context = LocalContext.current
     var query by rememberSaveable { mutableStateOf("") }
     val allSpaces = getSpacesList().filter { it.id!=6 }
-    val lockedWorkspace = states.workspaceState.allWorkspaces.filter { it.passKey?.isNotBlank()==true }.map { it.workspaceId }
+    val lockedWorkspace = states.workspaceState.allWorkspaces.filter { it.isLocked }.map { it.workspaceId }
     var filterState by remember {
         mutableStateOf(
             FilterState(

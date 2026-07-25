@@ -16,6 +16,7 @@ import androidx.room.PrimaryKey
 import java.util.UUID
 import com.flux.R
 import kotlinx.serialization.Serializable
+import com.flux.other.PasswordHasher
 
 @Serializable
 @Entity
@@ -27,10 +28,14 @@ data class WorkspaceModel(
     val colorInd: Int = 0,
     val cover: String = "",
     val icon: Int = 48,
-    val passKey: String? = null,
+    val passKeyHash: String? = null, // renamed from passKey; now stores a PBKDF2 hash, never plaintext
     val isPinned: Boolean = false,
     val selectedSpaces: List<Int> = emptyList()
-)
+) {
+    /** True if this workspace currently requires a passkey to unlock. */
+    val isLocked: Boolean
+        get() = !passKeyHash.isNullOrBlank()
+}
 
 data class Space(
     val id: Int,
@@ -49,4 +54,18 @@ fun getSpacesList(): List<Space> {
         Space(6, stringResource(R.string.Analytics), Icons.Default.Analytics),
         Space(7, stringResource(R.string.progress_tracker), Icons.Default.TrackChanges)
     )
+}
+
+fun WorkspaceModel.lockWith(rawPassword: String): WorkspaceModel {
+    require(rawPassword.isNotBlank()) { "Passkey cannot be blank" }
+    return copy(passKeyHash = PasswordHasher.hash(rawPassword))
+}
+
+/** Removes the passkey, unlocking the workspace permanently until re-locked. */
+fun WorkspaceModel.removePasskey(): WorkspaceModel = copy(passKeyHash = null)
+
+/** Checks [rawPassword] against the stored hash. Returns false if workspace isn't locked. */
+fun WorkspaceModel.verifyPasskey(rawPassword: String): Boolean {
+    val stored = passKeyHash ?: return false
+    return PasswordHasher.verify(rawPassword, stored)
 }

@@ -19,7 +19,7 @@ interface WorkspaceDao {
     @Insert(onConflict=OnConflictStrategy.REPLACE)
     suspend fun upsertWorkspaces(spaces: List<WorkspaceModel>)
 
-    @Query("SELECT workspaceId FROM WorkspaceModel WHERE passKey IS NULL OR passKey = ''")
+    @Query("SELECT workspaceId FROM WorkspaceModel WHERE passKeyHash IS NULL OR passKeyHash = ''")
     fun observePublicWorkspaceIds(): Flow<List<String>>
 
     @Delete

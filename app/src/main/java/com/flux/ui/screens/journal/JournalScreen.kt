@@ -203,7 +203,7 @@ fun JournalScreen(
                 description      = workspace.description,
                 cover            = workspace.cover,
                 icon             = workspace.icon,
-                isLocked         = workspace.passKey!=null,
+                isLocked         = workspace.isLocked,
                 onBackPressed    = { navController.popBackStack() },
                 onAddCover       = onAddCover,
                 onRemoveCover    = onRemoveCover,

@@ -48,6 +48,8 @@ import androidx.navigation.NavController
 import com.flux.R
 import com.flux.data.model.WorkspaceModel
 import com.flux.data.model.getSpacesList
+import com.flux.data.model.lockWith
+import com.flux.data.model.removePasskey
 import com.flux.other.icons
 import com.flux.ui.common.ChangeIconSheet
 import com.flux.ui.common.CompactCard
@@ -85,7 +87,9 @@ fun NewWorkspaceScreen(
     var title by remember { mutableStateOf(workspace.title) }
     var description by remember { mutableStateOf(workspace.description) }
     var icon by remember { mutableIntStateOf(workspace.icon) }
-    var passkey by remember { mutableStateOf(workspace.passKey) }
+    var isLocked by remember { mutableStateOf(workspace.passKeyHash != null) }
+    var pendingPasskey by remember { mutableStateOf<String?>(null) }
+
     val focusRequesterDesc = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
@@ -109,17 +113,20 @@ fun NewWorkspaceScreen(
     }
 
     fun saveWorkspace() {
-        onEvent(
-            WorkspaceEvents.UpsertSpace(
-                workspace.copy(
-                    title = title,
-                    description = description,
-                    icon = icon,
-                    passKey = passkey,
-                    selectedSpaces = selectedSpacesId.toList()
-                )
-            )
+        val baseWorkspace = workspace.copy(
+            title = title,
+            description = description,
+            icon = icon,
+            selectedSpaces = selectedSpacesId.toList()
         )
+
+        val resolvedWorkspace = when {
+            !isLocked -> baseWorkspace.removePasskey()
+            !pendingPasskey.isNullOrBlank() -> baseWorkspace.lockWith(pendingPasskey!!)
+            else -> baseWorkspace // keep existing passKeyHash as-is (unchanged)
+        }
+
+        onEvent(WorkspaceEvents.UpsertSpace(resolvedWorkspace))
     }
 
     if (showSpaceDeleteWarningDialog) {
@@ -205,17 +212,26 @@ fun NewWorkspaceScreen(
                 .fillMaxWidth()
                 .padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween){
                 Text(stringResource(R.string.Lock_Workspace), style = MaterialTheme.typography.bodyLarge)
-                Switch(passkey!=null, onCheckedChange = { passkey = if(it) "" else null })
+                Switch(
+                    checked = isLocked,
+                    onCheckedChange = { checked ->
+                        isLocked = checked
+                        pendingPasskey = if (checked) { "" } else { null }
+                    }
+                )
             }
 
-            passkey?.let {
+            if (isLocked) {
                 Row(Modifier
                     .fillMaxWidth()
                     .padding(8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween){
                     Text(stringResource(R.string.passkey), style = MaterialTheme.typography.bodyLarge)
 
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        if(it.isNotBlank()) Text("****")
+                        // Show masked dots if either an existing hash is already stored
+                        // OR the user has typed a new passkey in this session.
+                        val hasSetPasskey = workspace.passKeyHash != null || !pendingPasskey.isNullOrBlank()
+                        if (hasSetPasskey) Text("****")
                         IconButton(
                             { isDialogVisible = true },
                             colors = IconButtonDefaults.iconButtonColors(
@@ -307,7 +323,13 @@ fun NewWorkspaceScreen(
         onConfirm = { idx-> scope.launch { sheetState.hide() }.invokeOnCompletion { icon = idx } }
     )
 
-    if (isDialogVisible) { SetPasskeyDialog(passkey,{ passkey = it }) { isDialogVisible = false } }
+    if (isDialogVisible) {
+        SetPasskeyDialog(
+            key = pendingPasskey,
+            onConfirmRequest = { newRaw -> pendingPasskey = newRaw },
+            onDismissRequest = { isDialogVisible = false }
+        )
+    }
 }
 
 @Composable

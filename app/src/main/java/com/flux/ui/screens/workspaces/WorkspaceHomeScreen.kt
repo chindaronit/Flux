@@ -38,6 +38,7 @@ import com.flux.data.model.WorkspaceModel
 import com.flux.navigation.NavRoutes
 import com.flux.ui.events.WorkspaceEvents
 import com.flux.R
+import com.flux.data.model.verifyPasskey
 import com.flux.ui.common.BottomBar
 import com.flux.ui.common.SelectedToolBarRow
 import com.flux.ui.state.States
@@ -61,7 +62,7 @@ fun WorkspaceHomeScreen(
 
     lockedWorkspace?.let {
         SetPasskeyDialog(onConfirmRequest = { passkey ->
-            if (it.passKey == passkey) {
+            if (it.verifyPasskey(passkey)) {
                 navController.navigate(NavRoutes.WorkspaceHome.withArgs(it.workspaceId))
             } else {
                 Toast.makeText(context, wrongPassKeyLabel, Toast.LENGTH_SHORT).show()
@@ -70,10 +71,8 @@ fun WorkspaceHomeScreen(
     }
 
     fun handleWorkspaceClick(space: WorkspaceModel) {
-        if (space.passKey!=null) { lockedWorkspace = space }
-        else {
-            navController.navigate(NavRoutes.WorkspaceHome.withArgs(space.workspaceId))
-        }
+        if (space.isLocked) { lockedWorkspace = space }
+        else { navController.navigate(NavRoutes.WorkspaceHome.withArgs(space.workspaceId)) }
     }
 
     Scaffold(
@@ -156,7 +155,7 @@ fun WorkspaceHomeScreen(
                         gridColumns = gridColumns,
                         iconIndex = space.icon,
                         radius = radius,
-                        isLocked = space.passKey != null,
+                        isLocked = space.isLocked,
                         cover = space.cover,
                         title = space.title,
                         description = space.description,
@@ -185,7 +184,7 @@ fun WorkspaceHomeScreen(
                         gridColumns = gridColumns,
                         iconIndex = space.icon,
                         radius = radius,
-                        isLocked = space.passKey != null,
+                        isLocked = space.isLocked,
                         cover = space.cover,
                         title = space.title,
                         description = space.description,
