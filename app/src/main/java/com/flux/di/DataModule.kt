@@ -17,6 +17,7 @@ import com.flux.data.dao.TodoInstanceDao
 import com.flux.data.dao.WorkspaceDao
 import com.flux.data.database.FluxDatabase
 import com.flux.data.database.MIGRATION_10_11
+import com.flux.data.database.MIGRATION_11_12
 import com.flux.data.database.MIGRATION_1_2
 import com.flux.data.database.MIGRATION_2_3
 import com.flux.data.database.MIGRATION_3_4
@@ -55,7 +56,8 @@ object DataModule {
             MIGRATION_7_8,
             MIGRATION_8_9,
             MIGRATION_9_10,
-            MIGRATION_10_11
+            MIGRATION_10_11,
+            MIGRATION_11_12
         )
         .build()
 

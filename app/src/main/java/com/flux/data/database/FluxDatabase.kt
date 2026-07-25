@@ -1,5 +1,7 @@
 package com.flux.data.database
 
+import android.database.Cursor
+import android.util.Log
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
@@ -30,6 +32,7 @@ import com.flux.data.model.SettingsModel
 import com.flux.data.model.TodoInstance
 import com.flux.data.model.TodoModel
 import com.flux.data.model.WorkspaceModel
+import com.flux.other.PasswordHasher
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.serialization.json.Json
@@ -37,7 +40,7 @@ import java.util.UUID
 
 @Database(
     entities = [EventModel::class, LabelModel::class, EventInstanceModel::class, SettingsModel::class, NotesModel::class, HabitModel::class, HabitInstanceModel::class, WorkspaceModel::class, TodoModel::class, JournalModel::class, ProgressBoardModel::class, TodoInstance::class],
-    version = 11,
+    version = 12,
     exportSchema = false
 )
 @TypeConverters(Converter::class)
@@ -404,5 +407,119 @@ val MIGRATION_10_11 = object : Migration(10, 11) {
             "CREATE INDEX IF NOT EXISTS `index_HabitInstanceModel_instanceDate` " +
                     "ON `HabitInstanceModel` (`instanceDate`)"
         )
+    }
+}
+
+val MIGRATION_11_12 = object : Migration(11, 12) {
+
+    private val TAG = "Migration_11_12"
+    private val OLD_TABLE = "WorkspaceModel"
+    private val TMP_TABLE = "WorkspaceModel_new"
+
+    override fun migrate(db: SupportSQLiteDatabase) {
+        Log.i(TAG, "Starting migration 11 -> 12 (passKey -> hashed passKeyHash)")
+
+        recreateTableWithHashedColumn(db)
+        rehashExistingPasswords(db)
+
+        Log.i(TAG, "Migration 11 -> 12 finished")
+    }
+
+    /** Step 1: recreate WorkspaceModel with passKeyHash instead of passKey, copying all rows as-is. */
+    private fun recreateTableWithHashedColumn(db: SupportSQLiteDatabase) {
+        db.safeExec(
+            """
+            CREATE TABLE IF NOT EXISTS `$TMP_TABLE` (
+                `workspaceId` TEXT NOT NULL PRIMARY KEY,
+                `title` TEXT NOT NULL,
+                `description` TEXT NOT NULL,
+                `colorInd` INTEGER NOT NULL,
+                `cover` TEXT NOT NULL,
+                `icon` INTEGER NOT NULL,
+                `passKeyHash` TEXT,
+                `isPinned` INTEGER NOT NULL,
+                `selectedSpaces` TEXT NOT NULL
+            )
+            """.trimIndent()
+        )
+
+        db.safeExec(
+            """
+            INSERT INTO `$TMP_TABLE`
+                (`workspaceId`, `title`, `description`, `colorInd`, `cover`, `icon`, `passKeyHash`, `isPinned`, `selectedSpaces`)
+            SELECT
+                `workspaceId`, `title`, `description`, `colorInd`, `cover`, `icon`, `passKey`, `isPinned`, `selectedSpaces`
+            FROM `$OLD_TABLE`
+            """.trimIndent()
+        )
+
+        db.safeExec("DROP TABLE IF EXISTS `$OLD_TABLE`")
+        db.safeExec("ALTER TABLE `$TMP_TABLE` RENAME TO `$OLD_TABLE`")
+
+        Log.d(TAG, "WorkspaceModel table recreated with passKeyHash column")
+    }
+
+    /**
+     * Step 2: hash every non-blank plaintext passKeyHash value in place.
+     * Row-level failures are isolated so one bad row can never crash the migration
+     * or the app — this is a hard requirement, not an optimization.
+     */
+    private fun rehashExistingPasswords(db: SupportSQLiteDatabase) {
+        var total = 0
+        var migrated = 0
+        var alreadyHashed = 0
+        var failed = 0
+
+        var cursor: Cursor? = null
+        try {
+            cursor = db.query(
+                "SELECT `workspaceId`, `passKeyHash` FROM `$OLD_TABLE` " +
+                        "WHERE `passKeyHash` IS NOT NULL AND TRIM(`passKeyHash`) != ''"
+            )
+
+            val idColumn = cursor.getColumnIndexOrThrow("workspaceId")
+            val passColumn = cursor.getColumnIndexOrThrow("passKeyHash")
+
+            while (cursor.moveToNext()) {
+                total++
+                val workspaceId = cursor.getString(idColumn)
+                val currentValue = cursor.getString(passColumn)
+
+                try {
+                    if (PasswordHasher.isHashed(currentValue)) {
+                        Log.d(TAG, "Workspace $workspaceId already hashed, skipping")
+                        alreadyHashed++
+                        continue
+                    }
+
+                    val hashed = PasswordHasher.hash(currentValue)
+
+                    // Use safeExec-equivalent guarded update; bind values manually
+                    // since safeExec (per your codebase) likely takes raw SQL only.
+                    db.execSQL(
+                        "UPDATE `$OLD_TABLE` SET `passKeyHash` = ? WHERE `workspaceId` = ?",
+                        arrayOf(hashed, workspaceId)
+                    )
+                    migrated++
+                    Log.d(TAG, "Workspace $workspaceId passkey hashed successfully")
+                } catch (rowError: Exception) {
+                    failed++
+                    Log.e(
+                        TAG,
+                        "Failed to hash passkey for workspace $workspaceId, leaving value untouched",
+                        rowError
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Critical error while iterating WorkspaceModel rows for hashing", e)
+        } finally {
+            cursor?.close()
+            Log.i(
+                TAG,
+                "Passkey hashing summary — total: $total, migrated: $migrated, " +
+                        "alreadyHashed: $alreadyHashed, failed: $failed"
+            )
+        }
     }
 }

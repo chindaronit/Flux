@@ -72,8 +72,19 @@ import com.flux.ui.screens.settings.shapeManager
 
 // ------------- Dialog -------------
 @Composable
-fun SetPasskeyDialog(key: String?=null, onConfirmRequest: (String) -> Unit, onDismissRequest: () -> Unit) {
-    var passKey by remember { mutableStateOf(key?: "") }
+fun SetPasskeyDialog(
+    key: String? = null,
+    onConfirmRequest: (String) -> Unit,
+    onDismissRequest: () -> Unit
+) {
+    var passKey by remember { mutableStateOf(key ?: "") }
+    val isValid = passKey.isNotBlank()
+
+    fun confirmIfValid() {
+        if (!isValid) return
+        onConfirmRequest(passKey)
+        onDismissRequest()
+    }
 
     Dialog(onDismissRequest) {
         Card(shape = RoundedCornerShape(16.dp)) {
@@ -93,24 +104,20 @@ fun SetPasskeyDialog(key: String?=null, onConfirmRequest: (String) -> Unit, onDi
                     singleLine = true,
                     onValueChange = { passKey = it },
                     modifier = Modifier.fillMaxWidth(),
+                    isError = passKey.isNotEmpty() && !isValid,
                     keyboardOptions = KeyboardOptions.Default.copy(
                         imeAction = ImeAction.Done
                     ),
                     keyboardActions = KeyboardActions(
-                        onDone = {
-                            onConfirmRequest(passKey)
-                            onDismissRequest()
-                        }
+                        onDone = { confirmIfValid() }
                     )
                 )
 
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                     TextButton(onDismissRequest) { Text(stringResource(R.string.Dismiss)) }
                     TextButton(
-                        onClick = {
-                            onConfirmRequest(passKey)
-                            onDismissRequest()
-                        },
+                        onClick = { confirmIfValid() },
+                        enabled = isValid,
                         colors = ButtonDefaults.buttonColors()
                     ) { Text(stringResource(R.string.Confirm)) }
                 }
