@@ -411,18 +411,12 @@ val MIGRATION_10_11 = object : Migration(10, 11) {
 }
 
 val MIGRATION_11_12 = object : Migration(11, 12) {
-
-    private val TAG = "Migration_11_12"
     private val OLD_TABLE = "WorkspaceModel"
     private val TMP_TABLE = "WorkspaceModel_new"
 
     override fun migrate(db: SupportSQLiteDatabase) {
-        Log.i(TAG, "Starting migration 11 -> 12 (passKey -> hashed passKeyHash)")
-
         recreateTableWithHashedColumn(db)
         rehashExistingPasswords(db)
-
-        Log.i(TAG, "Migration 11 -> 12 finished")
     }
 
     /** Step 1: recreate WorkspaceModel with passKeyHash instead of passKey, copying all rows as-is. */
@@ -455,8 +449,6 @@ val MIGRATION_11_12 = object : Migration(11, 12) {
 
         db.safeExec("DROP TABLE IF EXISTS `$OLD_TABLE`")
         db.safeExec("ALTER TABLE `$TMP_TABLE` RENAME TO `$OLD_TABLE`")
-
-        Log.d(TAG, "WorkspaceModel table recreated with passKeyHash column")
     }
 
     /**
@@ -487,7 +479,6 @@ val MIGRATION_11_12 = object : Migration(11, 12) {
 
                 try {
                     if (PasswordHasher.isHashed(currentValue)) {
-                        Log.d(TAG, "Workspace $workspaceId already hashed, skipping")
                         alreadyHashed++
                         continue
                     }
@@ -501,22 +492,21 @@ val MIGRATION_11_12 = object : Migration(11, 12) {
                         arrayOf(hashed, workspaceId)
                     )
                     migrated++
-                    Log.d(TAG, "Workspace $workspaceId passkey hashed successfully")
                 } catch (rowError: Exception) {
                     failed++
                     Log.e(
-                        TAG,
+                        "Migration_11_12",
                         "Failed to hash passkey for workspace $workspaceId, leaving value untouched",
                         rowError
                     )
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Critical error while iterating WorkspaceModel rows for hashing", e)
+            Log.e("Migration_11_12", "Critical error while iterating WorkspaceModel rows for hashing", e)
         } finally {
             cursor?.close()
             Log.i(
-                TAG,
+                "Migration_11_12",
                 "Passkey hashing summary — total: $total, migrated: $migrated, " +
                         "alreadyHashed: $alreadyHashed, failed: $failed"
             )

@@ -548,4 +548,20 @@
     <string name="delete_alert">Alerte de suppression !</string>
     <string name="delete_spaces_alert">Vous êtes sur le point de supprimer définitivement les espaces %1$s avec toutes leurs données. Cette action est irréversible.</string>
 
+    <string name="set_backup_password_title">Définir un mot de passe de sauvegarde</string>
+    <string name="enter_backup_password_title">Saisir le mot de passe de sauvegarde</string>
+    <string name="backup_password_setting">Définir un mot de passe de sauvegarde</string>
+    <string name="backup_encrypted">Les sauvegardes sont chiffrées</string>
+    <string name="backup_not_encrypted">Les sauvegardes ne sont pas chiffrées</string>
+    <string name="backup_password">Mot de passe de sauvegarde</string>
+    <string name="backup_password_description">Ce mot de passe ne peut pas être récupéré s\'il est perdu. Vous en aurez besoin pour restaurer cette sauvegarde sur n'importe quel appareil.</string>
+    <string name="set_backup_password">Définir un mot de passe de sauvegarde</string>
+    <string name="auto_backup_requires_password">La sauvegarde automatique est activée, mais aucun mot de passe n\'est défini. Les sauvegardes ne peuvent donc pas être exécutées en toute sécurité. Définissez un mot de passe maintenant ou désactivez la sauvegarde automatique.</string>
+    <string name="go_to_settings">Aller aux paramètres</string>
+    <string name="change_backup_password_title">Changer le mot de passe de sauvegarde ?</string>
+    <string name="change_backup_password_message">Les sauvegardes déjà chiffrées avec votre mot de passe actuel ne pourront plus être restaurées après cette modification. Les nouvelles sauvegardes utiliseront le nouveau mot de passe. Cette action est irréversible.</string>
+    <string name="set_password">Définir le mot de passe</string>
+    <string name="turn_off_auto_backup">Désactiver la sauvegarde automatique</string>
+    <string name="unsupported_backup_version">Version de sauvegarde non prise en charge : %1$s</string>
+    <string name="backup_wrong_password_or_corrupted">Mot de passe incorrect, ou le fichier est corrompu ou a été modifié.</string>
 </resources>
