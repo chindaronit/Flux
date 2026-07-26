@@ -24,6 +24,7 @@ hilt = "2.60.1"
 hiltNavigationCompose = "1.4.0"
 browser = "1.10.0"
 documentfile = "1.1.0"
+securityCrypto = "1.1.0"
 workRuntimeKtx = "2.11.2"
 foundationLayout = "1.11.4"
 adaptive = "1.2.0"
@@ -50,6 +51,7 @@ androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 
 # Hilt (Dependency Injection)
+androidx-security-crypto = { module = "androidx.security:security-crypto", version.ref = "securityCrypto" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hilt" }

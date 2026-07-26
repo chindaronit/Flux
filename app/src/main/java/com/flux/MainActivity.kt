@@ -30,6 +30,7 @@ import com.flux.other.createNotificationChannel
 import com.flux.ui.effects.ScreenEffect
 import com.flux.ui.state.States
 import com.flux.ui.theme.FluxTheme
+import com.flux.ui.viewModel.BackupSettingsViewModel
 import com.flux.ui.viewModel.BackupViewModel
 import com.flux.ui.viewModel.EventViewModel
 import com.flux.ui.viewModel.HabitViewModel
@@ -74,6 +75,7 @@ class MainActivity : AppCompatActivity() {
             val backupViewModel: BackupViewModel = hiltViewModel()
             val labelViewModel: LabelViewModel = hiltViewModel()
             val progressBoardViewModel: ProgressBoardViewModel = hiltViewModel()
+            val backupSettingsViewModel: BackupSettingsViewModel = hiltViewModel()
 
             // States
             val settings by settingsViewModel.state.collectAsState()
@@ -114,7 +116,8 @@ class MainActivity : AppCompatActivity() {
                                 settingsViewModel,
                                 backupViewModel,
                                 labelViewModel,
-                                progressBoardViewModel
+                                progressBoardViewModel,
+                                backupSettingsViewModel
                             ),
                             states = States(
                                 notesState,

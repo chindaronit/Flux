@@ -547,4 +547,20 @@
     <string name="delete_alert">हटाने की चेतावनी!</string>
     <string name="delete_spaces_alert">%1$s स्पेस और उनका सारा डेटा स्थायी रूप से हटाया जाएगा। इसे वापस नहीं लाया जा सकता।</string>
 
+    <string name="set_backup_password_title">बैकअप पासवर्ड सेट करें</string>
+    <string name="enter_backup_password_title">बैकअप पासवर्ड दर्ज करें</string>
+    <string name="backup_password_setting">बैकअप पासवर्ड सेट करें</string>
+    <string name="backup_encrypted">बैकअप एन्क्रिप्टेड हैं</string>
+    <string name="backup_not_encrypted">बैकअप एन्क्रिप्टेड नहीं हैं</string>
+    <string name="backup_password">बैकअप पासवर्ड</string>
+    <string name="backup_password_description">यदि यह पासवर्ड खो जाता है तो इसे पुनर्प्राप्त नहीं किया जा सकता। किसी भी डिवाइस पर इस बैकअप को पुनर्स्थापित करने के लिए इसकी आवश्यकता होगी।</string>
+    <string name="set_backup_password">बैकअप पासवर्ड सेट करें</string>
+    <string name="auto_backup_requires_password">स्वचालित बैकअप चालू है, लेकिन कोई पासवर्ड सेट नहीं है, इसलिए बैकअप सुरक्षित रूप से नहीं चल सकते। अभी पासवर्ड सेट करें या स्वचालित बैकअप बंद करें।</string>
+    <string name="go_to_settings">सेटिंग्स पर जाएँ</string>
+    <string name="change_backup_password_title">बैकअप पासवर्ड बदलें?</string>
+    <string name="change_backup_password_message">आपके वर्तमान पासवर्ड से पहले से एन्क्रिप्ट किए गए बैकअप इस परिवर्तन के बाद पुनर्स्थापित नहीं किए जा सकेंगे। नए बैकअप नए पासवर्ड का उपयोग करेंगे। इस परिवर्तन को वापस नहीं किया जा सकता।</string>
+    <string name="set_password">पासवर्ड सेट करें</string>
+    <string name="turn_off_auto_backup">स्वचालित बैकअप बंद करें</string>
+    <string name="unsupported_backup_version">असमर्थित बैकअप संस्करण: %1$s</string>
+    <string name="backup_wrong_password_or_corrupted">गलत पासवर्ड, या फ़ाइल क्षतिग्रस्त है या उसके साथ छेड़छाड़ की गई है।</string>
 </resources>

@@ -138,4 +138,6 @@ dependencies {
 
     // draggable list
     implementation(libs.reorderable)
+
+    implementation(libs.androidx.security.crypto)
 }

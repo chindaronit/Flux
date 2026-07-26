@@ -551,4 +551,21 @@
     <string name="drag_horizontally_to_reorder">水平拖动以重新排序</string>
     <string name="delete_alert">删除警告！</string>
     <string name="delete_spaces_alert">你即将永久删除 %1$s 个空间及其所有数据，此操作无法撤销。</string>
+
+    <string name="set_backup_password_title">设置备份密码</string>
+    <string name="enter_backup_password_title">输入备份密码</string>
+    <string name="backup_password_setting">设置备份密码</string>
+    <string name="backup_encrypted">备份已加密</string>
+    <string name="backup_not_encrypted">备份未加密</string>
+    <string name="backup_password">备份密码</string>
+    <string name="backup_password_description">如果丢失，此密码无法恢复。您需要使用它才能在任何设备上恢复此备份。</string>
+    <string name="set_backup_password">设置备份密码</string>
+    <string name="auto_backup_requires_password">自动备份已开启，但尚未设置密码，因此无法安全执行备份。请立即设置密码，或关闭自动备份。</string>
+    <string name="go_to_settings">前往设置</string>
+    <string name="change_backup_password_title">更改备份密码？</string>
+    <string name="change_backup_password_message">使用当前密码加密的现有备份在更改后将无法再恢复。新的备份将使用新密码。此操作无法撤销。</string>
+    <string name="set_password">设置密码</string>
+    <string name="turn_off_auto_backup">关闭自动备份</string>
+    <string name="unsupported_backup_version">不支持的备份版本：%1$s</string>
+    <string name="backup_wrong_password_or_corrupted">密码错误，或文件已损坏或被篡改。</string>
 </resources>

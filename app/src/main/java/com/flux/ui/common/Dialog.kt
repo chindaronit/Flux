@@ -68,6 +68,13 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.rounded.Visibility
+import androidx.compose.material.icons.rounded.VisibilityOff
+import androidx.compose.material3.*
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 
 fun convertMillisToDate(millis: Long): String {
     val formatter = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
@@ -311,7 +318,7 @@ fun DataCopyDialog(
                         selectedWorkspaces.clear()
                     },
                     selected = selectedType == DataCopyType.COPY,
-                    label = { Text("Copy") }
+                    label = { Text(stringResource(R.string.copy)) }
                 )
 
                 SegmentedButton(
@@ -324,12 +331,12 @@ fun DataCopyDialog(
                         selectedWorkspaces.clear()
                     },
                     selected = selectedType == DataCopyType.MOVE,
-                    label = { Text("Move") }
+                    label = { Text(stringResource(R.string.move)) }
                 )
             }
         },
         title = {
-            Text("Select Workspaces")
+            Text(stringResource(R.string.select_workspaces))
         },
         text = {
             LazyColumn (Modifier
@@ -397,13 +404,122 @@ fun DataCopyDialog(
                 onConfirm(selectedType, selectedWorkspaces.toList())
                 onDismiss()
             }) {
-                Text("Confirm")
+                Text(stringResource(R.string.Confirm))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Dismiss")
+                Text(stringResource(R.string.Dismiss))
             }
         }
+    )
+}
+
+/** Captures a password string. Used for: initial setup, per-file import prompt, and password change. */
+@Composable
+fun BackupPasswordEntryDialog(
+    title: String,
+    onConfirm: (CharArray) -> Unit,
+    onDismiss: (() -> Unit)?, // null = non-dismissible (used for the mandatory setup flow)
+    supportingText: String? = null
+) {
+    var password by remember { mutableStateOf("") }
+    var visible by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = { onDismiss?.invoke() },
+        title = { Text(title) },
+        text = {
+            Column {
+                supportingText?.let {
+                    Text(it, style = MaterialTheme.typography.bodyMedium)
+                    Spacer(Modifier.height(12.dp))
+                }
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text(stringResource(R.string.backup_password)) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    visualTransformation = if (visible) VisualTransformation.None else PasswordVisualTransformation(),
+                    trailingIcon = {
+                        IconButton(onClick = { visible = !visible }) {
+                            Icon(
+                                if (visible) Icons.Rounded.VisibilityOff else Icons.Rounded.Visibility,
+                                contentDescription = null
+                            )
+                        }
+                    }
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    stringResource(R.string.backup_password_description),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                enabled = password.isNotEmpty(),
+                onClick = {
+                    val pw = password.toCharArray()
+                    password = ""
+                    onConfirm(pw)
+                }
+            ) { Text(stringResource(R.string.set_password)) }
+        },
+        dismissButton = onDismiss?.let {
+            { TextButton(onClick = it) { Text(stringResource(R.string.Dismiss)) } }
+        }
+    )
+}
+
+/** Non-dismissible: fires whenever auto-backup is on but no password exists (migration, import, or live toggle). */
+@Composable
+fun AutoBackupNeedsPasswordDialog(
+    onSetPasswordClick: () -> Unit,
+    onTurnOffAutoBackup: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = { /* force an explicit choice */ },
+        title = { Text(stringResource(R.string.backup_password_setting)) },
+        text = { Text(stringResource(R.string.auto_backup_requires_password)) },
+        confirmButton = {
+            TextButton(onClick = onSetPasswordClick) { Text(stringResource(R.string.set_password)) }
+        },
+        dismissButton = {
+            TextButton(onClick = onTurnOffAutoBackup) { Text(stringResource(R.string.turn_off_auto_backup)) }
+        }
+    )
+}
+
+@Composable
+fun AutoBackupNeedsPasswordInfoDialog(
+    onNavigate: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = { /* force an explicit choice */ },
+        title = { Text(stringResource(R.string.backup_password_setting)) },
+        text = { Text(stringResource(R.string.auto_backup_requires_password)) },
+        confirmButton = {
+            TextButton(onClick = onNavigate) { Text(stringResource(R.string.go_to_settings)) }
+        },
+        dismissButton = {  }
+    )
+}
+
+/** Confirms the destructive consequence of rotating the password. */
+@Composable
+fun ChangePasswordWarningDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.change_backup_password_title)) },
+        text = { Text(stringResource(R.string.change_backup_password_message)) },
+        confirmButton = { TextButton(onClick = onConfirm) { Text(stringResource(R.string.Confirm)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.Dismiss)) } }
     )
 }

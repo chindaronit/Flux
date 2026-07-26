@@ -546,4 +546,21 @@
     <string name="drag_horizontally_to_reorder">Sleep horizontaal om opnieuw te ordenen</string>
     <string name="delete_alert">Verwijderingswaarschuwing!</string>
     <string name="delete_spaces_alert">Je staat op het punt %1$s ruimte(n) met alle gegevens permanent te verwijderen. Dit kan niet ongedaan worden gemaakt.</string>
+
+    <string name="set_backup_password_title">Back-upwachtwoord instellen</string>
+    <string name="enter_backup_password_title">Back-upwachtwoord invoeren</string>
+    <string name="backup_password_setting">Een back-upwachtwoord instellen</string>
+    <string name="backup_encrypted">Back-ups zijn versleuteld</string>
+    <string name="backup_not_encrypted">Back-ups zijn niet versleuteld</string>
+    <string name="backup_password">Back-upwachtwoord</string>
+    <string name="backup_password_description">Dit wachtwoord kan niet worden hersteld als u het kwijtraakt. U hebt het nodig om deze back-up op elk apparaat te herstellen.</string>
+    <string name="set_backup_password">Een back-upwachtwoord instellen</string>
+    <string name="auto_backup_requires_password">Automatische back-up is ingeschakeld, maar er is geen wachtwoord ingesteld. Daardoor kunnen back-ups niet veilig worden uitgevoerd. Stel nu een wachtwoord in of schakel automatische back-up uit.</string>
+    <string name="go_to_settings">Ga naar instellingen</string>
+    <string name="change_backup_password_title">Back-upwachtwoord wijzigen?</string>
+    <string name="change_backup_password_message">Back-ups die al met uw huidige wachtwoord zijn versleuteld, kunnen na deze wijziging niet meer worden hersteld. Nieuwe back-ups gebruiken het nieuwe wachtwoord. Dit kan niet ongedaan worden gemaakt.</string>
+    <string name="set_password">Wachtwoord instellen</string>
+    <string name="turn_off_auto_backup">Automatische back-up uitschakelen</string>
+    <string name="unsupported_backup_version">Niet-ondersteunde back-upversie: %1$s</string>
+    <string name="backup_wrong_password_or_corrupted">Onjuist wachtwoord of het bestand is beschadigd of ermee is geknoeid.</string>
 </resources>

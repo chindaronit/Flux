@@ -545,4 +545,20 @@
     <string name="delete_alert">Delete Alert!</string>
     <string name="delete_spaces_alert">You are about to delete %1$s space(s) with their data permanently. This can\'t be undone.</string>
 
+    <string name="set_backup_password_title">Set backup password</string>
+    <string name="enter_backup_password_title">Enter backup password</string>
+    <string name="backup_password_setting">Set a backup password</string>
+    <string name="backup_encrypted">Backups are encrypted</string>
+    <string name="backup_not_encrypted">Backups are not encrypted</string>
+    <string name="backup_password">Backup password</string>
+    <string name="backup_password_description">This password cannot be recovered if lost. You will need it to restore this backup on any device.</string>
+    <string name="set_backup_password">Set a backup password</string>
+    <string name="auto_backup_requires_password">Automatic backup is turned on, but no password is set, so backups cannot run safely. Set a password now, or turn automatic backup off.</string>
+    <string name="go_to_settings">Go to settings</string>
+    <string name="change_backup_password_title">Change backup password?</string>
+    <string name="change_backup_password_message">Backups already encrypted with your current password will no longer be restorable after this change. New backups will use the new password. This cannot be undone.</string>
+    <string name="set_password">Set password</string>
+    <string name="turn_off_auto_backup">Turn off auto-backup</string>
+    <string name="unsupported_backup_version">Unsupported backup version: %1$s</string>
+    <string name="backup_wrong_password_or_corrupted">Wrong password, or the file is corrupted or has been tampered with.</string>
 </resources>

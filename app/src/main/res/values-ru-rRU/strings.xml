@@ -536,7 +536,6 @@
     <string name="missed">Пропущено</string>
     <string name="pick_a_todo">Выбрать задачу</string>
 
-    <!-- values-ru/strings.xml -->
     <string name="list_items">Элементы списка</string>
     <string name="no_checklist_for_date">Для этой даты нет контрольного списка.</string>
     <string name="tracking_starts_later">Отслеживание начнётся позже!</string>
@@ -548,4 +547,20 @@
     <string name="delete_alert">Предупреждение об удалении!</string>
     <string name="delete_spaces_alert">Вы собираетесь навсегда удалить пространство(а) %1$s вместе со всеми данными. Это действие нельзя отменить.</string>
 
+    <string name="set_backup_password_title">Установить пароль резервной копии</string>
+    <string name="enter_backup_password_title">Введите пароль резервной копии</string>
+    <string name="backup_password_setting">Установить пароль резервной копии</string>
+    <string name="backup_encrypted">Резервные копии зашифрованы</string>
+    <string name="backup_not_encrypted">Резервные копии не зашифрованы</string>
+    <string name="backup_password">Пароль резервной копии</string>
+    <string name="backup_password_description">Этот пароль невозможно восстановить, если он будет утерян. Он потребуется для восстановления этой резервной копии на любом устройстве.</string>
+    <string name="set_backup_password">Установить пароль резервной копии</string>
+    <string name="auto_backup_requires_password">Автоматическое резервное копирование включено, но пароль не задан, поэтому резервные копии не могут создаваться безопасно. Установите пароль сейчас или отключите автоматическое резервное копирование.</string>
+    <string name="go_to_settings">Перейти к настройкам</string>
+    <string name="change_backup_password_title">Изменить пароль резервной копии?</string>
+    <string name="change_backup_password_message">Резервные копии, уже зашифрованные текущим паролем, больше нельзя будет восстановить после этого изменения. Новые резервные копии будут использовать новый пароль. Это действие нельзя отменить.</string>
+    <string name="set_password">Установить пароль</string>
+    <string name="turn_off_auto_backup">Отключить автоматическое резервное копирование</string>
+    <string name="unsupported_backup_version">Неподдерживаемая версия резервной копии: %1$s</string>
+    <string name="backup_wrong_password_or_corrupted">Неверный пароль, либо файл повреждён или был изменён.</string>
 </resources>

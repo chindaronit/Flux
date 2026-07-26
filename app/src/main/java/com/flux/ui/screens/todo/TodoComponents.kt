@@ -131,7 +131,7 @@ fun TodoExpandableCard(
     Card(
         modifier = Modifier.padding(top = 4.dp),
         shape = if(isExpanded) shapeManager(isBoth = true, radius=radius) else RoundedCornerShape(50),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f))
     ) {
         Column {
             TodoHeaderRow(
@@ -250,7 +250,7 @@ fun MaterialListItem(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(50),
         colors = CardDefaults.cardColors(
-            containerColor = if (todoItem.isChecked) MaterialTheme.colorScheme.primaryContainer.copy(0.5f) else MaterialTheme.colorScheme.primaryContainer.copy(0.7f)
+            containerColor = if (todoItem.isChecked) MaterialTheme.colorScheme.primaryContainer.copy(0.4f) else MaterialTheme.colorScheme.primaryContainer.copy(0.6f)
         ),
         onClick = onToggleCheck
     ) {
