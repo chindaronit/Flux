@@ -50,7 +50,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -66,7 +65,9 @@ import androidx.compose.ui.window.Dialog
 import com.flux.R
 import com.flux.data.model.LabelModel
 import com.flux.other.ConvertType
-import com.flux.other.parseMarkdownContent
+import com.flux.other.MarkdownBlock
+import com.flux.other.MediaChipsRow
+import com.flux.other.extractMedia
 import com.flux.ui.common.CategoryRow
 import com.flux.ui.common.DateOptionRow
 import com.flux.ui.common.DatePickerModal
@@ -120,21 +121,36 @@ fun JournalPreview(
     labels: List<LabelModel>,
     onClick: () -> Unit
 ) {
+    val mediaExtraction = remember(content) { extractMedia(content) }
+    val maxHeight = 400.dp
     Card(
         colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)),
         modifier = Modifier.clip(shapeManager(isBoth = true, radius = radius / 2)).fillMaxWidth(),
         shape = shapeManager(isBoth = true, radius = radius / 2),
         onClick = onClick
     ) {
-        Text(
-            text = parseMarkdownContent(content),
-            style = MaterialTheme.typography.bodyMedium,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier
-                .alpha(0.9f)
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .heightIn(max = maxHeight)
                 .padding(12.dp)
-                .heightIn(min = 50.dp)
-        )
+        ) {
+            MarkdownBlock(
+                text = content,
+                onClick = onClick,
+                onLongClick = onClick
+            )
+        }
+
+        // Media chips pinned here, below the text, above labels
+        if (!mediaExtraction.media.isEmpty) {
+            MediaChipsRow(
+                media = mediaExtraction.media,
+                modifier = Modifier.padding(horizontal = 12.dp),
+                onClick = onClick ,
+                onLongClick = onClick
+            )
+        }
 
         FlowRow(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp).padding(bottom = 8.dp),

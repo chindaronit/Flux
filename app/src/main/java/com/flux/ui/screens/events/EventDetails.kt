@@ -31,7 +31,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -74,11 +73,11 @@ fun EventDetails(
     onTaskEvents: (TaskEvents) -> Unit,
     onWorkspaceEvents: (WorkspaceEvents) -> Unit
 ) {
-    var title by remember { mutableStateOf(event.title) }
-    var description by remember { mutableStateOf(event.description) }
+    val title = event.title
+    val description = event.description
     var pendingStatus by remember { mutableStateOf(isPending) }
-    var notificationOffset by remember { mutableLongStateOf(event.notificationOffset) }
-    var currentRecurrenceRule by remember { mutableStateOf(event.recurrence) }
+    val notificationOffset = event.notificationOffset
+    val currentRecurrenceRule = event.recurrence
     val context = LocalContext.current
     val time = event.startDateTime.toFormattedTime(settings.data.is24HourFormat)
     var showDeleteDialog by remember { mutableStateOf(false) }

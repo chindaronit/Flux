@@ -1,6 +1,5 @@
 package com.flux.ui.common
 
-import android.text.format.DateUtils
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
@@ -51,6 +50,9 @@ import com.flux.ui.screens.events.formatCustom
 import com.flux.ui.screens.events.formatMonthly
 import com.flux.ui.screens.events.formatOnce
 import com.flux.ui.screens.events.formatYearly
+import java.time.Instant
+import java.time.ZoneId
+import java.time.ZoneOffset
 import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -124,6 +126,7 @@ fun RecurrenceBottomSheet(
     var showDatePicker by remember { mutableStateOf(false) }
     var selectedDateTime by remember { mutableLongStateOf(startDateTime) }
     var tempRule by remember(currentRule) { mutableStateOf(currentRule) }
+    val zone = ZoneId.systemDefault()
 
     val options = listOf(
         RecurrenceRule.Once,
@@ -134,12 +137,27 @@ fun RecurrenceBottomSheet(
     )
 
     if (showDatePicker) {
-        DatePickerModal(onDateSelected = { newDateMillis ->
-            if (newDateMillis != null) {
-                val timeOfDay = selectedDateTime % DateUtils.DAY_IN_MILLIS
-                selectedDateTime = newDateMillis + timeOfDay
-            }
-        }, onDismiss = { showDatePicker = false })
+        DatePickerModal(
+            onDateSelected = { newDateMillis ->
+                if (newDateMillis != null) {
+
+                    val localTime = Instant.ofEpochMilli(selectedDateTime)
+                        .atZone(zone)
+                        .toLocalTime()
+
+                    val localDate = Instant.ofEpochMilli(newDateMillis)
+                        .atZone(ZoneOffset.UTC)
+                        .toLocalDate()
+
+                    selectedDateTime = localDate
+                        .atTime(localTime)
+                        .atZone(zone)
+                        .toInstant()
+                        .toEpochMilli()
+                }
+            },
+            onDismiss = { showDatePicker = false }
+        )
     }
 
     ModalBottomSheet(

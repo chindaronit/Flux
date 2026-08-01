@@ -1,13 +1,17 @@
 package com.flux.ui.common
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Label
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.RemoveCircleOutline
@@ -39,11 +43,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.flux.R
 import com.flux.data.model.WorkspaceModel
+import com.flux.data.model.getSocialCategory
 import com.flux.data.model.getSpacesList
 
 @Composable
@@ -100,7 +107,7 @@ fun DropdownMenuWithDetails(
             )
             HorizontalDivider()
             DropdownMenuItem(
-                text = { Text("Clone") },
+                text = { Text(stringResource(R.string.convert)) },
                 leadingIcon = { Icon(Icons.Outlined.ControlPointDuplicate, contentDescription = null) },
                 onClick = {
                     expanded = false
@@ -109,7 +116,7 @@ fun DropdownMenuWithDetails(
             )
             HorizontalDivider()
             DropdownMenuItem(
-                text = { Text("Copy") },
+                text = { Text(stringResource(R.string.copy)) },
                 leadingIcon = { Icon(Icons.Outlined.ContentCopy, contentDescription = null) },
                 onClick = {
                     expanded = false
@@ -118,7 +125,7 @@ fun DropdownMenuWithDetails(
             )
             HorizontalDivider()
             DropdownMenuItem(
-                text = { Text("Convert") },
+                text = { Text(stringResource(R.string.convert)) },
                 leadingIcon = { Icon(Icons.Outlined.SwapHoriz, contentDescription = null) },
                 onClick = {
                     expanded = false
@@ -220,7 +227,7 @@ fun JournalDropdownMenu(
             )
             HorizontalDivider()
             DropdownMenuItem(
-                text = { Text("Clone") },
+                text = { Text(stringResource(R.string.clone)) },
                 leadingIcon = { Icon(Icons.Outlined.ControlPointDuplicate, contentDescription = null) },
                 onClick = {
                     expanded = false
@@ -229,7 +236,7 @@ fun JournalDropdownMenu(
             )
             HorizontalDivider()
             DropdownMenuItem(
-                text = { Text("Copy") },
+                text = { Text(stringResource(R.string.copy)) },
                 leadingIcon = { Icon(Icons.Outlined.ContentCopy, contentDescription = null) },
                 onClick = {
                     expanded = false
@@ -238,7 +245,7 @@ fun JournalDropdownMenu(
             )
             HorizontalDivider()
             DropdownMenuItem(
-                text = { Text("Convert") },
+                text = { Text(stringResource(R.string.convert)) },
                 leadingIcon = { Icon(Icons.Outlined.SwapHoriz, contentDescription = null) },
                 onClick = {
                     expanded = false
@@ -481,7 +488,7 @@ fun TodoDropdownMenu(
                 HorizontalDivider()
             }
             DropdownMenuItem(
-                text = { Text("Clone") },
+                text = { Text(stringResource(R.string.clone)) },
                 leadingIcon = { Icon(Icons.Outlined.ControlPointDuplicate, contentDescription = null) },
                 onClick = {
                     expanded = false
@@ -490,7 +497,7 @@ fun TodoDropdownMenu(
             )
             HorizontalDivider()
             DropdownMenuItem(
-                text = { Text("Copy") },
+                text = { Text(stringResource(R.string.copy)) },
                 leadingIcon = { Icon(Icons.Outlined.ContentCopy, contentDescription = null) },
                 onClick = {
                     expanded = false
@@ -499,7 +506,7 @@ fun TodoDropdownMenu(
             )
             HorizontalDivider()
             DropdownMenuItem(
-                text = { Text("Convert") },
+                text = { Text(stringResource(R.string.convert)) },
                 leadingIcon = { Icon(Icons.Outlined.SwapHoriz, contentDescription = null) },
                 onClick = {
                     expanded = false
@@ -543,7 +550,7 @@ fun EventDropdownMenu(
             onDismissRequest = { expanded = false }
         ) {
             DropdownMenuItem(
-                text = { Text("Clone") },
+                text = { Text(stringResource(R.string.clone)) },
                 leadingIcon = { Icon(Icons.Outlined.ControlPointDuplicate, contentDescription = null) },
                 onClick = {
                     expanded = false
@@ -552,7 +559,7 @@ fun EventDropdownMenu(
             )
             HorizontalDivider()
             DropdownMenuItem(
-                text = { Text("Copy") },
+                text = { Text(stringResource(R.string.copy)) },
                 leadingIcon = { Icon(Icons.Outlined.ContentCopy, contentDescription = null) },
                 onClick = {
                     expanded = false
@@ -635,6 +642,70 @@ fun HabitDropdownMenu(
                     onDelete()
                 }
             )
+        }
+    }
+}
+
+@Composable
+fun SocialCategoryDropDown(
+    selected: Int = 0,
+    onSelect: (Int) -> Unit
+) {
+    val categories = getSocialCategory()
+    var expanded by remember { mutableStateOf(false) }
+
+    Box {
+        DropdownMenuItem(
+            text = { Text(categories[selected].name) },
+            leadingIcon = {
+                Icon(
+                    painter = painterResource(categories[selected].icon),
+                    contentDescription = null,
+                    tint = Color.Unspecified,
+                    modifier = Modifier.size(24.dp)
+                )
+            },
+            trailingIcon = {
+                Icon(
+                    imageVector = Icons.Default.ArrowDropDown,
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp)
+                )
+            },
+            onClick = { expanded = true }
+        )
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            Column(
+                modifier = Modifier
+                    .heightIn(max = 300.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                categories.forEachIndexed { index, item ->
+                    DropdownMenuItem(
+                        text = { Text(item.name) },
+                        leadingIcon = {
+                            Icon(
+                                painter = painterResource(item.icon),
+                                contentDescription = null,
+                                tint = Color.Unspecified,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        },
+                        onClick = {
+                            expanded = false
+                            onSelect(index)
+                        }
+                    )
+
+                    if (index != categories.lastIndex) {
+                        HorizontalDivider()
+                    }
+                }
+            }
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.flux.ui.screens.notes
 
 import android.app.Activity
+import android.content.Intent
 import android.net.Uri
 import android.webkit.WebView
 import android.widget.Toast
@@ -42,6 +43,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -56,6 +61,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -70,14 +76,17 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastJoinToString
+import androidx.core.net.toUri
 import androidx.navigation.NavController
 import com.flux.R
 import com.flux.data.model.JournalModel
 import com.flux.data.model.LabelModel
 import com.flux.data.model.NotesModel
+import com.flux.data.model.SocialModel
 import com.flux.data.model.TodoItem
 import com.flux.data.model.TodoModel
 import com.flux.data.model.WorkspaceModel
+import com.flux.data.model.getSocialCategory
 import com.flux.navigation.NavRoutes
 import com.flux.other.Constants
 import com.flux.other.HeaderNode
@@ -99,10 +108,18 @@ import com.flux.other.AudioRecorder
 import com.flux.other.ConvertType
 import com.flux.other.DataCopyType
 import com.flux.ui.common.DataCopyDialog
+import com.flux.ui.common.SocialCategoryCard
+import com.flux.ui.common.SocialDialog
 import com.flux.ui.common.convertMillisToTime
 import com.flux.ui.events.JournalEvents
 import com.flux.ui.events.TodoEvents
 import com.flux.ui.events.WorkspaceEvents
+import kotlinx.coroutines.channels.Channel
+
+data class PendingSocialDelete(
+    val index: Int,
+    val item: SocialModel
+)
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -151,6 +168,7 @@ fun NoteDetails(
     var isSearching by remember { mutableStateOf(false) }
     var showAboutNotes by rememberSaveable { mutableStateOf(false) }
     var showLinkDialog by rememberSaveable { mutableStateOf(false) }
+    var showSocialDialog by rememberSaveable { mutableStateOf(false) }
     var showTaskDialog by rememberSaveable { mutableStateOf(false) }
     var showTableDialog by rememberSaveable { mutableStateOf(false) }
     var showListDialog by rememberSaveable { mutableStateOf(false) }
@@ -171,6 +189,36 @@ fun NoteDetails(
     val contentCopiedString = stringResource(R.string.content_copied)
     val contentMovedString = stringResource(R.string.content_moved)
     val successString = stringResource(R.string.success)
+    val socialCategoryList = getSocialCategory()
+    val socialLinksSaver = Saver<SnapshotStateList<SocialModel>, String>(
+        save = { Json.encodeToString(it.toList()) },
+        restore = { encoded ->
+            mutableStateListOf<SocialModel>().apply {
+                addAll(Json.decodeFromString<List<SocialModel>>(encoded))
+            }
+        }
+    )
+
+    val socialLinks = rememberSaveable(saver = socialLinksSaver) {
+        mutableStateListOf<SocialModel>().apply { addAll(note.socialLinks) }
+    }
+    var selectedSocialModel by remember { mutableStateOf<SocialModel?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val deleteChannel = remember { Channel<PendingSocialDelete>(Channel.UNLIMITED) }
+
+    LaunchedEffect(Unit) {
+        for (pending in deleteChannel) {
+            val result = snackbarHostState.showSnackbar(
+                message = "Social link removed",
+                actionLabel = "Undo",
+                withDismissAction = true,
+                duration = SnackbarDuration.Short
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                socialLinks.add(pending.index.coerceAtMost(socialLinks.size), pending.item)
+            }
+        }
+    }
 
     LaunchedEffect(searchState.searchWord, contentState.text) {
         withContext(Dispatchers.Default) {
@@ -227,7 +275,7 @@ fun NoteDetails(
         val newTitle = titleState.text.toString()
         val newDescription = contentState.text.toString()
 
-        if (newTitle == note.title && newDescription == note.description && noteLabelIds.toList()==note.labels) return
+        if (newTitle == note.title && newDescription == note.description && noteLabelIds.toList()==note.labels && socialLinks==note.socialLinks) return
 
         onNotesEvents(
             NotesEvents.UpsertNote(
@@ -236,7 +284,8 @@ fun NoteDetails(
                     description = contentState.text.toString(),
                     isPinned = isPinned,
                     lastEdited = System.currentTimeMillis(),
-                    labels = noteLabelIds.toList()
+                    labels = noteLabelIds.toList(),
+                    socialLinks = socialLinks
                 )
             )
         )
@@ -249,6 +298,7 @@ fun NoteDetails(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         modifier = Modifier.imePadding(),
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         topBar = {
@@ -300,6 +350,7 @@ fun NoteDetails(
                     onListButtonClick = { showListDialog = true },
                     onTaskButtonClick = { showTaskDialog = true },
                     onLinkButtonClick = { showLinkDialog = true },
+                    onSocialButtonClick = { showSocialDialog = true },
                     onRecordAudioClick = {
                         ensureStorageRoot(
                             scope = scope,
@@ -378,7 +429,7 @@ fun NoteDetails(
                     )
 
                     if (noteLabelIds.isNotEmpty()) {
-                        LazyRow(modifier = Modifier.padding(start = 12.dp, top = 2.dp, bottom = 2.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        LazyRow(modifier = Modifier.padding(start = 12.dp, top = 2.dp, bottom = 2.dp, end = 6.dp), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
                             items(allLabels.filter { l-> noteLabelIds.contains(l.labelId) }) { label ->
                                 Box(
                                     modifier = Modifier
@@ -393,8 +444,8 @@ fun NoteDetails(
                                     ) {
                                         Icon(
                                             Icons.AutoMirrored.Default.LabelImportant,
-                                            contentDescription = "Label",
-                                            modifier = Modifier.size(18.dp),
+                                            contentDescription = null,
+                                            modifier = Modifier.size(20.dp),
                                             tint = MaterialTheme.colorScheme.onPrimaryContainer
                                         )
                                         Text(
@@ -404,6 +455,36 @@ fun NoteDetails(
                                         )
                                     }
                                 }
+                            }
+                            items(socialLinks) { item ->
+                                val category = socialCategoryList[item.category]
+
+                                SocialCategoryCard(
+                                    title = item.title,
+                                    cardContainerColor = category.containerColor,
+                                    cardContentColor = category.contentColor,
+                                    icon = category.icon,
+                                    onClick = {
+                                        if(isReadView){
+                                            val intent = Intent(
+                                                Intent.ACTION_VIEW,
+                                                item.link.toUri()
+                                            )
+                                            context.startActivity(intent)
+                                        }
+                                        else{
+                                            val index = socialLinks.indexOf(item)
+                                            if (index != -1) {
+                                                socialLinks.removeAt(index)
+                                                deleteChannel.trySend(PendingSocialDelete(index, item))
+                                            }
+                                        }
+                                    },
+                                    onLongPress = {
+                                        selectedSocialModel=item
+                                        showSocialDialog=true
+                                    }
+                                )
                             }
                         }
                     }
@@ -467,6 +548,17 @@ fun NoteDetails(
         ListDialog(onDismissRequest = { showListDialog = false }) {
             onMarkdownKeyPressed(Constants.Editor.LIST, contentState, it.fastJoinToString(separator = "\n"))
         }
+    }
+
+    if(showSocialDialog){
+        SocialDialog(
+            selectedSocialModel,
+            { socialLinks.add(it.copy(notesId = note.notesId, workspaceId = note.workspaceId)) },
+            {
+                showSocialDialog=false
+                selectedSocialModel=null
+            }
+        )
     }
 
     if (showTaskDialog) {

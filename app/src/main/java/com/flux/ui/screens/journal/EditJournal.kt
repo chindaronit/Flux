@@ -1,6 +1,7 @@
 package com.flux.ui.screens.journal
 
 import android.app.Activity
+import android.content.Intent
 import android.net.Uri
 import android.webkit.WebView
 import android.widget.Toast
@@ -38,6 +39,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -84,20 +89,26 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.core.net.toUri
 import com.flux.R
 import com.flux.data.model.LabelModel
 import com.flux.data.model.NotesModel
+import com.flux.data.model.SocialModel
 import com.flux.data.model.TodoItem
 import com.flux.data.model.TodoModel
 import com.flux.data.model.WorkspaceModel
+import com.flux.data.model.getSocialCategory
 import com.flux.navigation.NavRoutes
 import com.flux.other.ConvertType
 import com.flux.other.DataCopyType
 import com.flux.ui.common.DataCopyDialog
 import com.flux.ui.common.DatePickerModal
+import com.flux.ui.common.SocialCategoryCard
+import com.flux.ui.common.SocialDialog
 import com.flux.ui.events.NotesEvents
 import com.flux.ui.events.TodoEvents
 import com.flux.ui.events.WorkspaceEvents
@@ -106,12 +117,14 @@ import com.flux.ui.screens.notes.ListDialog
 import com.flux.ui.screens.notes.MarkdownEditorRow
 import com.flux.ui.screens.notes.NotesInfoBottomSheet
 import com.flux.ui.screens.notes.OutlineBottomSheet
+import com.flux.ui.screens.notes.PendingSocialDelete
 import com.flux.ui.screens.notes.RecordAudioDialog
 import com.flux.ui.screens.notes.SelectLabelDialog
 import com.flux.ui.screens.notes.ShareDialog
 import com.flux.ui.screens.notes.TableDialog
 import com.flux.ui.screens.notes.TaskDialog
 import com.flux.ui.screens.notes.TaskItem
+import kotlinx.coroutines.channels.Channel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -169,6 +182,7 @@ fun EditJournal(
     var showAudioRecorder by rememberSaveable { mutableStateOf(false) }
     var readWebView by remember { mutableStateOf<WebView?>(null) }
     var showLabelDialog by rememberSaveable { mutableStateOf(false) }
+    var showSocialDialog by rememberSaveable { mutableStateOf(false) }
     val currentLabelIds = rememberSaveable {
         mutableStateListOf<String>().apply {
             addAll(journal.labels)
@@ -182,6 +196,36 @@ fun EditJournal(
     val contentCopiedString = stringResource(R.string.content_copied)
     val contentMovedString = stringResource(R.string.content_moved)
     val successString = stringResource(R.string.success)
+    val socialCategoryList = getSocialCategory()
+    val socialLinksSaver = Saver<SnapshotStateList<SocialModel>, String>(
+        save = { Json.encodeToString(it.toList()) },
+        restore = { encoded ->
+            mutableStateListOf<SocialModel>().apply {
+                addAll(Json.decodeFromString<List<SocialModel>>(encoded))
+            }
+        }
+    )
+
+    val socialLinks = rememberSaveable(saver = socialLinksSaver) {
+        mutableStateListOf<SocialModel>().apply { addAll(journal.socialLinks) }
+    }
+    var selectedSocialModel by remember { mutableStateOf<SocialModel?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val deleteChannel = remember { Channel<PendingSocialDelete>(Channel.UNLIMITED) }
+
+    LaunchedEffect(Unit) {
+        for (pending in deleteChannel) {
+            val result = snackbarHostState.showSnackbar(
+                message = "Social link removed",
+                actionLabel = "Undo",
+                withDismissAction = true,
+                duration = SnackbarDuration.Short
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                socialLinks.add(pending.index.coerceAtMost(socialLinks.size), pending.item)
+            }
+        }
+    }
 
     val rootPicker =
         rememberLauncherForActivityResult(
@@ -227,17 +271,17 @@ fun EditJournal(
 
     fun onSaveJournal() {
         val newText = contentState.text.toString()
-
         val hasChanged = newText != journal.text
 
-        if (!hasChanged && currentLabelIds.toList()==journal.labels && journalDate==journal.dateTime) return
+        if (!hasChanged && currentLabelIds.toList()==journal.labels && journalDate==journal.dateTime && socialLinks==journal.socialLinks) return
 
         onJournalEvents(
             JournalEvents.UpsertEntry(
                 journal.copy(
                     text = newText,
                     dateTime = if (isToday) System.currentTimeMillis() else journalDate,
-                    labels = currentLabelIds.toList()
+                    labels = currentLabelIds.toList(),
+                    socialLinks = socialLinks
                 )
             )
         )
@@ -250,6 +294,7 @@ fun EditJournal(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         modifier = Modifier.imePadding(),
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         topBar = {
@@ -294,6 +339,7 @@ fun EditJournal(
                     onListButtonClick = { showListDialog = true },
                     onTaskButtonClick = { showTaskDialog = true },
                     onLinkButtonClick = { showLinkDialog = true },
+                    onSocialButtonClick = { showSocialDialog = true },
                     onRecordAudioClick = {
                         ensureStorageRoot(
                             scope = scope,
@@ -399,6 +445,36 @@ fun EditJournal(
                         }
                     }
                 }
+                items(socialLinks) { item ->
+                    val category = socialCategoryList[item.category]
+
+                    SocialCategoryCard(
+                        title = item.title,
+                        cardContainerColor = category.containerColor,
+                        cardContentColor = category.contentColor,
+                        icon = category.icon,
+                        onClick = {
+                            if(isReadView){
+                                val intent = Intent(
+                                    Intent.ACTION_VIEW,
+                                    item.link.toUri()
+                                )
+                                context.startActivity(intent)
+                            }
+                            else{
+                                val index = socialLinks.indexOf(item)
+                                if (index != -1) {
+                                    socialLinks.removeAt(index)
+                                    deleteChannel.trySend(PendingSocialDelete(index, item))
+                                }
+                            }
+                        },
+                        onLongPress = {
+                            selectedSocialModel=item
+                            showSocialDialog=true
+                        }
+                    )
+                }
             }
 
             /*-------------------------------------------------*/
@@ -446,15 +522,11 @@ fun EditJournal(
         DatePickerModal(
             initialSelectedDateMillis = journalDate,
             onDateSelected = { selectedDate ->
-
                 if (selectedDate == null) return@DatePickerModal
-
                 val now = System.currentTimeMillis()
-
                 val selectedLocalDate = Instant.ofEpochMilli(selectedDate)
                     .atZone(ZoneId.systemDefault())
                     .toLocalDate()
-
                 val today = LocalDate.now()
 
                 when {
@@ -571,6 +643,19 @@ fun EditJournal(
             },
             onDismissRequest = { showLabelDialog = false },
             onAddLabel = { navController.navigate(NavRoutes.EditLabels.withArgs(journal.workspaceId)) }
+        )
+    }
+
+    if(showSocialDialog){
+        SocialDialog(
+            selectedSocialModel,
+            {
+                socialLinks.add(it.copy(notesId = journal.journalId, workspaceId = journal.workspaceId))
+            },
+            {
+                showSocialDialog=false
+                selectedSocialModel=null
+            }
         )
     }
 

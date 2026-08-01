@@ -97,7 +97,21 @@ class Converter {
             json.decodeFromString(value)
         } catch (
             _: Exception) {
-            HabitConfig.Simple // fallback (critical)
+            HabitConfig.Simple
+        }
+    }
+
+    @TypeConverter
+    fun socialLinksToJson(value: List<SocialModel>): String {
+        return json.encodeToString(value)
+    }
+
+    @TypeConverter
+    fun jsonToSocialLinks(value: String): List<SocialModel> {
+        return if (value.isBlank()) {
+            emptyList()
+        } else {
+            json.decodeFromString(value)
         }
     }
 }

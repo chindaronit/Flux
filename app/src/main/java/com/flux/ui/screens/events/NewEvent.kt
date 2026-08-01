@@ -16,7 +16,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccessTime
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.Today
@@ -61,6 +60,7 @@ import com.flux.R
 import com.flux.data.model.EventModel
 import com.flux.data.model.RecurrenceRule
 import com.flux.ui.common.DatePickerModal
+import com.flux.ui.common.DiscardChangesDialog
 import com.flux.ui.common.RecurrenceBottomSheet
 import com.flux.ui.common.TimePicker
 import com.flux.ui.common.convertMillisToTime
@@ -78,6 +78,7 @@ fun NewEvent(
     onTaskEvents: (TaskEvents) -> Unit
 ) {
     val context = LocalContext.current
+    val originalEvent = remember { event }
     var title by rememberSaveable { mutableStateOf(event.title) }
     var description by rememberSaveable { mutableStateOf(event.description) }
     var showTimePicker by remember { mutableStateOf(false) }
@@ -91,6 +92,7 @@ fun NewEvent(
     var eventEndsOn by rememberSaveable { mutableLongStateOf(event.endDateTime) }
     var neverEnds by rememberSaveable { mutableStateOf(event.endDateTime==-1L) }
     var showDatePicker by remember { mutableStateOf(false) }
+    var showDiscardDialog by remember { mutableStateOf(false) }
 
     if (showCustomNotificationDialog) {
         CustomNotificationDialog({
@@ -122,6 +124,28 @@ fun NewEvent(
         }
     }
 
+    fun saveEventIfPossible(): Boolean {
+        val candidate = originalEvent.copy(
+            title = title,
+            startDateTime = selectedDateTime,
+            description = description,
+            endDateTime = eventEndsOn,
+            recurrence = currentRecurrenceRule,
+            notificationOffset = notificationOffset
+        )
+        val hasContent = candidate != originalEvent
+
+        if (!hasContent) { return true }
+
+        if (title.isBlank()) {
+            showDiscardDialog = true
+            return false
+        }
+
+        onTaskEvents(TaskEvents.UpsertTask(context, candidate))
+        return true
+    }
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         topBar = {
@@ -129,23 +153,16 @@ fun NewEvent(
                 colors = TopAppBarDefaults.topAppBarColors(MaterialTheme.colorScheme.surfaceContainerLow),
                 title = { Text(stringResource(R.string.Edit_Event)) },
                 navigationIcon = {
-                    IconButton({ navController.popBackStack() }) {
+                    IconButton({
+                        if(saveEventIfPossible()){
+                            navController.popBackStack()
+                        }
+                    }) {
                         Icon(
                             Icons.AutoMirrored.Default.ArrowBack,
                             null
                         )
                     }
-                },
-                actions = {
-                    IconButton(
-                        enabled = title.isNotBlank(),
-                        onClick = {
-                            val updatedEvent = event.copy(title = title, description = description, startDateTime = selectedDateTime, notificationOffset = notificationOffset, recurrence = currentRecurrenceRule, endDateTime = eventEndsOn)
-                            onTaskEvents(TaskEvents.UpsertTask(context, updatedEvent))
-                            navController.popBackStack()
-                        }
-                    )
-                    { Icon(Icons.Default.Check, null) }
                 }
             )
         }
@@ -347,6 +364,15 @@ fun NewEvent(
                 Icon(Icons.Outlined.NotificationsActive, null)
                 Text(getNotificationText(notificationOffset))
             }
+        }
+    }
+
+    if (showDiscardDialog) {
+        DiscardChangesDialog({
+            showDiscardDialog = false
+            navController.popBackStack()
+        }) {
+            showDiscardDialog=false
         }
     }
 

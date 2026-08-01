@@ -415,6 +415,8 @@ val MIGRATION_11_12 = object : Migration(11, 12) {
     private val TMP_TABLE = "WorkspaceModel_new"
 
     override fun migrate(db: SupportSQLiteDatabase) {
+        db.safeExec("ALTER TABLE NotesModel ADD COLUMN socialLinks TEXT NOT NULL DEFAULT '[]'")
+        db.safeExec("ALTER TABLE JournalModel ADD COLUMN socialLinks TEXT NOT NULL DEFAULT '[]'")
         recreateTableWithHashedColumn(db)
         rehashExistingPasswords(db)
     }
