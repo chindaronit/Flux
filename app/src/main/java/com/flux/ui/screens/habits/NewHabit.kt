@@ -1,6 +1,7 @@
 package com.flux.ui.screens.habits
 
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,6 +34,7 @@ import androidx.compose.material.icons.filled.TrackChanges
 import androidx.compose.material.icons.outlined.Circle
 import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.StopCircle
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -46,6 +48,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.surfaceColorAtElevation
@@ -77,6 +80,7 @@ import com.flux.data.model.HabitConfig
 import com.flux.data.model.HabitModel
 import com.flux.data.model.RecurrenceRule
 import com.flux.ui.common.DatePickerModal
+import com.flux.ui.common.DiscardChangesDialog
 import com.flux.ui.common.TimePicker
 import com.flux.ui.events.HabitEvents
 import com.flux.ui.screens.events.getTextFieldColors
@@ -106,6 +110,8 @@ fun NewHabit(
     var neverEnds by rememberSaveable { mutableStateOf(habit.endDateTime == -1L) }
     val focusRequesterDesc = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
+    var showDiscardDialog by remember { mutableStateOf(false) }
+    val originalHabit = remember { habit }
     val weekdays = listOf(
         stringResource(R.string.monday_short),
         stringResource(R.string.tuesday_short),
@@ -135,6 +141,37 @@ fun NewHabit(
         mutableStateOf(habit.habitConfig as? HabitConfig.Counted ?: HabitConfig.Counted())
     }
 
+    fun saveHabitIfPossible(): Boolean {
+        val candidate = originalHabit.copy(
+            title = newHabitTitle,
+            description = newHabitDescription,
+            startDateTime = newHabitTime,
+            endDateTime = habitEndsOn,
+            recurrence = RecurrenceRule.Weekly(selectedDays.toList()),
+            habitConfig = newHabitConfig
+        )
+
+        val hasContent = candidate != originalHabit
+
+        if (!hasContent) {
+            return true
+        }
+
+        if (newHabitTitle.isBlank()) {
+            showDiscardDialog = true
+            return false
+        }
+
+        onHabitEvents(HabitEvents.UpsertHabit(context, candidate))
+        return true
+    }
+
+    BackHandler {
+        if (saveHabitIfPossible()) {
+            navController.popBackStack()
+        }
+    }
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         topBar = {
@@ -142,31 +179,12 @@ fun NewHabit(
                 colors = TopAppBarDefaults.topAppBarColors(MaterialTheme.colorScheme.surfaceContainerLow),
                 title = { Text(topBarTitle) },
                 navigationIcon = {
-                    IconButton({ navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Default.ArrowBack, null)
-                    }
-                },
-                actions = {
-                    IconButton(
-                        enabled = newHabitTitle.isNotBlank() && selectedDays.isNotEmpty(),
-                        onClick = {
+                    IconButton({
+                        if (saveHabitIfPossible()) {
                             navController.popBackStack()
-                            onHabitEvents(
-                                HabitEvents.UpsertHabit(
-                                    context,
-                                    habit.copy(
-                                        title = newHabitTitle,
-                                        description = newHabitDescription,
-                                        startDateTime = newHabitTime,
-                                        endDateTime = habitEndsOn,
-                                        recurrence = RecurrenceRule.Weekly(selectedDays.toList()),
-                                        habitConfig = newHabitConfig
-                                    )
-                                )
-                            )
                         }
-                    ) {
-                        Icon(Icons.Default.Check, null)
+                    }) {
+                        Icon(Icons.AutoMirrored.Default.ArrowBack, null)
                     }
                 }
             )
@@ -410,6 +428,15 @@ fun NewHabit(
                     }
                 }
             )
+        }
+    }
+
+    if (showDiscardDialog) {
+        DiscardChangesDialog({
+            showDiscardDialog = false
+            navController.popBackStack()
+        }) {
+            showDiscardDialog=false
         }
     }
 

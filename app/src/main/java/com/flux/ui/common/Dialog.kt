@@ -2,6 +2,7 @@ package com.flux.ui.common
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.DeleteOutline
@@ -48,7 +50,6 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -68,11 +69,87 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.rounded.Visibility
+import androidx.compose.material.icons.rounded.VisibilityOff
+import androidx.compose.material3.*
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
+import com.flux.data.model.SocialModel
+import com.flux.ui.screens.events.getTextFieldColors
+import java.time.Instant
+import java.time.ZoneId
+import java.time.ZoneOffset
 
 fun convertMillisToDate(millis: Long): String {
     val formatter = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
     formatter.timeZone = TimeZone.getDefault()
     return formatter.format(Date(millis))
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DateOnlyPickerModal(
+    initialSelectedDateMillis: Long = System.currentTimeMillis(),
+    onDateSelected: (Long?) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val pickerInitialMillis =
+        Instant.ofEpochMilli(initialSelectedDateMillis)
+            .atZone(ZoneId.systemDefault())
+            .toLocalDate()
+            .atStartOfDay(ZoneOffset.UTC)
+            .toInstant()
+            .toEpochMilli()
+
+    val state = rememberDatePickerState(
+        initialSelectedDateMillis = pickerInitialMillis
+    )
+
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    val result = state.selectedDateMillis?.let { utcMillis ->
+                        val localDate = Instant.ofEpochMilli(utcMillis)
+                            .atZone(ZoneOffset.UTC)
+                            .toLocalDate()
+
+                        localDate
+                            .atStartOfDay(ZoneId.systemDefault())
+                            .toInstant()
+                            .toEpochMilli()
+                    }
+
+                    onDateSelected(result)
+                    onDismiss()
+                }
+            ) {
+                Text(stringResource(R.string.Set))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.Cancel))
+            }
+        }
+    ) {
+        DatePicker(state = state)
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -90,16 +167,7 @@ fun DatePickerModal(
         onDismissRequest = onDismiss,
         confirmButton = {
             TextButton(onClick = {
-                val normalized = datePickerState.selectedDateMillis?.let { millis ->
-                    Calendar.getInstance().apply {
-                        timeInMillis = millis
-                        set(Calendar.HOUR_OF_DAY, 0)
-                        set(Calendar.MINUTE, 0)
-                        set(Calendar.SECOND, 0)
-                        set(Calendar.MILLISECOND, 0)
-                    }.timeInMillis
-                }
-                onDateSelected(normalized)
+                onDateSelected(datePickerState.selectedDateMillis)
                 onDismiss()
             }) {
                 Text(stringResource(R.string.Set))
@@ -311,7 +379,7 @@ fun DataCopyDialog(
                         selectedWorkspaces.clear()
                     },
                     selected = selectedType == DataCopyType.COPY,
-                    label = { Text("Copy") }
+                    label = { Text(stringResource(R.string.copy)) }
                 )
 
                 SegmentedButton(
@@ -324,12 +392,12 @@ fun DataCopyDialog(
                         selectedWorkspaces.clear()
                     },
                     selected = selectedType == DataCopyType.MOVE,
-                    label = { Text("Move") }
+                    label = { Text(stringResource(R.string.move)) }
                 )
             }
         },
         title = {
-            Text("Select Workspaces")
+            Text(stringResource(R.string.select_workspaces))
         },
         text = {
             LazyColumn (Modifier
@@ -397,12 +465,286 @@ fun DataCopyDialog(
                 onConfirm(selectedType, selectedWorkspaces.toList())
                 onDismiss()
             }) {
-                Text("Confirm")
+                Text(stringResource(R.string.Confirm))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Dismiss")
+                Text(stringResource(R.string.Dismiss))
+            }
+        }
+    )
+}
+
+/** Captures a password string. Used for: initial setup, per-file import prompt, and password change. */
+@Composable
+fun BackupPasswordEntryDialog(
+    title: String,
+    onConfirm: (CharArray) -> Unit,
+    onDismiss: (() -> Unit)?, // null = non-dismissible (used for the mandatory setup flow)
+    supportingText: String? = null
+) {
+    var password by remember { mutableStateOf("") }
+    var visible by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = { onDismiss?.invoke() },
+        title = { Text(title) },
+        text = {
+            Column {
+                supportingText?.let {
+                    Text(it, style = MaterialTheme.typography.bodyMedium)
+                    Spacer(Modifier.height(12.dp))
+                }
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text(stringResource(R.string.backup_password)) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    visualTransformation = if (visible) VisualTransformation.None else PasswordVisualTransformation(),
+                    trailingIcon = {
+                        IconButton(onClick = { visible = !visible }) {
+                            Icon(
+                                if (visible) Icons.Rounded.VisibilityOff else Icons.Rounded.Visibility,
+                                contentDescription = null
+                            )
+                        }
+                    }
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    stringResource(R.string.backup_password_description),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                enabled = password.isNotEmpty(),
+                onClick = {
+                    val pw = password.toCharArray()
+                    password = ""
+                    onConfirm(pw)
+                }
+            ) { Text(stringResource(R.string.set_password)) }
+        },
+        dismissButton = onDismiss?.let {
+            { TextButton(onClick = it) { Text(stringResource(R.string.Dismiss)) } }
+        }
+    )
+}
+
+/** Non-dismissible: fires whenever auto-backup is on but no password exists (migration, import, or live toggle). */
+@Composable
+fun AutoBackupNeedsPasswordDialog(
+    onSetPasswordClick: () -> Unit,
+    onTurnOffAutoBackup: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = { /* force an explicit choice */ },
+        title = { Text(stringResource(R.string.backup_password_setting)) },
+        text = { Text(stringResource(R.string.auto_backup_requires_password)) },
+        confirmButton = {
+            TextButton(onClick = onSetPasswordClick) { Text(stringResource(R.string.set_password)) }
+        },
+        dismissButton = {
+            TextButton(onClick = onTurnOffAutoBackup) { Text(stringResource(R.string.turn_off_auto_backup)) }
+        }
+    )
+}
+
+@Composable
+fun AutoBackupNeedsPasswordInfoDialog(
+    onNavigate: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = { /* force an explicit choice */ },
+        title = { Text(stringResource(R.string.backup_password_setting)) },
+        text = { Text(stringResource(R.string.auto_backup_requires_password)) },
+        confirmButton = {
+            TextButton(onClick = onNavigate) { Text(stringResource(R.string.go_to_settings)) }
+        },
+        dismissButton = {  }
+    )
+}
+
+/** Confirms the destructive consequence of rotating the password. */
+@Composable
+fun ChangePasswordWarningDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.change_backup_password_title)) },
+        text = { Text(stringResource(R.string.change_backup_password_message)) },
+        confirmButton = { TextButton(onClick = onConfirm) { Text(stringResource(R.string.Confirm)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.Dismiss)) } }
+    )
+}
+
+@Composable
+fun SocialDialog(
+    socialModel: SocialModel?=null,
+    onConfirm: (SocialModel) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var title by rememberSaveable { mutableStateOf(socialModel?.title?:"") }
+    var link by rememberSaveable { mutableStateOf(socialModel?.link?:"") }
+    var selectedCategory by rememberSaveable { mutableIntStateOf(socialModel?.category?:0) }
+    val focusRequesterDesc = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    Dialog(onDismissRequest = onDismiss){
+        Card(Modifier.fillMaxWidth()) {
+            Column(
+                Modifier.fillMaxWidth().padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    "Add Social",
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
+                )
+                Spacer(Modifier.height(8.dp))
+                SocialCategoryDropDown(selectedCategory) {
+                    selectedCategory=it
+                }
+
+                TextField(
+                    value = title,
+                    onValueChange = { title = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text(stringResource(R.string.Title)) },
+                    singleLine = true,
+                    textStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                    shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
+                    colors = getTextFieldColors(),
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        capitalization = KeyboardCapitalization.Words,
+                        imeAction = ImeAction.Next
+                    ),
+                    keyboardActions = KeyboardActions(onNext = { focusRequesterDesc.requestFocus() })
+                )
+
+                TextField(
+                    value = link,
+                    onValueChange = { link = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 6.dp)
+                        .focusRequester(focusRequesterDesc),
+                    placeholder = { Text(stringResource(R.string.link)) },
+                    singleLine = true,
+                    shape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp),
+                    colors = getTextFieldColors(),
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        capitalization = KeyboardCapitalization.Sentences,
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(onDone = { keyboardController?.hide() })
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextButton(onDismiss) {
+                        Text(stringResource(R.string.Dismiss))
+                    }
+
+                    FilledTonalButton(
+                        onClick = {
+                            onConfirm(
+                                SocialModel(
+                                    title = title,
+                                    link = link,
+                                    category = selectedCategory
+                                )
+                            )
+                            onDismiss()
+                        }
+                    ) { Text(stringResource(R.string.Confirm)) }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun SocialCategoryCard(
+    title: String,
+    cardContainerColor: Long,
+    cardContentColor: Long,
+    icon: Int,
+    onClick: () -> Unit,
+    onLongPress: () -> Unit
+) {
+    Card(
+        modifier = Modifier.clip(RoundedCornerShape(50))
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongPress
+            ),
+        shape = RoundedCornerShape(50),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(cardContainerColor).copy(alpha = 0.75f),
+            contentColor = Color(cardContentColor)
+        )
+    ) {
+        Row(
+            modifier = Modifier.padding(2.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(
+                modifier = Modifier.size(24.dp),
+                onClick = onClick,
+                colors = IconButtonDefaults.iconButtonColors(
+                    containerColor = Color(cardContainerColor)
+                )
+            ) {
+                Icon(
+                    painter = painterResource(icon),
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                    tint = Color.Unspecified
+                )
+            }
+
+            Spacer(Modifier.width(6.dp))
+
+            Text(
+                title,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color(cardContentColor)
+            )
+
+            Spacer(Modifier.width(6.dp))
+        }
+    }
+}
+
+@Composable
+fun DiscardChangesDialog(
+    onDiscard: () -> Unit,
+    onDismiss: () -> Unit
+){
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.discard_changes)) },
+        text = { Text(stringResource(R.string.discard_changes_message)) },
+        confirmButton = {
+            TextButton(onClick = onDiscard) {
+                Text(stringResource(R.string.discard))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.keep_editing))
             }
         }
     )

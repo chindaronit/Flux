@@ -540,4 +540,29 @@
     <string name="delete_alert">Löschwarnung!</string>
     <string name="delete_spaces_alert">Du bist dabei, %1$s Bereich(e) mit allen Daten dauerhaft zu löschen. Dies kann nicht rückgängig gemacht werden.</string>
 
+    <string name="set_backup_password_title">Backup-Passwort festlegen</string>
+    <string name="enter_backup_password_title">Backup-Passwort eingeben</string>
+    <string name="backup_password_setting">Backup-Passwort festlegen</string>
+    <string name="backup_encrypted">Backups sind verschlüsselt</string>
+    <string name="backup_not_encrypted">Backups sind nicht verschlüsselt</string>
+    <string name="backup_password">Backup-Passwort</string>
+    <string name="backup_password_description">Dieses Passwort kann nicht wiederhergestellt werden, wenn es verloren geht. Sie benötigen es, um dieses Backup auf jedem Gerät wiederherzustellen.</string>
+    <string name="set_backup_password">Backup-Passwort festlegen</string>
+    <string name="auto_backup_requires_password">Die automatische Sicherung ist aktiviert, aber es wurde kein Passwort festgelegt. Deshalb können Sicherungen nicht sicher ausgeführt werden. Legen Sie jetzt ein Passwort fest oder deaktivieren Sie die automatische Sicherung.</string>
+    <string name="go_to_settings">Zu den Einstellungen</string>
+    <string name="change_backup_password_title">Backup-Passwort ändern?</string>
+    <string name="change_backup_password_message">Bereits mit Ihrem aktuellen Passwort verschlüsselte Backups können nach dieser Änderung nicht mehr wiederhergestellt werden. Neue Backups verwenden das neue Passwort. Dieser Vorgang kann nicht rückgängig gemacht werden.</string>
+    <string name="set_password">Passwort festlegen</string>
+    <string name="turn_off_auto_backup">Automatische Sicherung deaktivieren</string>
+    <string name="unsupported_backup_version">Nicht unterstützte Backup-Version: %1$s</string>
+    <string name="backup_wrong_password_or_corrupted">Falsches Passwort oder die Datei ist beschädigt bzw. wurde manipuliert.</string>
+
+    <string name="social_link_removed">Social-Link entfernt</string>
+    <string name="discard_changes">Änderungen verwerfen?</string>
+    <string name="discard_changes_message">Du hast Änderungen vorgenommen, aber keinen Titel hinzugefügt. Füge einen Titel hinzu, um zu speichern, oder verwerfe die Änderungen.</string>
+    <string name="discard">Verwerfen</string>
+    <string name="keep_editing">Weiter bearbeiten</string>
+    <string name="add_social">Sozialen Link hinzufügen</string>
+    <string name="changelog">Änderungsprotokoll</string>
+    <string name="changelog_description">Verfolge die Änderungen jeder Version.</string>
 </resources>

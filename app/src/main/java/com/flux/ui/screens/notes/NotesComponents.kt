@@ -73,6 +73,7 @@ import androidx.compose.material.icons.filled.SubdirectoryArrowRight
 import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.outlined.AddChart
+import androidx.compose.material.icons.outlined.AlternateEmail
 import androidx.compose.material.icons.outlined.AudioFile
 import androidx.compose.material.icons.outlined.AutoStories
 import androidx.compose.material.icons.outlined.CheckBox
@@ -1914,6 +1915,7 @@ fun MarkdownEditorRow(
     onListButtonClick: () -> Unit,
     onTaskButtonClick: () -> Unit,
     onLinkButtonClick: () -> Unit,
+    onSocialButtonClick: () -> Unit,
     onImageButtonClick: () -> Unit,
     onAudioButtonClick: () -> Unit,
     onRecordAudioClick: () -> Unit,
@@ -2182,6 +2184,12 @@ fun MarkdownEditorRow(
             imageVector = Icons.Outlined.Link,
             contentDescription = "Link",
             onClick = onLinkButtonClick
+        )
+
+        CustomIconButton(
+            imageVector = Icons.Outlined.AlternateEmail,
+            contentDescription = "Social",
+            onClick = onSocialButtonClick
         )
 
         CustomIconButton(

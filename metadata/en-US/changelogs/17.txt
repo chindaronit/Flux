@@ -1,0 +1,10 @@
+feat:
+    - Addition of backup encryption to all the export of backup.
+    - Added social links option in notes and journal.
+    - Media detection support in journals
+    - Consistent saving of habits and events
+    - Changelog in about.
+
+fix:
+    - Local date bug in events
+    - Event stale data of EventDetails.kt after edit.

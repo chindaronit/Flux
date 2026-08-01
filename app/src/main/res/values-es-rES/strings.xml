@@ -544,4 +544,29 @@
     <string name="delete_alert">¡Alerta de eliminación!</string>
     <string name="delete_spaces_alert">Estás a punto de eliminar permanentemente los espacios %1$s con todos sus datos. Esta acción no se puede deshacer.</string>
 
+    <string name="set_backup_password_title">Establecer contraseña de copia de seguridad</string>
+    <string name="enter_backup_password_title">Introducir contraseña de copia de seguridad</string>
+    <string name="backup_password_setting">Establecer una contraseña de copia de seguridad</string>
+    <string name="backup_encrypted">Las copias de seguridad están cifradas</string>
+    <string name="backup_not_encrypted">Las copias de seguridad no están cifradas</string>
+    <string name="backup_password">Contraseña de copia de seguridad</string>
+    <string name="backup_password_description">Esta contraseña no puede recuperarse si se pierde. La necesitará para restaurar esta copia de seguridad en cualquier dispositivo.</string>
+    <string name="set_backup_password">Establecer una contraseña de copia de seguridad</string>
+    <string name="auto_backup_requires_password">La copia de seguridad automática está activada, pero no se ha configurado una contraseña, por lo que no puede ejecutarse de forma segura. Configure una contraseña ahora o desactive la copia de seguridad automática.</string>
+    <string name="go_to_settings">Ir a ajustes</string>
+    <string name="change_backup_password_title">¿Cambiar la contraseña de copia de seguridad?</string>
+    <string name="change_backup_password_message">Las copias de seguridad ya cifradas con su contraseña actual dejarán de poder restaurarse después de este cambio. Las nuevas copias de seguridad usarán la nueva contraseña. Esta acción no se puede deshacer.</string>
+    <string name="set_password">Establecer contraseña</string>
+    <string name="turn_off_auto_backup">Desactivar copia de seguridad automática</string>
+    <string name="unsupported_backup_version">Versión de copia de seguridad no compatible: %1$s</string>
+    <string name="backup_wrong_password_or_corrupted">La contraseña es incorrecta o el archivo está dañado o ha sido manipulado.</string>
+
+    <string name="social_link_removed">Enlace social eliminado</string>
+    <string name="discard_changes">¿Descartar cambios?</string>
+    <string name="discard_changes_message">Has realizado cambios pero no has agregado un título. Agrega un título para guardar o descarta los cambios.</string>
+    <string name="discard">Descartar</string>
+    <string name="keep_editing">Seguir editando</string>
+    <string name="add_social">Agregar enlace social</string>
+    <string name="changelog">Registro de cambios</string>
+    <string name="changelog_description">Consulta los cambios de cada versión.</string>
 </resources>

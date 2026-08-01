@@ -66,7 +66,7 @@ import com.flux.R
 import com.flux.data.model.ProgressBoardModel
 import com.flux.other.icons
 import com.flux.ui.common.ChangeIconSheet
-import com.flux.ui.common.DatePickerModal
+import com.flux.ui.common.DateOnlyPickerModal
 import com.flux.ui.common.convertMillisToDate
 import com.flux.ui.screens.events.getTextFieldColors
 import com.flux.ui.screens.settings.shapeManager
@@ -104,13 +104,18 @@ fun NewBoardItemSheet(
     val startDateString = stringResource(R.string.start_date_after_target_error)
     val targetDateString = stringResource(R.string.target_date_before_start_error)
 
-    if (showDateSelector) {
-        DatePickerModal(
-            onDateSelected = {
-                val selectedDate = it ?: -1L
+    if(showDateSelector){
+        DateOnlyPickerModal(
+            initialSelectedDateMillis = if (isSelectingStartDate) {
+                if (startDate == -1L) System.currentTimeMillis() else startDate
+            } else {
+                if (endDate == -1L) System.currentTimeMillis() else endDate
+            },
+            onDateSelected = { picked ->
+
+                val selectedDate = picked ?: -1L
 
                 if (isSelectingStartDate) {
-
                     if (
                         endDate != -1L &&
                         selectedDate != -1L &&
@@ -124,9 +129,7 @@ fun NewBoardItemSheet(
                     } else {
                         startDate = selectedDate
                     }
-
                 } else {
-
                     if (
                         startDate != -1L &&
                         selectedDate != -1L &&
@@ -140,12 +143,12 @@ fun NewBoardItemSheet(
                     } else {
                         endDate = selectedDate
                     }
-
                 }
+            },
+            onDismiss = {
+                showDateSelector = false
             }
-        ) {
-            showDateSelector = false
-        }
+        )
     }
 
     ChangeIconSheet (isChangeIcon, iconSheetState, { isChangeIcon=false }) {

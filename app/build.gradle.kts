@@ -14,8 +14,8 @@ android {
         applicationId = "com.flux"
         minSdk = 29
         targetSdk = 37
-        versionCode = 16
-        versionName = "3.1.10"
+        versionCode = 17
+        versionName = "3.2.0"
     }
 
     dependenciesInfo {
@@ -138,4 +138,6 @@ dependencies {
 
     // draggable list
     implementation(libs.reorderable)
+
+    implementation(libs.androidx.security.crypto)
 }

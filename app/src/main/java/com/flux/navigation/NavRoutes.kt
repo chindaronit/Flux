@@ -21,6 +21,7 @@ import com.flux.ui.screens.labels.EditLabels
 import com.flux.ui.screens.notes.NoteDetails
 import com.flux.ui.screens.search.SearchScreen
 import com.flux.ui.screens.settings.About
+import com.flux.ui.screens.settings.Changelog
 import com.flux.ui.screens.settings.Contact
 import com.flux.ui.screens.settings.Customize
 import com.flux.ui.screens.settings.Data
@@ -65,6 +66,7 @@ sealed class NavRoutes(val route: String) {
     data object Theme : NavRoutes("settings/customize/theme")
     data object Languages : NavRoutes("settings/language")
     data object About : NavRoutes("settings/about")
+    data object Changelog : NavRoutes("settings/about/changelog")
     data object Contact : NavRoutes("settings/contact")
     data object Backup : NavRoutes("setting/backup")
     data object Editor : NavRoutes("setting/editor")
@@ -227,7 +229,7 @@ val SettingsScreens =
             Contact(navController, states.settings.data.cornerRadius)
         },
         NavRoutes.Backup.route to { navController, snackbarHostState, states, viewModels ->
-            Data(navController, states.settings.data.cornerRadius, states.settings, snackbarHostState, viewModels.backupViewModel, viewModels.settingsViewModel::onEvent)
+            Data(navController, states.settings.data.cornerRadius, states.settings, snackbarHostState, viewModels.backupViewModel, viewModels.backupSettingsViewModel, viewModels.settingsViewModel::onEvent)
         },
         NavRoutes.Editor.route to { navController, _, states, viewModels ->
             Editor(navController, states.settings, viewModels.settingsViewModel::onEvent)
@@ -240,6 +242,9 @@ val SettingsScreens =
         },
         NavRoutes.NotesPreview.route to { navController, _, states, viewModels ->
             NotesPreviewSetting(navController, states.settings, viewModels.settingsViewModel::onEvent)
+        },
+        NavRoutes.Changelog.route to { navController, _, _, _ ->
+            Changelog(navController)
         }
     )
 

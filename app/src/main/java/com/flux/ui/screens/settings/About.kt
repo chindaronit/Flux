@@ -10,7 +10,7 @@ import androidx.compose.material.icons.automirrored.rounded.Article
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.rounded.Code
-import androidx.compose.material.icons.rounded.DeveloperMode
+import androidx.compose.material.icons.rounded.Commit
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.IosShare
 import androidx.compose.material.icons.rounded.PrivacyTip
@@ -26,6 +26,7 @@ import androidx.core.net.toUri
 import androidx.navigation.NavController
 import com.flux.BuildConfig
 import com.flux.R
+import com.flux.navigation.NavRoutes
 import com.flux.ui.common.BasicScaffold
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -80,11 +81,12 @@ fun About(navController: NavController, radius: Int) {
             item {
                 Spacer(Modifier.height(24.dp))
                 SettingOption(
-                    title = stringResource(R.string.Developer),
-                    description = stringResource(R.string.Developer_Name),
-                    icon = Icons.Rounded.DeveloperMode,
+                    title = stringResource(R.string.changelog),
+                    description = stringResource(R.string.changelog_description),
+                    icon = Icons.Rounded.Commit,
                     radius = shapeManager(radius = radius, isFirst = true),
-                    actionType = ActionType.None
+                    actionType = ActionType.CUSTOM,
+                    onCustomClick = { navController.navigate(NavRoutes.Changelog.route) }
                 )
             }
 

@@ -27,7 +27,8 @@ import com.flux.ui.common.BasicScaffold
 @Composable
 fun Contact(navController: NavController, radius: Int) {
     val context = LocalContext.current
-    val no_email_app = stringResource(R.string.no_email_app)
+    val noEmailAppLabel = stringResource(R.string.no_email_app)
+
     BasicScaffold(
         title = stringResource(R.string.Contact),
         onBackClicked = { navController.popBackStack() }
@@ -86,7 +87,7 @@ fun Contact(navController: NavController, radius: Int) {
                         try {
                             context.startActivity(intent)
                         } catch (_: ActivityNotFoundException) {
-                            Toast.makeText(context, no_email_app, Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, noEmailAppLabel, Toast.LENGTH_SHORT).show()
                         }
                     }
                 )

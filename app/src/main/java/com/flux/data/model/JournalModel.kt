@@ -16,7 +16,8 @@ data class JournalModel(
     val workspaceId: String = "",
     val text: String = "",
     val dateTime: Long = System.currentTimeMillis(),
-    val labels: List<String> = emptyList()
+    val labels: List<String> = emptyList(),
+    val socialLinks: List<SocialModel> = emptyList(),
 )
 
 fun JournalModel.writtenOnDate(date: LocalDate): Boolean {
