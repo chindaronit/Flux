@@ -81,8 +81,8 @@ fun About(navController: NavController, radius: Int) {
             item {
                 Spacer(Modifier.height(24.dp))
                 SettingOption(
-                    title = "Changelog",
-                    description = "Track the changes in every version.",
+                    title = stringResource(R.string.changelog),
+                    description = stringResource(R.string.changelog_description),
                     icon = Icons.Rounded.Commit,
                     radius = shapeManager(radius = radius, isFirst = true),
                     actionType = ActionType.CUSTOM,

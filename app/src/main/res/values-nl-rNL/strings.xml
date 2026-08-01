@@ -563,4 +563,13 @@
     <string name="turn_off_auto_backup">Automatische back-up uitschakelen</string>
     <string name="unsupported_backup_version">Niet-ondersteunde back-upversie: %1$s</string>
     <string name="backup_wrong_password_or_corrupted">Onjuist wachtwoord of het bestand is beschadigd of ermee is geknoeid.</string>
+
+    <string name="social_link_removed">Sociale link verwijderd</string>
+    <string name="discard_changes">Wijzigingen verwerpen?</string>
+    <string name="discard_changes_message">Je hebt wijzigingen aangebracht maar nog geen titel toegevoegd. Voeg een titel toe om op te slaan of verwerp de wijzigingen.</string>
+    <string name="discard">Verwerpen</string>
+    <string name="keep_editing">Doorgaan met bewerken</string>
+    <string name="add_social">Sociale link toevoegen</string>
+    <string name="changelog">Wijzigingslogboek</string>
+    <string name="changelog_description">Bekijk de wijzigingen in elke versie.</string>
 </resources>

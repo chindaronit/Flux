@@ -637,7 +637,7 @@ fun SocialDialog(
                         .fillMaxWidth()
                         .padding(bottom = 6.dp)
                         .focusRequester(focusRequesterDesc),
-                    placeholder = { Text("Link") },
+                    placeholder = { Text(stringResource(R.string.link)) },
                     singleLine = true,
                     shape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp),
                     colors = getTextFieldColors(),
@@ -734,17 +734,17 @@ fun DiscardChangesDialog(
     onDismiss: () -> Unit
 ){
     AlertDialog(
-        onDismissRequest = onDismiss, // tapping outside = keep editing
-        title = { Text("Discard Changes?") }, // e.g. "Discard changes?"
-        text = { Text("You\'ve made changes but haven\'t added a title. Add a title to save, or discard your changes.") }, // e.g. "You have unsaved changes. Add a title to save, or discard them."
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.discard_changes)) },
+        text = { Text(stringResource(R.string.discard_changes_message)) },
         confirmButton = {
             TextButton(onClick = onDiscard) {
-                Text("Discard")
+                Text(stringResource(R.string.discard))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Keep editing")
+                Text(stringResource(R.string.keep_editing))
             }
         }
     )

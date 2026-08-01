@@ -205,12 +205,14 @@ fun NoteDetails(
     var selectedSocialModel by remember { mutableStateOf<SocialModel?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
     val deleteChannel = remember { Channel<PendingSocialDelete>(Channel.UNLIMITED) }
+    val undoLabel = stringResource(R.string.undo)
+    val socialRemovedLabel = stringResource(R.string.social_link_removed)
 
     LaunchedEffect(Unit) {
         for (pending in deleteChannel) {
             val result = snackbarHostState.showSnackbar(
-                message = "Social link removed",
-                actionLabel = "Undo",
+                message = socialRemovedLabel,
+                actionLabel = undoLabel,
                 withDismissAction = true,
                 duration = SnackbarDuration.Short
             )

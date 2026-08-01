@@ -563,4 +563,13 @@
     <string name="turn_off_auto_backup">Desativar backup automático</string>
     <string name="unsupported_backup_version">Versão de backup não suportada: %1$s</string>
     <string name="backup_wrong_password_or_corrupted">Senha incorreta ou o arquivo está corrompido ou foi adulterado.</string>
+
+    <string name="social_link_removed">Link social removido</string>
+    <string name="discard_changes">Descartar alterações?</string>
+    <string name="discard_changes_message">Você fez alterações, mas não adicionou um título. Adicione um título para salvar ou descarte as alterações.</string>
+    <string name="discard">Descartar</string>
+    <string name="keep_editing">Continuar editando</string>
+    <string name="add_social">Adicionar link social</string>
+    <string name="changelog">Registro de alterações</string>
+    <string name="changelog_description">Acompanhe as alterações de cada versão.</string>
 </resources>

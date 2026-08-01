@@ -563,4 +563,13 @@
     <string name="turn_off_auto_backup">Отключить автоматическое резервное копирование</string>
     <string name="unsupported_backup_version">Неподдерживаемая версия резервной копии: %1$s</string>
     <string name="backup_wrong_password_or_corrupted">Неверный пароль, либо файл повреждён или был изменён.</string>
+
+    <string name="social_link_removed">Социальная ссылка удалена</string>
+    <string name="discard_changes">Отменить изменения?</string>
+    <string name="discard_changes_message">Вы внесли изменения, но не добавили заголовок. Добавьте заголовок, чтобы сохранить изменения, или отмените их.</string>
+    <string name="discard">Отменить</string>
+    <string name="keep_editing">Продолжить редактирование</string>
+    <string name="add_social">Добавить социальную ссылку</string>
+    <string name="changelog">Журнал изменений</string>
+    <string name="changelog_description">Просматривайте изменения в каждой версии.</string>
 </resources>

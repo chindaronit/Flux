@@ -564,4 +564,13 @@
     <string name="turn_off_auto_backup">Désactiver la sauvegarde automatique</string>
     <string name="unsupported_backup_version">Version de sauvegarde non prise en charge : %1$s</string>
     <string name="backup_wrong_password_or_corrupted">Mot de passe incorrect, ou le fichier est corrompu ou a été modifié.</string>
+
+    <string name="social_link_removed">Lien social supprimé</string>
+    <string name="discard_changes">Ignorer les modifications ?</string>
+    <string name="discard_changes_message">Vous avez effectué des modifications mais n\'avez pas ajouté de titre. Ajoutez un titre pour enregistrer ou ignorez les modifications.</string>
+    <string name="discard">Ignorer</string>
+    <string name="keep_editing">Continuer la modification</string>
+    <string name="add_social">Ajouter un lien social</string>
+    <string name="changelog">Journal des modifications</string>
+    <string name="changelog_description">Suivez les modifications de chaque version.</string>
 </resources>

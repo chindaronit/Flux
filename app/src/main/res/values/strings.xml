@@ -561,4 +561,13 @@
     <string name="turn_off_auto_backup">Turn off auto-backup</string>
     <string name="unsupported_backup_version">Unsupported backup version: %1$s</string>
     <string name="backup_wrong_password_or_corrupted">Wrong password, or the file is corrupted or has been tampered with.</string>
+
+    <string name="social_link_removed">Social link removed</string>
+    <string name="discard_changes">Discard Changes?</string>
+    <string name="discard_changes_message">You\'ve made changes but haven\'t added a title. Add a title to save, or discard your changes.</string>
+    <string name="discard">Discard</string>
+    <string name="keep_editing">Keep editing</string>
+    <string name="add_social">Add Social</string>
+    <string name="changelog">Changelog</string>
+    <string name="changelog_description">Track the changes in every version.</string>
 </resources>

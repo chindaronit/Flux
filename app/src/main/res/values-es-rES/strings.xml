@@ -560,4 +560,13 @@
     <string name="turn_off_auto_backup">Desactivar copia de seguridad automática</string>
     <string name="unsupported_backup_version">Versión de copia de seguridad no compatible: %1$s</string>
     <string name="backup_wrong_password_or_corrupted">La contraseña es incorrecta o el archivo está dañado o ha sido manipulado.</string>
+
+    <string name="social_link_removed">Enlace social eliminado</string>
+    <string name="discard_changes">¿Descartar cambios?</string>
+    <string name="discard_changes_message">Has realizado cambios pero no has agregado un título. Agrega un título para guardar o descarta los cambios.</string>
+    <string name="discard">Descartar</string>
+    <string name="keep_editing">Seguir editando</string>
+    <string name="add_social">Agregar enlace social</string>
+    <string name="changelog">Registro de cambios</string>
+    <string name="changelog_description">Consulta los cambios de cada versión.</string>
 </resources>

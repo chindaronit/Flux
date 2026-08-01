@@ -568,4 +568,13 @@
     <string name="turn_off_auto_backup">关闭自动备份</string>
     <string name="unsupported_backup_version">不支持的备份版本：%1$s</string>
     <string name="backup_wrong_password_or_corrupted">密码错误，或文件已损坏或被篡改。</string>
+
+    <string name="social_link_removed">社交链接已删除</string>
+    <string name="discard_changes">放弃更改？</string>
+    <string name="discard_changes_message">您已进行了修改，但尚未添加标题。添加标题以保存，或放弃更改。</string>
+    <string name="discard">放弃</string>
+    <string name="keep_editing">继续编辑</string>
+    <string name="add_social">添加社交链接</string>
+    <string name="changelog">更新日志</string>
+    <string name="changelog_description">查看每个版本的更新内容。</string>
 </resources>

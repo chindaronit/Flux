@@ -19,8 +19,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.flux.R
 import androidx.navigation.NavController
 import com.flux.ui.common.BasicScaffold
 
@@ -29,7 +31,7 @@ fun Changelog(
     navController: NavController,
 ){
     BasicScaffold(
-        title = "Changelog",
+        title = stringResource(R.string.changelog),
         onBackClicked = { navController.popBackStack() }
     ) { innerPadding ->
         LazyColumn(
@@ -190,7 +192,6 @@ val CHANGELOG_DATA = listOf(
                - Habit description visibility.
                - Journal data deletion on habit space removal.
                - Correction in Streak calculation.
-
         """.trimIndent()
     ),
     ChangelogEntry(
@@ -248,7 +249,6 @@ val CHANGELOG_DATA = listOf(
             
             fix:
                 - weekly option selection bug.
-
         """.trimIndent()
     ),
     ChangelogEntry(
@@ -262,7 +262,23 @@ val CHANGELOG_DATA = listOf(
             
             fix:
                 - weekly option selection bug.
-
         """.trimIndent()
     ),
+    ChangelogEntry(
+        version = "v3.2.0",
+        versionCode = 16,
+        date = "Aug 1, 2026",
+        changes = """
+            feat:
+                - Addition of backup encryption to all the export of backup.
+                - Added social links option in notes and journal.
+                - Media detection support in journals
+                - Consistent saving of habits and events
+                - Changelog in about.
+            
+            fix:
+                - Local date bug in events
+                - Event stale data of EventDetails.kt after edit.
+        """.trimIndent()
+    )
 )

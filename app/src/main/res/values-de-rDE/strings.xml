@@ -556,4 +556,13 @@
     <string name="turn_off_auto_backup">Automatische Sicherung deaktivieren</string>
     <string name="unsupported_backup_version">Nicht unterstützte Backup-Version: %1$s</string>
     <string name="backup_wrong_password_or_corrupted">Falsches Passwort oder die Datei ist beschädigt bzw. wurde manipuliert.</string>
+
+    <string name="social_link_removed">Social-Link entfernt</string>
+    <string name="discard_changes">Änderungen verwerfen?</string>
+    <string name="discard_changes_message">Du hast Änderungen vorgenommen, aber keinen Titel hinzugefügt. Füge einen Titel hinzu, um zu speichern, oder verwerfe die Änderungen.</string>
+    <string name="discard">Verwerfen</string>
+    <string name="keep_editing">Weiter bearbeiten</string>
+    <string name="add_social">Sozialen Link hinzufügen</string>
+    <string name="changelog">Änderungsprotokoll</string>
+    <string name="changelog_description">Verfolge die Änderungen jeder Version.</string>
 </resources>

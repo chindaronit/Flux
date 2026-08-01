@@ -563,4 +563,13 @@
     <string name="turn_off_auto_backup">स्वचालित बैकअप बंद करें</string>
     <string name="unsupported_backup_version">असमर्थित बैकअप संस्करण: %1$s</string>
     <string name="backup_wrong_password_or_corrupted">गलत पासवर्ड, या फ़ाइल क्षतिग्रस्त है या उसके साथ छेड़छाड़ की गई है।</string>
+
+    <string name="social_link_removed">सोशल लिंक हटाया गया</string>
+    <string name="discard_changes">परिवर्तन हटाएँ?</string>
+    <string name="discard_changes_message">आपने परिवर्तन किए हैं लेकिन शीर्षक नहीं जोड़ा है। सहेजने के लिए शीर्षक जोड़ें या परिवर्तन हटा दें।</string>
+    <string name="discard">हटाएँ</string>
+    <string name="keep_editing">संपादन जारी रखें</string>
+    <string name="add_social">सोशल लिंक जोड़ें</string>
+    <string name="changelog">परिवर्तन लॉग</string>
+    <string name="changelog_description">हर संस्करण के परिवर्तनों को देखें।</string>
 </resources>
