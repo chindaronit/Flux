@@ -108,6 +108,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DragIndicator
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -1028,10 +1029,13 @@ fun HabitDateCard(
 
 @Composable
 fun HabitPreviewCard(
+    modifier: Modifier = Modifier,
     radius: Int,
     is24HourFormat: Boolean,
     habit: HabitModel,
     instances: List<HabitInstanceModel>,
+    isReordering: Boolean = false,
+    dragHandleModifier: Modifier = Modifier,
     onClick: (Long) -> Unit,
     onAnalyticsClicked: () -> Unit
 ) {
@@ -1062,7 +1066,7 @@ fun HabitPreviewCard(
 
     Card(
         onClick = { onClick(todayEpoch) },
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = if (isTodayDone) MaterialTheme.colorScheme.primaryContainer
             else MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)
@@ -1097,13 +1101,23 @@ fun HabitPreviewCard(
                 }
 
                 Row(modifier = Modifier.padding(end = 2.dp), verticalAlignment = Alignment.CenterVertically) {
-                    IconButton({}, modifier = Modifier.size(36.dp)) { Icon(Icons.Default.LocalFireDepartment, null) }
-                    Text("$currentStreak", modifier = Modifier.padding(end = 4.dp), style = MaterialTheme.typography.labelLarge)
-                    IconButton({}, modifier = Modifier.size(36.dp)) { Icon(habitTypeIcon, null) }
-                    if(habit.habitConfig is HabitConfig.Counted || habit.habitConfig is HabitConfig.Timed){
-                        Text(habitTypeText, modifier = Modifier.padding(end = 4.dp), style = MaterialTheme.typography.labelLarge)
+                    if (isReordering) {
+                        Icon(
+                            imageVector = Icons.Default.DragIndicator,
+                            contentDescription = null,
+                            modifier = dragHandleModifier
+                                .size(36.dp)
+                                .padding(8.dp)
+                        )
+                    } else {
+                        IconButton({}, modifier = Modifier.size(36.dp)) { Icon(Icons.Default.LocalFireDepartment, null) }
+                        Text("$currentStreak", modifier = Modifier.padding(end = 4.dp), style = MaterialTheme.typography.labelLarge)
+                        IconButton({}, modifier = Modifier.size(36.dp)) { Icon(habitTypeIcon, null) }
+                        if(habit.habitConfig is HabitConfig.Counted || habit.habitConfig is HabitConfig.Timed){
+                            Text(habitTypeText, modifier = Modifier.padding(end = 4.dp), style = MaterialTheme.typography.labelLarge)
+                        }
+                        IconButton(onAnalyticsClicked, modifier = Modifier.size(36.dp)) { Icon(Icons.Default.Analytics, null) }
                     }
-                    IconButton(onAnalyticsClicked, modifier = Modifier.size(36.dp)) { Icon(Icons.Default.Analytics, null) }
                 }
             }
 

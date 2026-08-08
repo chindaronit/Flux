@@ -93,6 +93,7 @@ import com.flux.ui.screens.events.getTextFieldColors
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZoneOffset
+import java.util.UUID
 
 fun convertMillisToDate(millis: Long): String {
     val formatter = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
@@ -605,7 +606,7 @@ fun SocialDialog(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
-                    "Add Social",
+                    stringResource(R.string.add_social),
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Center
                 )
@@ -661,9 +662,12 @@ fun SocialDialog(
                         onClick = {
                             onConfirm(
                                 SocialModel(
+                                    socialId = socialModel?.socialId ?: UUID.randomUUID().toString(),
                                     title = title,
                                     link = link,
-                                    category = selectedCategory
+                                    category = selectedCategory,
+                                    notesId = socialModel?.notesId ?: "",
+                                    workspaceId = socialModel?.workspaceId ?: ""
                                 )
                             )
                             onDismiss()

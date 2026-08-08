@@ -19,6 +19,15 @@ interface NotesDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertNotes(notes: List<NotesModel>)
 
+    @Query("SELECT * FROM NotesModel WHERE notesId = :notesId")
+    suspend fun getNotesById(notesId: String): NotesModel?
+
+    @Query("UPDATE NotesModel SET `order` = :order WHERE notesId = :id")
+    suspend fun updateOrder(id: String, order: Int)
+
+    @Query("SELECT COALESCE(MAX(`order`), -1) FROM NotesModel WHERE workspaceId = :workspaceId")
+    suspend fun getMaxOrder(workspaceId: String): Int
+
     @Delete
     suspend fun deleteNote(note: NotesModel)
 
@@ -28,9 +37,9 @@ interface NotesDao {
     @Query("DELETE FROM NotesModel WHERE workspaceId = :workspaceId")
     suspend fun deleteAllWorkspaceNotes(workspaceId: String)
 
-    @Query("SELECT * FROM NotesModel ORDER by lastEdited DESC")
+    @Query("SELECT * FROM NotesModel ORDER BY `order` ASC")
     fun loadNotesData(): Flow<List<NotesModel>>
 
-    @Query("SELECT * FROM NotesModel")
+    @Query("SELECT * FROM NotesModel ORDER BY `order` ASC")
     fun loadAllNotes(): List<NotesModel>
 }

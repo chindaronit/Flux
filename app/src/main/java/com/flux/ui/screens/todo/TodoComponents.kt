@@ -38,6 +38,7 @@ import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.DragIndicator
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.outlined.AutoStories
@@ -46,7 +47,6 @@ import androidx.compose.material.icons.outlined.Circle
 import androidx.compose.material.icons.outlined.Percent
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
@@ -116,33 +116,35 @@ import java.time.format.TextStyle
 import java.time.temporal.ChronoUnit
 import kotlin.math.roundToInt
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TodoExpandableCard(
     navController: NavController,
+    modifier: Modifier = Modifier,
     radius: Int,
     context: Context,
     item: TodoModel,
+    isReordering: Boolean,
+    dragHandleModifier: Modifier = Modifier,
     isExpanded: Boolean,
     workspaceId: String,
     onExpandToggle: (String) -> Unit,
     onTodoEvents: (TodoEvents) -> Unit
 ) {
     Card(
-        modifier = Modifier.padding(top = 4.dp),
-        shape = if(isExpanded) shapeManager(isBoth = true, radius=radius) else RoundedCornerShape(50),
+        modifier = modifier.padding(top = 4.dp),
+        shape = if (isExpanded) shapeManager(isBoth = true, radius = radius) else RoundedCornerShape(50),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f))
     ) {
         Column {
             TodoHeaderRow(
                 id = item.id,
                 title = item.title,
+                isReordering = isReordering,
+                modifier = dragHandleModifier,
                 isReminderOn = item.recurrence is RecurrenceRule.Weekly,
                 onExpandToggle = onExpandToggle,
                 onNavigate = {
-                    navController.navigate(
-                        NavRoutes.TodoDetail.withArgs(workspaceId, item.id)
-                    )
+                    navController.navigate(NavRoutes.TodoDetail.withArgs(workspaceId, item.id))
                 }
             )
 
@@ -162,6 +164,8 @@ fun TodoExpandableCard(
 private fun TodoHeaderRow(
     id: String,
     title: String,
+    isReordering: Boolean,
+    modifier: Modifier = Modifier,
     isReminderOn: Boolean,
     onExpandToggle: (String) -> Unit,
     onNavigate: () -> Unit
@@ -184,13 +188,21 @@ private fun TodoHeaderRow(
                 .padding(start = 20.dp, end = 3.dp),
         )
         Row {
-            if(isReminderOn){
+            if (isReminderOn) {
                 IconButton(onClick = onNavigate) {
                     Icon(Icons.Default.Alarm, null)
                 }
             }
-            IconButton(onClick = onNavigate) {
-                Icon(Icons.Default.Analytics, null)
+            if (isReordering) {
+                Icon(
+                    imageVector = Icons.Default.DragIndicator,
+                    contentDescription = null,
+                    modifier = modifier.padding(12.dp)
+                )
+            } else {
+                IconButton(onClick = onNavigate) {
+                    Icon(Icons.Default.Analytics, null)
+                }
             }
         }
     }

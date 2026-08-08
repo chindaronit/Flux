@@ -20,6 +20,7 @@ data class HabitModel(
     val endDateTime: Long = -1L,
     val notificationOffset: Long = 0L,
     val workspaceId: String = "",
+    val order: Int = 0,
     val habitConfig: HabitConfig = HabitConfig.Simple
 )
 

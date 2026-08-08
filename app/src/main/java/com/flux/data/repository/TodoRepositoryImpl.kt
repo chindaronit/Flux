@@ -32,7 +32,14 @@ class TodoRepositoryImpl @Inject constructor(
 
     override suspend fun upsertList(list: TodoModel) {
         return withContext(Dispatchers.IO) {
-            dao.upsertList(list)
+            val existing = dao.getTodoById(list.id)
+            val listToSave = if (existing == null) {
+                val nextOrder = dao.getMaxOrder(list.workspaceId) + 1
+                list.copy(order = nextOrder)
+            } else {
+                list
+            }
+            dao.upsertList(listToSave)
 
             val todayEpoch = LocalDate.now().toEpochDay()
             val todayInstance = instanceDao.loadInstanceForDate(list.id, todayEpoch) ?: return@withContext
@@ -149,6 +156,12 @@ class TodoRepositoryImpl @Inject constructor(
 
                 instanceDao.upsertTodoInstance(instance.copy(items = updated))
             }
+        }
+    }
+
+    override suspend fun updateTodoOrder(todoIds: List<String>) {
+        todoIds.forEachIndexed { index, id ->
+            dao.updateOrder(id = id, order = index)
         }
     }
 

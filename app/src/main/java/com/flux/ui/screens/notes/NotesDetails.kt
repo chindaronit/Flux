@@ -5,7 +5,6 @@ import android.content.Intent
 import android.net.Uri
 import android.webkit.WebView
 import android.widget.Toast
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -51,6 +50,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -77,6 +77,9 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastJoinToString
 import androidx.core.net.toUri
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.flux.R
 import com.flux.data.model.JournalModel
@@ -277,7 +280,12 @@ fun NoteDetails(
         val newTitle = titleState.text.toString()
         val newDescription = contentState.text.toString()
 
-        if (newTitle == note.title && newDescription == note.description && noteLabelIds.toList()==note.labels && socialLinks==note.socialLinks) return
+        if (newTitle == note.title &&
+            newDescription == note.description &&
+            isPinned == note.isPinned &&
+            noteLabelIds.toList() == note.labels &&
+            socialLinks.toList() == note.socialLinks
+        ) return
 
         onNotesEvents(
             NotesEvents.UpsertNote(
@@ -287,16 +295,23 @@ fun NoteDetails(
                     isPinned = isPinned,
                     lastEdited = System.currentTimeMillis(),
                     labels = noteLabelIds.toList(),
-                    socialLinks = socialLinks
+                    socialLinks = socialLinks.toList()
                 )
             )
         )
     }
 
-    BackHandler {
-        focusManager.clearFocus()
-        onSaveNote()
-        navController.popBackStack()
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_STOP) {
+                onSaveNote()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
     }
 
     Scaffold(
@@ -430,7 +445,7 @@ fun NoteDetails(
                         }
                     )
 
-                    if (noteLabelIds.isNotEmpty()) {
+                    if (noteLabelIds.isNotEmpty() || socialLinks.isNotEmpty()) {
                         LazyRow(modifier = Modifier.padding(start = 12.dp, top = 2.dp, bottom = 2.dp, end = 6.dp), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
                             items(allLabels.filter { l-> noteLabelIds.contains(l.labelId) }) { label ->
                                 Box(
@@ -554,11 +569,21 @@ fun NoteDetails(
 
     if(showSocialDialog){
         SocialDialog(
-            selectedSocialModel,
-            { socialLinks.add(it.copy(notesId = note.notesId, workspaceId = note.workspaceId)) },
-            {
-                showSocialDialog=false
-                selectedSocialModel=null
+            socialModel = selectedSocialModel,
+            onConfirm = { social ->
+                val updated = social.copy(
+                    notesId = note.notesId,
+                    workspaceId = note.workspaceId
+                )
+
+                val index = socialLinks.indexOfFirst { it.socialId == updated.socialId }
+
+                if (index == -1) { socialLinks.add(updated) }
+                else { socialLinks[index] = updated }
+            },
+            onDismiss = {
+                showSocialDialog = false
+                selectedSocialModel = null
             }
         )
     }

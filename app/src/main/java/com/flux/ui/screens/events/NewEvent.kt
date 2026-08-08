@@ -1,5 +1,6 @@
 package com.flux.ui.screens.events
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -144,6 +145,12 @@ fun NewEvent(
 
         onTaskEvents(TaskEvents.UpsertTask(context, candidate))
         return true
+    }
+
+    BackHandler {
+        if (saveEventIfPossible()) {
+            navController.popBackStack()
+        }
     }
 
     Scaffold(

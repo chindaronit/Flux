@@ -591,7 +591,8 @@ fun LazyListScope.searchedTodo(
             workspaceId = todoItem.workspaceId,
             isExpanded = todoItem.id in expandedTODOIds,
             onExpandToggle = onExpandToggle,
-            onTodoEvents = onEvent
+            onTodoEvents = onEvent,
+            isReordering = false
         )
     }
 }

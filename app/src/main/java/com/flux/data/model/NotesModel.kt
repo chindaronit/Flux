@@ -15,6 +15,7 @@ data class NotesModel(
     val workspaceId: String = "",
     val title: String = "",
     val description: String = "",
+    val order: Int = 0,
     val isPinned: Boolean = false,
     val socialLinks: List<SocialModel> = emptyList(),
     val labels: List<String> = emptyList(),

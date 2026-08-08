@@ -59,6 +59,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.AudioFile
 import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.DragIndicator
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FilePresent
 import androidx.compose.material.icons.filled.FormatQuote
@@ -1745,6 +1746,8 @@ fun NotesFilterSheet(
 @Composable
 fun NotesPreviewCard(
     modifier: Modifier = Modifier,
+    dragHandleModifier: Modifier = Modifier,
+    isReordering: Boolean = false,
     radius: Int,
     notesPreviewMode: Int,
     isSelected: Boolean,
@@ -1768,7 +1771,9 @@ fun NotesPreviewCard(
             .clip(shapeManager(isBoth = true, radius = radius / 2))
             .combinedClickable(
                 onClick = { onClick(note.notesId) },
-                onLongClick = onLongPressed
+                // While reordering, long-press is reserved for the drag handle below —
+                // selection long-click would otherwise fight the drag gesture.
+                onLongClick = if (isReordering) null else onLongPressed
             ),
         shape = shapeManager(isBoth = true, radius = radius / 2),
         border = if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
@@ -1780,17 +1785,38 @@ fun NotesPreviewCard(
                 .fillMaxWidth()
                 .padding(bottom = 8.dp)
         ) {
-            // Title
-            Text(
-                text = note.title,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.primary,
+            // Title row — drag handle sits alongside the title when reordering
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier
-                    .alpha(0.75f)
+                    .fillMaxWidth()
                     .padding(horizontal = 12.dp)
                     .padding(top = 12.dp)
-            )
+            ) {
+                Text(
+                    text = note.title,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.primary,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier
+                        .weight(1f)
+                        .alpha(0.75f)
+                )
+
+                if (isReordering) {
+                    Icon(
+                        imageVector = Icons.Default.DragIndicator,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = dragHandleModifier
+                            .padding(start = 8.dp)
+                            .size(24.dp)
+                    )
+                }
+            }
 
             // Description — media already stripped inside MarkdownBlock
             if(maxHeight!=0.dp){
@@ -1803,7 +1829,7 @@ fun NotesPreviewCard(
                     MarkdownBlock(
                         text = note.description,
                         onClick = { onClick(note.notesId) },
-                        onLongClick = onLongPressed
+                        onLongClick = if (isReordering) ({}) else onLongPressed
                     )
                 }
 
@@ -1813,7 +1839,7 @@ fun NotesPreviewCard(
                         media = mediaExtraction.media,
                         modifier = Modifier.padding(horizontal = 12.dp),
                         onClick = { onClick(note.notesId) },
-                        onLongClick = onLongPressed
+                        onLongClick = if (isReordering) ({}) else onLongPressed
                     )
                 }
             }

@@ -14,6 +14,7 @@ interface TodoRepository {
     suspend fun existInstance(listId: String, instanceDate: Long): Boolean
     suspend fun loadAllLists(): List<TodoModel>
     suspend fun toggleTodoItem(item: TodoDisplayItem, itemId: String)
+    suspend fun updateTodoOrder(todoIds: List<String>)
     fun observePublicTodos(): Flow<List<TodoModel>>
     fun observeTodoList(todoId: String): Flow<TodoDisplayItem?>
     fun loadAllTodoInstance(): Flow<List<TodoInstance>>

@@ -250,6 +250,8 @@ class NotesViewModel @Inject constructor(
                     updateState { it.copy(textState = TextState.fromText(event.content)) }
                 }
             }
+
+            is NotesEvents.UpdateOrder -> updateNotesOrder(event.notesIds)
         }
     }
 
@@ -380,5 +382,9 @@ class NotesViewModel @Inject constructor(
         if (isNewNote && isBlankNote) return
 
         viewModelScope.launch(Dispatchers.IO) { repository.upsertNote(data) }
+    }
+
+    private fun updateNotesOrder(notesIds: List<String>){
+        viewModelScope.launch(Dispatchers.IO) { repository.updateOrder(notesIds) }
     }
 }
