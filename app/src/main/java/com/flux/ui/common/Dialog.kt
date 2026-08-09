@@ -780,7 +780,13 @@ fun ChangeRootProgressDialog(
                                 modifier = Modifier.fillMaxWidth()
                             )
                             Spacer(Modifier.height(8.dp))
-                            Text(stringResource(R.string.files_progress, state.copied / state.total))
+                            Text(
+                                stringResource(
+                                    R.string.files_progress,
+                                    state.copied,
+                                    state.total
+                                )
+                            )
                         } else {
                             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                         }
@@ -808,7 +814,12 @@ fun ChangeRootProgressDialog(
                                 style = MaterialTheme.typography.bodySmall
                             )
                             if (state.failedFiles.size > 5) {
-                                Text(stringResource(R.string.files_progress, state.failedFiles.size - 5))
+                                Text(
+                                    stringResource(
+                                        R.string.more_files,
+                                        state.failedFiles.size - 5
+                                    )
+                                )
                             }
                         }
                     }

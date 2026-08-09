@@ -572,14 +572,14 @@ val MIGRATION_12_13 = object : Migration(12, 13) {
         """.trimIndent())
 
         db.query("""
-            SELECT id
+            SELECT notesId
             FROM NotesModel
             ORDER BY lastEdited ASC
         """.trimIndent()).use { cursor ->
             var order = 0
             while (cursor.moveToNext()) {
                 db.execSQL(
-                    "UPDATE NotesModel SET `order` = ? WHERE id = ?",
+                    "UPDATE NotesModel SET `order` = ? WHERE notesId = ?",
                     arrayOf(order++, cursor.getString(0))
                 )
             }
