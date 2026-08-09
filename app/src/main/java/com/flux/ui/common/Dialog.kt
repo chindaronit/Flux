@@ -1,5 +1,6 @@
 package com.flux.ui.common
 
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -73,6 +74,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.*
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -90,6 +92,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import com.flux.data.model.SocialModel
 import com.flux.ui.screens.events.getTextFieldColors
+import com.flux.ui.state.RootChangeState
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZoneOffset
@@ -752,4 +755,77 @@ fun DiscardChangesDialog(
             }
         }
     )
+}
+
+@Composable
+fun ChangeRootProgressDialog(
+    state: RootChangeState,
+    onRetry: (Uri) -> Unit,
+    newRootUri: Uri?,
+    onDismiss: () -> Unit
+) {
+    when (state) {
+        is RootChangeState.Copying -> {
+            Dialog(onDismissRequest = {}) {
+                Card {
+                    Column(
+                        modifier = Modifier.padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(stringResource(R.string.moving_your_data), style = MaterialTheme.typography.titleMedium)
+                        Spacer(Modifier.height(16.dp))
+                        if (state.total > 0) {
+                            LinearProgressIndicator(
+                                progress = { state.copied / state.total.toFloat() },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Spacer(Modifier.height(8.dp))
+                            Text(stringResource(R.string.files_progress, state.copied / state.total))
+                        } else {
+                            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                        }
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            stringResource(R.string.please_dont_close_app),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+            }
+        }
+
+        is RootChangeState.Failed -> {
+            AlertDialog(
+                onDismissRequest = onDismiss,
+                title = { Text(stringResource(R.string.couldnt_move_data)) },
+                text = {
+                    Column {
+                        Text(state.reason)
+                        if (state.failedFiles.isNotEmpty()) {
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                state.failedFiles.take(5).joinToString("\n"),
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                            if (state.failedFiles.size > 5) {
+                                Text(stringResource(R.string.files_progress, state.failedFiles.size - 5))
+                            }
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { newRootUri?.let(onRetry) }) { Text(stringResource(R.string.retry)) }
+                },
+                dismissButton = {
+                    TextButton(onClick = onDismiss) { Text(stringResource(R.string.Cancel)) }
+                }
+            )
+        }
+
+        RootChangeState.Success -> {
+            LaunchedEffect(Unit) { onDismiss() }
+        }
+
+        RootChangeState.Idle -> {}
+    }
 }

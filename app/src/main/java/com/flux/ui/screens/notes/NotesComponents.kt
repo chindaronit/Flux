@@ -11,7 +11,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
@@ -20,6 +19,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -1917,14 +1917,17 @@ fun CustomIconButton(
     IconButton(
         onClick = onClick,
         enabled = enabled,
+        modifier = Modifier.size(36.dp)
     ) {
         if (imageVector != null) {
             Icon(
+                modifier = Modifier.size(22.dp).alpha(0.8f),
                 imageVector = imageVector,
                 contentDescription = contentDescription
             )
         } else {
             Icon(
+                modifier = Modifier.size(22.dp).alpha(0.8f),
                 painter = painterResource(id = painter!!),
                 contentDescription = contentDescription
             )
@@ -1951,295 +1954,333 @@ fun MarkdownEditorRow(
     var isExpanded by rememberSaveable { mutableStateOf(false) }
     var isAlertExpanded by rememberSaveable { mutableStateOf(false) }
 
+    // Outer row is just a scrollable strip — no border, no shared background.
+    // Each group below renders as its own separate pill, so sections are
+    // visually distinct by being physically separate surfaces.
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
             .navigationBarsPadding()
-            .height(48.dp)
-            .border(
-                BorderStroke(0.5.dp, MaterialTheme.colorScheme.primary),
-                shape = RoundedCornerShape(50)
-            )
-            .clip(RoundedCornerShape(50))
-            .horizontalScroll(rememberScrollState())
-            .background(MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)),
-        verticalAlignment = Alignment.CenterVertically
+            .horizontalScroll(rememberScrollState()),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        CustomIconButton(
-            enabled = canUndo,
-            painter = R.drawable.undo,
-            contentDescription = "Undo"
-        ) {
-            onEdit(Constants.Editor.UNDO)
-        }
 
-        CustomIconButton(
-            enabled = canRedo,
-            painter = R.drawable.redo,
-            contentDescription = "Redo"
-        ) {
-            onEdit(Constants.Editor.REDO)
-        }
-
-        CustomIconButton(
-            imageVector = Icons.Outlined.Title,
-            contentDescription = "Heading Level"
-        ) {
-            isExpanded = !isExpanded
-        }
-
-        AnimatedVisibility(visible = isExpanded) {
-            Row(
-                modifier = Modifier.fillMaxHeight(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Start
+        // ── History ──────────────────────────────────────────────
+        ToolbarSection {
+            CustomIconButton(
+                enabled = canUndo,
+                painter = R.drawable.undo,
+                contentDescription = "Undo"
             ) {
+                onEdit(Constants.Editor.UNDO)
+            }
 
-                CustomIconButton(
-                    painter = R.drawable.format_h1,
-                    contentDescription = "H1"
-                ) {
-                    onEdit(Constants.Editor.H1)
-                }
+            CustomIconButton(
+                enabled = canRedo,
+                painter = R.drawable.redo,
+                contentDescription = "Redo"
+            ) {
+                onEdit(Constants.Editor.REDO)
+            }
+        }
 
-                CustomIconButton(
-                    painter = R.drawable.format_h2,
-                    contentDescription = "H2"
-                ) {
-                    onEdit(Constants.Editor.H2)
-                }
+        // ── Headings ─────────────────────────────────────────────
+        ToolbarSection {
+            CustomIconButton(
+                imageVector = Icons.Outlined.Title,
+                contentDescription = "Heading Level"
+            ) {
+                isExpanded = !isExpanded
+            }
 
-                CustomIconButton(
-                    painter = R.drawable.format_h3,
-                    contentDescription = "H3"
+            AnimatedVisibility(visible = isExpanded) {
+                Row(
+                    modifier = Modifier.fillMaxHeight(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Start
                 ) {
-                    onEdit(Constants.Editor.H3)
-                }
+                    CustomIconButton(
+                        painter = R.drawable.format_h1,
+                        contentDescription = "H1"
+                    ) {
+                        onEdit(Constants.Editor.H1)
+                    }
 
-                CustomIconButton(
-                    painter = R.drawable.format_h4,
-                    contentDescription = "H4"
-                ) {
-                    onEdit(Constants.Editor.H4)
-                }
+                    CustomIconButton(
+                        painter = R.drawable.format_h2,
+                        contentDescription = "H2"
+                    ) {
+                        onEdit(Constants.Editor.H2)
+                    }
 
-                CustomIconButton(
-                    painter = R.drawable.format_h5,
-                    contentDescription = "H5"
-                ) {
-                    onEdit(Constants.Editor.H5)
-                }
+                    CustomIconButton(
+                        painter = R.drawable.format_h3,
+                        contentDescription = "H3"
+                    ) {
+                        onEdit(Constants.Editor.H3)
+                    }
 
-                CustomIconButton(
-                    painter = R.drawable.format_h6,
-                    contentDescription = "H6"
-                ) {
-                    onEdit(Constants.Editor.H6)
+                    CustomIconButton(
+                        painter = R.drawable.format_h4,
+                        contentDescription = "H4"
+                    ) {
+                        onEdit(Constants.Editor.H4)
+                    }
+
+                    CustomIconButton(
+                        painter = R.drawable.format_h5,
+                        contentDescription = "H5"
+                    ) {
+                        onEdit(Constants.Editor.H5)
+                    }
+
+                    CustomIconButton(
+                        painter = R.drawable.format_h6,
+                        contentDescription = "H6"
+                    ) {
+                        onEdit(Constants.Editor.H6)
+                    }
                 }
             }
         }
 
-        CustomIconButton(
-            imageVector = Icons.Outlined.FormatBold,
-            contentDescription = "Bold"
-        ) {
-            onEdit(Constants.Editor.BOLD)
-        }
-
-        CustomIconButton(
-            imageVector = Icons.Outlined.FormatItalic,
-            contentDescription = "Italic"
-        ) {
-            onEdit(Constants.Editor.ITALIC)
-        }
-
-        CustomIconButton(
-            imageVector = Icons.Outlined.FormatUnderlined,
-            contentDescription = "Underline"
-        ) {
-            onEdit(Constants.Editor.UNDERLINE)
-        }
-
-        CustomIconButton(
-            imageVector = Icons.Outlined.StrikethroughS,
-            contentDescription = "Strike Through"
-        ) {
-            onEdit(Constants.Editor.STRIKETHROUGH)
-        }
-
-        CustomIconButton(
-            imageVector = Icons.Outlined.FormatPaint,
-            contentDescription = "Mark"
-        ) {
-            onEdit(Constants.Editor.MARK)
-        }
-
-        CustomIconButton(
-            imageVector = Icons.Outlined.Code,
-            contentDescription = "Code"
-        ) {
-            onEdit(Constants.Editor.INLINE_CODE)
-        }
-
-        CustomIconButton(
-            imageVector = Icons.Outlined.DataArray,
-            contentDescription = "Brackets"
-        ) {
-            onEdit(Constants.Editor.INLINE_BRACKETS)
-        }
-
-        CustomIconButton(
-            imageVector = Icons.Outlined.DataObject,
-            contentDescription = "Braces"
-        ) {
-            onEdit(Constants.Editor.INLINE_BRACES)
-        }
-
-        CustomIconButton(
-            imageVector = Icons.AutoMirrored.Outlined.FormatIndentIncrease,
-            contentDescription = "Tab"
-        ) {
-            onEdit(Constants.Editor.TAB)
-        }
-
-        CustomIconButton(
-            imageVector = Icons.AutoMirrored.Outlined.FormatIndentDecrease,
-            contentDescription = "unTab"
-        ) {
-            onEdit(Constants.Editor.UN_TAB)
-        }
-
-        CustomIconButton(
-            painter = R.drawable.function,
-            contentDescription = "Math"
-        ) {
-            onEdit(Constants.Editor.INLINE_MATH)
-        }
-
-        CustomIconButton(
-            imageVector = Icons.Outlined.FormatQuote,
-            contentDescription = "Quote"
-        ) {
-            onEdit(Constants.Editor.QUOTE)
-        }
-
-        CustomIconButton(
-            imageVector = Icons.AutoMirrored.Outlined.Label,
-            contentDescription = "Alert",
-        ) {
-            isAlertExpanded = !isAlertExpanded
-        }
-
-        AnimatedVisibility(visible = isAlertExpanded) {
-            Row(
-                modifier = Modifier.fillMaxHeight(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Start
+        // ── Inline text formatting ──────────────────────────────
+        ToolbarSection {
+            CustomIconButton(
+                imageVector = Icons.Outlined.FormatBold,
+                contentDescription = "Bold"
             ) {
-                CustomIconButton(
-                    imageVector = Icons.Outlined.Info,
-                    contentDescription = "Note Alert",
-                ) {
-                    onEdit(Constants.Editor.NOTE)
-                }
+                onEdit(Constants.Editor.BOLD)
+            }
 
-                CustomIconButton(
-                    imageVector = Icons.Outlined.Lightbulb,
-                    contentDescription = "Tip Alert",
-                ) {
-                    onEdit(Constants.Editor.TIP)
-                }
+            CustomIconButton(
+                imageVector = Icons.Outlined.FormatItalic,
+                contentDescription = "Italic"
+            ) {
+                onEdit(Constants.Editor.ITALIC)
+            }
 
-                CustomIconButton(
-                    imageVector = Icons.Outlined.Feedback,
-                    contentDescription = "Important Alert",
-                ) {
-                    onEdit(Constants.Editor.IMPORTANT)
+            CustomIconButton(
+                imageVector = Icons.Outlined.FormatUnderlined,
+                contentDescription = "Underline"
+            ) {
+                onEdit(Constants.Editor.UNDERLINE)
+            }
 
-                }
-                CustomIconButton(
-                    imageVector = Icons.Outlined.Warning,
-                    contentDescription = "Warning Alert",
-                ) {
-                    onEdit(Constants.Editor.WARNING)
-                }
+            CustomIconButton(
+                imageVector = Icons.Outlined.StrikethroughS,
+                contentDescription = "Strike Through"
+            ) {
+                onEdit(Constants.Editor.STRIKETHROUGH)
+            }
 
-                CustomIconButton(
-                    imageVector = Icons.Outlined.ReportGmailerrorred,
-                    contentDescription = "Caution Alert",
+            CustomIconButton(
+                imageVector = Icons.Outlined.FormatPaint,
+                contentDescription = "Mark"
+            ) {
+                onEdit(Constants.Editor.MARK)
+            }
+        }
+
+        // ── Inline code / symbols ───────────────────────────────
+        ToolbarSection {
+            CustomIconButton(
+                imageVector = Icons.Outlined.Code,
+                contentDescription = "Code"
+            ) {
+                onEdit(Constants.Editor.INLINE_CODE)
+            }
+
+            CustomIconButton(
+                imageVector = Icons.Outlined.DataArray,
+                contentDescription = "Brackets"
+            ) {
+                onEdit(Constants.Editor.INLINE_BRACKETS)
+            }
+
+            CustomIconButton(
+                imageVector = Icons.Outlined.DataObject,
+                contentDescription = "Braces"
+            ) {
+                onEdit(Constants.Editor.INLINE_BRACES)
+            }
+
+            CustomIconButton(
+                painter = R.drawable.function,
+                contentDescription = "Math"
+            ) {
+                onEdit(Constants.Editor.INLINE_MATH)
+            }
+        }
+
+        // ── Indentation ──────────────────────────────────────────
+        ToolbarSection {
+            CustomIconButton(
+                imageVector = Icons.AutoMirrored.Outlined.FormatIndentIncrease,
+                contentDescription = "Tab"
+            ) {
+                onEdit(Constants.Editor.TAB)
+            }
+
+            CustomIconButton(
+                imageVector = Icons.AutoMirrored.Outlined.FormatIndentDecrease,
+                contentDescription = "unTab"
+            ) {
+                onEdit(Constants.Editor.UN_TAB)
+            }
+        }
+
+        // ── Block elements ───────────────────────────────────────
+        ToolbarSection {
+            CustomIconButton(
+                imageVector = Icons.Outlined.FormatQuote,
+                contentDescription = "Quote"
+            ) {
+                onEdit(Constants.Editor.QUOTE)
+            }
+
+            CustomIconButton(
+                imageVector = Icons.Outlined.HorizontalRule,
+                contentDescription = "Horizontal Rule",
+            ) {
+                onEdit(Constants.Editor.RULE)
+            }
+
+            CustomIconButton(
+                imageVector = Icons.AutoMirrored.Outlined.Label,
+                contentDescription = "Alert",
+            ) {
+                isAlertExpanded = !isAlertExpanded
+            }
+
+            AnimatedVisibility(visible = isAlertExpanded) {
+                Row(
+                    modifier = Modifier.fillMaxHeight(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Start
                 ) {
-                    onEdit(Constants.Editor.CAUTION)
+                    CustomIconButton(
+                        imageVector = Icons.Outlined.Info,
+                        contentDescription = "Note Alert",
+                    ) {
+                        onEdit(Constants.Editor.NOTE)
+                    }
+
+                    CustomIconButton(
+                        imageVector = Icons.Outlined.Lightbulb,
+                        contentDescription = "Tip Alert",
+                    ) {
+                        onEdit(Constants.Editor.TIP)
+                    }
+
+                    CustomIconButton(
+                        imageVector = Icons.Outlined.Feedback,
+                        contentDescription = "Important Alert",
+                    ) {
+                        onEdit(Constants.Editor.IMPORTANT)
+                    }
+
+                    CustomIconButton(
+                        imageVector = Icons.Outlined.Warning,
+                        contentDescription = "Warning Alert",
+                    ) {
+                        onEdit(Constants.Editor.WARNING)
+                    }
+
+                    CustomIconButton(
+                        imageVector = Icons.Outlined.ReportGmailerrorred,
+                        contentDescription = "Caution Alert",
+                    ) {
+                        onEdit(Constants.Editor.CAUTION)
+                    }
                 }
             }
         }
 
-        CustomIconButton(
-            imageVector = Icons.Outlined.HorizontalRule,
-            contentDescription = "Horizontal Rule",
-        ) {
-            onEdit(Constants.Editor.RULE)
+        // ── Structured content (table / diagram / lists) ────────
+        ToolbarSection {
+            CustomIconButton(
+                imageVector = Icons.Outlined.TableChart,
+                contentDescription = "Table",
+                onClick = onTableButtonClick
+            )
+
+            CustomIconButton(
+                imageVector = Icons.Outlined.AddChart,
+                contentDescription = "Mermaid Diagram",
+            ) {
+                onEdit(Constants.Editor.DIAGRAM)
+            }
+
+            CustomIconButton(
+                imageVector = Icons.AutoMirrored.Outlined.List,
+                contentDescription = "List",
+                onClick = onListButtonClick
+            )
+
+            CustomIconButton(
+                imageVector = Icons.Outlined.CheckBox,
+                contentDescription = "Task List",
+                onClick = onTaskButtonClick
+            )
         }
 
-        CustomIconButton(
-            imageVector = Icons.Outlined.TableChart,
-            contentDescription = "Table",
-            onClick = onTableButtonClick
-        )
+        // ── Links & mentions ─────────────────────────────────────
+        ToolbarSection {
+            CustomIconButton(
+                imageVector = Icons.Outlined.Link,
+                contentDescription = "Link",
+                onClick = onLinkButtonClick
+            )
 
-        CustomIconButton(
-            imageVector = Icons.Outlined.AddChart,
-            contentDescription = "Mermaid Diagram",
-        ) {
-            onEdit(Constants.Editor.DIAGRAM)
+            CustomIconButton(
+                imageVector = Icons.Outlined.AlternateEmail,
+                contentDescription = "Social",
+                onClick = onSocialButtonClick
+            )
         }
 
-        CustomIconButton(
-            imageVector = Icons.AutoMirrored.Outlined.List,
-            contentDescription = "List",
-            onClick = onListButtonClick
-        )
+        // ── Media ─────────────────────────────────────────────────
+        ToolbarSection {
+            CustomIconButton(
+                imageVector = Icons.Outlined.Image,
+                contentDescription = "Image",
+                onClick = onImageButtonClick
+            )
 
-        CustomIconButton(
-            imageVector = Icons.Outlined.CheckBox,
-            contentDescription = "Task List",
-            onClick = onTaskButtonClick
-        )
+            CustomIconButton(
+                imageVector = Icons.Outlined.VideoFile,
+                contentDescription = "Video",
+                onClick = onVideoButtonClick
+            )
 
-        CustomIconButton(
-            imageVector = Icons.Outlined.Link,
-            contentDescription = "Link",
-            onClick = onLinkButtonClick
-        )
+            CustomIconButton(
+                imageVector = Icons.Outlined.AudioFile,
+                contentDescription = "Audio",
+                onClick = onAudioButtonClick
+            )
 
-        CustomIconButton(
-            imageVector = Icons.Outlined.AlternateEmail,
-            contentDescription = "Social",
-            onClick = onSocialButtonClick
-        )
-
-        CustomIconButton(
-            imageVector = Icons.Outlined.Mic,
-            contentDescription = "Audio",
-            onClick = onRecordAudioClick
-        )
-
-        CustomIconButton(
-            imageVector = Icons.Outlined.AudioFile,
-            contentDescription = "Audio",
-            onClick = onAudioButtonClick
-        )
-
-        CustomIconButton(
-            imageVector = Icons.Outlined.VideoFile,
-            contentDescription = "Video",
-            onClick = onVideoButtonClick
-        )
-
-        CustomIconButton(
-            imageVector = Icons.Outlined.Image,
-            contentDescription = "Image",
-            onClick = onImageButtonClick
-        )
+            CustomIconButton(
+                imageVector = Icons.Outlined.Mic,
+                contentDescription = "Record Audio",
+                onClick = onRecordAudioClick
+            )
+        }
     }
+}
+
+@Composable
+private fun ToolbarSection(
+    content: @Composable RowScope.() -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp))
+            .padding(horizontal = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        content = content
+    )
 }

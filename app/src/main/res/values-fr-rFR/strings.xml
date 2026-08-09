@@ -573,4 +573,14 @@
     <string name="add_social">Ajouter un lien social</string>
     <string name="changelog">Journal des modifications</string>
     <string name="changelog_description">Suivez les modifications de chaque version.</string>
+
+    <string name="change">Modifier</string>
+    <string name="change_root_directory">Modifier le répertoire racine des données Flux</string>
+    <string name="change_storage_root">Modifier la racine de stockage</string>
+    <string name="couldnt_move_data">Impossible de déplacer les données</string>
+    <string name="please_dont_close_app">Veuillez ne pas fermer l’application</string>
+    <string name="moving_your_data">Déplacement de vos données…</string>
+    <string name="more_files">…et %1$d de plus</string>
+    <string name="files_progress">%1$d / %2$d fichiers</string>
+
 </resources>

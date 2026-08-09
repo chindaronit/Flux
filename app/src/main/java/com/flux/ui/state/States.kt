@@ -9,5 +9,6 @@ data class States(
     val journalState: JournalState,
     val progressBoardState: ProgressBoardState,
     val labelState: LabelState,
-    val settings: Settings
+    val settings: Settings,
+    val rootChangeState: RootChangeState
 )

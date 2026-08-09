@@ -572,4 +572,13 @@
     <string name="add_social">Sociale link toevoegen</string>
     <string name="changelog">Wijzigingslogboek</string>
     <string name="changelog_description">Bekijk de wijzigingen in elke versie.</string>
+
+    <string name="change">Wijzigen</string>
+    <string name="change_root_directory">Hoofdmap voor Flux-gegevens wijzigen</string>
+    <string name="change_storage_root">Opslaghoofdmap wijzigen</string>
+    <string name="couldnt_move_data">Kan gegevens niet verplaatsen</string>
+    <string name="please_dont_close_app">Sluit de app niet</string>
+    <string name="moving_your_data">Je gegevens worden verplaatst…</string>
+    <string name="more_files">…en nog %1$d</string>
+    <string name="files_progress">%1$d / %2$d bestanden</string>
 </resources>

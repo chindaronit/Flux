@@ -572,4 +572,13 @@
     <string name="add_social">सोशल लिंक जोड़ें</string>
     <string name="changelog">परिवर्तन लॉग</string>
     <string name="changelog_description">हर संस्करण के परिवर्तनों को देखें।</string>
+
+    <string name="change">बदलें</string>
+    <string name="change_root_directory">Flux डेटा की रूट डायरेक्टरी बदलें</string>
+    <string name="change_storage_root">स्टोरेज रूट बदलें</string>
+    <string name="couldnt_move_data">डेटा स्थानांतरित नहीं किया जा सका</string>
+    <string name="please_dont_close_app">कृपया ऐप को बंद न करें</string>
+    <string name="moving_your_data">आपका डेटा स्थानांतरित किया जा रहा है…</string>
+    <string name="more_files">…और %1$d अन्य</string>
+    <string name="files_progress">%1$d / %2$d फ़ाइलें</string>
 </resources>

@@ -565,4 +565,13 @@
     <string name="add_social">Sozialen Link hinzufügen</string>
     <string name="changelog">Änderungsprotokoll</string>
     <string name="changelog_description">Verfolge die Änderungen jeder Version.</string>
+
+    <string name="change">Ändern</string>
+    <string name="change_root_directory">Stammverzeichnis für Flux-Daten ändern</string>
+    <string name="change_storage_root">Speicherstamm ändern</string>
+    <string name="couldnt_move_data">Daten konnten nicht verschoben werden</string>
+    <string name="please_dont_close_app">Bitte schließen Sie die App nicht</string>
+    <string name="moving_your_data">Daten werden verschoben…</string>
+    <string name="more_files">…und %1$d weitere</string>
+    <string name="files_progress">%1$d / %2$d Dateien</string>
 </resources>

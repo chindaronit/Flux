@@ -87,6 +87,7 @@ class MainActivity : AppCompatActivity() {
             val journalState by journalViewModel.state.collectAsStateWithLifecycle()
             val labelState by labelViewModel.state.collectAsStateWithLifecycle()
             val progressBoardState by progressBoardViewModel.state.collectAsStateWithLifecycle()
+            val rootChangeState by settingsViewModel.rootChangeState.collectAsStateWithLifecycle()
 
             // Stop splash screen when settings are loaded
             LaunchedEffect(settings.isLoading) { keepSplashScreen.value = settings.isLoading }
@@ -128,7 +129,8 @@ class MainActivity : AppCompatActivity() {
                                 journalState,
                                 progressBoardState,
                                 labelState,
-                                settings
+                                settings,
+                                rootChangeState
                             )
                         )
                     }

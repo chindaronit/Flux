@@ -1,5 +1,6 @@
 package com.flux.ui.screens.settings
 
+import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.widget.Toast
@@ -13,6 +14,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.outlined.CleaningServices
 import androidx.compose.material.icons.outlined.EditCalendar
+import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.rounded.Backup
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Restore
@@ -58,8 +60,10 @@ import com.flux.other.requestExactAlarmPermission
 import com.flux.ui.common.AutoBackupNeedsPasswordDialog
 import com.flux.ui.common.BackupPasswordEntryDialog
 import com.flux.ui.common.ChangePasswordWarningDialog
+import com.flux.ui.common.ChangeRootProgressDialog
 import com.flux.ui.common.DeleteAlert
 import com.flux.ui.events.SettingEvents
+import com.flux.ui.state.RootChangeState
 import com.flux.ui.state.Settings
 import com.flux.ui.viewModel.BackupSettingsViewModel
 import com.flux.ui.viewModel.BackupViewModel
@@ -72,6 +76,7 @@ fun Data(
     navController: NavController,
     radius: Int,
     settings: Settings,
+    rootChangeState: RootChangeState,
     snackbarHostState: SnackbarHostState,
     backupViewModel: BackupViewModel,
     backupSettingsViewModel: BackupSettingsViewModel,
@@ -83,6 +88,7 @@ fun Data(
     val operationSuccessful = stringResource(R.string.success)
     val operationFailed = stringResource(R.string.Failed)
 
+    var showRootChangeDialog by remember { mutableStateOf(false) }
     var showWarningDialog by remember { mutableStateOf(false) }
     var showAutoBackupNeedsPasswordDialog by remember { mutableStateOf(false) }
     var showSetPasswordDialog by remember { mutableStateOf(false) }
@@ -123,6 +129,21 @@ fun Data(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
         uri?.let { backupViewModel.importBackup(context, it) }
+    }
+
+    var pendingNewRootUri by remember { mutableStateOf<Uri?>(null) }
+
+    val rootPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val uri = result.data?.data ?: return@rememberLauncherForActivityResult
+        context.contentResolver.takePersistableUriPermission(
+            uri,
+            Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+        )
+        pendingNewRootUri = uri
+        showRootChangeDialog = true
+        onSettingsEvents(SettingEvents.ChangeStorageRoot(context, uri))
     }
 
     LaunchedEffect(Unit) {
@@ -265,6 +286,34 @@ fun Data(
             item {
                 ListItem(
                     colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+                    leadingContent = { Icon(Icons.Outlined.Storage, contentDescription = "Storage") },
+                    headlineContent = { Text(stringResource(R.string.change_storage_root)) },
+                    trailingContent = {
+                        TextButton(
+                            onClick = {
+                                hapticFeedback.performHapticFeedback(HapticFeedbackType.ContextClick)
+                                val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
+                                    addFlags(
+                                        Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                                                Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
+                                                Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+                                    )
+                                }
+                                rootPicker.launch(intent)
+                            },
+                            colors = ButtonDefaults.textButtonColors().copy(
+                                containerColor = MaterialTheme.colorScheme.errorContainer,
+                                contentColor = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                        ) { Text(stringResource(R.string.change)) }
+                    },
+                    supportingContent = { Text(stringResource(R.string.change_root_directory)) }
+                )
+            }
+
+            item {
+                ListItem(
+                    colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
                     leadingContent = { Icon(Icons.Outlined.CleaningServices, contentDescription = "Reset") },
                     headlineContent = { Text(stringResource(R.string.reset_database)) },
                     trailingContent = {
@@ -358,6 +407,18 @@ fun Data(
                     pendingImportUri?.let { backupViewModel.importBackupWithPassword(context, it, pw) }
                 },
                 onDismiss = { showImportPasswordDialog = false }
+            )
+        }
+
+        if (showRootChangeDialog) {
+            ChangeRootProgressDialog(
+                state = rootChangeState,
+                newRootUri = pendingNewRootUri,
+                onRetry = { uri -> onSettingsEvents(SettingEvents.ChangeStorageRoot(context, uri)) },
+                onDismiss = {
+                    showRootChangeDialog = false
+                    onSettingsEvents(SettingEvents.ResetRootChange)
+                }
             )
         }
     }
