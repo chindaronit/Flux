@@ -64,7 +64,12 @@ class TodoViewModel @Inject constructor(
             is TodoEvents.DeleteAllWorkspaceLists -> deleteWorkspaceLists(event.context, event.workspaceId)
             is TodoEvents.CreateInstance -> createInstance(event.listId, event.workspaceId)
             is TodoEvents.UpsertInstance -> upsertInstance(event.instance)
+            is TodoEvents.UpdateTodoOrder -> updateTodoOrder(event.todoIds)
         }
+    }
+
+    private fun updateTodoOrder(todoIds: List<String>){
+        viewModelScope.launch(Dispatchers.IO) { repository.updateTodoOrder(todoIds) }
     }
 
     private fun createInstance(listId: String, workspaceId: String) {

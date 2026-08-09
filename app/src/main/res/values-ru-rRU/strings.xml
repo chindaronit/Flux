@@ -572,4 +572,13 @@
     <string name="add_social">Добавить социальную ссылку</string>
     <string name="changelog">Журнал изменений</string>
     <string name="changelog_description">Просматривайте изменения в каждой версии.</string>
+
+    <string name="change">Изменить</string>
+    <string name="change_root_directory">Изменить корневой каталог данных Flux</string>
+    <string name="change_storage_root">Изменить корневой каталог хранилища</string>
+    <string name="couldnt_move_data">Не удалось переместить данные</string>
+    <string name="please_dont_close_app">Не закрывайте приложение</string>
+    <string name="moving_your_data">Перемещение данных…</string>
+    <string name="more_files">…и ещё %1$d</string>
+    <string name="files_progress">%1$d / %2$d файлов</string>
 </resources>

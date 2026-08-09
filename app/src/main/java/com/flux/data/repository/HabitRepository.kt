@@ -15,6 +15,7 @@ interface HabitRepository {
     suspend fun loadAllHabits(): List<HabitModel>
     suspend fun loadAllHabitsInstances(): List<HabitInstanceModel>
     suspend fun toggleHabit(habit: HabitModel, currentlyCompleted: Boolean)
+    suspend fun updateOrder(habitIds: List<String>)
     fun observeTodayHabitStatuses(): Flow<List<HabitWithStatus>>
     fun loadHabitData(): Flow<List<HabitModel>>
     fun loadHabitInstanceData(): Flow<List<HabitInstanceModel>>

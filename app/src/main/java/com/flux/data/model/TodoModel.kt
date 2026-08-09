@@ -17,6 +17,7 @@ data class TodoModel(
     val id: String = UUID.randomUUID().toString(),
     val workspaceId: String = "",
     val title: String = "",
+    val order: Int = 0,
     val items: List<TodoItem> = emptyList(),
     val startDateTime: Long = System.currentTimeMillis(),
     val recurrence: RecurrenceRule = RecurrenceRule.NONE,
@@ -25,8 +26,6 @@ data class TodoModel(
 @Serializable
 data class TodoItem(
     val id: String = UUID.randomUUID().toString(),
-
-
     val value: String = "",
     val isChecked: Boolean = false
 )

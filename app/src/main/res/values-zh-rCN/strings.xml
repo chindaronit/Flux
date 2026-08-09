@@ -577,4 +577,13 @@
     <string name="add_social">添加社交链接</string>
     <string name="changelog">更新日志</string>
     <string name="changelog_description">查看每个版本的更新内容。</string>
+
+    <string name="change">更改</string>
+    <string name="change_root_directory">更改 Flux 数据根目录</string>
+    <string name="change_storage_root">更改存储根目录</string>
+    <string name="couldnt_move_data">无法移动数据</string>
+    <string name="please_dont_close_app">请不要关闭应用</string>
+    <string name="moving_your_data">正在移动您的数据…</string>
+    <string name="more_files">…以及另外 %1$d 个</string>
+    <string name="files_progress">%1$d / %2$d 个文件</string>
 </resources>

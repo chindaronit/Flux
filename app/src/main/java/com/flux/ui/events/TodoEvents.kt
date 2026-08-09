@@ -10,4 +10,5 @@ sealed class TodoEvents {
     data class UpsertList(val context: Context, val isRemovingReminder: Boolean, val data: TodoModel) : TodoEvents()
     data class CreateInstance(val listId: String, val workspaceId: String) : TodoEvents()
     data class UpsertInstance(val instance: TodoInstance) : TodoEvents()
+    data class UpdateTodoOrder(val todoIds: List<String>) : TodoEvents()
 }

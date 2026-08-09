@@ -12,8 +12,26 @@ class NoteRepositoryImpl @Inject constructor(
     private val notesDao: NotesDao,
     private val labelDao: LabelDao
 ) : NoteRepository {
+    override suspend fun updateOrder(notesIds: List<String>) {
+        return withContext(Dispatchers.IO) {
+            notesIds.forEachIndexed { index, id ->
+                notesDao.updateOrder(id = id, order = index)
+            }
+        }
+    }
+
     override suspend fun upsertNote(note: NotesModel) {
-        return withContext(Dispatchers.IO) { notesDao.upsertNote(note) }
+        return withContext(Dispatchers.IO) {
+            val existing = notesDao.getNotesById(note.notesId)
+            val noteToSave = if (existing == null) {
+                val nextOrder = notesDao.getMaxOrder(note.workspaceId) + 1
+                note.copy(order = nextOrder)
+            } else {
+                note
+            }
+
+            notesDao.upsertNote(noteToSave)
+        }
     }
 
     override suspend fun upsertNotes(notes: List<NotesModel>) {

@@ -24,9 +24,13 @@ import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.lazy.staggeredgrid.itemsIndexed
+import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material.icons.outlined.Create
@@ -47,7 +51,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -68,9 +74,12 @@ import com.flux.ui.common.SpaceTopBar
 import com.flux.ui.common.SpacesMenu
 import com.flux.ui.events.NotesEvents
 import com.flux.ui.events.SettingEvents
+import com.flux.ui.screens.todo.move
 import com.flux.ui.screens.workspaces.SpacesToolBar
 import com.flux.ui.state.NotesState
 import com.flux.ui.state.Settings
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyStaggeredGridState
 
 data class FilterState(
     val sort: String? = null,
@@ -203,6 +212,23 @@ fun NotesScreen(
         }
     }
 
+    var reorderEnabled by rememberSaveable { mutableStateOf(false) }
+    val notesList = remember(allNotes) { allNotes.toMutableStateList() }
+    val lazyStaggeredGridState = rememberLazyStaggeredGridState()
+
+    val headerOffset = 1
+    val reorderState = rememberReorderableLazyStaggeredGridState(lazyStaggeredGridState) { from, to ->
+        if (!reorderEnabled) return@rememberReorderableLazyStaggeredGridState
+
+        val fromIndex = from.index - headerOffset
+        val toIndex = to.index - headerOffset
+
+        if (fromIndex in notesList.indices && toIndex in notesList.indices) {
+            notesList.move(fromIndex, toIndex)
+            onEvent(NotesEvents.UpdateOrder(notesList.map { it.notesId }))
+        }
+    }
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         topBar = {
@@ -273,80 +299,122 @@ fun NotesScreen(
         when {
             isLoading -> Loader()
             else -> {
-                    LazyVerticalStaggeredGrid(
-                        columns = StaggeredGridCells.Fixed(columns),
-                        verticalItemSpacing = 8.dp,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        contentPadding = PaddingValues(
-                            start = 12.dp,
-                            end = 12.dp,
-                            top = 12.dp,
-                            bottom = 80.dp
-                        ),
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(innerPadding)
-                            .nestedScroll(scrollBehavior.nestedScrollConnection)
-                    ) {
-                        item(span = StaggeredGridItemSpan.FullLine) {
-                            if (selectedNotes.isEmpty()){
-                                Row(
-                                    Modifier
-                                        .fillMaxWidth()
-                                        .padding(bottom = 8.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    if(showSearchBar){ SpaceSearchBar(query, { query=it }, { showSearchBar=false }) }
-                                    else {
-                                        SpacesToolBar(
-                                            stringResource(R.string.Notes),
-                                            Icons.AutoMirrored.Filled.Notes,
-                                            false,
-                                            onMainClick = { showSpacesMenu = true },
-                                            onEditClick = onShowSpaceBottomSheet
-                                        )
-                                        SpacesMenu(
-                                            showSpacesMenu,
-                                            workspace,
-                                            onSpaceChange
-                                        ) { showSpacesMenu = false }
+                LazyVerticalStaggeredGrid(
+                    state = lazyStaggeredGridState,
+                    columns = StaggeredGridCells.Fixed(columns),
+                    verticalItemSpacing = 8.dp,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(
+                        start = 12.dp,
+                        end = 12.dp,
+                        top = 12.dp,
+                        bottom = 80.dp
+                    ),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                        .nestedScroll(scrollBehavior.nestedScrollConnection)
+                ) {
+                    item(span = StaggeredGridItemSpan.FullLine) {
+                        if (selectedNotes.isEmpty()){
+                            Row(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                if(showSearchBar){ SpaceSearchBar(query, { query=it }, { showSearchBar=false }) }
+                                else {
+                                    SpacesToolBar(
+                                        stringResource(R.string.Notes),
+                                        Icons.AutoMirrored.Filled.Notes,
+                                        false,
+                                        onMainClick = { showSpacesMenu = true },
+                                        onEditClick = onShowSpaceBottomSheet
+                                    )
+                                    SpacesMenu(
+                                        showSpacesMenu,
+                                        workspace,
+                                        onSpaceChange
+                                    ) { showSpacesMenu = false }
 
-                                        Row{
-                                            IconButton({ showSearchBar = true }) {
-                                                Icon(Icons.Default.Search, null, tint = MaterialTheme.colorScheme.primary)
-                                            }
-                                            IconButton({ isToolsSheetVisible = true }) {
-                                                Icon(Icons.Outlined.FilterList, null, tint = MaterialTheme.colorScheme.primary)
-                                            }
+                                    Row{
+                                        IconButton({ showSearchBar = true }) {
+                                            Icon(Icons.Default.Search, null, tint = MaterialTheme.colorScheme.primary)
+                                        }
+                                        IconButton({ isToolsSheetVisible = true }) {
+                                            Icon(Icons.Outlined.FilterList, null, tint = MaterialTheme.colorScheme.primary)
+                                        }
+                                        IconButton(onClick = { reorderEnabled = !reorderEnabled }) {
+                                            Icon(
+                                                imageVector =
+                                                    if (reorderEnabled) Icons.Default.LockOpen
+                                                    else Icons.Default.Lock,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.primary
+                                            )
                                         }
                                     }
                                 }
                             }
-                            else{
-                                SelectedToolBarRow(
-                                    true,
-                                    selectedNotes.size,
-                                    selectedNotes.size == allNotes.size,
-                                    pinnedNotes.size == allNotes.size,
-                                    { selectedNotes.clear() },
-                                    { isDialogVisible = true },
-                                    {
-                                        onEvent(NotesEvents.TogglePinMultiple(selectedNotes.toList()))
+                        }
+                        else{
+                            SelectedToolBarRow(
+                                true,
+                                selectedNotes.size,
+                                selectedNotes.size == allNotes.size,
+                                pinnedNotes.size == allNotes.size,
+                                { selectedNotes.clear() },
+                                { isDialogVisible = true },
+                                {
+                                    onEvent(NotesEvents.TogglePinMultiple(selectedNotes.toList()))
+                                    selectedNotes.clear()
+                                },
+                                {
+                                    if (allNotes.size == selectedNotes.size) {
                                         selectedNotes.clear()
-                                    },
-                                    {
-                                        if (allNotes.size == selectedNotes.size) {
-                                            selectedNotes.clear()
+                                    } else {
+                                        selectedNotes.clear()
+                                        selectedNotes.addAll(allNotes)
+                                    }
+                                }
+                            )
+                        }
+                    }
+                    if (allNotes.isEmpty()) item(span = StaggeredGridItemSpan.FullLine) { EmptyData() }
+
+                    if (reorderEnabled) {
+                        // Flat, reorderable list — pin sections are suppressed while reordering
+                        itemsIndexed(
+                            notesList,
+                            key = { _, item -> item.notesId }
+                        ) { _, note ->
+                            ReorderableItem(
+                                state = reorderState,
+                                key = note.notesId
+                            ) {
+                                NotesPreviewCard(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    dragHandleModifier = Modifier.draggableHandle(),
+                                    isReordering = true,
+                                    radius = radius,
+                                    isSelected = selectedNotes.contains(note),
+                                    note = note,
+                                    notesPreviewMode = notesPreviewMode,
+                                    labels = allLabels.filter { note.labels.contains(it.labelId) }.map { it.value },
+                                    onClick = { navController.navigate(NavRoutes.NoteDetails.withArgs(workspaceId, note.notesId)) },
+                                    onLongPressed = {
+                                        if (selectedNotes.contains(note)) {
+                                            selectedNotes.remove(note)
                                         } else {
-                                            selectedNotes.clear()
-                                            selectedNotes.addAll(allNotes)
+                                            selectedNotes.add(note)
                                         }
                                     }
                                 )
                             }
                         }
-                        if (allNotes.isEmpty()) item(span = StaggeredGridItemSpan.FullLine) { EmptyData() }
+                    } else {
                         if(showLabels) {
                             item(span = StaggeredGridItemSpan.FullLine) {
                                 Text(
@@ -402,6 +470,7 @@ fun NotesScreen(
                             )
                         }
                     }
+                }
             }
         }
     }

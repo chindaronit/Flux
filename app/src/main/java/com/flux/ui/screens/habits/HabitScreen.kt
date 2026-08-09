@@ -10,9 +10,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.EventAvailable
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -26,7 +30,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -51,9 +57,12 @@ import com.flux.ui.common.SpaceSearchBar
 import com.flux.ui.common.SpaceTopBar
 import com.flux.ui.common.SpacesMenu
 import com.flux.ui.events.HabitEvents
+import com.flux.ui.screens.todo.move
 import com.flux.ui.screens.workspaces.SpacesToolBar
 import com.flux.ui.state.HabitState
 import com.flux.ui.state.Settings
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
 import java.time.LocalDate
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -86,9 +95,27 @@ fun HabitScreen(
     val pastHabits = allHabits.filter { !it.isLive() }
     var showSearchBar by remember { mutableStateOf(false) }
     var showSpacesMenu by remember { mutableStateOf(false) }
+    var reorderEnabled by rememberSaveable { mutableStateOf(false) }
     val notificationPermissionLabel = stringResource(R.string.Notification_Permission)
     val reminderPermissionLabel = stringResource(R.string.Reminder_Permission)
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+
+    // Reorderable state for the "current" habits section only
+    val habitList = remember(currentHabits) { currentHabits.toMutableStateList() }
+    val lazyListState = rememberLazyListState()
+    val headerOffset = 1
+
+    val reorderState = rememberReorderableLazyListState(lazyListState = lazyListState) { from, to ->
+        if (!reorderEnabled) return@rememberReorderableLazyListState
+
+        val fromIndex = from.index - headerOffset
+        val toIndex = to.index - headerOffset
+
+        if (fromIndex in habitList.indices && toIndex in habitList.indices) {
+            habitList.move(fromIndex, toIndex)
+            onEvent(HabitEvents.UpdateOrder(habitList.map { it.id }))
+        }
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
@@ -128,7 +155,8 @@ fun HabitScreen(
             isLoading -> Loader()
             else -> {
                 LazyColumn(
-                    Modifier
+                    state = lazyListState,
+                    modifier = Modifier
                         .fillMaxSize()
                         .padding(innerPadding)
                         .padding(12.dp)
@@ -155,37 +183,58 @@ fun HabitScreen(
                                     IconButton({ showSearchBar = true }) {
                                         Icon(Icons.Default.Search, null, tint = MaterialTheme.colorScheme.primary)
                                     }
+                                    IconButton(onClick = { reorderEnabled = !reorderEnabled }) {
+                                        Icon(
+                                            imageVector = if (reorderEnabled) Icons.Default.LockOpen else Icons.Default.Lock,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
                     if(allHabits.isEmpty())  item { EmptyData() }
-                    items(currentHabits) { habit ->
-                        val habitInstances = allInstances.filter { it.habitId == habit.id }
-                        HabitPreviewCard(
-                            radius = radius,
-                            habit = habit,
-                            is24HourFormat = is24HourFormat,
-                            instances = habitInstances,
-                            onClick = { date ->
-                                if (isDateAllowedForHabit(habit.recurrence, date)) {
-                                    val oldInstance = habitInstances.find { it.instanceDate == date }
-                                    val count = if(habit.isCounted){
-                                        if(oldInstance!=null) oldInstance.count+1
-                                        else 1
-                                    } else 0
+                    itemsIndexed(
+                        habitList,
+                        key = { _, habit -> habit.id }
+                    ) { _, habit ->
+                        ReorderableItem(
+                            state = reorderState,
+                            key = habit.id
+                        ) {
+                            val cardDragModifier = if (reorderEnabled) Modifier.longPressDraggableHandle() else Modifier
+                            val iconDragModifier = if (reorderEnabled) Modifier.draggableHandle() else Modifier
 
-                                    val newInstance = HabitInstanceModel(
-                                        instanceDate = date,
-                                        habitId = habit.id,
-                                        workspaceId = workspaceId,
-                                        count = count
-                                    )
-                                    onEvent(HabitEvents.UpdateInstance(newInstance, habit.habitConfig))
-                                }
-                            },
-                            onAnalyticsClicked = { navController.navigate(NavRoutes.HabitDetails.withArgs(workspaceId, habit.id)) }
-                        )
+                            val habitInstances = allInstances.filter { it.habitId == habit.id }
+                            HabitPreviewCard(
+                                modifier = Modifier.animateItem().then(cardDragModifier),
+                                radius = radius,
+                                habit = habit,
+                                is24HourFormat = is24HourFormat,
+                                instances = habitInstances,
+                                isReordering = reorderEnabled,
+                                dragHandleModifier = iconDragModifier,
+                                onClick = { date ->
+                                    if (isDateAllowedForHabit(habit.recurrence, date)) {
+                                        val oldInstance = habitInstances.find { it.instanceDate == date }
+                                        val count = if(habit.isCounted){
+                                            if(oldInstance!=null) oldInstance.count+1
+                                            else 1
+                                        } else 0
+
+                                        val newInstance = HabitInstanceModel(
+                                            instanceDate = date,
+                                            habitId = habit.id,
+                                            workspaceId = workspaceId,
+                                            count = count
+                                        )
+                                        onEvent(HabitEvents.UpdateInstance(newInstance, habit.habitConfig))
+                                    }
+                                },
+                                onAnalyticsClicked = { navController.navigate(NavRoutes.HabitDetails.withArgs(workspaceId, habit.id)) }
+                            )
+                        }
                     }
                     if(pastHabits.isNotEmpty()) {
                         item {
@@ -196,7 +245,7 @@ fun HabitScreen(
                             )
                         }
                     }
-                    items(pastHabits) { habit ->
+                    items(pastHabits, key = { it.id }) { habit ->
                         val habitInstances = allInstances.filter { it.habitId == habit.id }
                         HabitPreviewCard (
                             radius = radius,
@@ -224,9 +273,7 @@ fun HabitScreen(
 fun isDateAllowedForHabit(recurrence: RecurrenceRule, epochDay: Long): Boolean {
     return when (recurrence) {
         is RecurrenceRule.Weekly -> {
-            // Convert epoch day to LocalDate to get day of week
             val localDate = LocalDate.ofEpochDay(epochDay)
-            // Convert to Monday=0, Tuesday=1, ..., Sunday=6 format
             val dayOfWeek = (localDate.dayOfWeek.value + 6) % 7
             dayOfWeek in recurrence.daysOfWeek
         }

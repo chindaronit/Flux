@@ -1,6 +1,6 @@
 [versions]
 agp = "9.2.1"
-kotlin = "2.4.0"
+kotlin = "2.4.10"
 ksp = "2.3.9"
 kotlinxSerializationJson = "1.11.0"
 biometric = "1.4.0-alpha07"
@@ -17,7 +17,7 @@ room = "2.8.4"
 coilCompose = "2.7.0"
 
 # Common Mark
-commonmark = "0.29.0"
+commonmark = "0.30.0"
 
 # Hilt
 hilt = "2.60.1"

@@ -15,6 +15,7 @@ sealed class NotesEvents {
     data class UpsertNote(val data: NotesModel) : NotesEvents()
     data class SelectNotes(val noteId: String) : NotesEvents()
     data class UnSelectNotes(val noteId: String) : NotesEvents()
+    data class UpdateOrder(val notesIds: List<String>) : NotesEvents()
     data class ImportAudio(val context: Context, val sourceUri: Uri, val contentState: TextFieldState): NotesEvents()
     data class ImportImages(val context: Context, val uriList: List<Uri>, val contentState: TextFieldState): NotesEvents()
     data class ImportVideo(val context: Context, val uri: Uri, val contentState: TextFieldState): NotesEvents()

@@ -33,7 +33,17 @@ class HabitRepositoryImpl @Inject constructor(
     }
 
     override suspend fun upsertHabit(habit: HabitModel) {
-        return withContext(Dispatchers.IO) { dao.upsertHabit(habit) }
+        withContext(Dispatchers.IO){
+            val existing = dao.getHabitById(habit.id)
+            val habitToSave = if (existing == null) {
+                val nextOrder = dao.getMaxOrder(habit.workspaceId) + 1
+                habit.copy(order = nextOrder)
+            } else {
+                habit
+            }
+
+            dao.upsertHabit(habitToSave)
+        }
     }
 
     override suspend fun deleteInstance(habitInstance: HabitInstanceModel) {
@@ -50,6 +60,12 @@ class HabitRepositoryImpl @Inject constructor(
 
     override suspend fun loadAllHabitsInstances(): List<HabitInstanceModel> {
         return withContext(Dispatchers.IO) { instanceDao.loadAllInstances() }
+    }
+
+    override suspend fun updateOrder(habitIds: List<String>) {
+        habitIds.forEachIndexed { index, id ->
+            dao.updateOrder(id = id, order = index)
+        }
     }
 
     override suspend fun toggleHabit(habit: HabitModel, currentlyCompleted: Boolean) {

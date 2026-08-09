@@ -280,5 +280,26 @@ val CHANGELOG_DATA = listOf(
                 - Local date bug in events
                 - Event stale data of EventDetails.kt after edit.
         """.trimIndent()
+    ),
+    ChangelogEntry(
+        version = "v3.2.1",
+        versionCode = 17,
+        date = "Aug 9, 2026",
+        changes = """
+                feat:
+                    - Option to change storage root.
+                    - Reorder notes, todo, habits manually by dragging.
+                
+                src:
+                    - Update Markdown editor row options with sections.
+                
+                fix:
+                    - Bugs in social dialog in Markdown editor
+                
+                chore: 
+                    - Update changelog
+                    - Update Gradle lib versions in metadata
+                    - Prepare for release 3.2.1
+            """.trimIndent()
     )
 )

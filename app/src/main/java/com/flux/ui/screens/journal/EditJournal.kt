@@ -5,7 +5,6 @@ import android.content.Intent
 import android.net.Uri
 import android.webkit.WebView
 import android.widget.Toast
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -46,6 +45,7 @@ import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -94,6 +94,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.core.net.toUri
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.flux.R
 import com.flux.data.model.LabelModel
 import com.flux.data.model.NotesModel
@@ -275,24 +278,33 @@ fun EditJournal(
         val newText = contentState.text.toString()
         val hasChanged = newText != journal.text
 
-        if (!hasChanged && currentLabelIds.toList()==journal.labels && journalDate==journal.dateTime && socialLinks==journal.socialLinks) return
+        if (!hasChanged &&
+            currentLabelIds.toList() == journal.labels &&
+            journalDate == journal.dateTime &&
+            socialLinks.toList() == journal.socialLinks
+        ) return
 
         onJournalEvents(
             JournalEvents.UpsertEntry(
                 journal.copy(
                     text = newText,
-                    dateTime = if (isToday) System.currentTimeMillis() else journalDate,
+                    dateTime = journalDate,
                     labels = currentLabelIds.toList(),
-                    socialLinks = socialLinks
+                    socialLinks = socialLinks.toList()
                 )
             )
         )
     }
 
-    BackHandler {
-        onSaveJournal()
-        focusManager.clearFocus()
-        navController.popBackStack()
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_STOP) { onSaveJournal() }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
     }
 
     Scaffold(
@@ -650,9 +662,17 @@ fun EditJournal(
 
     if(showSocialDialog){
         SocialDialog(
-            selectedSocialModel,
-            {
-                socialLinks.add(it.copy(notesId = journal.journalId, workspaceId = journal.workspaceId))
+            socialModel = selectedSocialModel,
+            {social->
+                val updated = social.copy(
+                    notesId = journal.journalId,
+                    workspaceId = journal.workspaceId
+                )
+
+                val index = socialLinks.indexOfFirst { it.socialId == updated.socialId }
+
+                if (index == -1) { socialLinks.add(updated) }
+                else { socialLinks[index] = updated }
             },
             {
                 showSocialDialog=false

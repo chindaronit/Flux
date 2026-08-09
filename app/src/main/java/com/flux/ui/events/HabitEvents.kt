@@ -10,4 +10,5 @@ sealed class HabitEvents {
     data class DeleteHabit(val habit: HabitModel, val context: Context) : HabitEvents()
     data class UpsertHabit(val context: Context, val habit: HabitModel) : HabitEvents()
     data class UpdateInstance(val habitInstance: HabitInstanceModel, val config: HabitConfig) : HabitEvents()
+    data class UpdateOrder(val habitIds: List<String>) : HabitEvents()
 }

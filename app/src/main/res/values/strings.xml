@@ -570,4 +570,13 @@
     <string name="add_social">Add Social</string>
     <string name="changelog">Changelog</string>
     <string name="changelog_description">Track the changes in every version.</string>
+
+    <string name="change">Change</string>
+    <string name="change_root_directory">Change root directory for Flux data</string>
+    <string name="change_storage_root">Change storage root</string>
+    <string name="couldnt_move_data">Couldn\'t move data</string>
+    <string name="please_dont_close_app">Please don\'t close the app</string>
+    <string name="moving_your_data">Moving your data…</string>
+    <string name="more_files">…and %1$d more</string>
+    <string name="files_progress">%1$d / %2$d files</string>
 </resources>

@@ -229,7 +229,7 @@ val SettingsScreens =
             Contact(navController, states.settings.data.cornerRadius)
         },
         NavRoutes.Backup.route to { navController, snackbarHostState, states, viewModels ->
-            Data(navController, states.settings.data.cornerRadius, states.settings, snackbarHostState, viewModels.backupViewModel, viewModels.backupSettingsViewModel, viewModels.settingsViewModel::onEvent)
+            Data(navController, states.settings.data.cornerRadius, states.settings, states.rootChangeState, snackbarHostState, viewModels.backupViewModel, viewModels.backupSettingsViewModel, viewModels.settingsViewModel::onEvent)
         },
         NavRoutes.Editor.route to { navController, _, states, viewModels ->
             Editor(navController, states.settings, viewModels.settingsViewModel::onEvent)

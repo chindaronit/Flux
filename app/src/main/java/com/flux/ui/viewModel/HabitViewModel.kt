@@ -45,6 +45,7 @@ class HabitViewModel @Inject constructor(private val repository: HabitRepository
             is HabitEvents.UpsertHabit -> upsertHabit(event.context, event.habit)
             is HabitEvents.UpdateInstance -> updateInstance(event.habitInstance, event.config)
             is HabitEvents.DeleteAllWorkspaceHabits -> deleteWorkspaceHabits(event.workspaceId, event.context)
+            is HabitEvents.UpdateOrder -> updateOrder(event.habitIds)
         }
     }
 
@@ -54,7 +55,7 @@ class HabitViewModel @Inject constructor(private val repository: HabitRepository
                 repository.loadHabitData(),
                 repository.loadHabitInstanceData()
             ) { habits, instances ->
-                habits.sortedBy { it.startDateTime } to instances
+                habits to instances
             }.collect { (habits, instances) ->
                     updateState {
                         it.copy(
@@ -65,6 +66,10 @@ class HabitViewModel @Inject constructor(private val repository: HabitRepository
                     }
                 }
         }
+    }
+
+    private fun updateOrder(habitIds: List<String>){
+        viewModelScope.launch(Dispatchers.IO) { repository.updateOrder(habitIds) }
     }
 
     private fun deleteInstance(instance: HabitInstanceModel) {

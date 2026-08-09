@@ -40,7 +40,7 @@ import java.util.UUID
 
 @Database(
     entities = [EventModel::class, LabelModel::class, EventInstanceModel::class, SettingsModel::class, NotesModel::class, HabitModel::class, HabitInstanceModel::class, WorkspaceModel::class, TodoModel::class, JournalModel::class, ProgressBoardModel::class, TodoInstance::class],
-    version = 12,
+    version = 13,
     exportSchema = false
 )
 @TypeConverters(Converter::class)
@@ -512,6 +512,77 @@ val MIGRATION_11_12 = object : Migration(11, 12) {
                 "Passkey hashing summary — total: $total, migrated: $migrated, " +
                         "alreadyHashed: $alreadyHashed, failed: $failed"
             )
+        }
+    }
+}
+
+val MIGRATION_12_13 = object : Migration(12, 13) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+
+        // -------------------------
+        // TodoModel
+        // -------------------------
+        db.execSQL("""
+            ALTER TABLE TodoModel
+            ADD COLUMN `order` INTEGER NOT NULL DEFAULT 0
+        """.trimIndent())
+
+        db.query("""
+            SELECT id
+            FROM TodoModel
+            ORDER BY startDateTime ASC
+        """.trimIndent()).use { cursor ->
+            var order = 0
+            while (cursor.moveToNext()) {
+                db.execSQL(
+                    "UPDATE TodoModel SET `order` = ? WHERE id = ?",
+                    arrayOf(order++, cursor.getString(0))
+                )
+            }
+        }
+
+        // -------------------------
+        // HabitModel
+        // -------------------------
+        db.execSQL("""
+            ALTER TABLE HabitModel
+            ADD COLUMN `order` INTEGER NOT NULL DEFAULT 0
+        """.trimIndent())
+
+        db.query("""
+            SELECT id
+            FROM HabitModel
+            ORDER BY startDateTime ASC
+        """.trimIndent()).use { cursor ->
+            var order = 0
+            while (cursor.moveToNext()) {
+                db.execSQL(
+                    "UPDATE HabitModel SET `order` = ? WHERE id = ?",
+                    arrayOf(order++, cursor.getString(0))
+                )
+            }
+        }
+
+        // -------------------------
+        // NotesModel
+        // -------------------------
+        db.execSQL("""
+            ALTER TABLE NotesModel
+            ADD COLUMN `order` INTEGER NOT NULL DEFAULT 0
+        """.trimIndent())
+
+        db.query("""
+            SELECT id
+            FROM NotesModel
+            ORDER BY startDateTime ASC
+        """.trimIndent()).use { cursor ->
+            var order = 0
+            while (cursor.moveToNext()) {
+                db.execSQL(
+                    "UPDATE NotesModel SET `order` = ? WHERE id = ?",
+                    arrayOf(order++, cursor.getString(0))
+                )
+            }
         }
     }
 }
