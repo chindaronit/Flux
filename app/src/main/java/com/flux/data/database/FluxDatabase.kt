@@ -574,7 +574,7 @@ val MIGRATION_12_13 = object : Migration(12, 13) {
         db.query("""
             SELECT id
             FROM NotesModel
-            ORDER BY startDateTime ASC
+            ORDER BY lastEdited ASC
         """.trimIndent()).use { cursor ->
             var order = 0
             while (cursor.moveToNext()) {
