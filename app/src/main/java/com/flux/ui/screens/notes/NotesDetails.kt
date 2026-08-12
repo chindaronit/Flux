@@ -58,6 +58,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -276,22 +277,24 @@ fun NoteDetails(
         isSearching = false
     }
 
+    val currentNote by rememberUpdatedState(note)
+
     fun onSaveNote() {
         val newTitle = titleState.text.toString()
         val newDescription = contentState.text.toString()
 
-        if (newTitle == note.title &&
-            newDescription == note.description &&
-            isPinned == note.isPinned &&
-            noteLabelIds.toList() == note.labels &&
-            socialLinks.toList() == note.socialLinks
+        if (newTitle == currentNote.title &&
+            newDescription == currentNote.description &&
+            isPinned == currentNote.isPinned &&
+            noteLabelIds.toList() == currentNote.labels &&
+            socialLinks.toList() == currentNote.socialLinks
         ) return
 
         onNotesEvents(
             NotesEvents.UpsertNote(
-                note.copy(
-                    title = titleState.text.toString(),
-                    description = contentState.text.toString(),
+                currentNote.copy(
+                    title = newTitle,
+                    description = newDescription,
                     isPinned = isPinned,
                     lastEdited = System.currentTimeMillis(),
                     labels = noteLabelIds.toList(),
@@ -323,9 +326,7 @@ fun NoteDetails(
                 isPinned = isPinned,
                 isReadView = isReadView,
                 isSearching= isSearching,
-                onBackPressed = {
-                    onSaveNote()
-                    navController.popBackStack() },
+                onBackPressed = { navController.popBackStack() },
                 onOutlineClicked = {
                     onNotesEvents(NotesEvents.CalculateOutline(contentState.text.toString()))
                     showOutlineSheet=true },
@@ -347,7 +348,7 @@ fun NoteDetails(
                     ) { showSaveNotesDialog = true } },
                 onPrintNote = { printPdf(context as Activity, readWebView, titleState.text.toString()) },
                 onCloneNote = {
-                    onNotesEvents(NotesEvents.UpsertNote(NotesModel(title = "Clone ${titleState.text}", description = contentState.text.toString(), workspaceId = workspaceId, labels = noteLabelIds)))
+                    onNotesEvents(NotesEvents.UpsertNote(NotesModel(title = "Clone ${titleState.text}", description = contentState.text.toString(), workspaceId = workspaceId, labels = noteLabelIds, socialLinks = socialLinks)))
                     Toast.makeText(context, cloneString, Toast.LENGTH_SHORT).show()
                 },
                 onConvertNote = { showConvertDialog = true },

@@ -78,8 +78,7 @@ enum class ExportType {
 enum class ConvertType {
     NOTE,
     TODO,
-    JOURNAL,
-    EVENT
+    JOURNAL
 }
 
 enum class DataCopyType {

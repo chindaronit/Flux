@@ -126,7 +126,7 @@ val CHANGELOG_DATA = listOf(
     ),
     ChangelogEntry(
         version = "v3.1.1",
-        versionCode = 6,
+        versionCode = 7,
         date = "Feb 24, 2026",
         changes = """
             - Audio recorder added to notes and journal.
@@ -137,7 +137,7 @@ val CHANGELOG_DATA = listOf(
     ),
     ChangelogEntry(
         version = "v3.1.2",
-        versionCode = 7,
+        versionCode = 8,
         date = "Mar 17, 2026",
         changes = """
             - Fixed Automatic Backup Manager
@@ -149,7 +149,7 @@ val CHANGELOG_DATA = listOf(
     ),
     ChangelogEntry(
         version = "v3.1.3",
-        versionCode = 8,
+        versionCode = 9,
         date = "Mar 22, 2026",
         changes = """
             - New Space Addition: Progress Tracker
@@ -159,7 +159,7 @@ val CHANGELOG_DATA = listOf(
     ),
     ChangelogEntry(
         version = "v3.1.4",
-        versionCode = 9,
+        versionCode =  10,
         date = "Mar 28, 2026",
         changes = """
             - Fixed Progress Tracker Delete bug
@@ -174,7 +174,7 @@ val CHANGELOG_DATA = listOf(
     ),
     ChangelogEntry(
         version = "v3.1.5",
-        versionCode = 10,
+        versionCode = 11,
         date = "May 24, 2026",
         changes = """
             feat!:
@@ -196,7 +196,7 @@ val CHANGELOG_DATA = listOf(
     ),
     ChangelogEntry(
         version = "v3.1.6",
-        versionCode = 11,
+        versionCode = 12,
         date = "Jun 7, 2026",
         changes = """
             feat:
@@ -210,7 +210,7 @@ val CHANGELOG_DATA = listOf(
     ),
     ChangelogEntry(
         version = "v3.1.7",
-        versionCode = 12,
+        versionCode = 13,
         date = "Jun 7, 2026",
         changes = """
             feat:
@@ -224,7 +224,7 @@ val CHANGELOG_DATA = listOf(
     ),
     ChangelogEntry(
         version = "v3.1.8",
-        versionCode = 13,
+        versionCode = 14,
         date = "Jun 25, 2026",
         changes = """
             feat:
@@ -240,7 +240,7 @@ val CHANGELOG_DATA = listOf(
     ),
     ChangelogEntry(
         version = "v3.1.9",
-        versionCode = 14,
+        versionCode = 15,
         date = "July 12, 2026",
         changes = """
             feat:
@@ -253,7 +253,7 @@ val CHANGELOG_DATA = listOf(
     ),
     ChangelogEntry(
         version = "v3.1.10",
-        versionCode = 15,
+        versionCode = 16,
         date = "July 19, 2026",
         changes = """
             feat:
@@ -266,7 +266,7 @@ val CHANGELOG_DATA = listOf(
     ),
     ChangelogEntry(
         version = "v3.2.0",
-        versionCode = 16,
+        versionCode = 17,
         date = "Aug 1, 2026",
         changes = """
             feat:
@@ -283,7 +283,7 @@ val CHANGELOG_DATA = listOf(
     ),
     ChangelogEntry(
         version = "v3.2.1",
-        versionCode = 17,
+        versionCode = 18,
         date = "Aug 9, 2026",
         changes = """
                 feat:
@@ -300,6 +300,26 @@ val CHANGELOG_DATA = listOf(
                     - Update changelog
                     - Update Gradle lib versions in metadata
                     - Prepare for release 3.2.1
+            """.trimIndent()
+    ),
+    ChangelogEntry(
+        version = "v3.2.2",
+        versionCode = 19,
+        date = "Aug 12, 2026",
+        changes = """
+            feat:
+                - haptic feedbacks in notes selection, sliders 
+                
+            fix: 
+                - clone label in notes
+                - radio slider bug
+                - Double content creation on nav icon back click for notes, todo, journal
+                - journal date bug for new journals.
+            src: 
+                - addition of more categories to icon sheet
+            chore: 
+                - Update changelog
+                - prepare for release 3.2.2
             """.trimIndent()
     )
 )

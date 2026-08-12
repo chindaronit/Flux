@@ -107,7 +107,10 @@ fun WorkspaceHomeScreen(
                         selectedWorkspace.size,
                         selectedWorkspace.containsAll(allSpaces),
                         selectedWorkspace.all { it.isPinned },
-                        onTogglePin = { viewModels.workspaceViewModel.onEvent(WorkspaceEvents.UpsertSpaces(selectedWorkspace.toList())) },
+                        onTogglePin = {
+                            viewModels.workspaceViewModel.onEvent(WorkspaceEvents.UpsertSpaces(selectedWorkspace.toList()))
+                            selectedWorkspace.clear()
+                        },
                         onToggleSelection = {
                             if (selectedWorkspace.containsAll(allSpaces)){ selectedWorkspace.clear() }
                             else {

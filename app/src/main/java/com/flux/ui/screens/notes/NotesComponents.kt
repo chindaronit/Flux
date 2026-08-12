@@ -151,6 +151,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -183,6 +184,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import com.flux.other.ConvertType
 import com.flux.other.MarkdownBlock
 import com.flux.other.MediaChipsRow
@@ -1764,6 +1766,14 @@ fun NotesPreviewCard(
         1 -> 180.dp
         else -> 360.dp
     }
+    val hapticFeedback = LocalHapticFeedback.current
+
+    val handleLongPress = {
+        hapticFeedback.performHapticFeedback(
+            HapticFeedbackType.LongPress
+        )
+        onLongPressed()
+    }
 
     Card(
         colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)),
@@ -1771,9 +1781,7 @@ fun NotesPreviewCard(
             .clip(shapeManager(isBoth = true, radius = radius / 2))
             .combinedClickable(
                 onClick = { onClick(note.notesId) },
-                // While reordering, long-press is reserved for the drag handle below —
-                // selection long-click would otherwise fight the drag gesture.
-                onLongClick = if (isReordering) null else onLongPressed
+                onLongClick = if (isReordering) null else handleLongPress
             ),
         shape = shapeManager(isBoth = true, radius = radius / 2),
         border = if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
@@ -1829,7 +1837,7 @@ fun NotesPreviewCard(
                     MarkdownBlock(
                         text = note.description,
                         onClick = { onClick(note.notesId) },
-                        onLongClick = if (isReordering) ({}) else onLongPressed
+                        onLongClick = if (isReordering) ({}) else handleLongPress
                     )
                 }
 
@@ -1839,7 +1847,7 @@ fun NotesPreviewCard(
                         media = mediaExtraction.media,
                         modifier = Modifier.padding(horizontal = 12.dp),
                         onClick = { onClick(note.notesId) },
-                        onLongClick = if (isReordering) ({}) else onLongPressed
+                        onLongClick = if (isReordering) ({}) else handleLongPress
                     )
                 }
             }

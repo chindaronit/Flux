@@ -38,13 +38,16 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -65,8 +68,10 @@ import com.flux.ui.common.DeleteAlert
 import com.flux.ui.events.TodoEvents
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
+import androidx.compose.runtime.saveable.Saver
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -79,16 +84,21 @@ fun NewTodoList(
 ) {
     val context = LocalContext.current
     var title by rememberSaveable { mutableStateOf(list.title) }
-    val itemList = remember { list.items.toMutableStateList() }
     var showDeleteDialog by remember { mutableStateOf(false) }
-    var recurrence by remember { mutableStateOf(list.recurrence) }
-    var reminderTime by remember { mutableLongStateOf(list.startDateTime) }
+    val reminderTime = rememberSaveable { mutableLongStateOf(list.startDateTime) }
     val deleteQueue = remember {
         Channel<Pair<Int, TodoItem>>(Channel.UNLIMITED)
     }
     // True = normal editing mode (locked ordering)
     // False = reorder mode (unlocked ordering, drag handles visible)
     var isReordering by remember { mutableStateOf(false) }
+    val itemListSaver = Saver<SnapshotStateList<TodoItem>, String>(
+        save = { Json.encodeToString(it.toList()) },
+        restore = { encoded ->
+            Json.decodeFromString<List<TodoItem>>(encoded).toMutableStateList()
+        }
+    )
+    val itemList = rememberSaveable(saver = itemListSaver) { list.items.toMutableStateList() }
 
     if (showDeleteDialog) {
         DeleteAlert(
@@ -99,6 +109,14 @@ fun NewTodoList(
                 showDeleteDialog = false
             }
         )
+    }
+    val recurrenceSaver = Saver<MutableState<RecurrenceRule>, String>(
+        save = { Json.encodeToString(it.value) },
+        restore = { encoded -> mutableStateOf(Json.decodeFromString<RecurrenceRule>(encoded)) }
+    )
+
+    var recurrence by rememberSaveable(list.id, saver = recurrenceSaver) {
+        mutableStateOf(list.recurrence)
     }
 
     val lazyListState = rememberLazyListState()
@@ -128,6 +146,8 @@ fun NewTodoList(
         }
     }
 
+    val currentList by rememberUpdatedState(list)
+
     fun saveTodoIfPossible(): Boolean {
         val hasContent = title.isNotBlank() || itemList.isNotEmpty()
 
@@ -141,13 +161,13 @@ fun NewTodoList(
         onTodoEvents(
             TodoEvents.UpsertList(
                 context,
-                list.recurrence is RecurrenceRule.Weekly && recurrence is RecurrenceRule.NONE,
-                list.copy(
+                currentList.recurrence is RecurrenceRule.Weekly && recurrence is RecurrenceRule.NONE,
+                currentList.copy(
                     title = title,
                     items = itemList.toList(),
                     workspaceId = workspaceId,
                     recurrence = recurrence,
-                    startDateTime = reminderTime
+                    startDateTime = reminderTime.longValue
                 )
             )
         )
@@ -201,12 +221,7 @@ fun NewTodoList(
                     )
                 },
                 navigationIcon = {
-                    IconButton({
-                        if (saveTodoIfPossible()) {
-                            isReordering = false
-                            navController.popBackStack()
-                        }
-                    }) {
+                    IconButton({ navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Default.ArrowBack, null)
                     }
                 },
@@ -352,12 +367,12 @@ fun NewTodoList(
     if (isReminderDialogVisible) {
         TodoReminderDialog(
             is24HourFormat = is24HoursFormat,
-            reminderTime = reminderTime,
+            reminderTime = reminderTime.longValue,
             recurrence = recurrence,
             onDismiss = { isReminderDialogVisible = false }
         ) { newRecurrence, newReminderTime ->
             recurrence=newRecurrence
-            reminderTime = newReminderTime
+            reminderTime.longValue = newReminderTime
         }
     }
 }
