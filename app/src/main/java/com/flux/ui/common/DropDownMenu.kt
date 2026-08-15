@@ -107,7 +107,7 @@ fun DropdownMenuWithDetails(
             )
             HorizontalDivider()
             DropdownMenuItem(
-                text = { Text(stringResource(R.string.convert)) },
+                text = { Text(stringResource(R.string.clone)) },
                 leadingIcon = { Icon(Icons.Outlined.ControlPointDuplicate, contentDescription = null) },
                 onClick = {
                     expanded = false

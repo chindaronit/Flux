@@ -1,0 +1,12 @@
+feat:
+    - haptic feedbacks in notes selection, sliders
+
+fix:
+    - clone label in notes
+    - radio slider bug
+    - Double content creation on nav icon back click for notes, todo, journal
+    - journal date bug for new journals.
+src:
+    - addition of more categories to icon sheet
+chore:
+    - prepare for release 3.2.2

@@ -1,8 +1,17 @@
 package com.flux.other
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.DirectionsRun
+import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
+import androidx.compose.material.icons.automirrored.filled.Label
+import androidx.compose.material.icons.automirrored.filled.Login
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material.icons.automirrored.filled.Note
 import androidx.compose.material.icons.automirrored.filled.Notes
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.automirrored.filled.ShowChart
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.AccountBalance
@@ -97,6 +106,95 @@ import androidx.compose.material.icons.filled.WavingHand
 import androidx.compose.material.icons.filled.Woman
 import androidx.compose.material.icons.filled.Work
 import androidx.compose.material.icons.filled.Workspaces
+import androidx.compose.material.icons.filled.Accessibility
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.AirplanemodeActive
+import androidx.compose.material.icons.filled.Alarm
+import androidx.compose.material.icons.filled.Album
+import androidx.compose.material.icons.filled.Apps
+import androidx.compose.material.icons.filled.AttachFile
+import androidx.compose.material.icons.filled.Badge
+import androidx.compose.material.icons.filled.BeachAccess
+import androidx.compose.material.icons.filled.BikeScooter
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.BusinessCenter
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.CarRental
+import androidx.compose.material.icons.filled.Cloud
+import androidx.compose.material.icons.filled.Computer
+import androidx.compose.material.icons.filled.ContactMail
+import androidx.compose.material.icons.filled.ContactPhone
+import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.Dns
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Engineering
+import androidx.compose.material.icons.filled.Explore
+import androidx.compose.material.icons.filled.Extension
+import androidx.compose.material.icons.filled.FileCopy
+import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.filled.FileUpload
+import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.Gamepad
+import androidx.compose.material.icons.filled.Gavel
+import androidx.compose.material.icons.filled.GpsFixed
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Hotel
+import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Key
+import androidx.compose.material.icons.filled.Laptop
+import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.LocalHospital
+import androidx.compose.material.icons.filled.LocalMall
+import androidx.compose.material.icons.filled.LocalPharmacy
+import androidx.compose.material.icons.filled.LocalShipping
+import androidx.compose.material.icons.filled.LocationCity
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.Medication
+import androidx.compose.material.icons.filled.MobileFriendly
+import androidx.compose.material.icons.filled.Monitor
+import androidx.compose.material.icons.filled.Movie
+import androidx.compose.material.icons.filled.NearMe
+import androidx.compose.material.icons.filled.Newspaper
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Park
+import androidx.compose.material.icons.filled.Password
+import androidx.compose.material.icons.filled.Pets
+import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Print
+import androidx.compose.material.icons.filled.Public
+import androidx.compose.material.icons.filled.PushPin
+import androidx.compose.material.icons.filled.QrCode
+import androidx.compose.material.icons.filled.Receipt
+import androidx.compose.material.icons.filled.RestartAlt
+import androidx.compose.material.icons.filled.RocketLaunch
+import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.Science
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.ShoppingBag
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.Smartphone
+import androidx.compose.material.icons.filled.SportsBasketball
+import androidx.compose.material.icons.filled.SportsCricket
+import androidx.compose.material.icons.filled.SportsEsports
+import androidx.compose.material.icons.filled.SportsFootball
+import androidx.compose.material.icons.filled.SportsSoccer
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Store
+import androidx.compose.material.icons.filled.Thermostat
+import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.TravelExplore
+import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VpnKey
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.WbSunny
+import androidx.compose.material.icons.filled.Wifi
+import androidx.compose.material.icons.filled.WorkspacePremium
 
 data class WorkspaceIcons(
     val title: String,
@@ -178,7 +276,76 @@ val FOOD = WorkspaceIcons(
     icons = listOf(64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79)
 )
 
-val workspaceIconList = listOf(DEFAULT, EMOTICON, FOOD, FINANCE, OTHERS)
+val COMMUNICATION = WorkspaceIcons(
+    title = "Communication",
+    icons = listOf(
+        96, 97, 98, 99, 100, 101, 102, 103,
+        104, 105, 106, 107, 108, 109, 110, 111
+    )
+)
+
+val TRAVEL = WorkspaceIcons(
+    title = "Travel & Places",
+    icons = listOf(
+        112, 113, 114, 115, 116, 117, 118, 119,
+        120, 121, 122, 123, 124, 125, 126, 127
+    )
+)
+
+val TECHNOLOGY = WorkspaceIcons(
+    title = "Technology",
+    icons = listOf(
+        128, 129, 130, 131, 132, 133, 134, 135,
+        136, 137, 138, 139, 140, 141, 142, 143
+    )
+)
+
+val HEALTH = WorkspaceIcons(
+    title = "Health & Fitness",
+    icons = listOf(
+        144, 145, 146, 147, 148, 149, 150, 151,
+        152, 153, 154, 155, 156, 157, 158, 159
+    )
+)
+
+val NATURE = WorkspaceIcons(
+    title = "Nature & Hobbies",
+    icons = listOf(
+        160, 161, 162, 163, 164, 165, 166, 167,
+        168, 169, 170, 171, 172, 173, 174, 175
+    )
+)
+
+val SHOPPING = WorkspaceIcons(
+    title = "Shopping & Lifestyle",
+    icons = listOf(
+        176, 177, 178, 179, 180, 181, 182, 183,
+        184, 185, 186, 187, 188, 189, 190, 191
+    )
+)
+
+val DOCUMENTS = WorkspaceIcons(
+    title = "Documents & Work",
+    icons = listOf(
+        192, 193, 194, 195, 196, 197, 198, 199,
+        200, 201, 202, 203, 204, 205, 206, 207
+    )
+)
+
+val workspaceIconList = listOf(
+    DEFAULT,
+    EMOTICON,
+    FOOD,
+    FINANCE,
+    OTHERS,
+    COMMUNICATION,
+    TRAVEL,
+    TECHNOLOGY,
+    HEALTH,
+    NATURE,
+    SHOPPING,
+    DOCUMENTS
+)
 
 val icons = listOf(
     // Finance
@@ -286,5 +453,131 @@ val icons = listOf(
     Icons.Default.Group,
     Icons.Default.Groups,
     Icons.Default.HourglassTop,
+
+    // COMMUNICATION 96-111
+    Icons.Default.Email,
+    Icons.AutoMirrored.Filled.Message,
+    Icons.AutoMirrored.Filled.Send,
+    Icons.Default.Share,
+    Icons.Default.ContactMail,
+    Icons.Default.ContactPhone,
+    Icons.Default.AccountCircle,
+    Icons.Default.Badge,
+    Icons.AutoMirrored.Filled.Login,
+    Icons.AutoMirrored.Filled.Logout,
+    Icons.Default.AttachFile,
+    Icons.Default.Link,
+    Icons.Default.QrCode,
+    Icons.Default.Search,
+    Icons.Default.Notifications,
+    Icons.Default.Public,
+
+    // TRAVEL & PLACES 112-127
+    Icons.Default.AirplanemodeActive,
+    Icons.Default.DirectionsCar,
+    Icons.Default.CarRental,
+    Icons.Default.BikeScooter,
+    Icons.AutoMirrored.Filled.DirectionsWalk,
+    Icons.AutoMirrored.Filled.DirectionsRun,
+    Icons.Default.LocationOn,
+    Icons.Default.LocationCity,
+    Icons.Default.Place,
+    Icons.Default.Map,
+    Icons.Default.NearMe,
+    Icons.Default.GpsFixed,
+    Icons.Default.Explore,
+    Icons.Default.TravelExplore,
+    Icons.Default.Hotel,
+    Icons.Default.BeachAccess,
+
+    // TECHNOLOGY 128-143
+    Icons.Default.Laptop,
+    Icons.Default.Computer,
+    Icons.Default.Smartphone,
+    Icons.Default.MobileFriendly,
+    Icons.Default.Monitor,
+    Icons.Default.Dns,
+    Icons.Default.Cloud,
+    Icons.Default.Wifi,
+    Icons.Default.Code,
+    Icons.Default.Build,
+    Icons.Default.Engineering,
+    Icons.Default.Extension,
+    Icons.Default.RocketLaunch,
+    Icons.Default.Apps,
+    Icons.Default.RestartAlt,
+    Icons.Default.Tune,
+
+    // HEALTH & FITNESS 144-159
+    Icons.Default.FitnessCenter,
+    Icons.Default.LocalHospital,
+    Icons.Default.LocalPharmacy,
+    Icons.Default.Medication,
+    Icons.Default.Thermostat,
+    Icons.Default.Accessibility,
+    Icons.AutoMirrored.Filled.DirectionsRun,
+    Icons.Default.SportsSoccer,
+    Icons.Default.SportsBasketball,
+    Icons.Default.SportsFootball,
+    Icons.Default.SportsCricket,
+    Icons.Default.SportsEsports,
+    Icons.Default.Timer,
+    Icons.Default.Alarm,
+    Icons.Default.HeartBroken,
+    Icons.Default.Warning,
+
+    // NATURE & HOBBIES 160-175
+    Icons.Default.Pets,
+    Icons.Default.Park,
+    Icons.Default.WbSunny,
+    Icons.Default.BeachAccess,
+    Icons.Default.Gamepad,
+    Icons.Default.Movie,
+    Icons.Default.MusicNote,
+    Icons.Default.CameraAlt,
+    Icons.Default.PhotoCamera,
+    Icons.Default.Image,
+    Icons.Default.Album,
+    Icons.Default.Palette,
+    Icons.AutoMirrored.Filled.MenuBook,
+    Icons.Default.School,
+    Icons.Default.Science,
+    Icons.Default.Newspaper,
+
+    // SHOPPING & LIFESTYLE 176-191
+    Icons.Default.ShoppingCart,
+    Icons.Default.ShoppingBag,
+    Icons.Default.LocalMall,
+    Icons.Default.Store,
+    Icons.Default.LocalShipping,
+    Icons.Default.Receipt,
+    Icons.Default.AttachMoney,
+    Icons.Default.CreditCard,
+    Icons.Default.Wallet,
+    Icons.Default.Star,
+    Icons.Default.Bookmark,
+    Icons.AutoMirrored.Filled.Label,
+    Icons.Default.Favorite,
+    Icons.Default.WorkspacePremium,
+    Icons.Default.BusinessCenter,
+    Icons.Default.Home,
+
+    // DOCUMENTS & WORK 192-207
+    Icons.Default.Folder,
+    Icons.Default.FileCopy,
+    Icons.Default.FileDownload,
+    Icons.Default.FileUpload,
+    Icons.Default.Print,
+    Icons.AutoMirrored.Filled.OpenInNew,
+    Icons.Default.Edit,
+    Icons.Default.Visibility,
+    Icons.Default.Lock,
+    Icons.Default.Key,
+    Icons.Default.Password,
+    Icons.Default.VpnKey,
+    Icons.Default.PushPin,
+    Icons.Default.Checklist,
+    Icons.Default.Gavel,
+    Icons.Default.Work,
 
     )

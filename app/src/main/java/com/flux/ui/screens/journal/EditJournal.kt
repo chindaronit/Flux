@@ -54,6 +54,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -157,7 +158,7 @@ fun EditJournal(
         restore = { TextFieldState(it) }
     )
     var isToday by remember { mutableStateOf(LocalDate.now() == Instant.ofEpochMilli(journal.dateTime).atZone(ZoneId.systemDefault()).toLocalDate()) }
-    var journalDate by remember { mutableLongStateOf(journal.dateTime) }
+    var journalDate by rememberSaveable(journal.journalId) { mutableLongStateOf(journal.dateTime) }
     val contentState = rememberSaveable(saver = textFieldStateSaver) { TextFieldState(journal.text) }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -274,23 +275,30 @@ fun EditJournal(
         isToday = LocalDate.now() == Instant.ofEpochMilli(journalDate).atZone(ZoneId.systemDefault()).toLocalDate()
     }
 
+    val currentJournal by rememberUpdatedState(journal)
+    val currentJournalDate by rememberUpdatedState(journalDate)
+    val currentLabels by rememberUpdatedState(currentLabelIds.toList())
+    val currentSocialLinks by rememberUpdatedState(socialLinks.toList())
+
     fun onSaveJournal() {
         val newText = contentState.text.toString()
-        val hasChanged = newText != journal.text
+        val hasChanged = newText != currentJournal.text
 
         if (!hasChanged &&
-            currentLabelIds.toList() == journal.labels &&
-            journalDate == journal.dateTime &&
-            socialLinks.toList() == journal.socialLinks
+            currentLabels == currentJournal.labels &&
+            currentJournalDate == currentJournal.dateTime &&
+            currentSocialLinks == currentJournal.socialLinks
         ) return
+
+        if (currentJournal.dateTime == 0L || currentJournalDate == 0L) return // guard from bug #1
 
         onJournalEvents(
             JournalEvents.UpsertEntry(
-                journal.copy(
+                currentJournal.copy(
                     text = newText,
-                    dateTime = journalDate,
-                    labels = currentLabelIds.toList(),
-                    socialLinks = socialLinks.toList()
+                    dateTime = currentJournalDate,
+                    labels = currentLabels,
+                    socialLinks = currentSocialLinks
                 )
             )
         )
@@ -315,9 +323,7 @@ fun EditJournal(
             JournalDetailsTopBar(
                 isReadView = isReadView,
                 isSearching= isSearching,
-                onBackPressed = {
-                    onSaveJournal()
-                    navController.popBackStack() },
+                onBackPressed = { navController.popBackStack() },
                 onOutlineClicked = {
                     onJournalEvents(JournalEvents.CalculateOutline(contentState.text.toString()))
                     showOutlineSheet=true },
@@ -333,7 +339,7 @@ fun EditJournal(
                 onAddLabel = { showLabelDialog = true },
                 onPrintNote = { printPdf(context as Activity, readWebView, convertMillisToDate(journal.dateTime)+"_"+ convertMillisToTime(journal.dateTime)) },
                 onCloneNote = {
-                    onJournalEvents(JournalEvents.UpsertEntry(JournalModel(text = contentState.text.toString(), workspaceId = workspaceId, labels = currentLabelIds)))
+                    onJournalEvents(JournalEvents.UpsertEntry(JournalModel(text = contentState.text.toString(), workspaceId = workspaceId, labels = currentLabelIds, socialLinks = socialLinks)))
                     Toast.makeText(context, cloneString, Toast.LENGTH_SHORT).show()
                 },
                 onCopyNote = { showDataCopyDialog = true },
@@ -598,16 +604,6 @@ fun EditJournal(
         TaskDialog(onDismissRequest = { showTaskDialog = false }) {
             onMarkdownKeyPressed(Constants.Editor.TASK, contentState, Json.encodeToString<List<TaskItem>>(it))
         }
-    }
-
-    if(showDeleteDialog){
-        DeleteAlert({
-            showDeleteDialog=false
-        }, {
-            onJournalEvents(JournalEvents.DeleteEntry(journal))
-            navController.popBackStack()
-            showDeleteDialog=false
-        })
     }
 
     if(showShareDialog){
