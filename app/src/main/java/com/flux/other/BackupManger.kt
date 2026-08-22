@@ -6,7 +6,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import java.util.concurrent.TimeUnit
 
-class BackupManager(
+class BackupManager (
     private val workManager: WorkManager
 ) {
     fun scheduleBackup(frequency: BackupFrequency) {

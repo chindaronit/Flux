@@ -64,6 +64,7 @@ import com.flux.ui.state.Settings
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 import java.time.LocalDate
+import java.util.UUID
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -146,7 +147,8 @@ fun HabitScreen(
                     openAppNotificationSettings(context)
                 }
                 if (canScheduleReminder(context) && isNotificationPermissionGranted(context)) {
-                    navController.navigate(NavRoutes.NewHabit.withArgs(workspaceId, ""))
+                    val newId = UUID.randomUUID().toString()
+                    navController.navigate(NavRoutes.NewHabit.withArgs(workspaceId, newId))
                 }
             }) { Icon(Icons.Default.Add, null) }
         }

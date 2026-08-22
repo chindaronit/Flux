@@ -2,16 +2,20 @@ package com.flux.other
 
 import android.content.Context
 import androidx.core.net.toUri
+import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.flux.R
 import com.flux.data.database.FluxBackup
 import com.flux.data.model.SettingsModel
 import com.flux.di.DataModule
+import com.flux.other.crypto.BackupCredentialsStore
+import com.flux.other.crypto.BackupEncryptor
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
-import java.io.OutputStreamWriter
 
 enum class BackupFrequency(val days: Int, val textRes: Int) {
     NEVER(0, R.string.never),
@@ -20,10 +24,20 @@ enum class BackupFrequency(val days: Int, val textRes: Int) {
     MONTHLY(30, R.string.monthly);
 }
 
-class BackupWorker(
-    appContext: Context,
-    workerParams: WorkerParameters
+@HiltWorker
+class BackupWorker @AssistedInject constructor(
+    @Assisted appContext: Context,
+    @Assisted workerParams: WorkerParameters,
+    private val credentialsStore: BackupCredentialsStore,
+    private val backupEncryptor: BackupEncryptor
 ) : CoroutineWorker(appContext, workerParams) {
+
+    private val backupJson = Json {
+        ignoreUnknownKeys = true
+        coerceInputValues = true
+        encodeDefaults = true
+        classDiscriminator = "type"
+    }
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         try {
@@ -41,8 +55,9 @@ class BackupWorker(
             val eventDao = DataModule.provideEventDao(fluxDatabase)
             val eventInstanceDao = DataModule.provideEventInstanceDao(fluxDatabase)
             val progressBoardDao = DataModule.provideProgressBoardDao(fluxDatabase)
+
             val settings = settingsDao.loadSetting()
-            val rootUri = settings?.storageRootUri?.toUri()?: "".toUri()
+            val rootUri = settings?.storageRootUri?.toUri() ?: "".toUri()
 
             val baseDir = getOrCreateDirectory(context, rootUri, Constants.File.FLUX)
             val backupDir = baseDir?.let { dir ->
@@ -60,10 +75,18 @@ class BackupWorker(
                     labels = labelDao.getAll(),
                     events = eventDao.loadAllEvents(),
                     eventInstances = eventInstanceDao.getAll(),
-                    settings = settingsDao.loadSetting()?: SettingsModel(),
+                    settings = settingsDao.loadSetting() ?: SettingsModel(),
                     progressBoardItems = progressBoardDao.getAllBoardItems()
                 )
-                val json = Json.encodeToString(FluxBackup.serializer(), backup)
+                val json = backupJson.encodeToString(FluxBackup.serializer(), backup)
+
+                val password = credentialsStore.getPassword()
+                val bytes = if (password != null) {
+                    backupEncryptor.encrypt(json.toByteArray(Charsets.UTF_8), password)
+                        .also { password.fill('\u0000') }
+                } else {
+                    json.toByteArray(Charsets.UTF_8) // no password set → plaintext, unchanged legacy behavior
+                }
 
                 val fileName = "${System.currentTimeMillis()}.json"
                 val file = dir.createFile("application/json", fileName)
@@ -71,9 +94,8 @@ class BackupWorker(
                 file?.let { docFile ->
                     context.contentResolver.openOutputStream(docFile.uri)
                         ?.use { outputStream ->
-                            OutputStreamWriter(outputStream).use { writer ->
-                                writer.write(json)
-                            }
+                            outputStream.write(bytes)
+                            outputStream.flush()
                         }
                 }
             }

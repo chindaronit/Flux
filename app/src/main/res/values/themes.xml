@@ -2,9 +2,11 @@
 <resources>
     <style name="Theme.Flux" parent="Theme.AppCompat.DayNight.NoActionBar" />
 
-    <style name="Theme.EasySplash" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">@color/white</item>
-        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
+    <!-- Android 12+ system splash theme -->
+    <style name="Theme.Flux.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <item name="windowSplashScreenAnimationDuration">300</item>
         <item name="postSplashScreenTheme">@style/Theme.Flux</item>
     </style>
 </resources>

@@ -52,6 +52,7 @@ import com.flux.ui.state.Settings
 import com.flux.ui.state.TodoState
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
+import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -120,7 +121,10 @@ fun TodoScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton({ navController.navigate(NavRoutes.NewTodoList.withArgs(workspaceId, "")) }) {
+            FloatingActionButton({
+                val newId = UUID.randomUUID().toString()
+                navController.navigate(NavRoutes.NewTodoList.withArgs(workspaceId, newId))
+            }) {
                 Icon(Icons.Default.AddTask, null)
             }
         }

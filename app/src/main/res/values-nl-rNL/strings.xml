@@ -581,4 +581,10 @@
     <string name="moving_your_data">Je gegevens worden verplaatst…</string>
     <string name="more_files">…en nog %1$d</string>
     <string name="files_progress">%1$d / %2$d bestanden</string>
+
+    <string name="welcome_back">Welkom terug bij</string>
+    <string name="authenticate">Authenticeren</string>
+    <string name="private_secure">Privé &amp; veilig</string>
+    <string name="biometric_unlock_description">Gebruik de biometrische gegevens van je apparaat om je Flux-gegevens veilig te ontgrendelen.</string>
+    <string name="biometric_data_never_leaves">Je biometrische gegevens verlaten je apparaat nooit</string>
 </resources>

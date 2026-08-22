@@ -116,7 +116,7 @@ val NotesScreens =
                 states.settings.data.isLintValid,
                 states.settings.data.isLineNumbersVisible,
                 states.settings.data.startWithReadView,
-                states.notesState.allNotes.find { it.notesId == notesId } ?: NotesModel(workspaceId = workspaceId),
+                states.notesState.allNotes.find { it.notesId == notesId } ?: NotesModel(workspaceId = workspaceId, notesId = notesId),
                 states.settings.data.storageRootUri,
                 states.labelState.allLabels.filter { it.workspaceId==workspaceId },
                 viewModel.settingsViewModel,
@@ -146,7 +146,7 @@ val HabitScreens =
         NavRoutes.NewHabit.route + "/{workspaceId}" + "/{habitId}" to { navController, habitId, workspaceId, states, viewModel ->
             NewHabit(
                 navController,
-                states.habitState.allHabits.find { it.id == habitId } ?: HabitModel(workspaceId=workspaceId),
+                states.habitState.allHabits.find { it.id == habitId } ?: HabitModel(workspaceId=workspaceId, id = habitId),
                 states.settings,
                 viewModel.habitViewModel::onEvent
             )
@@ -173,7 +173,7 @@ val TodoScreens =
             NewTodoList(
                 navController,
                 states.settings.data.is24HourFormat,
-                states.todoState.allLists.find { it.id == listId } ?: TodoModel(workspaceId = workspaceId),
+                states.todoState.allLists.find { it.id == listId } ?: TodoModel(workspaceId = workspaceId, id = listId),
                 workspaceId,
                 viewModel.todoViewModel::onEvent
             )
@@ -187,7 +187,7 @@ val JournalScreens =
                 navController,
                 states.workspaceState.allWorkspaces,
                 workspaceId,
-                states.journalState.data.find { it.journalId == journalId } ?: JournalModel(workspaceId = workspaceId, dateTime = journalDateTime),
+                states.journalState.data.find { it.journalId == journalId } ?: JournalModel(journalId = journalId, workspaceId = workspaceId, dateTime = journalDateTime),
                 states.journalState.outline,
                 states.journalState.textState,
                 states.settings.data.fontNumber,
@@ -266,7 +266,7 @@ val EventScreens =
         NavRoutes.NewEvent.route + "/{workspaceId}" + "/{eventId}" + "/{eventDate}"  to { navController, states, viewModels, eventId, workspaceId, _, eventDate ->
             NewEvent(
                 navController,
-                states.eventState.allEvent.find { it.id == eventId } ?: EventModel(workspaceId = workspaceId, startDateTime = eventDate),
+                states.eventState.allEvent.find { it.id == eventId } ?: EventModel(workspaceId = workspaceId, startDateTime = eventDate, id = eventId),
                 states.settings,
                 viewModels.eventViewModel::onEvent
             )

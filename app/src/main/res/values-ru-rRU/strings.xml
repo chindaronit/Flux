@@ -581,4 +581,10 @@
     <string name="moving_your_data">Перемещение данных…</string>
     <string name="more_files">…и ещё %1$d</string>
     <string name="files_progress">%1$d / %2$d файлов</string>
+
+    <string name="welcome_back">С возвращением в</string>
+    <string name="authenticate">Аутентификация</string>
+    <string name="private_secure">Конфиденциально и безопасно</string>
+    <string name="biometric_unlock_description">Используйте биометрию устройства для безопасной разблокировки данных Flux.</string>
+    <string name="biometric_data_never_leaves">Ваши биометрические данные никогда не покидают устройство</string>
 </resources>

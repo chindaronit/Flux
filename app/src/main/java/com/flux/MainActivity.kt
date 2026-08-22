@@ -1,5 +1,8 @@
 package com.flux
 
+import android.animation.Animator
+import android.animation.AnimatorSet
+import android.animation.ObjectAnimator
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.setContent
@@ -24,7 +27,6 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
 import com.flux.navigation.AppNavHost
-import com.flux.navigation.Loader
 import com.flux.other.Constants.Other
 import com.flux.other.createNotificationChannel
 import com.flux.ui.effects.ScreenEffect
@@ -54,13 +56,99 @@ class MainActivity : AppCompatActivity() {
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
+        val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
         createNotificationChannel(this)
-        // Splash screen condition
-        val splashScreen = installSplashScreen()
-        splashScreen.setKeepOnScreenCondition { keepSplashScreen.value }
+
+        splashScreen.setKeepOnScreenCondition {
+            keepSplashScreen.value
+        }
+
+        // Animated exit transition for the system splash screen.
+        splashScreen.setOnExitAnimationListener { splashScreenView ->
+            val iconView = splashScreenView.iconView
+
+            // Initial state
+            iconView.alpha = 1f
+            iconView.scaleX = 1f
+            iconView.scaleY = 1f
+            iconView.translationY = 0f
+
+            // Subtle "settle" scale
+            val scaleX = ObjectAnimator.ofFloat(
+                iconView,
+                "scaleX",
+                1f,
+                1.08f,
+                0.82f
+            )
+
+            val scaleY = ObjectAnimator.ofFloat(
+                iconView,
+                "scaleY",
+                1f,
+                1.08f,
+                0.82f
+            )
+
+            // Move upward while leaving
+            val translationY = ObjectAnimator.ofFloat(
+                iconView,
+                "translationY",
+                0f,
+                -20f,
+                -90f
+            )
+
+            // Fade slightly later than the movement begins
+            val fadeOut = ObjectAnimator.ofFloat(
+                iconView,
+                "alpha",
+                1f,
+                1f,
+                0f
+            )
+
+            AnimatorSet().apply {
+
+                playTogether(
+                    scaleX,
+                    scaleY,
+                    translationY,
+                    fadeOut
+                )
+
+                duration = 550L
+
+                // Smooth deceleration rather than AnticipateInterpolator.
+                interpolator = android.view.animation.PathInterpolator(
+                    0.2f,
+                    0f,
+                    0f,
+                    1f
+                )
+
+                addListener(object : Animator.AnimatorListener {
+
+                    override fun onAnimationStart(animation: Animator) = Unit
+
+                    override fun onAnimationEnd(animation: Animator) {
+                        splashScreenView.remove()
+                    }
+
+                    override fun onAnimationCancel(animation: Animator) {
+                        splashScreenView.remove()
+                    }
+
+                    override fun onAnimationRepeat(animation: Animator) = Unit
+                })
+
+                start()
+            }
+        }
 
         enableEdgeToEdge()
+
         setContent {
             val snackBarHostState = remember { SnackbarHostState() }
 
@@ -89,7 +177,7 @@ class MainActivity : AppCompatActivity() {
             val progressBoardState by progressBoardViewModel.state.collectAsStateWithLifecycle()
             val rootChangeState by settingsViewModel.rootChangeState.collectAsStateWithLifecycle()
 
-            // Stop splash screen when settings are loaded
+            // Keep system splash on screen until settings are actually loaded
             LaunchedEffect(settings.isLoading) { keepSplashScreen.value = settings.isLoading }
 
             HandleSideEffects(
@@ -98,8 +186,8 @@ class MainActivity : AppCompatActivity() {
                 settingsViewModel.effect
             )
 
-            if (!settings.isLoading) {
-                FluxTheme(settings, settingsViewModel::onEvent) {
+            FluxTheme(settings, settingsViewModel::onEvent) {
+                if (!settings.isLoading) {
                     Surface(
                         modifier = Modifier.fillMaxSize(),
                         color = MaterialTheme.colorScheme.surfaceContainerLow
@@ -135,8 +223,6 @@ class MainActivity : AppCompatActivity() {
                         )
                     }
                 }
-            } else {
-                Loader()
             }
         }
     }

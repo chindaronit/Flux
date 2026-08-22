@@ -28,7 +28,6 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import kotlinx.serialization.json.Json
 
-
 @HiltViewModel
 class BackupViewModel @Inject constructor(
     private val db: FluxDatabase,
@@ -56,11 +55,12 @@ class BackupViewModel @Inject constructor(
         classDiscriminator = "type"
     }
 
-    suspend fun exportBackup(context: Context) {
-        val rootUri = settingsRepository.getStorageRoot()
+    fun exportBackup(context: Context) {
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
+                val rootUri = settingsRepository.getStorageRoot()
+
                 val baseDir = getOrCreateDirectory(context, rootUri, Constants.File.FLUX)
                 val backupDir = baseDir?.let { getOrCreateDirectory(context, it.uri, Constants.File.FLUX_BACKUP) }
 
@@ -113,7 +113,7 @@ class BackupViewModel @Inject constructor(
                 }
                 try {
                     String(backupEncryptor.decrypt(bytes, password), Charsets.UTF_8)
-                } catch (e: BackupCryptoException.WrongPasswordOrCorrupted) {
+                } catch (_: BackupCryptoException.WrongPasswordOrCorrupted) {
                     _passwordRequired.emit(uri) // wrong/old password — ask the user for this file's actual one
                     return
                 } finally {

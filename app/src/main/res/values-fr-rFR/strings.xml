@@ -583,4 +583,10 @@
     <string name="more_files">…et %1$d de plus</string>
     <string name="files_progress">%1$d / %2$d fichiers</string>
 
+    <string name="welcome_back">Bon retour sur</string>
+    <string name="authenticate">S’authentifier</string>
+    <string name="private_secure">Privé &amp; sécurisé</string>
+    <string name="biometric_unlock_description">Utilisez la biométrie de votre appareil pour déverrouiller vos données Flux en toute sécurité.</string>
+    <string name="biometric_data_never_leaves">Vos données biométriques ne quittent jamais votre appareil</string>
+
 </resources>
