@@ -321,5 +321,22 @@ val CHANGELOG_DATA = listOf(
                 - Update changelog
                 - prepare for release 3.2.2
             """.trimIndent()
+    ),
+    ChangelogEntry(
+        version = "v3.2.3",
+        versionCode = 20,
+        date = "Aug 22, 2026",
+        changes = """
+                fix: 
+                   - encrypted backup in backup manager.
+                   - duplicate entry of data points.
+                   - app crash on storage root on backup
+                   - streak calculation in habits.
+                src:
+                   - UI improvement in Authentication Screen.
+                   - UI Improvement in Storage Root Selection. 
+                   
+                chore: update dependency to latest versions.
+                """.trimIndent()
     )
 )

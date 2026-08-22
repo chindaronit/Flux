@@ -72,6 +72,7 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.TextStyle
 import java.util.Locale
+import java.util.UUID
 
 data class FilterState(
     val sort: String? = null,
@@ -235,7 +236,10 @@ fun JournalScreen(
 
                         ExtendedFloatingActionButton(
                             modifier = buttonModifier,
-                            onClick = { navController.navigate(NavRoutes.EditJournal.withArgs(workspaceId, "", System.currentTimeMillis())) },
+                            onClick = {
+                                val newId = UUID.randomUUID().toString()
+                                navController.navigate(NavRoutes.EditJournal.withArgs(workspaceId, newId, System.currentTimeMillis()))
+                            },
                             icon = { Icon(Icons.Outlined.Create, contentDescription = null) },
                             text = { Text(stringResource(R.string.create)) }
                         )

@@ -581,4 +581,10 @@
     <string name="moving_your_data">आपका डेटा स्थानांतरित किया जा रहा है…</string>
     <string name="more_files">…और %1$d अन्य</string>
     <string name="files_progress">%1$d / %2$d फ़ाइलें</string>
+
+    <string name="welcome_back">आपका स्वागत है</string>
+    <string name="authenticate">प्रमाणित करें</string>
+    <string name="private_secure">निजी और सुरक्षित</string>
+    <string name="biometric_unlock_description">अपने Flux डेटा को सुरक्षित रूप से अनलॉक करने के लिए अपने डिवाइस की बायोमेट्रिक सुविधा का उपयोग करें।</string>
+    <string name="biometric_data_never_leaves">आपका बायोमेट्रिक डेटा आपके डिवाइस से कभी बाहर नहीं जाता</string>
 </resources>

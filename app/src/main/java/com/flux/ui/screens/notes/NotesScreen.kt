@@ -80,6 +80,7 @@ import com.flux.ui.state.NotesState
 import com.flux.ui.state.Settings
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyStaggeredGridState
+import java.util.UUID
 
 data class FilterState(
     val sort: String? = null,
@@ -270,7 +271,10 @@ fun NotesScreen(
 
                         ExtendedFloatingActionButton(
                             modifier = buttonModifier,
-                            onClick = { navController.navigate(NavRoutes.NoteDetails.withArgs(workspaceId, "")) },
+                            onClick = {
+                                val newId = UUID.randomUUID().toString()
+                                navController.navigate(NavRoutes.NoteDetails.withArgs(workspaceId, newId))
+                            },
                             icon = { Icon(Icons.Outlined.Create, contentDescription = null) },
                             text = { Text(stringResource(R.string.create)) }
                         )

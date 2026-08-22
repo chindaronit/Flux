@@ -28,6 +28,9 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Visibility
+import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -58,6 +61,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -77,6 +82,7 @@ fun SetPasskeyDialog(
     onConfirmRequest: (String) -> Unit,
     onDismissRequest: () -> Unit
 ) {
+    var passwordVisible by remember { mutableStateOf(false) }
     var passKey by remember { mutableStateOf(key ?: "") }
     val isValid = passKey.isNotBlank()
 
@@ -105,6 +111,40 @@ fun SetPasskeyDialog(
                     onValueChange = { passKey = it },
                     modifier = Modifier.fillMaxWidth(),
                     isError = passKey.isNotEmpty() && !isValid,
+                    supportingText = {
+                        if (passKey.isNotEmpty() && !isValid) {
+                            Text("Invalid Passkey")
+                        }
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Outlined.Lock,
+                            contentDescription = "Passkey"
+                        )
+                    },
+                    trailingIcon = {
+                        IconButton(
+                            onClick = { passwordVisible = !passwordVisible }
+                        ) {
+                            Icon(
+                                imageVector = if (passwordVisible) {
+                                    Icons.Outlined.VisibilityOff
+                                } else {
+                                    Icons.Outlined.Visibility
+                                },
+                                contentDescription = if (passwordVisible) {
+                                    "Hide passkey"
+                                } else {
+                                    "Show passkey"
+                                }
+                            )
+                        }
+                    },
+                    visualTransformation = if (passwordVisible) {
+                        VisualTransformation.None
+                    } else {
+                        PasswordVisualTransformation()
+                    },
                     keyboardOptions = KeyboardOptions.Default.copy(
                         imeAction = ImeAction.Done
                     ),

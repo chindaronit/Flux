@@ -578,4 +578,11 @@
     <string name="moving_your_data">Moviendo tus datos…</string>
     <string name="more_files">…y %1$d más</string>
     <string name="files_progress">%1$d / %2$d archivos</string>
+
+    <string name="welcome_back">Bienvenido de nuevo a</string>
+    <string name="authenticate">Autenticar</string>
+    <string name="private_secure">Privado y seguro</string>
+    <string name="biometric_unlock_description">Usa la biometría de tu dispositivo para desbloquear de forma segura tus datos de Flux.</string>
+    <string name="biometric_data_never_leaves">Tus datos biométricos nunca salen de tu dispositivo</string>
+
 </resources>

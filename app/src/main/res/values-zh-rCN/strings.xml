@@ -586,4 +586,10 @@
     <string name="moving_your_data">正在移动您的数据…</string>
     <string name="more_files">…以及另外 %1$d 个</string>
     <string name="files_progress">%1$d / %2$d 个文件</string>
+
+    <string name="welcome_back">欢迎回来，进入</string>
+    <string name="authenticate">身份验证</string>
+    <string name="private_secure">私密且安全</string>
+    <string name="biometric_unlock_description">使用设备的生物识别功能安全地解锁您的 Flux 数据。</string>
+    <string name="biometric_data_never_leaves">您的生物识别数据永远不会离开您的设备</string>
 </resources>

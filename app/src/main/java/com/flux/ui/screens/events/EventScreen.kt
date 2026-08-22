@@ -60,6 +60,7 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import java.util.UUID
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU, Build.VERSION_CODES.S)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -147,8 +148,8 @@ fun EventScreen(
                     val currentTime = LocalTime.now()
                     val zonedDateTime = ZonedDateTime.of(localDate, currentTime, ZoneId.systemDefault())
                     val selectedDateMillis = zonedDateTime.toInstant().toEpochMilli()
-
-                    navController.navigate(NavRoutes.NewEvent.withArgs(workspaceId, "", selectedDateMillis))
+                    val newId = UUID.randomUUID().toString()
+                    navController.navigate(NavRoutes.NewEvent.withArgs(workspaceId, newId, selectedDateMillis))
                 }
             }) { Icon(Icons.Default.Add, null) }
         }

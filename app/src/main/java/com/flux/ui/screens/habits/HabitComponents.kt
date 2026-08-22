@@ -1750,24 +1750,13 @@ private fun getExpectedDates(
             .atZone(ZoneId.systemDefault())
             .toLocalDate()
 
-    val weekly =
-        recurrence as? RecurrenceRule.Weekly
-            ?: return emptyList()
-
     val expectedDates = mutableListOf<Long>()
-
     var current = startDate
 
     while (!current.isAfter(today)) {
-
-        // Monday=0 ... Sunday=6
-        val dayOfWeek =
-            current.dayOfWeek.value - 1
-
-        if (dayOfWeek in weekly.daysOfWeek) {
+        if (recurrence.isActiveOn(date = current, startDate = startDate)) {
             expectedDates.add(current.toEpochDay())
         }
-
         current = current.plusDays(1)
     }
 
@@ -1781,23 +1770,20 @@ private fun calculateCurrentStreak(
 
     if (expectedDates.isEmpty()) return 0
 
+    val todayEpoch = LocalDate.now().toEpochDay()
     var streak = 0
+    var skippedToday = false
 
     for (expectedDate in expectedDates.asReversed()) {
 
         if (expectedDate in completedDates) {
             streak++
+        } else if (expectedDate == todayEpoch && !skippedToday) {
+            skippedToday = true
+            continue
         } else {
             break
         }
-    }
-
-    // If latest expected date is incomplete,
-    // streak is dead.
-    val latestExpected = expectedDates.last()
-
-    if (latestExpected !in completedDates) {
-        return 0
     }
 
     return streak

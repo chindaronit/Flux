@@ -183,7 +183,7 @@ fun Data(
                     icon = Icons.Rounded.Backup,
                     radius = shapeManager(radius = radius, isFirst = true),
                     actionType = ActionType.CUSTOM,
-                    onCustomClick = { coroutineScope.launch { backupViewModel.exportBackup(context) } }
+                    onCustomClick = { backupViewModel.exportBackup(context) }
                 )
             }
 

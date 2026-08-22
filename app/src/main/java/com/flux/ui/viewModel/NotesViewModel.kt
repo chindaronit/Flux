@@ -119,10 +119,10 @@ class NotesViewModel @Inject constructor(
                 val context = event.context
                 val contentResolver = context.contentResolver
                 val uriList = event.uriList
-                val rootUri = settingsRepository.getStorageRoot()
                 val contentState = event.contentState
 
                 viewModelScope.launch(Dispatchers.IO) {
+                    val rootUri = settingsRepository.getStorageRoot()
                     val baseDir = getOrCreateDirectory(context, rootUri, Constants.File.FLUX)
                     val imagesDir = baseDir?.let { dir -> getOrCreateDirectory(context, dir.uri, Constants.File.FLUX_IMAGES) }
                     val savedUriList = mutableListOf<String>()
@@ -158,10 +158,10 @@ class NotesViewModel @Inject constructor(
             is NotesEvents.ImportVideo -> {
                 val context = event.context
                 val uri = event.uri
-                val rootUri = settingsRepository.getStorageRoot()
                 val contentState = event.contentState
 
                 viewModelScope.launch(Dispatchers.IO) {
+                    val rootUri = settingsRepository.getStorageRoot()
                     val baseDir = getOrCreateDirectory(context, rootUri, Constants.File.FLUX)
                     val videosDir = baseDir?.let { dir -> getOrCreateDirectory(context, dir.uri, Constants.File.FLUX_VIDEOS) }
 
@@ -189,35 +189,38 @@ class NotesViewModel @Inject constructor(
             is NotesEvents.ImportAudio -> {
                 val context = event.context
                 val sourceUri = event.sourceUri
-                val rootUri = settingsRepository.getStorageRoot()
                 val contentState = event.contentState
 
-                val baseDir =
-                    getOrCreateDirectory(context, rootUri, Constants.File.FLUX)
-                val audioDir = baseDir?.let { dir ->
-                    getOrCreateDirectory(context, dir.uri, Constants.File.FLUX_AUDIO)
-                }
-
-                audioDir?.let { dir ->
-                    val sourceFile = DocumentFile.fromSingleUri(context, sourceUri)
-                    val sourceFileName = sourceFile?.name
-
-                    if (sourceFileName != null && hasFileWithName(dir, sourceFileName)) {
-                        contentState.edit { add("<audio src=\"$sourceFileName\" controls></audio>") }
-                        return
+                viewModelScope.launch(Dispatchers.IO) {
+                    val rootUri = settingsRepository.getStorageRoot()
+                    val baseDir =
+                        getOrCreateDirectory(context, rootUri, Constants.File.FLUX)
+                    val audioDir = baseDir?.let { dir ->
+                        getOrCreateDirectory(context, dir.uri, Constants.File.FLUX_AUDIO)
                     }
 
-                    val extension = getFileExtension(context, sourceUri)
-                    val fileName = "audio_${System.currentTimeMillis()}.$extension"
-                    val mimeType = sourceFile?.type ?: "audio/*"
+                    audioDir?.let { dir ->
+                        val sourceFile = DocumentFile.fromSingleUri(context, sourceUri)
+                        val sourceFileName = sourceFile?.name
 
-                    dir.createFile(mimeType, fileName)?.let { newFile ->
-                        context.contentResolver.openInputStream(sourceUri)?.use { input ->
-                            context.contentResolver.openOutputStream(newFile.uri)?.use { output ->
-                                input.copyTo(output)
-                            }
+                        if (sourceFileName != null && hasFileWithName(dir, sourceFileName)) {
+                            contentState.edit { add("<audio src=\"$sourceFileName\" controls></audio>") }
+                            return@launch
                         }
-                        contentState.edit { add("<audio src=\"$fileName\" controls></audio>") }
+
+                        val extension = getFileExtension(context, sourceUri)
+                        val fileName = "audio_${System.currentTimeMillis()}.$extension"
+                        val mimeType = sourceFile?.type ?: "audio/*"
+
+                        dir.createFile(mimeType, fileName)?.let { newFile ->
+                            context.contentResolver.openInputStream(sourceUri)?.use { input ->
+                                context.contentResolver.openOutputStream(newFile.uri)
+                                    ?.use { output ->
+                                        input.copyTo(output)
+                                    }
+                            }
+                            contentState.edit { add("<audio src=\"$fileName\" controls></audio>") }
+                        }
                     }
                 }
             }
