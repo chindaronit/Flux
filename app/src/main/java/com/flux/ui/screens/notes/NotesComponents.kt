@@ -2005,7 +2005,7 @@ fun MarkdownEditorRow(
 
             AnimatedVisibility(visible = isExpanded) {
                 Row(
-                    modifier = Modifier.fillMaxHeight(),
+                    modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Start
                 ) {
@@ -2165,7 +2165,7 @@ fun MarkdownEditorRow(
 
             AnimatedVisibility(visible = isAlertExpanded) {
                 Row(
-                    modifier = Modifier.fillMaxHeight(),
+                    modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Start
                 ) {
