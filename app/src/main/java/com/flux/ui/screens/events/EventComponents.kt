@@ -1,6 +1,12 @@
 package com.flux.ui.screens.events
 
 import android.content.Context
+import android.net.Uri
+import android.provider.OpenableColumns
+import android.util.Log
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -75,6 +81,8 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import com.flux.data.model.EventModel
+import com.flux.other.IcsImporter
 import java.time.LocalDate
 import java.time.YearMonth
 
@@ -647,5 +655,78 @@ fun MonthlyViewCalendar(
                 }
             }
         }
+    }
+}
+
+private const val TAG = "IcsImport"
+
+private fun Context.queryFileName(uri: Uri): String? =
+    contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
+        val idx = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+        if (cursor.moveToFirst() && idx >= 0) cursor.getString(idx) else null
+    }
+
+
+@Composable
+fun rememberIcsImportLauncher(
+    context: Context,
+    workspaceId: String = "",
+    onImported: (List<EventModel>) -> Unit
+): androidx.activity.result.ActivityResultLauncher<Array<String>> {
+    return rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        if (uri == null) {
+            Log.w(TAG, "No file selected (picker returned null URI)")
+            return@rememberLauncherForActivityResult
+        }
+
+        val fileName = context.queryFileName(uri)
+        Log.d(TAG, "Picked file: $fileName ($uri)")
+        if (fileName != null && !fileName.endsWith(".ics", ignoreCase = true)) {
+            Log.w(TAG, "Selected file doesn't look like an .ics file: $fileName")
+            Toast.makeText(context, "That doesn't look like an .ics file: $fileName", Toast.LENGTH_LONG).show()
+        }
+
+        val text = runCatching {
+            context.contentResolver.openInputStream(uri)
+                ?.bufferedReader(Charsets.UTF_8)
+                ?.use { it.readText() }
+        }.onFailure { e ->
+            Log.e(TAG, "Failed to read file contents", e)
+            Toast.makeText(context, "Couldn't read the file: ${e.message}", Toast.LENGTH_LONG).show()
+        }.getOrNull()
+
+        if (text.isNullOrBlank()) {
+            Log.w(TAG, "File was empty or unreadable")
+            Toast.makeText(context, "The file appears to be empty", Toast.LENGTH_LONG).show()
+            return@rememberLauncherForActivityResult
+        }
+        Log.d(TAG, "Read ${text.length} chars from file")
+
+        val imported = runCatching { IcsImporter.import(text, workspaceId) }
+            .onFailure { e ->
+                Log.e(TAG, "ICS parsing threw an exception", e)
+                Toast.makeText(context, "Failed to parse .ics: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+            .getOrDefault(emptyList())
+
+        if (imported.isEmpty()) {
+            Log.w(TAG, "Parsed 0 events out of ${text.lines().size} lines. First 500 chars:\n${text.take(500)}")
+            Toast.makeText(context, "No events found in that file", Toast.LENGTH_LONG).show()
+            return@rememberLauncherForActivityResult
+        }
+
+        imported.forEach { event ->
+            val dateStr = Instant.ofEpochMilli(event.startDateTime).atZone(ZoneId.systemDefault()).toLocalDate()
+            Log.d(TAG, "Imported: \"${event.title}\" on $dateStr, recurrence=${event.recurrence}, endDateTime=${event.endDateTime}")
+        }
+        Toast.makeText(
+            context,
+            "Imported ${imported.size} event${if (imported.size == 1) "" else "s"}",
+            Toast.LENGTH_SHORT
+        ).show()
+
+        onImported(imported)
     }
 }

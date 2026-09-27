@@ -105,6 +105,7 @@ class EventViewModel @Inject constructor(
                     event.date
                 )
             is TaskEvents.DeleteAllWorkspaceEvents -> deleteWorkspaceEvents(event.workspaceId, event.context)
+            is TaskEvents.ImportIcsEvents -> importIcsEvents(event.context, event.events)
         }
     }
 
@@ -137,6 +138,13 @@ class EventViewModel @Inject constructor(
             cancelReminder(context, data.toScheduleRequest())
             repository.upsertEvent(data)
             scheduleNextReminder(context = context, data.toScheduleRequest())
+        }
+    }
+
+    private fun importIcsEvents(context: Context, data: List<EventModel>) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.upsertEvents(data)
+            data.forEach { event -> scheduleNextReminder(context, event.toScheduleRequest()) }
         }
     }
 

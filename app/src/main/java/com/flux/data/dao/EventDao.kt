@@ -16,6 +16,9 @@ interface EventDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertEvent(task: EventModel): Long
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertEvents(tasks: List<EventModel>)
+
     @Delete
     suspend fun deleteEvent(task: EventModel)
 

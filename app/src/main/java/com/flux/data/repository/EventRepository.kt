@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface EventRepository {
     suspend fun upsertEvent(event: EventModel)
+    suspend fun upsertEvents(events: List<EventModel>)
     suspend fun deleteEvent(event: EventModel)
     suspend fun deleteAllWorkspaceEvent(workspaceId: String)
     suspend fun deleteEventInstance(eventInstanceModel: EventInstanceModel)

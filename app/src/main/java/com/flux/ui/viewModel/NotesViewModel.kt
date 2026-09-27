@@ -3,6 +3,7 @@ package com.flux.ui.viewModel
 import android.content.Context
 import android.graphics.Bitmap
 import android.webkit.WebView
+import android.widget.Toast
 import androidx.compose.ui.util.fastJoinToString
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.ViewModel
@@ -227,13 +228,25 @@ class NotesViewModel @Inject constructor(
 
             is NotesEvents.ExportNote -> {
                 viewModelScope.launch(Dispatchers.IO) {
-                    exportNoteToStorage(
+                    val success = exportNoteToStorage(
                         context = event.context,
                         noteTitle = event.noteTitle,
                         noteDescription = event.noteDescription,
                         type = event.type,
                         webView = event.webView
                     )
+
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            event.context,
+                            if (success) {
+                                "Note exported successfully"
+                            } else {
+                                "Failed to export note"
+                            },
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 }
             }
 
@@ -293,21 +306,42 @@ class NotesViewModel @Inject constructor(
         noteDescription: String,
         type: ExportType,
         webView: WebView?
-    ) {
+    ): Boolean {
         val rootUri = settingsRepository.getStorageRoot()
-        val dir = getOrCreateDirectory(context, rootUri, Constants.File.FLUX) ?: return
 
-        when (type) {
+        val dir = getOrCreateDirectory(
+            context,
+            rootUri,
+            Constants.File.FLUX
+        ) ?: return false
+
+        return when (type) {
             ExportType.TXT,
             ExportType.MARKDOWN,
-            ExportType.HTML -> exportAsText(dir, context, noteTitle, noteDescription, type)
-
-            ExportType.IMAGE -> {
-                val view = webView ?: return
-                exportAsImage(dir, context, view, noteTitle)
+            ExportType.HTML -> {
+                exportAsText(
+                    dir = dir,
+                    context = context,
+                    noteTitle = noteTitle,
+                    noteDescription = noteDescription,
+                    type = type
+                )
             }
 
-            ExportType.PDF -> {}
+            ExportType.IMAGE -> {
+                val view = webView ?: return false
+
+                exportAsImage(
+                    dir = dir,
+                    context = context,
+                    webView = view,
+                    noteTitle = noteTitle
+                )
+            }
+
+            ExportType.PDF -> {
+                false
+            }
         }
     }
 
@@ -317,7 +351,7 @@ class NotesViewModel @Inject constructor(
         noteTitle: String,
         noteDescription: String,
         type: ExportType
-    ) {
+    ): Boolean {
         val (mime, extension, content) = when (type) {
             ExportType.TXT ->
                 Triple("text/plain", ".txt", noteDescription)
@@ -328,13 +362,26 @@ class NotesViewModel @Inject constructor(
             ExportType.HTML ->
                 Triple("text/html", ".html", renderMarkdown(noteDescription))
 
-            else -> return
+            else -> return false
         }
 
-        val file = dir.createFile(mime, noteTitle.trim() + extension) ?: return
+        val file = dir.createFile(
+            mime,
+            noteTitle.trim() + extension
+        ) ?: return false
 
-        context.contentResolver.openOutputStream(file.uri)?.use { stream ->
-            OutputStreamWriter(stream).use { it.write(content) }
+        return try {
+            context.contentResolver
+                .openOutputStream(file.uri)
+                ?.use { stream ->
+                    OutputStreamWriter(stream).use {
+                        it.write(content)
+                    }
+                } ?: return false
+
+            true
+        } catch (_: Exception) {
+            false
         }
     }
 
@@ -343,13 +390,29 @@ class NotesViewModel @Inject constructor(
         context: Context,
         webView: WebView,
         noteTitle: String
-    ) {
-        val bitmap = convertHtmlToBitmap(webView) ?: return
+    ): Boolean {
+        val bitmap = convertHtmlToBitmap(webView) ?: return false
 
-        val file = dir.createFile("image/jpeg", "${noteTitle.trim()}.jpg") ?: return
+        return try {
+            val file = dir.createFile(
+                "image/jpeg",
+                "${noteTitle.trim()}.jpg"
+            ) ?: return false
 
-        context.contentResolver.openOutputStream(file.uri)?.use { stream ->
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 85, stream)
+            context.contentResolver
+                .openOutputStream(file.uri)
+                ?.use { stream ->
+                    bitmap.compress(
+                        Bitmap.CompressFormat.JPEG,
+                        85,
+                        stream
+                    )
+                } ?: return false
+
+            true
+        } catch (_: Exception) {
+            false
+        } finally {
             bitmap.recycle()
         }
     }

@@ -3,6 +3,7 @@ package com.flux.ui.viewModel
 import android.content.Context
 import android.graphics.Bitmap
 import android.webkit.WebView
+import android.widget.Toast
 import androidx.compose.ui.util.fastJoinToString
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.ViewModel
@@ -117,15 +118,28 @@ class JournalViewModel @Inject constructor(
                     updateState { it.copy(textState = TextState.fromText(event.content)) }
                 }
             }
+
             is JournalEvents.ExportJournal -> {
                 viewModelScope.launch(Dispatchers.IO) {
-                    exportJournalToStorage(
+                    val success = exportJournalToStorage(
                         context = event.context,
                         title = event.title,
                         content = event.content,
                         type = event.type,
                         webView = event.webView
                     )
+
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            event.context,
+                            if (success) {
+                                "Journal exported successfully"
+                            } else {
+                                "Failed to export journal"
+                            },
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 }
             }
 
@@ -279,48 +293,66 @@ class JournalViewModel @Inject constructor(
         content: String,
         type: ExportType,
         webView: WebView?
-    ) {
+    ): Boolean {
         val rootUri = settingsRepository.getStorageRoot()
-        val dir = getOrCreateDirectory(context, rootUri, Constants.File.FLUX) ?: return
 
-        when (type) {
+        val dir = getOrCreateDirectory(
+            context,
+            rootUri,
+            Constants.File.FLUX
+        ) ?: return false
+
+        return when (type) {
             ExportType.TXT,
             ExportType.MARKDOWN,
             ExportType.HTML -> exportAsText(dir, context, title, content, type)
 
             ExportType.IMAGE -> {
-                val view = webView ?: return
+                val view = webView ?: return false
                 exportAsImage(dir, context, view, title)
             }
 
-            ExportType.PDF -> {}
+            ExportType.PDF -> false
         }
     }
 
     private fun exportAsText(
         dir: DocumentFile,
         context: Context,
-        title: String,
-        content: String,
+        noteTitle: String,
+        noteDescription: String,
         type: ExportType
-    ) {
+    ): Boolean {
         val (mime, extension, content) = when (type) {
             ExportType.TXT ->
-                Triple("text/plain", ".txt", content)
+                Triple("text/plain", ".txt", noteDescription)
 
             ExportType.MARKDOWN ->
-                Triple("text/markdown", ".md", content)
+                Triple("text/markdown", ".md", noteDescription)
 
             ExportType.HTML ->
-                Triple("text/html", ".html", renderMarkdown(content))
+                Triple("text/html", ".html", renderMarkdown(noteDescription))
 
-            else -> return
+            else -> return false
         }
 
-        val file = dir.createFile(mime, title.trim() + extension) ?: return
+        val file = dir.createFile(
+            mime,
+            noteTitle.trim() + extension
+        ) ?: return false
 
-        context.contentResolver.openOutputStream(file.uri)?.use { stream ->
-            OutputStreamWriter(stream).use { it.write(content) }
+        return try {
+            context.contentResolver
+                .openOutputStream(file.uri)
+                ?.use { stream ->
+                    OutputStreamWriter(stream).use {
+                        it.write(content)
+                    }
+                } ?: return false
+
+            true
+        } catch (_: Exception) {
+            false
         }
     }
 
@@ -329,13 +361,29 @@ class JournalViewModel @Inject constructor(
         context: Context,
         webView: WebView,
         noteTitle: String
-    ) {
-        val bitmap = convertHtmlToBitmap(webView) ?: return
+    ): Boolean {
+        val bitmap = convertHtmlToBitmap(webView) ?: return false
 
-        val file = dir.createFile("image/jpeg", "${noteTitle.trim()}.jpg") ?: return
+        return try {
+            val file = dir.createFile(
+                "image/jpeg",
+                "${noteTitle.trim()}.jpg"
+            ) ?: return false
 
-        context.contentResolver.openOutputStream(file.uri)?.use { stream ->
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 85, stream)
+            context.contentResolver
+                .openOutputStream(file.uri)
+                ?.use { stream ->
+                    bitmap.compress(
+                        Bitmap.CompressFormat.JPEG,
+                        85,
+                        stream
+                    )
+                } ?: return false
+
+            true
+        } catch (_: Exception) {
+            false
+        } finally {
             bitmap.recycle()
         }
     }

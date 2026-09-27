@@ -17,6 +17,10 @@ class EventRepositoryImpl @Inject constructor(
         return withContext(Dispatchers.IO) { eventDao.upsertEvent(event) }
     }
 
+    override suspend fun upsertEvents(events: List<EventModel>) {
+        withContext(Dispatchers.IO) { eventDao.upsertEvents(events) }
+    }
+
     override suspend fun upsertEventInstance(eventInstanceModel: EventInstanceModel) {
         return withContext(Dispatchers.IO) { eventInstanceDao.upsertEventInstance(eventInstanceModel) }
     }
