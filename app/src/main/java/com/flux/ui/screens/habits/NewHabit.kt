@@ -27,7 +27,6 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Repeat
-import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Today
 import androidx.compose.material.icons.filled.TrackChanges
 import androidx.compose.material.icons.outlined.Circle
@@ -720,85 +719,85 @@ fun CountedConfigItems(
     }
 }
 
-@Composable
-fun TimedConfigItems(
-    startDateTime: Long,
-    config: HabitConfig.Timed,
-    is24HourFormat: Boolean,
-    onChange: (Long, HabitConfig.Timed)->Unit
-){
-    var newStartDateTime by remember { mutableLongStateOf(startDateTime) }
-    var durationMillis by remember { mutableLongStateOf(config.durationMillis) }
-    var showTimePicker by remember { mutableStateOf(false) }
-    var showDurationPicker by remember { mutableStateOf(false) }
-
-    if (showDurationPicker) {
-        TimerDialog(
-            durationMillis = durationMillis,
-            onDismiss = { showDurationPicker = false }
-        ) { duration ->
-            durationMillis = duration
-            onChange(newStartDateTime, config.copy(durationMillis = duration))
-        }
-    }
-
-    if (showTimePicker) {
-        TimePicker(
-            initialTime = newStartDateTime,
-            is24Hour = is24HourFormat,
-            onConfirm = {
-                newStartDateTime = it
-                onChange(it, config.copy(durationMillis = durationMillis))
-            }
-        ) { showTimePicker = false }
-    }
-
-    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ){
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(Icons.Default.AlarmAdd, null)
-                Text(stringResource(R.string.reminder_time))
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text(startDateTime.toFormattedTime(is24HourFormat))
-                FilledTonalIconButton({ showTimePicker = true }) {
-                    Icon(Icons.Default.Create, null)
-                }
-            }
-        }
-        HorizontalDivider()
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ){
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(Icons.Default.Timer, null)
-                Text(stringResource(R.string.duration))
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text(formatDuration(durationMillis))
-                FilledTonalIconButton({ showDurationPicker = true }) {
-                    Icon(Icons.Default.Create, null)
-                }
-            }
-        }
-    }
-}
+//@Composable
+//fun TimedConfigItems(
+//    startDateTime: Long,
+//    config: HabitConfig.Timed,
+//    is24HourFormat: Boolean,
+//    onChange: (Long, HabitConfig.Timed)->Unit
+//){
+//    var newStartDateTime by remember { mutableLongStateOf(startDateTime) }
+//    var durationMillis by remember { mutableLongStateOf(config.durationMillis) }
+//    var showTimePicker by remember { mutableStateOf(false) }
+//    var showDurationPicker by remember { mutableStateOf(false) }
+//
+//    if (showDurationPicker) {
+//        TimerDialog(
+//            durationMillis = durationMillis,
+//            onDismiss = { showDurationPicker = false }
+//        ) { duration ->
+//            durationMillis = duration
+//            onChange(newStartDateTime, config.copy(durationMillis = duration))
+//        }
+//    }
+//
+//    if (showTimePicker) {
+//        TimePicker(
+//            initialTime = newStartDateTime,
+//            is24Hour = is24HourFormat,
+//            onConfirm = {
+//                newStartDateTime = it
+//                onChange(it, config.copy(durationMillis = durationMillis))
+//            }
+//        ) { showTimePicker = false }
+//    }
+//
+//    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+//        Row(
+//            Modifier
+//                .fillMaxWidth()
+//                .padding(vertical = 8.dp),
+//            verticalAlignment = Alignment.CenterVertically,
+//            horizontalArrangement = Arrangement.SpaceBetween
+//        ){
+//            Row(
+//                horizontalArrangement = Arrangement.spacedBy(8.dp),
+//                verticalAlignment = Alignment.CenterVertically
+//            ) {
+//                Icon(Icons.Default.AlarmAdd, null)
+//                Text(stringResource(R.string.reminder_time))
+//            }
+//            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+//                Text(startDateTime.toFormattedTime(is24HourFormat))
+//                FilledTonalIconButton({ showTimePicker = true }) {
+//                    Icon(Icons.Default.Create, null)
+//                }
+//            }
+//        }
+//        HorizontalDivider()
+//        Row(
+//            Modifier
+//                .fillMaxWidth()
+//                .padding(vertical = 8.dp),
+//            verticalAlignment = Alignment.CenterVertically,
+//            horizontalArrangement = Arrangement.SpaceBetween
+//        ){
+//            Row(
+//                horizontalArrangement = Arrangement.spacedBy(8.dp),
+//                verticalAlignment = Alignment.CenterVertically
+//            ) {
+//                Icon(Icons.Default.Timer, null)
+//                Text(stringResource(R.string.duration))
+//            }
+//            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+//                Text(formatDuration(durationMillis))
+//                FilledTonalIconButton({ showDurationPicker = true }) {
+//                    Icon(Icons.Default.Create, null)
+//                }
+//            }
+//        }
+//    }
+//}
 
 fun formatDuration(durationMillis: Long): String {
     val totalMinutes = durationMillis / 60000

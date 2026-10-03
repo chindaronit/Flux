@@ -9,6 +9,7 @@ import com.flux.data.model.EventModel
 import com.flux.data.model.HabitModel
 import com.flux.data.model.JournalModel
 import com.flux.data.model.NotesModel
+import com.flux.data.model.ProgressBoardModel
 import com.flux.data.model.TodoModel
 import com.flux.data.model.WorkspaceModel
 import com.flux.ui.screens.auth.AuthScreen
@@ -19,6 +20,7 @@ import com.flux.ui.screens.habits.NewHabit
 import com.flux.ui.screens.journal.EditJournal
 import com.flux.ui.screens.labels.EditLabels
 import com.flux.ui.screens.notes.NoteDetails
+import com.flux.ui.screens.progressBoard.NewProgressItem
 import com.flux.ui.screens.search.SearchScreen
 import com.flux.ui.screens.settings.About
 import com.flux.ui.screens.settings.Changelog
@@ -58,6 +60,7 @@ sealed class NavRoutes(val route: String) {
     data object NewEvent : NavRoutes("workspace/event/edit") // new event
     data object Analytics : NavRoutes("Analytics")
     data object Search : NavRoutes("workspace/search")
+    data object NewProgressItem : NavRoutes("workspace/progress/new") // new habit
 
     // Settings
     data object Settings : NavRoutes("settings")
@@ -180,6 +183,17 @@ val TodoScreens =
         }
     )
 
+val ProgressBoardScreens =
+    mapOf<String, @Composable (navController: NavController, itemId: String, workspaceId: String, states: States, viewModels: ViewModels) -> Unit>(
+        NavRoutes.NewProgressItem.route + "/{workspaceId}" + "/{itemId}" to { navController, itemId, workspaceId, states, viewModel ->
+            NewProgressItem(
+                navController,
+                states.progressBoardState.allItems.find { it.itemId == itemId } ?: ProgressBoardModel(workspaceId = workspaceId, itemId = itemId),
+                viewModel.progressBoardViewModel::onEvent
+            )
+        }
+    )
+
 val JournalScreens =
     mapOf<String, @Composable (navController: NavController, journalId: String, journalDateTime: Long, workspaceId: String, states: States, viewModels: ViewModels) -> Unit>(
         NavRoutes.EditJournal.route + "/{workspaceId}" + "/{journalId}" + "/{journalDateTime}" to { navController, journalId, journalDateTime, workspaceId, states, viewModel ->
@@ -275,31 +289,27 @@ val EventScreens =
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 val WorkspaceScreens =
-    mapOf<String, @Composable (navController: NavController, snackbarHostState: SnackbarHostState, states: States, viewModels: ViewModels, workspaceId: String) -> Unit>(
-        NavRoutes.Workspace.route to { navController, snackbarHostState, states, viewModels, _ ->
-            WorkspaceHomeScreen(
-                snackbarHostState,
-                navController,
-                states,
-                viewModels
-            )
+    mapOf<String, @Composable (navController: NavController, snackbarHostState: SnackbarHostState, states: States, viewModels: ViewModels, workspaceId: String, spaceId: Int) -> Unit>(
+        NavRoutes.Workspace.route to { navController, snackbarHostState, states, viewModels, _, _ ->
+            WorkspaceHomeScreen(snackbarHostState, navController, states, viewModels)
         },
 
-        NavRoutes.NewWorkspace.route + "/{workspaceId}" to { navController, _, states, viewModels, workspaceId ->
-            NewWorkspaceScreen (
+        NavRoutes.NewWorkspace.route + "/{workspaceId}" to { navController, _, states, viewModels, workspaceId, _ ->
+            NewWorkspaceScreen(
                 navController,
-                states.workspaceState.allWorkspaces.find { it.workspaceId==workspaceId }?: WorkspaceModel(),
+                states.workspaceState.allWorkspaces.find { it.workspaceId == workspaceId } ?: WorkspaceModel(),
                 viewModels,
                 viewModels.workspaceViewModel::onEvent
             )
         },
 
-        NavRoutes.WorkspaceHome.route + "/{workspaceId}" to { navController, _, states, viewModels, workspaceId ->
+        NavRoutes.WorkspaceHome.route + "/{workspaceId}?spaceId={spaceId}" to { navController, _, states, viewModels, workspaceId, spaceId ->
             WorkspaceDetails(
                 navController,
                 states,
-                states.workspaceState.allWorkspaces.find { it.workspaceId==workspaceId }?: WorkspaceModel(workspaceId=workspaceId),
-                viewModels
+                states.workspaceState.allWorkspaces.find { it.workspaceId == workspaceId } ?: WorkspaceModel(workspaceId = workspaceId),
+                viewModels,
+                spaceId
             )
         }
     )

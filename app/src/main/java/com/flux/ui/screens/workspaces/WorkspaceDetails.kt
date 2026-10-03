@@ -48,12 +48,21 @@ fun WorkspaceDetails(
     navController: NavController,
     states: States,
     workspace: WorkspaceModel,
-    viewModels: ViewModels
+    viewModels: ViewModels,
+    initialSpaceId: Int = -1
 ) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val workspaceId = workspace.workspaceId
-    val selectedSpaceId = rememberSaveable { mutableIntStateOf(if (workspace.selectedSpaces.isEmpty()) -1 else workspace.selectedSpaces.first()) }
+    val selectedSpaceId = rememberSaveable {
+        mutableIntStateOf(
+            when {
+                initialSpaceId != -1 -> initialSpaceId
+                workspace.selectedSpaces.isEmpty() -> -1
+                else -> workspace.selectedSpaces.first()
+            }
+        )
+    }
     var isDeleteDialogVisible by remember { mutableStateOf(false) }
     var isPasskeyDialogVisible by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -285,8 +294,7 @@ fun SpaceMapper(
             onAddCover,
             onRemoveCover,
             onDeleteWorkspace,
-            onToggleLock,
-            viewModels.progressBoardViewModel::onEvent
+            onToggleLock
         )
 
         else -> {

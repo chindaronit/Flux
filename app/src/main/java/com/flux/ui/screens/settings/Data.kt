@@ -68,6 +68,7 @@ import com.flux.ui.state.Settings
 import com.flux.ui.viewModel.BackupSettingsViewModel
 import com.flux.ui.viewModel.BackupViewModel
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -238,10 +239,14 @@ fun Data(
                 fun mapDaysToSliderPosition(days: Int): Float = when (days) {
                     0 -> 0f; 1 -> 1f; 7 -> 2f; 30 -> 3f; else -> 0f
                 }
-                fun mapSliderPositionToFrequency(position: Float): BackupFrequency = when (position) {
-                    0f -> BackupFrequency.NEVER; 1f -> BackupFrequency.DAILY
-                    2f -> BackupFrequency.WEEKLY; 3f -> BackupFrequency.MONTHLY
-                    else -> BackupFrequency.NEVER
+                fun mapSliderPositionToFrequency(position: Float): BackupFrequency {
+                    return when (position.roundToInt()) {
+                        0 -> BackupFrequency.NEVER
+                        1 -> BackupFrequency.DAILY
+                        2 -> BackupFrequency.WEEKLY
+                        3 -> BackupFrequency.MONTHLY
+                        else -> BackupFrequency.NEVER
+                    }
                 }
 
                 var currentSliderPosition by remember(settings.data.backupFrequency) {
@@ -263,18 +268,23 @@ fun Data(
                     onValueChange = { newPosition ->
                         currentSliderPosition = newPosition
                         hapticFeedback.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
-                        val newFrequency = mapSliderPositionToFrequency(newPosition)
-                        onSettingsEvents(SettingEvents.UpdateSettings(settings.data.copy(backupFrequency = newFrequency.days)))
                     },
                     onValueChangeFinished = {
-                        val newFrequency = mapSliderPositionToFrequency(currentSliderPosition)
+                        val frequency = mapSliderPositionToFrequency(currentSliderPosition)
 
+                        onSettingsEvents(
+                            SettingEvents.UpdateSettings(
+                                settings.data.copy(
+                                    backupFrequency = frequency.days
+                                )
+                            )
+                        )
                         coroutineScope.launch {
-                            if (backupSettingsViewModel.isAutoBackupUnsafe(newFrequency.days)) {
-                                pendingBackupFrequency = newFrequency
+                            if (backupSettingsViewModel.isAutoBackupUnsafe(frequency.days)) {
+                                pendingBackupFrequency = frequency
                                 showAutoBackupNeedsPasswordDialog = true
                             } else {
-                                backupManager.scheduleBackup(newFrequency)
+                                backupManager.scheduleBackup(frequency)
                             }
                         }
                     },

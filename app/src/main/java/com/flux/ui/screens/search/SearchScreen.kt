@@ -1,6 +1,9 @@
 package com.flux.ui.screens.search
 
 import android.content.Context
+import android.os.Build
+import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -77,7 +80,11 @@ import com.flux.data.model.isCounted
 import com.flux.data.model.isLive
 import com.flux.navigation.Loader
 import com.flux.navigation.NavRoutes
+import com.flux.other.canScheduleReminder
 import com.flux.other.computeMonthlyEventDates
+import com.flux.other.isNotificationPermissionGranted
+import com.flux.other.openAppNotificationSettings
+import com.flux.other.requestExactAlarmPermission
 import com.flux.ui.common.BottomBar
 import com.flux.ui.common.CategoryRow
 import com.flux.ui.common.EmptyData
@@ -85,6 +92,7 @@ import com.flux.ui.common.GeneralSearchBar
 import com.flux.ui.common.MultiOptionRow
 import com.flux.ui.common.SearchFilterCategory
 import com.flux.ui.common.SearchFilterOption
+import com.flux.ui.common.SelectWorkspaceDialog
 import com.flux.ui.common.SelectionType
 import com.flux.ui.common.convertMillisToDate
 import com.flux.ui.common.convertMillisToTime
@@ -92,6 +100,7 @@ import com.flux.ui.events.HabitEvents
 import com.flux.ui.events.ProgressBoardEvents
 import com.flux.ui.events.TaskEvents
 import com.flux.ui.events.TodoEvents
+import com.flux.ui.events.WorkspaceEvents
 import com.flux.ui.screens.events.DailyViewCalendar
 import com.flux.ui.screens.events.EventCard
 import com.flux.ui.screens.events.MonthlyViewCalendar
@@ -110,7 +119,11 @@ import com.flux.ui.theme.failed
 import com.flux.ui.theme.pending
 import com.flux.ui.viewModel.ViewModels
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.YearMonth
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.util.UUID
 import kotlin.collections.minus
 import kotlin.collections.plus
 
@@ -235,6 +248,9 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
     val selectedSpace = rememberSaveable { mutableIntStateOf(1) }
     val workspacesLabel = stringResource(R.string.workspaces)
     val spacesLabel = stringResource(R.string.spaces)
+    var showWorkspaceSelectorDialog by remember { mutableStateOf(false) }
+    val notificationPermissionLabel = stringResource(R.string.Notification_Permission)
+    val reminderPermissionLabel = stringResource(R.string.Reminder_Permission)
 
     LaunchedEffect(query) {
         if(query.isNotBlank() && expandedTODOIds.value.isEmpty()){
@@ -250,6 +266,63 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
         }
     }
 
+    fun hasOrAppendSpace(workspaceId: String, spaceId: Int){
+        val workspaces = states.workspaceState.allWorkspaces
+        val selectedWorkspace = workspaces.find { it.workspaceId == workspaceId }
+        val currentSpaces = selectedWorkspace!!.selectedSpaces
+
+        if(!currentSpaces.contains(spaceId)){
+            val updatedWorkspace = selectedWorkspace.copy(selectedSpaces = currentSpaces.plus(spaceId))
+            viewModels.workspaceViewModel.onEvent(WorkspaceEvents.UpsertSpace(updatedWorkspace))
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    fun navigateToCreateNewSpaceEntry(selectedWorkspaceId: String){
+        val newId = UUID.randomUUID().toString()
+        val localDate = LocalDate.ofEpochDay(selectedDate)
+        val currentTime = LocalTime.now()
+        val zonedDateTime = ZonedDateTime.of(localDate, currentTime, ZoneId.systemDefault())
+        val selectedDateMillis = zonedDateTime.toInstant().toEpochMilli()
+
+        hasOrAppendSpace(selectedWorkspaceId, selectedSpace.intValue)
+
+        when(selectedSpace.intValue){
+            1-> navController.navigate(NavRoutes.NoteDetails.withArgs(selectedWorkspaceId, newId))
+            2-> navController.navigate(NavRoutes.NewTodoList.withArgs(selectedWorkspaceId, newId))
+            3-> navController.navigate(NavRoutes.NewEvent.withArgs(selectedWorkspaceId, newId, selectedDateMillis))
+            4-> navController.navigate(NavRoutes.EditJournal.withArgs(selectedWorkspaceId, newId, System.currentTimeMillis()))
+            5-> {
+                if (!canScheduleReminder(context)) {
+                    Toast.makeText(context, reminderPermissionLabel, Toast.LENGTH_SHORT).show()
+                    requestExactAlarmPermission(context)
+                }
+                if (!isNotificationPermissionGranted(context)) {
+                    Toast.makeText(context, notificationPermissionLabel, Toast.LENGTH_SHORT).show()
+                    openAppNotificationSettings(context)
+                }
+                if (canScheduleReminder(context) && isNotificationPermissionGranted(context)) {
+                    navController.navigate(NavRoutes.NewHabit.withArgs(selectedSpace, newId))
+                }
+            }
+            7-> navController.navigate(NavRoutes.NewProgressItem.withArgs(selectedWorkspaceId, newId))
+            else -> {}
+        }
+
+        showWorkspaceSelectorDialog = false
+    }
+
+    if(showWorkspaceSelectorDialog){
+        SelectWorkspaceDialog(
+            workspaces = states.workspaceState.allWorkspaces,
+            onDismiss = { showWorkspaceSelectorDialog = false },
+            onConfirm = {
+                navigateToCreateNewSpaceEntry(it)
+                showWorkspaceSelectorDialog = false
+            }
+        )
+    }
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         topBar = {
@@ -258,28 +331,35 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
                 trailingIcon = Icons.Default.FilterList,
                 textFieldState = TextFieldState(query),
                 onSearch = { query = it },
+                onAddClicked = { showWorkspaceSelectorDialog = true },
                 onTrailingIconClicked = { isToolsSheetVisible=true },
                 onCloseClicked = { query = "" }
             )
         }
     ) { innerPadding ->
-        Box(Modifier.fillMaxSize().padding(innerPadding)) {
+        Box(Modifier
+            .fillMaxSize()
+            .padding(innerPadding)) {
             when {
                 isLoading -> Loader()
                 else -> {
                     LazyColumn(
-                        Modifier.fillMaxSize().padding(horizontal = 12.dp),
+                        Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 12.dp),
                         contentPadding = PaddingValues(
                             top = 16.dp,
                             bottom = 64.dp
                         ),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         if(selectedSpaces.isEmpty()){ item { EmptyData() } }
                         else {
                             item {
                                 LazyRow(
-                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 4.dp),
                                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
                                     items(selectedSpaces){ space->
@@ -315,14 +395,16 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
                                 3 -> searchedEvent(navController, radius, is24HourFormat,pendingTasks, completedTasks, selectedDate, selectedMonth, isMonthlyView, monthlyEventCount, viewModels.eventViewModel::onEvent)
                                 4 -> searchedJournal(navController, radius, journals, labels)
                                 5 -> searchedHabits(navController, radius, is24HourFormat, currentHabits, pastHabits, states.habitState.allInstances, viewModels.habitViewModel::onEvent)
-                                7 -> searchedProgressBoard(radius, notStartedItems, inProgressItems, completedItems) { selectedProgressBoardItem = it }
+                                7 -> searchedProgressBoard(navController, radius, notStartedItems, inProgressItems, completedItems)
                                 else -> {}
                             }
                         }
                     }
                     BottomBar(
                         navController = navController,
-                        modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 16.dp)
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(bottom = 16.dp)
                     )
                 }
             }
@@ -367,7 +449,7 @@ fun LazyListScope.searchedNotes(navController: NavController, notesPreviewMode: 
             notesPreviewMode = notesPreviewMode,
             labels = labels.filter { note.labels.contains(it.labelId) }.map { it.value },
             onClick = { navController.navigate(NavRoutes.NoteDetails.withArgs(note.workspaceId, note.notesId)) },
-            onLongPressed = { navController.navigate(NavRoutes.NoteDetails.withArgs(note.workspaceId, note.notesId)) },
+            onLongPressed = { navController.navigate(NavRoutes.WorkspaceHome.withArgs(note.workspaceId) + "?spaceId=1") },
             modifier = Modifier.fillMaxWidth()
         )
     }
@@ -383,14 +465,16 @@ fun LazyListScope.searchedJournal(navController: NavController, radius: Int, all
             JournalPreview(
                 radius,
                 journal.text,
-                labels.filter { journal.labels.contains(it.labelId) }) {
-                navController.navigate(
-                    NavRoutes.EditJournal.withArgs(
-                        journal.workspaceId,
-                        journal.journalId,
-                        0L
+                labels.filter { journal.labels.contains(it.labelId) },{
+                    navController.navigate(
+                        NavRoutes.EditJournal.withArgs(
+                            journal.workspaceId,
+                            journal.journalId,
+                            0L
+                        )
                     )
-                )
+                }) {
+                navController.navigate(NavRoutes.WorkspaceHome.withArgs(journal.workspaceId) + "?spaceId=4")
             }
         }
     }
@@ -431,6 +515,7 @@ fun LazyListScope.searchedHabits(
                     onEvent(HabitEvents.UpdateInstance(newInstance, habit.habitConfig))
                 }
             },
+            onLongPressed = { navController.navigate(NavRoutes.WorkspaceHome.withArgs(habit.workspaceId) + "?spaceId=5") },
             onAnalyticsClicked = { navController.navigate(NavRoutes.HabitDetails.withArgs(habit.workspaceId, habit.id)) }
         )
     }
@@ -451,6 +536,7 @@ fun LazyListScope.searchedHabits(
             habit = habit,
             instances = habitInstances,
             onClick = {},
+            onLongPressed = { navController.navigate(NavRoutes.WorkspaceHome.withArgs(habit.workspaceId) + "?spaceId=5") },
             onAnalyticsClicked = {
                 navController.navigate(
                     NavRoutes.HabitDetails.withArgs(
@@ -486,8 +572,8 @@ fun LazyListScope.searchedEvent(
         }
     } else {
         item {
-            DailyViewCalendar(selectedMonth, selectedDate){
-                onEvent(TaskEvents.ChangeDate(it))
+            DailyViewCalendar(selectedMonth, selectedDate, { onEvent(TaskEvents.ChangeDate(it))}){
+                onEvent(TaskEvents.ChangeMonth(it) )
             }
         }
     }
@@ -503,7 +589,8 @@ fun LazyListScope.searchedEvent(
                 repeat = task.recurrence,
                 startDateTime = task.startDateTime,
                 onChangeStatus = { onEvent(TaskEvents.ToggleStatus(true, task.id, task.workspaceId, selectedDate)) },
-                onClick = { navController.navigate(NavRoutes.EventDetails.withArgs(task.workspaceId, task.id, selectedDate)) }
+                onClick = { navController.navigate(NavRoutes.EventDetails.withArgs(task.workspaceId, task.id, selectedDate)) },
+                onLongPressed = { navController.navigate(NavRoutes.WorkspaceHome.withArgs(task.workspaceId) + "?spaceId=3") },
             )
             Spacer(Modifier.height(8.dp))
         }
@@ -518,7 +605,8 @@ fun LazyListScope.searchedEvent(
                 repeat = task.recurrence,
                 startDateTime = task.startDateTime,
                 onChangeStatus = { onEvent(TaskEvents.ToggleStatus(false, task.id, task.workspaceId, selectedDate)) },
-                onClick = { navController.navigate(NavRoutes.EventDetails.withArgs(task.workspaceId, task.id, selectedDate)) }
+                onClick = { navController.navigate(NavRoutes.EventDetails.withArgs(task.workspaceId, task.id, selectedDate)) },
+                onLongPressed = { navController.navigate(NavRoutes.WorkspaceHome.withArgs(task.workspaceId) + "?spaceId=3") },
             )
             Spacer(Modifier.height(8.dp))
         }
@@ -527,11 +615,11 @@ fun LazyListScope.searchedEvent(
 
 @OptIn(ExperimentalMaterial3Api::class)
 fun LazyListScope.searchedProgressBoard(
+    navController: NavController,
     radius: Int,
     notStartedItems: List<ProgressBoardModel>,
     inProgressItems: List<ProgressBoardModel>,
-    completedItems: List<ProgressBoardModel>,
-    onSelectProgressBoardItem: (ProgressBoardModel) -> Unit
+    completedItems: List<ProgressBoardModel>
 ) {
     if((notStartedItems + inProgressItems + completedItems).isEmpty()) item { EmptyData() }
     if (notStartedItems.isNotEmpty()) {
@@ -541,11 +629,10 @@ fun LazyListScope.searchedProgressBoard(
                 stringResource(R.string.not_started),
                 radius,
                 notStartedItems,
-                onSelectProgressBoardItem
-            )
+                { navController.navigate(NavRoutes.NewProgressItem.withArgs(it.workspaceId, it.itemId)) }
+            ) { navController.navigate(NavRoutes.WorkspaceHome.withArgs(it.workspaceId) + "?spaceId=7") }
         }
     }
-
     if (inProgressItems.isNotEmpty()) {
         item {
             BoardContainer(
@@ -553,11 +640,10 @@ fun LazyListScope.searchedProgressBoard(
                 stringResource(R.string.in_progress),
                 radius,
                 inProgressItems,
-                onSelectProgressBoardItem
-            )
+                { navController.navigate(NavRoutes.NewProgressItem.withArgs(it.workspaceId, it.itemId)) }
+            ) { navController.navigate(NavRoutes.WorkspaceHome.withArgs(it.workspaceId) + "?spaceId=7") }
         }
     }
-
     if (completedItems.isNotEmpty()) {
         item {
             BoardContainer(
@@ -565,8 +651,8 @@ fun LazyListScope.searchedProgressBoard(
                 stringResource(R.string.Completed),
                 radius,
                 completedItems,
-                onSelectProgressBoardItem
-            )
+                { navController.navigate(NavRoutes.NewProgressItem.withArgs(it.workspaceId, it.itemId)) }
+            ) { navController.navigate(NavRoutes.WorkspaceHome.withArgs(it.workspaceId) + "?spaceId=7") }
         }
     }
 }
@@ -592,7 +678,8 @@ fun LazyListScope.searchedTodo(
             isExpanded = todoItem.id in expandedTODOIds,
             onExpandToggle = onExpandToggle,
             onTodoEvents = onEvent,
-            isReordering = false
+            isReordering = false,
+            onLongPressed = { navController.navigate(NavRoutes.WorkspaceHome.withArgs(todoItem.workspaceId) + "?spaceId=2") },
         )
     }
 }

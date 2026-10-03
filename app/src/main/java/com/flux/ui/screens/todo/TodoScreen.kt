@@ -237,7 +237,8 @@ fun TodoScreen(
                                         navController.navigate(NavRoutes.TodoDetail.withArgs(workspaceId, id))
                                     }
                                 },
-                                onTodoEvents = onEvent
+                                onTodoEvents = onEvent,
+                                onLongPressed = {}
                             )
                         }
                     }

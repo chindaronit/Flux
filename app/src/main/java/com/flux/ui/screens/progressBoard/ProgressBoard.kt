@@ -17,7 +17,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -30,7 +29,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.flux.R
-import com.flux.data.model.ProgressBoardModel
 import com.flux.data.model.WorkspaceModel
 import com.flux.navigation.Loader
 import com.flux.navigation.NavRoutes
@@ -39,13 +37,13 @@ import com.flux.ui.common.SpaceSearchBar
 import com.flux.ui.common.SpaceTopBar
 import com.flux.ui.common.SpacesMenu
 import com.flux.ui.common.convertMillisToDate
-import com.flux.ui.events.ProgressBoardEvents
 import com.flux.ui.screens.workspaces.SpacesToolBar
 import com.flux.ui.state.ProgressBoardState
 import com.flux.ui.state.Settings
 import com.flux.ui.theme.completed
 import com.flux.ui.theme.failed
 import com.flux.ui.theme.pending
+import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,8 +57,7 @@ fun ProgressTrackerScreen(
     onAddCover: () -> Unit,
     onRemoveCover: () -> Unit,
     onDeleteWorkspace: () -> Unit,
-    onToggleLock: () -> Unit,
-    onEvent: (ProgressBoardEvents) -> Unit
+    onToggleLock: () -> Unit
 ){
     val workspaceId = workspace.workspaceId
     val isLoading = state.isLoading
@@ -78,8 +75,6 @@ fun ProgressTrackerScreen(
     val completedItems = boardItems.filter { it.status == 2 }
     var showSpacesMenu by remember { mutableStateOf(false) }
     var showSearchBar by remember { mutableStateOf(false) }
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    var selectedItem by remember { mutableStateOf<ProgressBoardModel?>(null) }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     Scaffold(
@@ -101,7 +96,10 @@ fun ProgressTrackerScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton({ selectedItem = ProgressBoardModel(workspaceId=workspaceId) }) {
+            FloatingActionButton({
+                val newId = UUID.randomUUID().toString()
+                navController.navigate(NavRoutes.NewProgressItem.withArgs(workspaceId, newId))
+            }) {
                 Icon(Icons.Default.Add, null)
             }
         }
@@ -157,8 +155,9 @@ fun ProgressTrackerScreen(
                                 failed,
                                 stringResource(R.string.not_started),
                                 radius,
-                                notStartedItems
-                            ) { selectedItem = it }
+                                notStartedItems,
+                                { navController.navigate(NavRoutes.NewProgressItem.withArgs(workspaceId, it.itemId)) }
+                            ) { }
                         }
                     }
                     if (inProgressItems.isNotEmpty()) {
@@ -167,36 +166,23 @@ fun ProgressTrackerScreen(
                                 pending,
                                 stringResource(R.string.in_progress),
                                 radius,
-                                inProgressItems
-                            ) { selectedItem = it }
+                                inProgressItems,
+                                { navController.navigate(NavRoutes.NewProgressItem.withArgs(workspaceId, it.itemId)) }
+                            ) {  }
                         }
                     }
-
                     if (completedItems.isNotEmpty()) {
                         item {
                             BoardContainer(
                                 completed,
                                 stringResource(R.string.Completed),
                                 radius,
-                                completedItems
-                            ) { selectedItem = it }
+                                completedItems,
+                                { navController.navigate(NavRoutes.NewProgressItem.withArgs(workspaceId, it.itemId)) }
+                            ) {  }
                         }
                     }
                 }
-        }
-    }
-
-    selectedItem?.let { item ->
-        NewBoardItemSheet(
-            true,
-            sheetState,
-            item,
-            { selectedItem = null },
-            {
-                onEvent(ProgressBoardEvents.UpsertProgressItem(it))
-            }) {
-            onEvent(ProgressBoardEvents.DeleteProgressItem(it)
-            )
         }
     }
 }

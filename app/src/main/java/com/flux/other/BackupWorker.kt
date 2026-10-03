@@ -1,6 +1,7 @@
 package com.flux.other
 
 import android.content.Context
+import android.util.Log
 import androidx.core.net.toUri
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
@@ -101,7 +102,8 @@ class BackupWorker @AssistedInject constructor(
             }
 
             Result.success()
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Log.e("BackupWorker", "Backup failed", e)
             Result.failure()
         }
     }

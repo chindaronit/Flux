@@ -234,6 +234,7 @@ fun HabitScreen(
                                         onEvent(HabitEvents.UpdateInstance(newInstance, habit.habitConfig))
                                     }
                                 },
+                                onLongPressed = { },
                                 onAnalyticsClicked = { navController.navigate(NavRoutes.HabitDetails.withArgs(workspaceId, habit.id)) }
                             )
                         }
@@ -255,6 +256,7 @@ fun HabitScreen(
                             habit = habit,
                             instances = habitInstances,
                             onClick = {},
+                            onLongPressed = {},
                             onAnalyticsClicked = {
                                 navController.navigate(
                                     NavRoutes.HabitDetails.withArgs(

@@ -62,6 +62,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.lazy.LazyRow
@@ -76,9 +77,11 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import com.flux.data.model.EventModel
@@ -288,7 +291,8 @@ fun EventCard(
     repeat: RecurrenceRule,
     startDateTime: Long,
     onChangeStatus: () -> Unit,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onLongPressed: () -> Unit,
 ) {
     val containerColor =
         if (isPending) MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)
@@ -300,20 +304,26 @@ fun EventCard(
     val context = LocalContext.current
     val time = startDateTime.toFormattedTime(is24HourFormat)
 
+    val hapticFeedback = LocalHapticFeedback.current
+    val handleLongPress = {
+        hapticFeedback.performHapticFeedback(
+            HapticFeedbackType.LongPress
+        )
+        onLongPressed()
+    }
+
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().combinedClickable(
+            onClick = onClick,
+            onLongClick = handleLongPress
+        ),
         colors = CardDefaults.cardColors(
             containerColor = containerColor,
             contentColor = contentColor
         ),
-        shape = shapeManager(radius = radius * 2),
-        onClick = onClick
+        shape = shapeManager(radius = radius * 2)
     ) {
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(vertical = 4.dp)
-        ) {
+        Row(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
             IconRadioButton(
                 selected = !isPending,
                 onClick = onChangeStatus
@@ -450,21 +460,44 @@ fun DailyViewDateCard(date: Long, day: String, isSelected: Boolean, onClick: () 
 }
 
 @Composable
-fun MonthlyViewDateCard(date: Long, count: Int, maxCount: Int = 0, isSelected: Boolean, onClick: () -> Unit) {
+fun MonthlyViewDateCard(
+    date: Long,
+    count: Int,
+    maxCount: Int = 0,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    val today = LocalDate.now()
     val localDate = LocalDate.ofEpochDay(date)
-    val fraction = if (maxCount > 0 && count > 0) count.toFloat() / maxCount.toFloat() else 0f
-    val containerColor =
-        if (isSelected) MaterialTheme.colorScheme.primary
-        else MaterialTheme.colorScheme.surfaceContainerLow
-    val contentColor =
-        if (isSelected) MaterialTheme.colorScheme.onSurface
-        else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+    val isToday = date == today.toEpochDay()
+
+    val fraction =
+        if (maxCount > 0 && count > 0) {
+            count.toFloat() / maxCount.toFloat()
+        } else {
+            0f
+        }
+
     val primaryColor = MaterialTheme.colorScheme.primary
+
+    val contentColor =
+        if (isSelected) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+        }
 
     Box(
         modifier = Modifier
             .size(48.dp)
-            .clip(RoundedCornerShape(50))
+            .clip(CircleShape)
+            .background(
+                if (isSelected) {
+                    Color.Transparent
+                } else {
+                    MaterialTheme.colorScheme.surfaceContainerLow
+                }
+            )
             .drawBehind {
                 if (fraction > 0f && !isSelected) {
                     drawCircle(
@@ -478,11 +511,21 @@ fun MonthlyViewDateCard(date: Long, count: Int, maxCount: Int = 0, isSelected: B
                         )
                     )
                 }
+
+                if (isToday && !isSelected) {
+                    drawCircle(
+                        color = primaryColor,
+                        style = Stroke(width = 2.dp.toPx()),
+                        radius = size.minDimension / 2f - 1.dp.toPx()
+                    )
+                }
             }
             .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             Text(
                 text = localDate.dayOfMonth.toString(),
                 style = MaterialTheme.typography.bodyLarge,
@@ -494,8 +537,7 @@ fun MonthlyViewDateCard(date: Long, count: Int, maxCount: Int = 0, isSelected: B
                     modifier = Modifier
                         .size(8.dp)
                         .clip(CircleShape)
-                        .background(containerColor)
-                        .padding(top = 2.dp)
+                        .background(MaterialTheme.colorScheme.primary)
                 )
             }
         }
@@ -506,7 +548,8 @@ fun MonthlyViewDateCard(date: Long, count: Int, maxCount: Int = 0, isSelected: B
 fun DailyViewCalendar(
     selectedMonth: YearMonth,
     selectedDate: Long,
-    onDateChange: (Long) -> Unit
+    onDateChange: (Long) -> Unit,
+    onMonthChange: (YearMonth) -> Unit
 ) {
     val daysInMonth = selectedMonth.lengthOfMonth()
     val dateList = (1..daysInMonth).map { day -> selectedMonth.atDay(day) }
@@ -522,6 +565,45 @@ fun DailyViewCalendar(
     }
 
     Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = selectedMonth.month.name.lowercase().replaceFirstChar { it.uppercaseChar() } + ", ${selectedMonth.year}",
+                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            IconButton(onClick = {
+                val prevMonth = selectedMonth.minusMonths(1)
+                onMonthChange(prevMonth)
+                onDateChange(prevMonth.atDay(1).toEpochDay())
+            }) {
+                Icon(
+                    Icons.AutoMirrored.Default.ArrowBackIos,
+                    tint = MaterialTheme.colorScheme.primary,
+                    contentDescription = "Previous month",
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+
+            IconButton(onClick = {
+                val nextMonth = selectedMonth.plusMonths(1)
+                onMonthChange(nextMonth)
+                onDateChange(nextMonth.atDay(1).toEpochDay())
+            }) {
+                Icon(
+                    Icons.AutoMirrored.Default.ArrowForwardIos,
+                    tint = MaterialTheme.colorScheme.primary,
+                    contentDescription = "Next month",
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        }
+
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             state = listState
@@ -597,9 +679,7 @@ fun MonthlyViewCalendar(
                     Icons.AutoMirrored.Default.ArrowBackIos,
                     tint = MaterialTheme.colorScheme.primary,
                     contentDescription = "Previous month",
-                    modifier = Modifier
-                        .size(18.dp)
-                        .alpha(0.5f)
+                    modifier = Modifier.size(18.dp)
                 )
             }
 
@@ -612,9 +692,7 @@ fun MonthlyViewCalendar(
                     Icons.AutoMirrored.Default.ArrowForwardIos,
                     tint = MaterialTheme.colorScheme.primary,
                     contentDescription = "Next month",
-                    modifier = Modifier
-                        .size(18.dp)
-                        .alpha(0.5f)
+                    modifier = Modifier.size(18.dp)
                 )
             }
         }

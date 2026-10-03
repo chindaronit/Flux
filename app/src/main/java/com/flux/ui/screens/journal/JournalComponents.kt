@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -55,8 +56,10 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorProducer
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -119,15 +122,28 @@ fun JournalPreview(
     radius: Int,
     content: String,
     labels: List<LabelModel>,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onLongPressed: () -> Unit
 ) {
     val mediaExtraction = remember(content) { extractMedia(content) }
     val maxHeight = 400.dp
+
+    val hapticFeedback = LocalHapticFeedback.current
+    val handleLongPress = {
+        hapticFeedback.performHapticFeedback(
+            HapticFeedbackType.LongPress
+        )
+        onLongPressed()
+    }
+
     Card(
         colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)),
-        modifier = Modifier.clip(shapeManager(isBoth = true, radius = radius / 2)).fillMaxWidth(),
-        shape = shapeManager(isBoth = true, radius = radius / 2),
-        onClick = onClick
+        modifier = Modifier.clip(shapeManager(isBoth = true, radius = radius / 2)).fillMaxWidth()
+            .combinedClickable(
+                onClick =  onClick,
+                onLongClick = handleLongPress
+            ),
+        shape = shapeManager(isBoth = true, radius = radius / 2)
     ) {
         Box(
             Modifier
@@ -138,7 +154,7 @@ fun JournalPreview(
             MarkdownBlock(
                 text = content,
                 onClick = onClick,
-                onLongClick = onClick
+                onLongClick = handleLongPress
             )
         }
 
@@ -148,7 +164,7 @@ fun JournalPreview(
                 media = mediaExtraction.media,
                 modifier = Modifier.padding(horizontal = 12.dp),
                 onClick = onClick ,
-                onLongClick = onClick
+                onLongClick = handleLongPress
             )
         }
 

@@ -328,7 +328,7 @@ fun JournalScreen(
                         }")
                         Row(modifier = Modifier.height(IntrinsicSize.Min)) {
                             TimelineBody(isLast = false)
-                            JournalPreview(radius, entry.text, allLabels.filter { entry.labels.contains(it.labelId) }) {
+                            JournalPreview(radius, entry.text, allLabels.filter { entry.labels.contains(it.labelId) }, {
                                 navController.navigate(
                                     NavRoutes.EditJournal.withArgs(
                                         workspaceId,
@@ -336,7 +336,7 @@ fun JournalScreen(
                                         0L
                                     )
                                 )
-                            }
+                            }) {}
                         }
                     }
                 }

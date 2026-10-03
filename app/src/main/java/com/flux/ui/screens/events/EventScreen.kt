@@ -284,8 +284,8 @@ fun EventScreen(
                         }
                     } else {
                         item {
-                            DailyViewCalendar(selectedMonth, selectedDate){
-                                onEvent(TaskEvents.ChangeDate(it))
+                            DailyViewCalendar(selectedMonth, selectedDate, {onEvent(TaskEvents.ChangeDate(it))}){
+                                onEvent(TaskEvents.ChangeMonth(it))
                             }
                             Spacer(Modifier.height(6.dp))
                         }
@@ -301,7 +301,8 @@ fun EventScreen(
                                 repeat = task.recurrence,
                                 startDateTime = task.startDateTime,
                                 onChangeStatus = { onEvent(TaskEvents.ToggleStatus(true, task.id, workspaceId, selectedDate)) },
-                                onClick = { navController.navigate(NavRoutes.EventDetails.withArgs(workspaceId, task.id, selectedDate)) }
+                                onClick = { navController.navigate(NavRoutes.EventDetails.withArgs(workspaceId, task.id, selectedDate)) },
+                                onLongPressed = { navController.navigate(NavRoutes.EventDetails.withArgs(workspaceId, task.id, selectedDate)) }
                             )
                             Spacer(Modifier.height(8.dp))
                         }
@@ -316,7 +317,8 @@ fun EventScreen(
                                 repeat = task.recurrence,
                                 startDateTime = task.startDateTime,
                                 onChangeStatus = { onEvent(TaskEvents.ToggleStatus(false, task.id, workspaceId, selectedDate)) },
-                                onClick = { navController.navigate(NavRoutes.EventDetails.withArgs(workspaceId, task.id, selectedDate)) }
+                                onClick = { navController.navigate(NavRoutes.EventDetails.withArgs(workspaceId, task.id, selectedDate)) },
+                                onLongPressed = { navController.navigate(NavRoutes.EventDetails.withArgs(workspaceId, task.id, selectedDate)) }
                             )
                             Spacer(Modifier.height(8.dp))
                         }

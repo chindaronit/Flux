@@ -89,7 +89,6 @@ dependencies {
     implementation(libs.androidx.compose.ui.text)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.glance.appwidget)
-    implementation(libs.androidx.hilt.common)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.activity.compose)
@@ -109,9 +108,12 @@ dependencies {
 
     // Hilt
     ksp(libs.hilt.android.compiler)
+    ksp(libs.androidx.hilt.compiler)
     ksp(libs.kotlinMetadataWorkaround)
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)
+    implementation(libs.androidx.hilt.common)
+    implementation(libs.androidx.hilt.work)
 
     // Room
     ksp(libs.androidx.room.compiler)

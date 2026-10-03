@@ -83,6 +83,7 @@ import java.time.temporal.ChronoUnit
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.automirrored.filled.ArrowBackIos
@@ -1037,6 +1038,7 @@ fun HabitPreviewCard(
     isReordering: Boolean = false,
     dragHandleModifier: Modifier = Modifier,
     onClick: (Long) -> Unit,
+    onLongPressed: () -> Unit,
     onAnalyticsClicked: () -> Unit
 ) {
     val todayEpoch = LocalDate.now().toEpochDay()
@@ -1064,9 +1066,20 @@ fun HabitPreviewCard(
         else -> convertMillisToTime(habit.startDateTime, is24HourFormat)
     }
 
+    val hapticFeedback = LocalHapticFeedback.current
+    val handleLongPress = {
+        hapticFeedback.performHapticFeedback(
+            HapticFeedbackType.LongPress
+        )
+        onLongPressed()
+    }
+
     Card(
-        onClick = { onClick(todayEpoch) },
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth()
+            .combinedClickable(
+                onClick = { onClick(todayEpoch) },
+                onLongClick = handleLongPress
+            ),
         colors = CardDefaults.cardColors(
             containerColor = if (isTodayDone) MaterialTheme.colorScheme.primaryContainer
             else MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)
