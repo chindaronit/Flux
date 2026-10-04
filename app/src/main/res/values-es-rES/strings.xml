@@ -585,4 +585,9 @@
     <string name="biometric_unlock_description">Usa la biometría de tu dispositivo para desbloquear de forma segura tus datos de Flux.</string>
     <string name="biometric_data_never_leaves">Tus datos biométricos nunca salen de tu dispositivo</string>
 
+    <string name="default_screen">Pantalla predeterminada</string>
+    <string name="default_screen_description">La pantalla predeterminada se abrirá al iniciar la aplicación</string>
+    <string name="change_default_screen_description">Cambiar qué pantalla se carga primero al iniciar la aplicación</string>
+    <string name="add_new_item">Añadir nuevo elemento</string>
+    <string name="edit_item">Editar elemento</string>
 </resources>

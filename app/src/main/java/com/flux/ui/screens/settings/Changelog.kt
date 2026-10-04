@@ -668,5 +668,30 @@ val CHANGELOG_DATA = listOf(
             ),
             chore("Updated dependencies to latest versions.")
         )
+    ),
+    ChangelogEntry(
+        version = "v3.2.4",
+        versionCode = 21,
+        date = "Oct 4, 2026",
+        changes = listOf(
+            feat(
+                "Default Workspace screen option in customization",
+                "Navigation of workspace from search screen",
+                "Add data from search screen",
+                "ics import/export option of events"
+            ),
+            fix(
+                "Auto Backup manager bug",
+            ),
+            src(
+                "Added month change option in daily calendar view.",
+                "UI improvements in changelog screen",
+                "Keep once option as default for event creation"
+            ),
+            chore(
+                "Updated dependencies to latest versions.",
+                "Updated version to 3.2.4 (21) for release."
+            )
+        )
     )
 )

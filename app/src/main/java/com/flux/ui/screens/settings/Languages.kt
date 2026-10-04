@@ -214,7 +214,7 @@ private fun getLanguageInfo(languageCode: String): LanguageInfo {
 }
 
 @Composable
-fun LanguageItem(
+private fun LanguageItem(
     shape: RoundedCornerShape,
     title: String,
     description: String? = null,

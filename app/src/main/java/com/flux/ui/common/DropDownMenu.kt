@@ -532,9 +532,10 @@ fun TodoDropdownMenu(
 
 @Composable
 fun EventDropdownMenu(
+    onExport: ()-> Unit,
     onDelete: () -> Unit,
-    onCopyNote: () -> Unit,
-    onCloneNote: () -> Unit
+    onCopy: () -> Unit,
+    onClone: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -550,11 +551,19 @@ fun EventDropdownMenu(
             onDismissRequest = { expanded = false }
         ) {
             DropdownMenuItem(
+                text = { Text(stringResource(R.string.save)) },
+                leadingIcon = { Icon(Icons.Outlined.Download, contentDescription = null) },
+                onClick = {
+                    expanded = false
+                    onExport()
+                }
+            )
+            DropdownMenuItem(
                 text = { Text(stringResource(R.string.clone)) },
                 leadingIcon = { Icon(Icons.Outlined.ControlPointDuplicate, contentDescription = null) },
                 onClick = {
                     expanded = false
-                    onCloneNote()
+                    onClone()
                 }
             )
             HorizontalDivider()
@@ -563,7 +572,7 @@ fun EventDropdownMenu(
                 leadingIcon = { Icon(Icons.Outlined.ContentCopy, contentDescription = null) },
                 onClick = {
                     expanded = false
-                    onCopyNote()
+                    onCopy()
                 }
             )
             HorizontalDivider()

@@ -27,6 +27,7 @@ import com.flux.ui.screens.settings.Changelog
 import com.flux.ui.screens.settings.Contact
 import com.flux.ui.screens.settings.Customize
 import com.flux.ui.screens.settings.Data
+import com.flux.ui.screens.settings.DefaultWorkspace
 import com.flux.ui.screens.settings.Editor
 import com.flux.ui.screens.settings.Languages
 import com.flux.ui.screens.settings.Mode
@@ -74,6 +75,7 @@ sealed class NavRoutes(val route: String) {
     data object Backup : NavRoutes("setting/backup")
     data object Editor : NavRoutes("setting/editor")
     data object Mode : NavRoutes("setting/mode")
+    data object DefaultWorkspace : NavRoutes("setting/defaultWorkspace")
     data object NotesPreview : NavRoutes("setting/editor/notesPreview")
 
     fun withArgs(vararg args: Any): String {
@@ -89,13 +91,13 @@ sealed class NavRoutes(val route: String) {
 val AuthScreen =
     mapOf<String, @Composable (navController: NavController, states: States) -> Unit>(
         NavRoutes.AuthScreen.route to { navController, states ->
-            AuthScreen(navController, states.settings.data.isBiometricEnabled)
+            AuthScreen(navController, states.settings.data, states.settings.data.isBiometricEnabled)
         }
     )
 
 val StorageSelectionScreen = mapOf<String, @Composable (navController: NavController, states: States, viewModels: ViewModels) -> Unit>(
     NavRoutes.StorageSelection.route to { navController, states, viewModels ->
-        StorageSelectionScreen(navController, viewModels.settingsViewModel, states.settings.data.storageRootUri!=null)
+        StorageSelectionScreen(navController, states.settings.data, viewModels.settingsViewModel, states.settings.data.storageRootUri!=null)
     }
 )
 
@@ -259,6 +261,9 @@ val SettingsScreens =
         },
         NavRoutes.Changelog.route to { navController, _, _, _ ->
             Changelog(navController)
+        },
+        NavRoutes.DefaultWorkspace.route to { navController, _, states, viewModels ->
+            DefaultWorkspace(navController, states.settings, states.workspaceState.allWorkspaces, viewModels.settingsViewModel::onEvent)
         }
     )
 

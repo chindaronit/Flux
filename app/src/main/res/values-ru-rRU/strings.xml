@@ -587,4 +587,10 @@
     <string name="private_secure">Конфиденциально и безопасно</string>
     <string name="biometric_unlock_description">Используйте биометрию устройства для безопасной разблокировки данных Flux.</string>
     <string name="biometric_data_never_leaves">Ваши биометрические данные никогда не покидают устройство</string>
+
+    <string name="default_screen">Экран по умолчанию</string>
+    <string name="default_screen_description">Экран по умолчанию будет открыт при запуске приложения</string>
+    <string name="change_default_screen_description">Изменить экран, который загружается первым при запуске приложения</string>
+    <string name="add_new_item">Добавить новый элемент</string>
+    <string name="edit_item">Редактировать элемент</string>
 </resources>

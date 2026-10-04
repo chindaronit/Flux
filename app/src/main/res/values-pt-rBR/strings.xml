@@ -587,4 +587,10 @@
     <string name="private_secure">Privado &amp; seguro</string>
     <string name="biometric_unlock_description">Use a biometria do seu dispositivo para desbloquear seus dados do Flux com segurança.</string>
     <string name="biometric_data_never_leaves">Seus dados biométricos nunca saem do seu dispositivo</string>
+
+    <string name="default_screen">Tela padrão</string>
+    <string name="default_screen_description">A tela padrão será aberta quando o aplicativo for iniciado</string>
+    <string name="change_default_screen_description">Alterar qual tela será carregada primeiro ao iniciar o aplicativo</string>
+    <string name="add_new_item">Adicionar novo item</string>
+    <string name="edit_item">Editar item</string>
 </resources>

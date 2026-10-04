@@ -1,6 +1,8 @@
 package com.flux.ui.viewModel
 
 import android.content.Context
+import android.widget.Toast
+import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flux.data.model.EventInstanceModel
@@ -8,8 +10,12 @@ import com.flux.data.model.EventModel
 import com.flux.data.model.occursOn
 import com.flux.data.model.toScheduleRequest
 import com.flux.data.repository.EventRepository
+import com.flux.data.repository.SettingsRepository
+import com.flux.other.Constants
+import com.flux.other.IcsExporter
 import com.flux.other.cancelReminder
 import com.flux.other.computeMonthlyEventDates
+import com.flux.other.getOrCreateDirectory
 import com.flux.other.scheduleNextReminder
 import com.flux.ui.events.TaskEvents
 import com.flux.ui.state.EventState
@@ -24,6 +30,8 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.OutputStreamWriter
 import java.time.LocalDate
 import java.time.YearMonth
 import javax.inject.Inject
@@ -39,7 +47,8 @@ operator fun <A, B, C, D> Quadruple<A, B, C, D>.component4() = fourth
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class EventViewModel @Inject constructor(
-    private val repository: EventRepository
+    private val repository: EventRepository,
+    private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(EventState())
@@ -106,6 +115,7 @@ class EventViewModel @Inject constructor(
                 )
             is TaskEvents.DeleteAllWorkspaceEvents -> deleteWorkspaceEvents(event.workspaceId, event.context)
             is TaskEvents.ImportIcsEvents -> importIcsEvents(event.context, event.events)
+            is TaskEvents.ExportIcsEvents -> exportICSEvents(event.context, event.event)
         }
     }
 
@@ -152,6 +162,69 @@ class EventViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             state.value.allEvent.forEach { event -> cancelReminder(context, event.toScheduleRequest()) }
             repository.deleteAllWorkspaceEvent(workspaceId)
+        }
+    }
+
+    private fun exportICSEvents(context: Context, event: EventModel) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val success = exportIcsToStorage(
+                context = context,
+                title = event.title,
+                content = IcsExporter.export(listOf(event))
+            )
+            withContext(Dispatchers.Main) {
+                Toast.makeText(
+                    context,
+                    if (success) {
+                        "Event exported successfully"
+                    } else {
+                        "Failed to export event"
+                    },
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+
+    private suspend fun exportIcsToStorage(
+        context: Context,
+        title: String,
+        content: String
+    ): Boolean {
+        val rootUri = settingsRepository.getStorageRoot()
+
+        val dir = getOrCreateDirectory(
+            context,
+            rootUri,
+            Constants.File.FLUX
+        ) ?: return false
+
+        return exportAsIcs(dir, context, title, content)
+    }
+
+    private fun exportAsIcs(
+        dir: DocumentFile,
+        context: Context,
+        eventTitle: String,
+        content: String
+    ): Boolean {
+        val safeName = eventTitle
+            .trim()
+            .replace(Regex("""[\\/:*?"<>|]"""), "_")
+            .ifBlank { "event" }
+
+        val file = dir.createFile("text/calendar", "$safeName.ics") ?: return false
+
+        return try {
+            context.contentResolver
+                .openOutputStream(file.uri)
+                ?.use { stream ->
+                    OutputStreamWriter(stream, Charsets.UTF_8).use { it.write(content) }
+                } ?: return false
+
+            true
+        } catch (_: Exception) {
+            false
         }
     }
 

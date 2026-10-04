@@ -94,9 +94,9 @@ fun NewProgressItem(
     var showDeleteDialog by remember { mutableStateOf(false) }
     val isNew = boardItem.title.isEmpty()
     val topBarTitle = if (isNew) {
-        "Add New Item"
+        stringResource(R.string.add_new_item)
     } else {
-        "Edit Item"
+        stringResource(R.string.edit_item)
     }
 
     ChangeIconSheet (isChangeIcon, iconSheetState, { isChangeIcon=false }) {

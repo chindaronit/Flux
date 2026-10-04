@@ -587,4 +587,10 @@
     <string name="private_secure">Privé &amp; veilig</string>
     <string name="biometric_unlock_description">Gebruik de biometrische gegevens van je apparaat om je Flux-gegevens veilig te ontgrendelen.</string>
     <string name="biometric_data_never_leaves">Je biometrische gegevens verlaten je apparaat nooit</string>
+
+    <string name="default_screen">Standaardscherm</string>
+    <string name="default_screen_description">Het standaardscherm wordt geopend wanneer de app wordt gestart</string>
+    <string name="change_default_screen_description">Wijzigen welk scherm als eerste wordt geladen bij het starten van de app</string>
+    <string name="add_new_item">Nieuw item toevoegen</string>
+    <string name="edit_item">Item bewerken</string>
 </resources>

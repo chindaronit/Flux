@@ -76,8 +76,11 @@ fun WorkspaceHomeScreen(
     }
 
     fun handleWorkspaceClick(space: WorkspaceModel) {
-        if (space.isLocked) { lockedWorkspace = space }
-        else { navController.navigate(NavRoutes.WorkspaceHome.withArgs(space.workspaceId)) }
+        if (space.isLocked) {
+            lockedWorkspace = space
+        } else {
+            navController.navigate(NavRoutes.WorkspaceHome.withArgs(space.workspaceId))
+        }
     }
 
     // --- Migration / startup check: existing users with auto-backup already on, no password yet ---
@@ -91,29 +94,33 @@ fun WorkspaceHomeScreen(
     if (showAutoBackupNeedsPasswordDialog) {
         AutoBackupNeedsPasswordInfoDialog(
             onNavigate = {
-                showAutoBackupNeedsPasswordDialog=false
+                showAutoBackupNeedsPasswordDialog = false
                 navController.navigate(NavRoutes.Backup.route)
             }
         )
     }
-
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         topBar = {
             if (selectedWorkspace.isNotEmpty()) {
-                Box(Modifier.padding(top = 42.dp)){
-                    SelectedToolBarRow (
+                Box(Modifier.padding(top = 42.dp)) {
+                    SelectedToolBarRow(
                         false,
                         selectedWorkspace.size,
                         selectedWorkspace.containsAll(allSpaces),
                         selectedWorkspace.all { it.isPinned },
                         onTogglePin = {
-                            viewModels.workspaceViewModel.onEvent(WorkspaceEvents.UpsertSpaces(selectedWorkspace.toList()))
+                            viewModels.workspaceViewModel.onEvent(
+                                WorkspaceEvents.UpsertSpaces(
+                                    selectedWorkspace.toList()
+                                )
+                            )
                             selectedWorkspace.clear()
                         },
                         onToggleSelection = {
-                            if (selectedWorkspace.containsAll(allSpaces)){ selectedWorkspace.clear() }
-                            else {
+                            if (selectedWorkspace.containsAll(allSpaces)) {
+                                selectedWorkspace.clear()
+                            } else {
                                 selectedWorkspace.clear()
                                 selectedWorkspace.addAll(allSpaces)
                             }
@@ -125,9 +132,11 @@ fun WorkspaceHomeScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .padding(innerPadding)) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
 
             if (allSpaces.isEmpty()) {
                 Column(

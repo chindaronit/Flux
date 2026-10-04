@@ -73,10 +73,12 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.sp
+import com.flux.data.model.SettingsModel
 
 @Composable
 fun StorageSelectionScreen(
     navController: NavController,
+    settings: SettingsModel,
     settingsViewModel: SettingsViewModel,
     isStorageRootSelected: Boolean
 ) {
@@ -87,6 +89,12 @@ fun StorageSelectionScreen(
                     inclusive = true
                 }
                 launchSingleTop = true
+            }
+
+            if (settings.defaultWorkspace != null) {
+                navController.navigate(NavRoutes.WorkspaceHome.withArgs(settings.defaultWorkspace)){
+                    launchSingleTop = true
+                }
             }
         }
     }
