@@ -1,0 +1,14 @@
+feat
+    - Default Workspace screen option in customization
+    - Navigation of workspace from search screen
+    - Add data from search screen
+    - ics import/export option of events
+fix:
+     - Auto Backup manager bug
+src:
+     - Added month change option in daily calendar view.
+     - UI improvements in change-log screen
+     - Keep once option as default for event creation
+chore
+      - Updated dependencies to latest versions.
+      - Updated version to 3.2.4 (21) for release.
