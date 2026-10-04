@@ -3,13 +3,10 @@ package com.flux.ui.screens.settings
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.widget.Toast
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lightbulb
-import androidx.compose.material.icons.rounded.ChatBubble
 import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material.icons.rounded.Feedback
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -60,7 +57,7 @@ fun Contact(navController: NavController, radius: Int) {
                     title = stringResource(R.string.bug_report),
                     description = stringResource(R.string.Contact_desc2),
                     icon = Icons.Rounded.Feedback,
-                    radius = shapeManager(radius = radius, isLast = true),
+                    radius = shapeManager(radius = radius, isBoth = true),
                     actionType = ActionType.LINK,
                     linkClicked = {
                         val intent = Intent(
@@ -70,7 +67,6 @@ fun Contact(navController: NavController, radius: Int) {
                         context.startActivity(intent)
                     }
                 )
-                Spacer(Modifier.height(16.dp))
             }
 
             item {
@@ -78,7 +74,7 @@ fun Contact(navController: NavController, radius: Int) {
                     title = stringResource(R.string.email),
                     description = stringResource(R.string.email_desc),
                     icon = Icons.Rounded.Email,
-                    radius = shapeManager(radius = radius, isFirst = true),
+                    radius = shapeManager(radius = radius, isLast = true),
                     actionType = ActionType.LINK,
                     linkClicked = {
                         val intent = Intent(Intent.ACTION_SENDTO).apply {
@@ -92,22 +88,7 @@ fun Contact(navController: NavController, radius: Int) {
                     }
                 )
             }
-            item {
-                SettingOption(
-                    title = stringResource(R.string.discord),
-                    description = stringResource(R.string.discord_desc),
-                    icon = Icons.Rounded.ChatBubble,
-                    radius = shapeManager(radius = radius, isLast = true),
-                    actionType = ActionType.LINK,
-                    linkClicked = {
-                        val intent = Intent(
-                            Intent.ACTION_VIEW,
-                            "https://discord.gg/aA9zqMEC".toUri()
-                        )
-                        context.startActivity(intent)
-                    }
-                )
-            }
+
         }
     }
 }

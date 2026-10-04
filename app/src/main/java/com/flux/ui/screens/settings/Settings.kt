@@ -86,7 +86,8 @@ fun Settings(
                                 launchSingleTop = true
                                 restoreState = true
                             }
-                        })
+                        }
+                    )
                 }
 
                 item {

@@ -122,6 +122,7 @@ fun EventDetails(
                         )
                     }
                     EventDropdownMenu(
+                        { onTaskEvents(TaskEvents.ExportIcsEvents(context, event)) },
                         {showDeleteDialog=true},
                         {showDataCopyDialog=true},
                         {

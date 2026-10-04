@@ -56,6 +56,37 @@ fun AppNavHost(navController: NavHostController, snackbarHostState: SnackbarHost
             }
         }
 
+        ProgressBoardScreens.forEach { (route, screen) ->
+            val arguments = mutableListOf<NamedNavArgument>()
+
+            if (route.contains("{itemId}")) {
+                arguments.add(navArgument("itemId") {
+                    type = NavType.StringType
+                    nullable = false
+                })
+            }
+
+            if (route.contains("{workspaceId}")) {
+                arguments.add(navArgument("workspaceId") {
+                    type = NavType.StringType
+                    nullable = false
+                })
+            }
+
+            bottomSlideComposable(route, arguments) { entry ->
+                val itemId = entry.arguments?.getString("itemId") ?: ""
+                val workspaceId = entry.arguments?.getString("workspaceId") ?: ""
+
+                screen(
+                    navController,
+                    itemId,
+                    workspaceId,
+                    states,
+                    viewModels
+                )
+            }
+        }
+
         StorageSelectionScreen.forEach { (route, screen) ->
             animatedComposable(route) {
                 screen(
@@ -258,15 +289,17 @@ fun AppNavHost(navController: NavHostController, snackbarHostState: SnackbarHost
                 })
             }
 
+            if (route.contains("{spaceId}")) {
+                arguments.add(navArgument("spaceId") {
+                    type = NavType.IntType
+                    defaultValue = -1
+                })
+            }
+
             animatedComposable(route, arguments) { entry ->
                 val id = entry.arguments?.getString("workspaceId") ?: ""
-                screen(
-                    navController,
-                    snackbarHostState,
-                    states,
-                    viewModels,
-                    id
-                )
+                val spaceId = entry.arguments?.getInt("spaceId") ?: -1
+                screen(navController, snackbarHostState, states, viewModels, id, spaceId)
             }
         }
 

@@ -3,13 +3,23 @@ package com.flux.ui.screens.events
 import android.os.Build
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -18,12 +28,17 @@ import androidx.compose.material.icons.filled.CalendarViewDay
 import androidx.compose.material.icons.filled.CalendarViewMonth
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.Clear
+import androidx.compose.material.icons.outlined.Create
+import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -104,6 +119,10 @@ fun EventScreen(
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val notificationPermissionLabel = stringResource(R.string.Notification_Permission)
     val reminderPermissionLabel = stringResource(R.string.Reminder_Permission)
+    var isActionButtonExpanded by remember { mutableStateOf(false) }
+    val importLauncher = rememberIcsImportLauncher(context, workspaceId) {
+        onEvent(TaskEvents.ImportIcsEvents(context, it))
+    }
 
     val pendingTasks = datedEvents.filter { task ->
         val instance = allEventInstances.find { it.eventId == task.id && it.instanceDate == selectedDate }
@@ -134,24 +153,71 @@ fun EventScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton({
-                if (!canScheduleReminder(context)) {
-                    Toast.makeText(context, reminderPermissionLabel, Toast.LENGTH_SHORT).show()
-                    requestExactAlarmPermission(context)
+            Box(contentAlignment = Alignment.BottomEnd) {
+                // Expanded actions
+                AnimatedVisibility(
+                    visible = isActionButtonExpanded,
+                    enter = fadeIn() + expandVertically(expandFrom = Alignment.Bottom),
+                    exit = fadeOut() + shrinkVertically(shrinkTowards = Alignment.Bottom)
+                ) {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        horizontalAlignment = Alignment.End
+                    ) {
+                        val buttonModifier = Modifier.width(140.dp)
+
+                        ExtendedFloatingActionButton(
+                            modifier = buttonModifier,
+                            onClick = { importLauncher.launch(arrayOf("text/calendar")) },
+                            icon = { Icon(Icons.Outlined.Download, contentDescription = null) },
+                            text = { Text(stringResource(R.string.Import)) }
+                        )
+
+                        ExtendedFloatingActionButton(
+                            modifier = buttonModifier,
+                            onClick = {
+                                val localDate = LocalDate.ofEpochDay(selectedDate)
+                                val currentTime = LocalTime.now()
+                                val zonedDateTime = ZonedDateTime.of(localDate, currentTime, ZoneId.systemDefault())
+                                val selectedDateMillis = zonedDateTime.toInstant().toEpochMilli()
+                                val newId = UUID.randomUUID().toString()
+                                navController.navigate(NavRoutes.NewEvent.withArgs(workspaceId, newId, selectedDateMillis))
+                            },
+                            icon = { Icon(Icons.Outlined.Create, contentDescription = null) },
+                            text = { Text(stringResource(R.string.create)) }
+                        )
+
+                        ExtendedFloatingActionButton(
+                            modifier = buttonModifier,
+                            onClick = { isActionButtonExpanded = false },
+                            icon = { Icon(Icons.Outlined.Clear, contentDescription = null) },
+                            text = { Text(stringResource(R.string.clear)) }
+                        )
+                    }
                 }
-                if (!isNotificationPermissionGranted(context)) {
-                    Toast.makeText(context, notificationPermissionLabel, Toast.LENGTH_SHORT).show()
-                    openAppNotificationSettings(context)
+
+                AnimatedVisibility(
+                    visible = !isActionButtonExpanded,
+                    enter = scaleIn() + fadeIn(),
+                    exit = scaleOut() + fadeOut()
+                ) {
+                    FloatingActionButton( {
+                        if (!canScheduleReminder(context)) {
+                            Toast.makeText(context, reminderPermissionLabel, Toast.LENGTH_SHORT).show()
+                            requestExactAlarmPermission(context)
+                        }
+                        if (!isNotificationPermissionGranted(context)) {
+                            Toast.makeText(context, notificationPermissionLabel, Toast.LENGTH_SHORT).show()
+                            openAppNotificationSettings(context)
+                        }
+                        if (canScheduleReminder(context) && isNotificationPermissionGranted(context)) {
+                            isActionButtonExpanded = true
+                        }
+                    }) {
+                        Icon(Icons.Default.Add, null)
+                    }
                 }
-                if (canScheduleReminder(context) && isNotificationPermissionGranted(context)) {
-                    val localDate = LocalDate.ofEpochDay(selectedDate)
-                    val currentTime = LocalTime.now()
-                    val zonedDateTime = ZonedDateTime.of(localDate, currentTime, ZoneId.systemDefault())
-                    val selectedDateMillis = zonedDateTime.toInstant().toEpochMilli()
-                    val newId = UUID.randomUUID().toString()
-                    navController.navigate(NavRoutes.NewEvent.withArgs(workspaceId, newId, selectedDateMillis))
-                }
-            }) { Icon(Icons.Default.Add, null) }
+            }
         }
     ) { innerPadding ->
         when {
@@ -218,8 +284,8 @@ fun EventScreen(
                         }
                     } else {
                         item {
-                            DailyViewCalendar(selectedMonth, selectedDate){
-                                onEvent(TaskEvents.ChangeDate(it))
+                            DailyViewCalendar(selectedMonth, selectedDate, {onEvent(TaskEvents.ChangeDate(it))}){
+                                onEvent(TaskEvents.ChangeMonth(it))
                             }
                             Spacer(Modifier.height(6.dp))
                         }
@@ -235,7 +301,8 @@ fun EventScreen(
                                 repeat = task.recurrence,
                                 startDateTime = task.startDateTime,
                                 onChangeStatus = { onEvent(TaskEvents.ToggleStatus(true, task.id, workspaceId, selectedDate)) },
-                                onClick = { navController.navigate(NavRoutes.EventDetails.withArgs(workspaceId, task.id, selectedDate)) }
+                                onClick = { navController.navigate(NavRoutes.EventDetails.withArgs(workspaceId, task.id, selectedDate)) },
+                                onLongPressed = { navController.navigate(NavRoutes.EventDetails.withArgs(workspaceId, task.id, selectedDate)) }
                             )
                             Spacer(Modifier.height(8.dp))
                         }
@@ -250,7 +317,8 @@ fun EventScreen(
                                 repeat = task.recurrence,
                                 startDateTime = task.startDateTime,
                                 onChangeStatus = { onEvent(TaskEvents.ToggleStatus(false, task.id, workspaceId, selectedDate)) },
-                                onClick = { navController.navigate(NavRoutes.EventDetails.withArgs(workspaceId, task.id, selectedDate)) }
+                                onClick = { navController.navigate(NavRoutes.EventDetails.withArgs(workspaceId, task.id, selectedDate)) },
+                                onLongPressed = { navController.navigate(NavRoutes.EventDetails.withArgs(workspaceId, task.id, selectedDate)) }
                             )
                             Spacer(Modifier.height(8.dp))
                         }

@@ -63,12 +63,14 @@ import androidx.compose.ui.unit.sp
 import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavController
 import com.flux.R
+import com.flux.data.model.SettingsModel
 import com.flux.navigation.NavRoutes
 import com.flux.other.BiometricAuthenticator
 
 @Composable
 fun AuthScreen(
     navController: NavController,
+    settings: SettingsModel,
     isBiometricEnabled: Boolean
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -80,10 +82,14 @@ fun AuthScreen(
         showAuth.value = false
 
         navController.navigate(NavRoutes.Workspace.route) {
-            popUpTo(NavRoutes.AuthScreen.route) {
-                inclusive = true
-            }
+            popUpTo(NavRoutes.AuthScreen.route) { inclusive = true }
             launchSingleTop = true
+        }
+
+        if (settings.defaultWorkspace != null) {
+            navController.navigate(NavRoutes.WorkspaceHome.withArgs(settings.defaultWorkspace)){
+                launchSingleTop = true
+            }
         }
     }
 

@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -55,7 +56,9 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -371,12 +374,15 @@ fun BoardContainer(
     status: String,
     radius: Int,
     items: List<ProgressBoardModel>,
-    onClick: (ProgressBoardModel) -> Unit
+    onClick: (ProgressBoardModel) -> Unit,
+    onLongPressed: (ProgressBoardModel) -> Unit
 ){
+    val hapticFeedback = LocalHapticFeedback.current
+
     Card(
         modifier = Modifier.width(300.dp),
         shape = shapeManager(radius = radius * 2),
-        onClick = { },
+        onClick = {},
         colors = CardDefaults.cardColors(containerColor = containerColor.copy(0.1f))
     ) {
         Column(
@@ -391,9 +397,17 @@ fun BoardContainer(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 4.dp),
+                        .padding(horizontal = 4.dp)
+                        .combinedClickable(
+                            onClick= { onClick(item) },
+                            onLongClick = {
+                                hapticFeedback.performHapticFeedback(
+                                    HapticFeedbackType.LongPress
+                                )
+                                onLongPressed(item)
+                            }
+                        ),
                     shape = shapeManager(radius = radius * 2),
-                    onClick = { onClick(item) },
                     colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surface)
                 ) {
                     Row(
@@ -454,7 +468,6 @@ fun BoardContainer(
                                 }
 
                                 if (item.endDate != -1L && item.status != 2) {
-
                                     val daysLeft = daysLeft(item.endDate)
 
                                     Row(

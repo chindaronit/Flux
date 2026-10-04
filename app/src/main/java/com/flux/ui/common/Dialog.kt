@@ -840,3 +840,65 @@ fun ChangeRootProgressDialog(
         RootChangeState.Idle -> {}
     }
 }
+
+@Composable
+fun SelectWorkspaceDialog(
+    workspaces: List<WorkspaceModel>,
+    onConfirm: (String) -> Unit,
+    onDismiss: () -> Unit
+){
+    AlertDialog(
+        icon = {},
+        title = { Text(stringResource(R.string.select_workspaces))},
+        text = {
+            LazyColumn (Modifier
+                .fillMaxWidth()
+                .heightIn(max = 300.dp)) {
+                items(workspaces) { workspace->
+                    Card(
+                        Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(50))
+                            .padding(vertical = 2.dp)
+                            .clickable { onConfirm(workspace.workspaceId) },
+                        shape = RoundedCornerShape(50)
+                    ) {
+                        Row(
+                            Modifier
+                                .padding(vertical = 6.dp, horizontal = 8.dp)
+                                .fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                CircleWrapper(color = MaterialTheme.colorScheme.primary) {
+                                    Icon(
+                                        icons[workspace.icon],
+                                        null,
+                                        tint = MaterialTheme.colorScheme.onPrimary
+                                    )
+                                }
+                                Text(
+                                    text = workspace.title,
+                                    overflow = TextOverflow.Ellipsis,
+                                    maxLines = 1,
+                                    modifier = Modifier.width(150.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.Dismiss))
+            }
+        },
+        dismissButton = {}
+    )
+}

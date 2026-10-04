@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -38,6 +40,7 @@ fun GeneralSearchBar(
     trailingIcon: ImageVector? = null,
     onLeadingIconClicked: () -> Unit = {},
     onTrailingIconClicked: () -> Unit = {},
+    onAddClicked: (() -> Unit)? = null,
     onSearch: (String) -> Unit,
     onCloseClicked: () -> Unit,
 ) {
@@ -74,6 +77,7 @@ fun GeneralSearchBar(
                         onSearch("")
                         expanded = false
                     },
+                    onAddClicked = onAddClicked,
                     leadingIcon = leadingIcon,
                     trailingIcon = trailingIcon,
                     onLeadingIconClicked = onLeadingIconClicked,
@@ -96,6 +100,7 @@ fun GeneralSearchInputField(
     onQueryChange: (String) -> Unit,
     onSearch: (String) -> Unit,
     onSearchClosed: () -> Unit,
+    onAddClicked: (() -> Unit)? = null,
     onLeadingIconClicked: () -> Unit = {},
     onTrailingIconClicked: () -> Unit = {}
 ) {
@@ -123,8 +128,17 @@ fun GeneralSearchInputField(
                 trailingIcon?.let {
                     IconButton(onClick = onTrailingIconClicked) {
                         Icon(
-                            imageVector = trailingIcon,
+                            imageVector = it,
                             contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+                onAddClicked?.let { onAdd ->
+                    IconButton(onClick = onAdd) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Add",
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }

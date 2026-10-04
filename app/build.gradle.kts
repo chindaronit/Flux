@@ -14,8 +14,8 @@ android {
         applicationId = "com.flux"
         minSdk = 29
         targetSdk = 37
-        versionCode = 20
-        versionName = "3.2.3"
+        versionCode = 21
+        versionName = "3.2.4"
     }
 
     dependenciesInfo {
@@ -89,7 +89,6 @@ dependencies {
     implementation(libs.androidx.compose.ui.text)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.glance.appwidget)
-    implementation(libs.androidx.hilt.common)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.activity.compose)
@@ -109,9 +108,12 @@ dependencies {
 
     // Hilt
     ksp(libs.hilt.android.compiler)
+    ksp(libs.androidx.hilt.compiler)
     ksp(libs.kotlinMetadataWorkaround)
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)
+    implementation(libs.androidx.hilt.common)
+    implementation(libs.androidx.hilt.work)
 
     // Room
     ksp(libs.androidx.room.compiler)

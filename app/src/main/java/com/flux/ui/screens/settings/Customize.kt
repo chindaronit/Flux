@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.AddToHomeScreen
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.AutoMode
 import androidx.compose.material.icons.filled.Colorize
@@ -140,6 +141,18 @@ fun Customize(
                     onCustomClick = { showRadiusDialog=true }
                 )
             }
+
+            item {
+                SettingOption(
+                    title = stringResource(R.string.default_screen),
+                    description = stringResource(R.string.change_default_screen_description),
+                    icon = Icons.AutoMirrored.Rounded.AddToHomeScreen,
+                    radius = shapeManager(radius = settings.data.cornerRadius),
+                    actionType = ActionType.CUSTOM,
+                    onCustomClick = { navController.navigate(NavRoutes.DefaultWorkspace.route) }
+                )
+            }
+
             item {
                 SettingOption(
                     title = stringResource(R.string.mode_title),

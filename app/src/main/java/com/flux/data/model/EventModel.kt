@@ -15,7 +15,7 @@ data class EventModel(
     @PrimaryKey val id: String = UUID.randomUUID().toString(),
     val title: String = "",
     val description: String = "",
-    val recurrence: RecurrenceRule = RecurrenceRule.Custom(),
+    val recurrence: RecurrenceRule = RecurrenceRule.Once,
     val startDateTime: Long = System.currentTimeMillis(),
     val endDateTime: Long = -1L,
     val notificationOffset: Long = 0L,
@@ -74,6 +74,6 @@ fun EventModel.occursOn(date: LocalDate): Boolean {
                     date.month == eventStart.month
         }
 
-        else -> return false
+        else -> false
     }
 }

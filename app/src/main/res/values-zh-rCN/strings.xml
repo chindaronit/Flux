@@ -592,4 +592,10 @@
     <string name="private_secure">私密且安全</string>
     <string name="biometric_unlock_description">使用设备的生物识别功能安全地解锁您的 Flux 数据。</string>
     <string name="biometric_data_never_leaves">您的生物识别数据永远不会离开您的设备</string>
+
+    <string name="default_screen">默认屏幕</string>
+    <string name="default_screen_description">应用启动时将打开默认屏幕</string>
+    <string name="change_default_screen_description">更改应用启动时首先加载的屏幕</string>
+    <string name="add_new_item">添加新项目</string>
+    <string name="edit_item">编辑项目</string>
 </resources>

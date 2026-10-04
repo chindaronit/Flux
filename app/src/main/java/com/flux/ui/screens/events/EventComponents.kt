@@ -1,6 +1,12 @@
 package com.flux.ui.screens.events
 
 import android.content.Context
+import android.net.Uri
+import android.provider.OpenableColumns
+import android.util.Log
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -56,6 +62,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.lazy.LazyRow
@@ -70,11 +77,15 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import com.flux.data.model.EventModel
+import com.flux.other.IcsImporter
 import java.time.LocalDate
 import java.time.YearMonth
 
@@ -280,7 +291,8 @@ fun EventCard(
     repeat: RecurrenceRule,
     startDateTime: Long,
     onChangeStatus: () -> Unit,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onLongPressed: () -> Unit,
 ) {
     val containerColor =
         if (isPending) MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)
@@ -292,20 +304,26 @@ fun EventCard(
     val context = LocalContext.current
     val time = startDateTime.toFormattedTime(is24HourFormat)
 
+    val hapticFeedback = LocalHapticFeedback.current
+    val handleLongPress = {
+        hapticFeedback.performHapticFeedback(
+            HapticFeedbackType.LongPress
+        )
+        onLongPressed()
+    }
+
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().combinedClickable(
+            onClick = onClick,
+            onLongClick = handleLongPress
+        ),
         colors = CardDefaults.cardColors(
             containerColor = containerColor,
             contentColor = contentColor
         ),
-        shape = shapeManager(radius = radius * 2),
-        onClick = onClick
+        shape = shapeManager(radius = radius * 2)
     ) {
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(vertical = 4.dp)
-        ) {
+        Row(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
             IconRadioButton(
                 selected = !isPending,
                 onClick = onChangeStatus
@@ -442,21 +460,44 @@ fun DailyViewDateCard(date: Long, day: String, isSelected: Boolean, onClick: () 
 }
 
 @Composable
-fun MonthlyViewDateCard(date: Long, count: Int, maxCount: Int = 0, isSelected: Boolean, onClick: () -> Unit) {
+fun MonthlyViewDateCard(
+    date: Long,
+    count: Int,
+    maxCount: Int = 0,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    val today = LocalDate.now()
     val localDate = LocalDate.ofEpochDay(date)
-    val fraction = if (maxCount > 0 && count > 0) count.toFloat() / maxCount.toFloat() else 0f
-    val containerColor =
-        if (isSelected) MaterialTheme.colorScheme.primary
-        else MaterialTheme.colorScheme.surfaceContainerLow
-    val contentColor =
-        if (isSelected) MaterialTheme.colorScheme.onSurface
-        else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+    val isToday = date == today.toEpochDay()
+
+    val fraction =
+        if (maxCount > 0 && count > 0) {
+            count.toFloat() / maxCount.toFloat()
+        } else {
+            0f
+        }
+
     val primaryColor = MaterialTheme.colorScheme.primary
+
+    val contentColor =
+        if (isSelected) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+        }
 
     Box(
         modifier = Modifier
             .size(48.dp)
-            .clip(RoundedCornerShape(50))
+            .clip(CircleShape)
+            .background(
+                if (isSelected) {
+                    Color.Transparent
+                } else {
+                    MaterialTheme.colorScheme.surfaceContainerLow
+                }
+            )
             .drawBehind {
                 if (fraction > 0f && !isSelected) {
                     drawCircle(
@@ -470,11 +511,21 @@ fun MonthlyViewDateCard(date: Long, count: Int, maxCount: Int = 0, isSelected: B
                         )
                     )
                 }
+
+                if (isToday && !isSelected) {
+                    drawCircle(
+                        color = primaryColor,
+                        style = Stroke(width = 2.dp.toPx()),
+                        radius = size.minDimension / 2f - 1.dp.toPx()
+                    )
+                }
             }
             .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             Text(
                 text = localDate.dayOfMonth.toString(),
                 style = MaterialTheme.typography.bodyLarge,
@@ -486,8 +537,7 @@ fun MonthlyViewDateCard(date: Long, count: Int, maxCount: Int = 0, isSelected: B
                     modifier = Modifier
                         .size(8.dp)
                         .clip(CircleShape)
-                        .background(containerColor)
-                        .padding(top = 2.dp)
+                        .background(MaterialTheme.colorScheme.primary)
                 )
             }
         }
@@ -498,7 +548,8 @@ fun MonthlyViewDateCard(date: Long, count: Int, maxCount: Int = 0, isSelected: B
 fun DailyViewCalendar(
     selectedMonth: YearMonth,
     selectedDate: Long,
-    onDateChange: (Long) -> Unit
+    onDateChange: (Long) -> Unit,
+    onMonthChange: (YearMonth) -> Unit
 ) {
     val daysInMonth = selectedMonth.lengthOfMonth()
     val dateList = (1..daysInMonth).map { day -> selectedMonth.atDay(day) }
@@ -514,6 +565,45 @@ fun DailyViewCalendar(
     }
 
     Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = selectedMonth.month.name.lowercase().replaceFirstChar { it.uppercaseChar() } + ", ${selectedMonth.year}",
+                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            IconButton(onClick = {
+                val prevMonth = selectedMonth.minusMonths(1)
+                onMonthChange(prevMonth)
+                onDateChange(prevMonth.atDay(1).toEpochDay())
+            }) {
+                Icon(
+                    Icons.AutoMirrored.Default.ArrowBackIos,
+                    tint = MaterialTheme.colorScheme.primary,
+                    contentDescription = "Previous month",
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+
+            IconButton(onClick = {
+                val nextMonth = selectedMonth.plusMonths(1)
+                onMonthChange(nextMonth)
+                onDateChange(nextMonth.atDay(1).toEpochDay())
+            }) {
+                Icon(
+                    Icons.AutoMirrored.Default.ArrowForwardIos,
+                    tint = MaterialTheme.colorScheme.primary,
+                    contentDescription = "Next month",
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        }
+
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             state = listState
@@ -589,9 +679,7 @@ fun MonthlyViewCalendar(
                     Icons.AutoMirrored.Default.ArrowBackIos,
                     tint = MaterialTheme.colorScheme.primary,
                     contentDescription = "Previous month",
-                    modifier = Modifier
-                        .size(18.dp)
-                        .alpha(0.5f)
+                    modifier = Modifier.size(18.dp)
                 )
             }
 
@@ -604,9 +692,7 @@ fun MonthlyViewCalendar(
                     Icons.AutoMirrored.Default.ArrowForwardIos,
                     tint = MaterialTheme.colorScheme.primary,
                     contentDescription = "Next month",
-                    modifier = Modifier
-                        .size(18.dp)
-                        .alpha(0.5f)
+                    modifier = Modifier.size(18.dp)
                 )
             }
         }
@@ -647,5 +733,77 @@ fun MonthlyViewCalendar(
                 }
             }
         }
+    }
+}
+
+private const val TAG = "IcsImport"
+
+private fun Context.queryFileName(uri: Uri): String? =
+    contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
+        val idx = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+        if (cursor.moveToFirst() && idx >= 0) cursor.getString(idx) else null
+    }
+
+@Composable
+fun rememberIcsImportLauncher(
+    context: Context,
+    workspaceId: String = "",
+    onImported: (List<EventModel>) -> Unit
+): androidx.activity.result.ActivityResultLauncher<Array<String>> {
+    return rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        if (uri == null) {
+            Log.w(TAG, "No file selected (picker returned null URI)")
+            return@rememberLauncherForActivityResult
+        }
+
+        val fileName = context.queryFileName(uri)
+        Log.d(TAG, "Picked file: $fileName ($uri)")
+        if (fileName != null && !fileName.endsWith(".ics", ignoreCase = true)) {
+            Log.w(TAG, "Selected file doesn't look like an .ics file: $fileName")
+            Toast.makeText(context, "That doesn't look like an .ics file: $fileName", Toast.LENGTH_LONG).show()
+        }
+
+        val text = runCatching {
+            context.contentResolver.openInputStream(uri)
+                ?.bufferedReader(Charsets.UTF_8)
+                ?.use { it.readText() }
+        }.onFailure { e ->
+            Log.e(TAG, "Failed to read file contents", e)
+            Toast.makeText(context, "Couldn't read the file: ${e.message}", Toast.LENGTH_LONG).show()
+        }.getOrNull()
+
+        if (text.isNullOrBlank()) {
+            Log.w(TAG, "File was empty or unreadable")
+            Toast.makeText(context, "The file appears to be empty", Toast.LENGTH_LONG).show()
+            return@rememberLauncherForActivityResult
+        }
+        Log.d(TAG, "Read ${text.length} chars from file")
+
+        val imported = runCatching { IcsImporter.import(text, workspaceId) }
+            .onFailure { e ->
+                Log.e(TAG, "ICS parsing threw an exception", e)
+                Toast.makeText(context, "Failed to parse .ics: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+            .getOrDefault(emptyList())
+
+        if (imported.isEmpty()) {
+            Log.w(TAG, "Parsed 0 events out of ${text.lines().size} lines. First 500 chars:\n${text.take(500)}")
+            Toast.makeText(context, "No events found in that file", Toast.LENGTH_LONG).show()
+            return@rememberLauncherForActivityResult
+        }
+
+        imported.forEach { event ->
+            val dateStr = Instant.ofEpochMilli(event.startDateTime).atZone(ZoneId.systemDefault()).toLocalDate()
+            Log.d(TAG, "Imported: \"${event.title}\" on $dateStr, recurrence=${event.recurrence}, endDateTime=${event.endDateTime}")
+        }
+        Toast.makeText(
+            context,
+            "Imported ${imported.size} event${if (imported.size == 1) "" else "s"}",
+            Toast.LENGTH_SHORT
+        ).show()
+
+        onImported(imported)
     }
 }

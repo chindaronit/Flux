@@ -587,4 +587,10 @@
     <string name="private_secure">निजी और सुरक्षित</string>
     <string name="biometric_unlock_description">अपने Flux डेटा को सुरक्षित रूप से अनलॉक करने के लिए अपने डिवाइस की बायोमेट्रिक सुविधा का उपयोग करें।</string>
     <string name="biometric_data_never_leaves">आपका बायोमेट्रिक डेटा आपके डिवाइस से कभी बाहर नहीं जाता</string>
+
+    <string name="default_screen">डिफ़ॉल्ट स्क्रीन</string>
+    <string name="default_screen_description">ऐप लॉन्च होने पर डिफ़ॉल्ट स्क्रीन खोली जाएगी</string>
+    <string name="change_default_screen_description">ऐप लॉन्च होने पर पहले लोड होने वाली स्क्रीन बदलें</string>
+    <string name="add_new_item">नया आइटम जोड़ें</string>
+    <string name="edit_item">आइटम संपादित करें</string>
 </resources>
