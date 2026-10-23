@@ -1,10 +1,13 @@
 package com.flux.widgets.todo
 
+import android.appwidget.AppWidgetManager
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -18,11 +21,14 @@ import androidx.glance.GlanceTheme
 import androidx.glance.Image
 import androidx.glance.ImageProvider
 import androidx.glance.LocalSize
+import androidx.glance.action.Action
 import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
+import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.SizeMode
+import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.components.TitleBar
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.lazy.LazyColumn
@@ -31,6 +37,7 @@ import androidx.glance.appwidget.provideContent
 import androidx.glance.background
 import androidx.glance.currentState
 import androidx.glance.layout.Alignment
+import androidx.glance.layout.Box
 import androidx.glance.layout.Column
 import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
@@ -40,7 +47,9 @@ import androidx.glance.layout.height
 import androidx.glance.layout.padding
 import androidx.glance.layout.width
 import androidx.glance.state.PreferencesGlanceStateDefinition
+import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
+import androidx.glance.text.TextAlign
 import androidx.glance.text.TextDecoration
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
@@ -50,10 +59,19 @@ import com.flux.data.model.TodoDisplayItem
 import com.flux.other.ReceiverEntryPoint
 import com.flux.widgets.WidgetSize
 import dagger.hilt.android.EntryPointAccessors
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 class TodoWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = TodoWidget()
+}
+
+private sealed interface WidgetState {
+    data object Loading : WidgetState
+    data object Missing : WidgetState
+    data class Ready(val item: TodoDisplayItem) : WidgetState
 }
 
 class TodoWidget : GlanceAppWidget() {
@@ -63,6 +81,7 @@ class TodoWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val entryPoint = EntryPointAccessors.fromApplication(context, ReceiverEntryPoint::class.java)
         val todoRepo = entryPoint.todoRepository()
+        val appWidgetId = GlanceAppWidgetManager(context).getAppWidgetId(id)
 
         provideContent {
             val size = LocalSize.current
@@ -70,26 +89,32 @@ class TodoWidget : GlanceAppWidget() {
             val prefs = currentState<Preferences>()
             val todoId = prefs[TODO_ID_KEY]
 
-            val item = if (todoId != null) {
-                val state by todoRepo.observeTodoList(todoId).collectAsState(initial = null)
-                state
-            } else {
-                null
+            val stateFlow: Flow<WidgetState> = remember(todoId) {
+                if (todoId == null) emptyFlow()
+                else todoRepo.observeTodoList(todoId).map { t ->
+                    if (t == null) WidgetState.Missing else WidgetState.Ready(t)
+                }
             }
+            val state by stateFlow.collectAsState(initial = WidgetState.Loading)
 
             GlanceTheme {
                 if (todoId == null) {
-                    WidgetSurface {
-                        NoSelectionState()
+                    WidgetSurface { NoSelectionState() }
+                } else when (val s = state) {
+                    WidgetState.Loading -> WidgetSurface {}
+                    WidgetState.Missing -> WidgetSurface {
+                        ListDeletedState(
+                            onPickAnother = actionStartActivity(
+                                Intent(context, TodoWidgetConfigActivity::class.java)
+                                    .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+                            )
+                        )
                     }
-                } else if (item == null) {
-                    WidgetSurface {}
-                } else {
-                    SingleTodoContent(
-                        todo = item,
+                    is WidgetState.Ready -> SingleTodoContent(
+                        todo = s.item,
                         widgetSize = size,
                         onToggleItem = { itemId ->
-                            scope.launch { todoRepo.toggleTodoItem(item, itemId) }
+                            scope.launch { todoRepo.toggleTodoItem(s.item, itemId) }
                         },
                         onUpdateWidget = { scope.launch { this@TodoWidget.update(context, id) } }
                     )
@@ -144,7 +169,8 @@ private fun SingleTodoContent(
     val itemSpacing = if (isCompactHeight) 2.dp else 6.dp
 
     val visibleItems = todo.items
-    val checkedCount = todo.items.count { it.isChecked }
+    val isEnabled = todo !is TodoDisplayItem.NotScheduled
+    val checkedCount = if (isEnabled) todo.items.count { it.isChecked } else 0
 
     Column(
         modifier = modifier
@@ -174,6 +200,29 @@ private fun SingleTodoContent(
             },
         )
 
+        if (!isEnabled) {
+            Box(
+                modifier = GlanceModifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+            ) {
+                Row(
+                    modifier = GlanceModifier
+                        .fillMaxWidth()
+                        .background(GlanceTheme.colors.tertiaryContainer)
+                        .cornerRadius(12.dp)
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = "Not scheduled today. Items are read-only",
+                        style = TextStyle(color = GlanceTheme.colors.onTertiaryContainer),
+                        maxLines = 2,
+                    )
+                }
+            }
+        }
+
         LazyColumn(
             modifier = GlanceModifier.fillMaxWidth().defaultWeight().padding(horizontal = 8.dp),
             horizontalAlignment = Alignment.Start,
@@ -184,8 +233,9 @@ private fun SingleTodoContent(
                         text = todoItem.value,
                         isChecked = todoItem.isChecked,
                         showIcon = showIcon,
+                        enabled = isEnabled,
                         roundedSupported = roundedSupported,
-                        onToggle = { onToggleItem(todoItem.id) },
+                        onToggle = { onToggleItem(todoItem.id) }
                     )
                     Spacer(modifier = GlanceModifier.height(itemSpacing))
                 }
@@ -196,21 +246,57 @@ private fun SingleTodoContent(
 
 @GlanceComposable
 @Composable
+private fun ListDeletedState(onPickAnother: Action) {
+    Column(
+        modifier = GlanceModifier.fillMaxWidth().padding(16.dp).clickable(onPickAnother),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            text = "This list was deleted",
+            style = TextStyle(
+                color = GlanceTheme.colors.onSurface,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+            ),
+        )
+        Spacer(modifier = GlanceModifier.height(4.dp))
+        Text(
+            text = "Tap to choose another list, or remove this widget from your home screen.",
+            style = TextStyle(
+                color = GlanceTheme.colors.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            ),
+        )
+    }
+}
+
+@GlanceComposable
+@Composable
 private fun TodoItemRow(
     text: String,
     isChecked: Boolean,
     showIcon: Boolean,
     roundedSupported: Boolean,
-    onToggle: () -> Unit,
+    enabled: Boolean,
+    onToggle: () -> Unit
 ) {
-    val containerColor = if (isChecked) GlanceTheme.colors.tertiaryContainer else GlanceTheme.colors.secondaryContainer
-    val onContainerColor = if (isChecked) GlanceTheme.colors.onTertiaryContainer else GlanceTheme.colors.onSecondaryContainer
+    val containerColor = when {
+        !enabled -> GlanceTheme.colors.surfaceVariant
+        isChecked -> GlanceTheme.colors.tertiaryContainer
+        else -> GlanceTheme.colors.secondaryContainer
+    }
+    val onContainerColor = when {
+        !enabled -> GlanceTheme.colors.onSurfaceVariant
+        isChecked -> GlanceTheme.colors.onTertiaryContainer
+        else -> GlanceTheme.colors.onSecondaryContainer
+    }
+
+    val rowModifier = GlanceModifier.fillMaxWidth()
+        .todoItemBackground(roundedSupported, containerColor)
+        .padding(vertical = 6.dp, horizontal = 8.dp)
 
     Row(
-        modifier = GlanceModifier.fillMaxWidth()
-            .todoItemBackground(roundedSupported, containerColor)
-            .padding(vertical = 6.dp, horizontal = 8.dp)
-            .clickable { onToggle() },
+        modifier = if (enabled) rowModifier.clickable { onToggle() } else rowModifier,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (showIcon) {
