@@ -14,7 +14,6 @@ import com.flux.ui.common.slideScreenEnterAnimation
 import com.flux.ui.common.slideScreenExitAnimation
 import com.flux.ui.common.slideToBottomExit
 
-
 fun NavGraphBuilder.animatedComposable(
     route: String,
     arguments: List<NamedNavArgument> = emptyList(),

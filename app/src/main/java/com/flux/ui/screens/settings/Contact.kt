@@ -57,7 +57,7 @@ fun Contact(navController: NavController, radius: Int) {
                     title = stringResource(R.string.bug_report),
                     description = stringResource(R.string.Contact_desc2),
                     icon = Icons.Rounded.Feedback,
-                    radius = shapeManager(radius = radius, isBoth = true),
+                    radius = shapeManager(radius = radius),
                     actionType = ActionType.LINK,
                     linkClicked = {
                         val intent = Intent(
