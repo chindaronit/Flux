@@ -130,7 +130,7 @@ class TodoWidget : GlanceAppWidget() {
 
 @GlanceComposable
 @Composable
-private fun WidgetSurface(
+fun WidgetSurface(
     content: @Composable () -> Unit,
 ) {
     val roundedSupported = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
@@ -246,13 +246,13 @@ private fun SingleTodoContent(
 
 @GlanceComposable
 @Composable
-private fun ListDeletedState(onPickAnother: Action) {
+fun ListDeletedState(onPickAnother: Action) {
     Column(
         modifier = GlanceModifier.fillMaxWidth().padding(16.dp).clickable(onPickAnother),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = "This list was deleted",
+            text = "This data was deleted",
             style = TextStyle(
                 color = GlanceTheme.colors.onSurface,
                 fontWeight = FontWeight.Bold,
@@ -261,7 +261,7 @@ private fun ListDeletedState(onPickAnother: Action) {
         )
         Spacer(modifier = GlanceModifier.height(4.dp))
         Text(
-            text = "Tap to choose another list, or remove this widget from your home screen.",
+            text = "Tap to choose another, or remove this widget from your home screen.",
             style = TextStyle(
                 color = GlanceTheme.colors.onSurfaceVariant,
                 textAlign = TextAlign.Center,

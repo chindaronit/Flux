@@ -22,6 +22,13 @@ interface HabitInstanceDao {
     @Query("SELECT * FROM HabitInstanceModel WHERE habitId = :habitId AND instanceDate = :date LIMIT 1")
     suspend fun getHabitInstance(habitId: String, date: Long): HabitInstanceModel?
 
+    @Query("""
+        SELECT * FROM HabitInstanceModel
+        WHERE habitId = :habitId AND instanceDate >= :sinceEpochDay
+        ORDER BY instanceDate DESC
+    """)
+    fun observeHabitInstances(habitId: String, sinceEpochDay: Long): Flow<List<HabitInstanceModel>>
+
     @Query("SELECT * FROM HabitInstanceModel WHERE instanceDate = :date")
     fun loadInstancesForDate(date: Long): Flow<List<HabitInstanceModel>>
 

@@ -20,6 +20,7 @@ import androidx.glance.LocalSize
 import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
+import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.components.TitleBar
 import androidx.glance.appwidget.cornerRadius
@@ -48,6 +49,10 @@ import com.flux.other.ReceiverEntryPoint
 import com.flux.widgets.WidgetSize
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.launch
+
+class HabitWidgetReceiver : GlanceAppWidgetReceiver() {
+    override val glanceAppWidget: GlanceAppWidget = HabitWidget()
+}
 
 class HabitWidget : GlanceAppWidget() {
     override val sizeMode: SizeMode = SizeMode.Exact
@@ -226,7 +231,7 @@ private fun HabitListItem(
     }
 }
 
-private fun GlanceModifier.roundedWidgetBackground(color: ColorProvider): GlanceModifier =
+fun GlanceModifier.roundedWidgetBackground(color: ColorProvider): GlanceModifier =
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         background(color).cornerRadius(24.dp)
     } else {
