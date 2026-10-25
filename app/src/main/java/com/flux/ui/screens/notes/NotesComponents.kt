@@ -41,7 +41,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.shape.ZeroCornerSize
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowRight
 import androidx.compose.material.icons.automirrored.filled.FormatAlignLeft
@@ -697,8 +696,7 @@ fun ListDialog(
         text = {
             LazyColumn(modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max=380.dp)
-                .verticalScroll(rememberScrollState())) {
+                .heightIn(max=380.dp)) {
 
                 itemsIndexed(list){ index, str ->
                     Row(
@@ -776,8 +774,7 @@ fun TaskDialog(
         text = {
             LazyColumn (modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max=380.dp)
-                .verticalScroll(rememberScrollState())) {
+                .heightIn(max=380.dp)) {
                 itemsIndexed(taskList) { index, taskState ->
                     Row(
                         modifier = Modifier
