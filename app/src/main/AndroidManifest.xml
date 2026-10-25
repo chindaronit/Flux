@@ -54,7 +54,7 @@
 
         <receiver android:name=".widgets.habits.HabitWidgetReceiver"
             android:exported="true"
-            android:label="Habits Widget">
+            android:label="All Habits Widget">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
             </intent-filter>
@@ -63,10 +63,30 @@
                 android:resource="@xml/habit_widget"/>
         </receiver>
 
+        <receiver android:name=".widgets.habits.SingleHabitAnalyticsReceiver"
+            android:exported="true"
+            android:label="Single Habit Analytics Widget">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/single_habit_analytics"/>
+        </receiver>
+
+        <activity
+            android:name=".widgets.habits.SingleHabitAnalyticsConfigActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Flux">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
         <receiver
             android:name=".widgets.todo.TodoWidgetReceiver"
             android:exported="true"
-            android:label="Todo Widget">
+            android:label="Single Todo Widget">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>

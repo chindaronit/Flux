@@ -124,7 +124,7 @@ class TodoRepositoryImpl @Inject constructor(
                     )
                 }
 
-                else -> null
+                else -> TodoDisplayItem.NotScheduled(todo)
             }
         }.flowOn(Dispatchers.Default)
     }
@@ -156,6 +156,8 @@ class TodoRepositoryImpl @Inject constructor(
 
                 instanceDao.upsertTodoInstance(instance.copy(items = updated))
             }
+
+            is TodoDisplayItem.NotScheduled -> {}
         }
     }
 

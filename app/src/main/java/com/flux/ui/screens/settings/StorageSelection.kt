@@ -69,6 +69,8 @@ import com.flux.other.ensureStorageRoot
 import com.flux.ui.viewModel.SettingsViewModel
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
@@ -163,6 +165,7 @@ private fun StorageSelectionContent(
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
                 .background(
                     Brush.radialGradient(
                         colors = listOf(

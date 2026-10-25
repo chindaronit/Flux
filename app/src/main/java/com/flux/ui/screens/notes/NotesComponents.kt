@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.CornerBasedShape
@@ -40,7 +41,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.shape.ZeroCornerSize
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowRight
 import androidx.compose.material.icons.automirrored.filled.FormatAlignLeft
@@ -511,12 +511,8 @@ fun LinkDialog(
 
     val linkError by remember {
         derivedStateOf {
-            if (link.isNotEmpty()) {
-                // Email is considered erroneous until it completely matches EMAIL_ADDRESS.
-                !android.util.Patterns.WEB_URL.matcher(link).matches()
-            } else {
-                false
-            }
+            // Email is considered erroneous until it completely matches EMAIL_ADDRESS.
+            link.isNotEmpty() && !android.util.Patterns.WEB_URL.matcher(link).matches()
         }
     }
 
@@ -698,10 +694,11 @@ fun ListDialog(
             }
         },
         text = {
-            Column(modifier = Modifier
+            LazyColumn(modifier = Modifier
                 .fillMaxWidth()
-                .verticalScroll(rememberScrollState())) {
-                list.forEachIndexed { index, str ->
+                .heightIn(max=380.dp)) {
+
+                itemsIndexed(list){ index, str ->
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
@@ -732,13 +729,15 @@ fun ListDialog(
                     }
                 }
 
-                TextButton(onClick = { list.add("") }) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(Icons.Default.SubdirectoryArrowRight, null)
-                        Text(stringResource(R.string.Add_Item))
+                item {
+                    TextButton(onClick = { list.add("") }) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.SubdirectoryArrowRight, null)
+                            Text(stringResource(R.string.Add_Item))
+                        }
                     }
                 }
             }
@@ -773,10 +772,10 @@ fun TaskDialog(
     AlertDialog(
         title = { Text(stringResource(R.string.task)) },
         text = {
-            Column(modifier = Modifier
+            LazyColumn (modifier = Modifier
                 .fillMaxWidth()
-                .verticalScroll(rememberScrollState())) {
-                taskList.forEachIndexed { index, taskState ->
+                .heightIn(max=380.dp)) {
+                itemsIndexed(taskList) { index, taskState ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -813,13 +812,15 @@ fun TaskDialog(
                     }
                 }
 
-                TextButton(onClick = { taskList.add(TaskItem("", false)) }) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(Icons.Default.SubdirectoryArrowRight, null)
-                        Text(stringResource(R.string.Add_Item))
+                item {
+                    TextButton(onClick = { taskList.add(TaskItem("", false)) }) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.SubdirectoryArrowRight, null)
+                            Text(stringResource(R.string.Add_Item))
+                        }
                     }
                 }
             }
@@ -1744,7 +1745,6 @@ fun NotesFilterSheet(
 }
 
 // ------------- Card -------------
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotesPreviewCard(
     modifier: Modifier = Modifier,
@@ -1913,7 +1913,6 @@ fun NotesPreviewCard(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomIconButton(
     enabled: Boolean = true,

@@ -1,5 +1,6 @@
 package com.flux.data.repository
 
+import com.flux.data.model.HabitDataItem
 import com.flux.data.model.HabitInstanceModel
 import com.flux.data.model.HabitModel
 import com.flux.data.model.HabitWithStatus
@@ -16,7 +17,9 @@ interface HabitRepository {
     suspend fun loadAllHabitsInstances(): List<HabitInstanceModel>
     suspend fun toggleHabit(habit: HabitModel, currentlyCompleted: Boolean)
     suspend fun updateOrder(habitIds: List<String>)
+    fun observePublicHabits(): Flow<List<HabitModel>>
     fun observeTodayHabitStatuses(): Flow<List<HabitWithStatus>>
+    fun observeHabitDataItem(habitId: String): Flow<HabitDataItem?>
     fun loadHabitData(): Flow<List<HabitModel>>
     fun loadHabitInstanceData(): Flow<List<HabitInstanceModel>>
 }

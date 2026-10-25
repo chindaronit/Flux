@@ -8,7 +8,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -27,10 +26,10 @@ import com.flux.ui.common.DeleteAlert
 import com.flux.ui.events.HabitEvents
 import com.flux.ui.events.JournalEvents
 import com.flux.ui.events.NotesEvents
+import com.flux.ui.events.ProgressBoardEvents
 import com.flux.ui.events.TaskEvents
 import com.flux.ui.events.TodoEvents
 import com.flux.ui.events.WorkspaceEvents
-import com.flux.ui.events.ProgressBoardEvents
 import com.flux.ui.screens.analytics.AnalyticScreen
 import com.flux.ui.screens.events.EventScreen
 import com.flux.ui.screens.habits.HabitScreen
@@ -40,6 +39,74 @@ import com.flux.ui.screens.progressBoard.ProgressTrackerScreen
 import com.flux.ui.screens.todo.TodoScreen
 import com.flux.ui.state.States
 import com.flux.ui.viewModel.ViewModels
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.key
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Modifier
+
+private const val VIRTUAL_PAGE_COUNT = 100_000
+
+/**
+ * Circular horizontal pager over [spaces].
+ * Swipe left -> next space, swipe right -> previous space, wrapping at both ends.
+ */
+@Composable
+fun CircularSpacePager(
+    spaces: List<Int>,
+    selectedSpaceId: Int,
+    onPageSettled: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+    content: @Composable (spaceId: Int) -> Unit
+) {
+    val size = spaces.size
+    if (size == 0) return
+
+    // Rebuild the pager when spaces are added/removed
+    key(spaces) {
+        val circular = size > 1
+        val startIndex = spaces.indexOf(selectedSpaceId).coerceAtLeast(0)
+        val initialPage = if (circular) {
+            val mid = VIRTUAL_PAGE_COUNT / 2
+            mid - (mid % size) + startIndex
+        } else 0
+
+        val pagerState = rememberPagerState(initialPage = initialPage) {
+            if (circular) VIRTUAL_PAGE_COUNT else 1
+        }
+
+        // Pager -> selection
+        LaunchedEffect(pagerState) {
+            snapshotFlow { pagerState.settledPage }
+                .collect { onPageSettled(spaces[it.mod(size)]) }
+        }
+
+        // Selection -> pager (e.g. a chip/tab inside a screen calls onSpaceChange)
+        LaunchedEffect(selectedSpaceId) {
+            if (!circular || pagerState.isScrollInProgress) return@LaunchedEffect
+            val target = spaces.indexOf(selectedSpaceId)
+            val current = pagerState.currentPage
+            val currentIdx = current.mod(size)
+            if (target < 0 || target == currentIdx) return@LaunchedEffect
+
+            var delta = target - currentIdx
+            if (delta > size / 2) delta -= size
+            else if (delta < -size / 2) delta += size // shortest circular path
+            pagerState.animateScrollToPage(current + delta)
+        }
+
+        HorizontalPager(
+            state = pagerState,
+            modifier = modifier,
+            userScrollEnabled = circular,
+            key = { it }
+        ) { page ->
+            content(spaces[page.mod(size)])
+        }
+    }
+}
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,41 +138,76 @@ fun WorkspaceDetails(
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
-        onResult = { uri: Uri? -> uri?.let { viewModels.workspaceViewModel.onEvent(WorkspaceEvents.ChangeCover(context, uri, workspace)) } }
-    )
-
-    val rootPicker =
-        rememberLauncherForActivityResult(
-            ActivityResultContracts.StartActivityForResult()
-        ) { result ->
-            val uri = result.data?.data ?: return@rememberLauncherForActivityResult
-            viewModels.settingsViewModel.saveRootUri(uri)
-        }
-
-    SpaceMapper(
-        navController = navController,
-        workspace = workspace,
-        spaceId = selectedSpaceId.intValue,
-        states = states,
-        viewModels = viewModels,
-        onAddCover = {
-            ensureStorageRoot(
-                scope = scope,
-                settingsViewModel = viewModels.settingsViewModel,
-                rootPicker = rootPicker
-            ) { imagePickerLauncher.launch("image/*") }
-        },
-        onRemoveCover = { viewModels.workspaceViewModel.onEvent(WorkspaceEvents.UpsertSpace(workspace.copy(cover = ""))) },
-        onDeleteWorkspace = { isDeleteDialogVisible = true },
-        onToggleLock = {
-            if(workspace.isLocked) {
-                viewModels.workspaceViewModel.onEvent(WorkspaceEvents.UpsertSpace(workspace.removePasskey()))
+        onResult = { uri: Uri? ->
+            uri?.let {
+                viewModels.workspaceViewModel.onEvent(WorkspaceEvents.ChangeCover(context, uri, workspace))
             }
-            else { isPasskeyDialogVisible = true }
-        },
-        onSpaceChange = { selectedSpaceId.intValue = it },
-        onShowSpaceBottomSheet = { showBottomSheet = true },
+        }
     )
+
+    val rootPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val uri = result.data?.data ?: return@rememberLauncherForActivityResult
+        viewModels.settingsViewModel.saveRootUri(uri)
+    }
+
+    // Shared callbacks, used by both the empty state and the pager pages
+    val onAddCover: () -> Unit = {
+        ensureStorageRoot(
+            scope = scope,
+            settingsViewModel = viewModels.settingsViewModel,
+            rootPicker = rootPicker
+        ) { imagePickerLauncher.launch("image/*") }
+    }
+    val onRemoveCover: () -> Unit = {
+        viewModels.workspaceViewModel.onEvent(WorkspaceEvents.UpsertSpace(workspace.copy(cover = "")))
+    }
+    val onDeleteWorkspace: () -> Unit = { isDeleteDialogVisible = true }
+    val onToggleLock: () -> Unit = {
+        if (workspace.isLocked) {
+            viewModels.workspaceViewModel.onEvent(WorkspaceEvents.UpsertSpace(workspace.removePasskey()))
+        } else {
+            isPasskeyDialogVisible = true
+        }
+    }
+    val onShowSpaceBottomSheet: () -> Unit = { showBottomSheet = true }
+
+    if (workspace.selectedSpaces.isEmpty()) {
+        SpaceMapper(
+            navController = navController,
+            workspace = workspace,
+            spaceId = -1,
+            states = states,
+            viewModels = viewModels,
+            onAddCover = onAddCover,
+            onRemoveCover = onRemoveCover,
+            onDeleteWorkspace = onDeleteWorkspace,
+            onToggleLock = onToggleLock,
+            onSpaceChange = {},
+            onShowSpaceBottomSheet = onShowSpaceBottomSheet,
+        )
+    } else {
+        CircularSpacePager(
+            spaces = workspace.selectedSpaces,
+            selectedSpaceId = selectedSpaceId.intValue,
+            onPageSettled = { selectedSpaceId.intValue = it },
+        ) { id ->
+            SpaceMapper(
+                navController = navController,
+                workspace = workspace,
+                spaceId = id,
+                states = states,
+                viewModels = viewModels,
+                onAddCover = onAddCover,
+                onRemoveCover = onRemoveCover,
+                onDeleteWorkspace = onDeleteWorkspace,
+                onToggleLock = onToggleLock,
+                onSpaceChange = { selectedSpaceId.intValue = it },
+                onShowSpaceBottomSheet = onShowSpaceBottomSheet,
+            )
+        }
+    }
 
     if (isPasskeyDialogVisible) {
         SetPasskeyDialog(
@@ -117,13 +219,14 @@ fun WorkspaceDetails(
     }
 
     if (isDeleteDialogVisible) {
-        DeleteAlert(onConfirmation = {
-            isDeleteDialogVisible = false
-            navController.popBackStack()
-            clearWorkspace(context, workspace, viewModels)
-        }, onDismissRequest = {
-            isDeleteDialogVisible = false
-        })
+        DeleteAlert(
+            onConfirmation = {
+                isDeleteDialogVisible = false
+                navController.popBackStack()
+                clearWorkspace(context, workspace, viewModels)
+            },
+            onDismissRequest = { isDeleteDialogVisible = false }
+        )
     }
 
     AddNewSpacesBottomSheet(
@@ -147,18 +250,14 @@ fun WorkspaceDetails(
             if (selectedSpaceId.intValue == -1) selectedSpaceId.intValue = it
             viewModels.workspaceViewModel.onEvent(
                 WorkspaceEvents.UpsertSpace(
-                    workspace.copy(
-                        selectedSpaces = workspace.selectedSpaces.plus(
-                            it
-                        )
-                    )
+                    workspace.copy(selectedSpaces = workspace.selectedSpaces.plus(it))
                 )
             )
         }
     )
 }
 
-fun clearWorkspace(context: Context, workspace: WorkspaceModel, viewModels: ViewModels){
+fun clearWorkspace(context: Context, workspace: WorkspaceModel, viewModels: ViewModels) {
     viewModels.workspaceViewModel.onEvent(WorkspaceEvents.DeleteSpace(workspace))
     workspace.selectedSpaces.forEach { spaceId ->
         removeSpaceData(workspace.workspaceId, spaceId, context, viewModels)
@@ -200,7 +299,7 @@ fun SpaceMapper(
         1 -> NotesScreen(
             navController,
             states.notesState,
-            states.labelState.allLabels.filter { it.workspaceId==workspace.workspaceId },
+            states.labelState.allLabels.filter { it.workspaceId == workspace.workspaceId },
             states.settings,
             workspace,
             onShowSpaceBottomSheet,
@@ -247,7 +346,7 @@ fun SpaceMapper(
             states.journalState,
             states.settings,
             workspace,
-            states.labelState.allLabels.filter { it.workspaceId==workspace.workspaceId },
+            states.labelState.allLabels.filter { it.workspaceId == workspace.workspaceId },
             onShowSpaceBottomSheet,
             onSpaceChange,
             onAddCover,
@@ -297,16 +396,14 @@ fun SpaceMapper(
             onToggleLock
         )
 
-        else -> {
-            EmptyWorkspace(
-                navController,
-                workspace,
-                onShowSpaceBottomSheet,
-                onAddCover,
-                onRemoveCover,
-                onDeleteWorkspace,
-                onToggleLock
-            )
-        }
+        else -> EmptyWorkspace(
+            navController,
+            workspace,
+            onShowSpaceBottomSheet,
+            onAddCover,
+            onRemoveCover,
+            onDeleteWorkspace,
+            onToggleLock
+        )
     }
 }

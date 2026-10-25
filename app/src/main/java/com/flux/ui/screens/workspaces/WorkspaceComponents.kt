@@ -315,14 +315,14 @@ fun WorkspaceCard(
     }
 
     val paddingValues = when (gridColumns) {
-        1 -> 8.dp
-        2 -> 6.dp
-        else -> 4.dp
+        1 -> 12.dp
+        2 -> 10.dp
+        else -> 8.dp
     }
 
     val iconSize = when (gridColumns) {
         1 -> 28.dp
-        2 -> 24.dp
+        2 -> 20.dp
         else -> 18.dp
     }
 
@@ -334,13 +334,13 @@ fun WorkspaceCard(
 
     val descriptionStyle = when (gridColumns) {
         1 -> MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Normal)
-        2 -> MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Normal)
+        2 -> MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Normal)
         else -> MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.ExtraLight)
     }
 
     Card(
         shape = shapeManager(radius = radius*2),
-        modifier = Modifier.fillMaxWidth().padding(horizontal = paddingValues)
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp)
             .clip(shapeManager(radius = radius*2))
             .combinedClickable(
                 onClick = onClick,

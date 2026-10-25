@@ -278,4 +278,10 @@ sealed class TodoDisplayItem {
         override val title get() = todo.title
         override val items get() = instance.items
     }
+
+    data class NotScheduled(val todo: TodoModel) : TodoDisplayItem() {
+        override val todoId get() = todo.id
+        override val title get() = todo.title
+        override val items get() = todo.items
+    }
 }

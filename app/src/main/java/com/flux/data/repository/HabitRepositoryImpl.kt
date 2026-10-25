@@ -4,6 +4,7 @@ import com.flux.data.dao.HabitInstanceDao
 import com.flux.data.dao.HabitsDao
 import com.flux.data.dao.WorkspaceDao
 import com.flux.data.model.HabitConfig
+import com.flux.data.model.HabitDataItem
 import com.flux.data.model.HabitInstanceModel
 import com.flux.data.model.HabitModel
 import com.flux.data.model.HabitWithStatus
@@ -66,6 +67,18 @@ class HabitRepositoryImpl @Inject constructor(
         habitIds.forEachIndexed { index, id ->
             dao.updateOrder(id = id, order = index)
         }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun observePublicHabits(): Flow<List<HabitModel>> {
+        return workspaceDao.observePublicWorkspaceIds()
+            .flatMapLatest { workspaceIds ->
+                if (workspaceIds.isEmpty()) {
+                    flowOf(emptyList())
+                } else {
+                    dao.observePublicHabits(workspaceIds)
+                }
+            }
     }
 
     override suspend fun toggleHabit(habit: HabitModel, currentlyCompleted: Boolean) {
@@ -144,6 +157,16 @@ class HabitRepositoryImpl @Inject constructor(
             .flowOn(Dispatchers.Default)
     }
 
+    override fun observeHabitDataItem(habitId: String): Flow<HabitDataItem?> {
+        return combine(
+            dao.observeHabitById(habitId),
+            instanceDao.observeHabitInstances(habitId, LocalDate.now().minusDays(29).toEpochDay())
+        ) { habit, instances ->
+            if (habit == null) return@combine null
+
+            HabitDataItem(habit, instances)
+        }.flowOn(Dispatchers.Default)
+    }
 
     override fun loadHabitInstanceData(): Flow<List<HabitInstanceModel>> {
         return instanceDao.loadHabitInstanceData()

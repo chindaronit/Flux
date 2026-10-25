@@ -39,14 +39,19 @@ data class HabitInstanceModel(
     val count: Int = 0
 )
 
+data class HabitDataItem(
+    val habit: HabitModel,
+    val instances: List<HabitInstanceModel>
+)
+
 fun HabitModel.isLive(): Boolean {
-    if (endDateTime == -1L) return true
-    return endDateTime > System.currentTimeMillis()
+    return endDateTime == -1L || endDateTime > System.currentTimeMillis()
 }
 
 fun HabitModel.startDateAsLocalDate(zoneId: ZoneId): LocalDate =
     Instant.ofEpochMilli(startDateTime).atZone(zoneId).toLocalDate()
 
+val HabitModel.isSimple get() = habitConfig is HabitConfig.Simple
 val HabitModel.isTimed get() = habitConfig is HabitConfig.Timed
 val HabitModel.isCounted get() = habitConfig is HabitConfig.Counted
 

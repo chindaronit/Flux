@@ -31,6 +31,12 @@ interface HabitsDao {
     @Query("DELETE FROM HabitModel WHERE workspaceId = :workspaceId")
     suspend fun deleteAllWorkspaceHabit(workspaceId: String)
 
+    @Query("SELECT * FROM HabitModel WHERE workspaceId IN (:workspaceIds)")
+    fun observePublicHabits(workspaceIds: List<String>): Flow<List<HabitModel>>
+
+    @Query("SELECT * FROM HabitModel WHERE id = :habitId")
+    fun observeHabitById(habitId: String): Flow<HabitModel?>
+
     @Query("""
         SELECT * FROM HabitModel
         WHERE workspaceId IN (:workspaceIds)
