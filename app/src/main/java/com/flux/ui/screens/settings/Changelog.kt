@@ -693,5 +693,25 @@ val CHANGELOG_DATA = listOf(
                 "Updated version to 3.2.4 (21) for release."
             )
         )
+    ),
+    ChangelogEntry(
+        version = "v3.2.5",
+        versionCode = 22,
+        date = "Oct 25, 2026",
+        changes = listOf(
+            feat(
+                "Added horizontal paging in workspace details to swipe between spaces.",
+                "Added a single habit analytics widget to track weekly progress, streaks, heatmap for last 30 days."
+            ),
+            fix(
+                "Fixed the to-do widget disappearing on days when no tasks are scheduled.",
+                "Fixed spacing issues in workspace details.",
+                "Made note task lists scrollable.",
+                "Made the storage selection page scrollable."
+            ),
+            chore(
+                "Updated version to 3.2.5 (22) for release."
+            )
+        )
     )
 )
