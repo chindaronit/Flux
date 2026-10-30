@@ -93,6 +93,7 @@ class EventViewModel @Inject constructor(
     private fun reduce(event: TaskEvents) {
         when (event) {
             is TaskEvents.ChangeMonth -> updateState { it.copy(selectedYearMonth = event.newYearMonth) }
+            TaskEvents.ClearDate -> updateState { it.copy(selectedDate = null) }
             is TaskEvents.ChangeDate -> {
                 val newDate = event.newLocalDate
                 updateState {
@@ -230,8 +231,9 @@ class EventViewModel @Inject constructor(
 
     private fun filterByDate(
         entries: List<EventModel>,
-        epochDay: Long
+        epochDay: Long?
     ): List<EventModel> {
+        if (epochDay == null) return emptyList()
         val date = LocalDate.ofEpochDay(epochDay)
         return entries.filter { it.occursOn(date) }
     }

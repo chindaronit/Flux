@@ -65,6 +65,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.flux.R
 import com.flux.data.model.EventModel
+import com.flux.data.model.occurrenceDate
 import com.flux.data.model.HabitInstanceModel
 import com.flux.data.model.HabitModel
 import com.flux.data.model.JournalModel
@@ -132,6 +133,7 @@ import kotlin.collections.plus
 fun SearchScreen(navController: NavController, states: States, viewModels: ViewModels){
     val context = LocalContext.current
     var query by rememberSaveable { mutableStateOf("") }
+    var isEventDateSelected by remember { mutableStateOf(false) }
     val allSpaces = getSpacesList().filter { it.id!=6 }
     val lockedWorkspace = states.workspaceState.allWorkspaces.filter { it.isLocked }.map { it.workspaceId }
     var filterState by remember {
@@ -211,19 +213,29 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
     val pastHabits = habits.filter { !it.isLive() }
     val selectedDate = states.eventState.selectedDate
     val selectedMonth = states.eventState.selectedYearMonth
-    val datedEvents = states.eventState.datedEvents
-        .filter { selectedWorkspaceIds.contains(it.workspaceId) }
-        .filter { it.title.contains(query, ignoreCase = true)  }
-        .filterNot { lockedWorkspace.contains(it.workspaceId) }
+    val datedEvents = if (query.isNotBlank()) {
+        states.eventState.allEvent
+            .filter { selectedWorkspaceIds.contains(it.workspaceId) }
+            .filter { it.title.contains(query, ignoreCase = true) }
+            .filterNot { lockedWorkspace.contains(it.workspaceId) }
+    } else if (isEventDateSelected) {
+        states.eventState.datedEvents
+            .filter { selectedWorkspaceIds.contains(it.workspaceId) }
+            .filterNot { lockedWorkspace.contains(it.workspaceId) }
+    } else {
+        emptyList()
+    }
 
     val pendingTasks = datedEvents.filter { task ->
+        val instanceDate = task.occurrenceDate(selectedDate)
         val instance = states.eventState.allEventInstances
-            .find { it.eventId == task.id && it.instanceDate == selectedDate }
+            .find { it.eventId == task.id && it.instanceDate == instanceDate }
         instance == null
     }
     val completedTasks = datedEvents.filter { task ->
+        val instanceDate = task.occurrenceDate(selectedDate)
         val instance = states.eventState.allEventInstances
-            .find { it.eventId == task.id && it.instanceDate == selectedDate }
+            .find { it.eventId == task.id && it.instanceDate == instanceDate }
         instance != null
     }
     val monthlyEventCount =
@@ -280,7 +292,7 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     fun navigateToCreateNewSpaceEntry(selectedWorkspaceId: String){
         val newId = UUID.randomUUID().toString()
-        val localDate = LocalDate.ofEpochDay(selectedDate)
+        val localDate = LocalDate.ofEpochDay(selectedDate ?: LocalDate.now().toEpochDay())
         val currentTime = LocalTime.now()
         val zonedDateTime = ZonedDateTime.of(localDate, currentTime, ZoneId.systemDefault())
         val selectedDateMillis = zonedDateTime.toInstant().toEpochMilli()
@@ -330,7 +342,13 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
                 leadingIcon = Icons.Default.Search,
                 trailingIcon = Icons.Default.FilterList,
                 textFieldState = TextFieldState(query),
-                onSearch = { query = it },
+                onSearch = {
+                    query = it
+                    if (it.isNotBlank()) {
+                        isEventDateSelected = false
+                        viewModels.eventViewModel.onEvent(TaskEvents.ClearDate)
+                    }
+                },
                 onAddClicked = { showWorkspaceSelectorDialog = true },
                 onTrailingIconClicked = { isToolsSheetVisible=true },
                 onCloseClicked = { query = "" }
@@ -392,7 +410,17 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
                                     }
                                     else{ navController.navigate(NavRoutes.TodoDetail.withArgs(workspaceId, id)) }
                                 }, viewModels.todoViewModel::onEvent)
-                                3 -> searchedEvent(navController, radius, is24HourFormat,pendingTasks, completedTasks, selectedDate, selectedMonth, isMonthlyView, monthlyEventCount, viewModels.eventViewModel::onEvent)
+                                3 -> searchedEvent(
+                                    navController, radius, is24HourFormat, pendingTasks, completedTasks,
+                                    if (isEventDateSelected) selectedDate else null,
+                                    selectedMonth, isMonthlyView, monthlyEventCount,
+                                    onDateSelected = {
+                                        query = ""
+                                        isEventDateSelected = true
+                                        viewModels.eventViewModel.onEvent(TaskEvents.ChangeDate(it))
+                                    },
+                                    onEvent = viewModels.eventViewModel::onEvent
+                                )
                                 4 -> searchedJournal(navController, radius, journals, labels)
                                 5 -> searchedHabits(navController, radius, is24HourFormat, currentHabits, pastHabits, states.habitState.allInstances, viewModels.habitViewModel::onEvent)
                                 7 -> searchedProgressBoard(navController, radius, notStartedItems, inProgressItems, completedItems)
@@ -556,10 +584,11 @@ fun LazyListScope.searchedEvent(
     is24HourFormat: Boolean,
     pendingTasks: List<EventModel>,
     completedTasks: List<EventModel>,
-    selectedDate: Long,
+    selectedDate: Long?,
     selectedMonth: YearMonth,
     isMonthlyView: Boolean,
     monthlyEventCount: Map<LocalDate, Int>,
+    onDateSelected: (Long) -> Unit,
     onEvent: (TaskEvents) -> Unit
 ) {
     if (isMonthlyView) {
@@ -567,12 +596,12 @@ fun LazyListScope.searchedEvent(
             MonthlyViewCalendar(
                 selectedMonth, selectedDate, monthlyEventCount,
                 onMonthChange = { onEvent(TaskEvents.ChangeMonth(it)) },
-                onDateChange = { onEvent(TaskEvents.ChangeDate(it)) }
+                onDateChange = onDateSelected
             )
         }
     } else {
         item {
-            DailyViewCalendar(selectedMonth, selectedDate, { onEvent(TaskEvents.ChangeDate(it))}){
+            DailyViewCalendar(selectedMonth, selectedDate, onDateSelected){
                 onEvent(TaskEvents.ChangeMonth(it) )
             }
         }
@@ -588,8 +617,8 @@ fun LazyListScope.searchedEvent(
                 title = task.title,
                 repeat = task.recurrence,
                 startDateTime = task.startDateTime,
-                onChangeStatus = { onEvent(TaskEvents.ToggleStatus(true, task.id, task.workspaceId, selectedDate)) },
-                onClick = { navController.navigate(NavRoutes.EventDetails.withArgs(task.workspaceId, task.id, selectedDate)) },
+                onChangeStatus = { onEvent(TaskEvents.ToggleStatus(true, task.id, task.workspaceId, task.occurrenceDate(selectedDate))) },
+                onClick = { navController.navigate(NavRoutes.EventDetails.withArgs(task.workspaceId, task.id, task.occurrenceDate(selectedDate))) },
                 onLongPressed = { navController.navigate(NavRoutes.WorkspaceHome.withArgs(task.workspaceId) + "?spaceId=3") },
             )
             Spacer(Modifier.height(8.dp))
@@ -604,8 +633,8 @@ fun LazyListScope.searchedEvent(
                 title = task.title,
                 repeat = task.recurrence,
                 startDateTime = task.startDateTime,
-                onChangeStatus = { onEvent(TaskEvents.ToggleStatus(false, task.id, task.workspaceId, selectedDate)) },
-                onClick = { navController.navigate(NavRoutes.EventDetails.withArgs(task.workspaceId, task.id, selectedDate)) },
+                onChangeStatus = { onEvent(TaskEvents.ToggleStatus(false, task.id, task.workspaceId, task.occurrenceDate(selectedDate))) },
+                onClick = { navController.navigate(NavRoutes.EventDetails.withArgs(task.workspaceId, task.id, task.occurrenceDate(selectedDate))) },
                 onLongPressed = { navController.navigate(NavRoutes.WorkspaceHome.withArgs(task.workspaceId) + "?spaceId=3") },
             )
             Spacer(Modifier.height(8.dp))

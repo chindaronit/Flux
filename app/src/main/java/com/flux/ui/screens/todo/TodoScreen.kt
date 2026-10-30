@@ -24,6 +24,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -67,14 +68,18 @@ fun TodoScreen(
     onRemoveCover: () -> Unit,
     onDeleteWorkspace: () -> Unit,
     onToggleLock: () -> Unit,
-    onEvent: (TodoEvents) -> Unit
+    onEvent: (TodoEvents) -> Unit,
+    query: String,
+    onQueryChange: (String) -> Unit,
+    showSearchBar: Boolean,
+    onSearchBarVisibilityChange: (Boolean) -> Unit,
+    expandedTODOIds: MutableState<Set<String>>
 ){
     val context = LocalContext.current
     val workspaceId = workspace.workspaceId
     val isLoading = state.isLoading
     val radius = settings.data.cornerRadius
     var showSpacesMenu by remember { mutableStateOf(false) }
-    var query by remember { mutableStateOf("") }
     val allList = state.allLists.filter {
         it.workspaceId == workspaceId && (
             it.title.contains(query, ignoreCase = true) ||
@@ -98,10 +103,7 @@ fun TodoScreen(
         }
     }
 
-    var showSearchBar by remember { mutableStateOf(false) }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    val expandedTODOIds = rememberSaveable(workspaceId) { mutableStateOf<Set<String>>(emptySet()) }
-
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         topBar = {
@@ -148,9 +150,9 @@ fun TodoScreen(
                             if(showSearchBar){
                                 SpaceSearchBar(
                                     query,
-                                    { query=it },
+                                    onQueryChange,
                                     {
-                                        showSearchBar=false
+                                        onSearchBarVisibilityChange(false)
                                         expandedTODOIds.value=emptySet()
                                     }
                                 )
@@ -173,7 +175,7 @@ fun TodoScreen(
                                     IconButton({
                                         expandedTODOIds.value = emptySet()
                                         expandedTODOIds.value = allList.map { it.id }.toSet()
-                                        showSearchBar = true
+                                        onSearchBarVisibilityChange(true)
                                     }) {
                                         Icon(
                                             Icons.Default.Search,

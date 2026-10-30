@@ -10,7 +10,7 @@ data class EventState(
     val isAllEventsLoading: Boolean = true,
     val monthlyEventDates: Map<LocalDate, Int> = emptyMap(),
     val selectedYearMonth: YearMonth = YearMonth.now(),
-    val selectedDate: Long = LocalDate.now().toEpochDay(),
+    val selectedDate: Long? = LocalDate.now().toEpochDay(),
     val allEvent: List<EventModel> = emptyList(),
     val datedEvents: List<EventModel> = emptyList(),
     val allEventInstances: List<EventInstanceModel> = emptyList()

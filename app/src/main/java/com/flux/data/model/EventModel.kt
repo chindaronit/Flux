@@ -35,6 +35,12 @@ fun EventModel.isLive(): Boolean {
     return endDateTime > System.currentTimeMillis()
 }
 
+fun EventModel.occurrenceDate(selectedDate: Long?): Long =
+    selectedDate ?: Instant.ofEpochMilli(startDateTime)
+        .atZone(ZoneId.systemDefault())
+        .toLocalDate()
+        .toEpochDay()
+
 fun EventModel.occursOn(date: LocalDate): Boolean {
     val eventStart = Instant.ofEpochMilli(startDateTime)
         .atZone(ZoneId.systemDefault())

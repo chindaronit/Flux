@@ -547,7 +547,7 @@ fun MonthlyViewDateCard(
 @Composable
 fun DailyViewCalendar(
     selectedMonth: YearMonth,
-    selectedDate: Long,
+    selectedDate: Long?,
     onDateChange: (Long) -> Unit,
     onMonthChange: (YearMonth) -> Unit
 ) {
@@ -629,7 +629,7 @@ fun DailyViewCalendar(
 @Composable
 fun MonthlyViewCalendar(
     currentMonth: YearMonth,
-    selectedDate: Long,
+    selectedDate: Long?,
     monthlyJournalCount:  Map<LocalDate, Int> = emptyMap(),
     onMonthChange: (YearMonth) -> Unit,
     onDateChange: (Long) -> Unit

@@ -104,9 +104,14 @@ fun NotesScreen(
     onDeleteWorkspace: () -> Unit,
     onToggleLock: () -> Unit,
     onEvent: (NotesEvents) -> Unit,
-    onSettingChange: (SettingEvents) -> Unit
+    onSettingChange: (SettingEvents) -> Unit,
+    query: String,
+    onQueryChange: (String) -> Unit,
+    showSearchBar: Boolean,
+    onSearchBarVisibilityChange: (Boolean) -> Unit,
+    filterState: FilterState,
+    onFilterStateChange: (FilterState) -> Unit
 ){
-    var query by remember { mutableStateOf("") }
     val context = LocalContext.current
     val workspaceId = workspace.workspaceId
     val isGridView = settings.data.isGridView
@@ -118,12 +123,10 @@ fun NotesScreen(
     val importSuccess = stringResource(R.string.import_success)
     val importFailed = stringResource(R.string.import_failed)
     var isToolsSheetVisible by remember { mutableStateOf(false) }
-    var showSearchBar by remember { mutableStateOf(false) }
     var isDialogVisible by remember { mutableStateOf(false) }
     var showSpacesMenu by remember { mutableStateOf(false) }
     var isActionButtonExpanded by remember { mutableStateOf(false) }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    var filterState by remember { mutableStateOf(FilterState()) }
     val labelMap = remember(allLabels) { allLabels.associateBy { it.labelId } }
     val sortByLabel = stringResource(R.string.sort_by)
     val labelName = stringResource(R.string.labels)
@@ -328,7 +331,7 @@ fun NotesScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                if(showSearchBar){ SpaceSearchBar(query, { query=it }, { showSearchBar=false }) }
+                                if(showSearchBar){ SpaceSearchBar(query, onQueryChange, { onSearchBarVisibilityChange(false) }) }
                                 else {
                                     SpacesToolBar(
                                         stringResource(R.string.Notes),
@@ -344,7 +347,7 @@ fun NotesScreen(
                                     ) { showSpacesMenu = false }
 
                                     Row{
-                                        IconButton({ showSearchBar = true }) {
+                                        IconButton({ onSearchBarVisibilityChange(true) }) {
                                             Icon(Icons.Default.Search, null, tint = MaterialTheme.colorScheme.primary)
                                         }
                                         IconButton({ isToolsSheetVisible = true }) {
@@ -494,12 +497,12 @@ fun NotesScreen(
             rememberModalBottomSheetState(),
             onDismiss = { isToolsSheetVisible = false },
         ) { single, multi ->
-            filterState = FilterState(
+            onFilterStateChange(FilterState(
                 sort = single[sortByLabel],
                 view = single[viewLabel],
                 pinned = single[pinnedLabel],
                 selectedLabelIds = multi[labelName] ?: emptySet()
-            )
+            ))
 
             if(isGridView && single[viewLabel]=="list" || !isGridView && single[viewLabel]=="grid"){
                 onSettingChange(SettingEvents.UpdateSettings(settings.data.copy(isGridView=(single[viewLabel]=="grid"))))

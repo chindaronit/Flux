@@ -80,7 +80,11 @@ fun HabitScreen(
     onRemoveCover: () -> Unit,
     onDeleteWorkspace: () -> Unit,
     onToggleLock: () -> Unit,
-    onEvent: (HabitEvents) -> Unit
+    onEvent: (HabitEvents) -> Unit,
+    query: String,
+    onQueryChange: (String) -> Unit,
+    showSearchBar: Boolean,
+    onSearchBarVisibilityChange: (Boolean) -> Unit
 ){
     val context = LocalContext.current
     val workspaceId = workspace.workspaceId
@@ -88,13 +92,11 @@ fun HabitScreen(
     val allInstances = state.allInstances
     val radius = settings.data.cornerRadius
     val is24HourFormat = settings.data.is24HourFormat
-    var query by remember { mutableStateOf("") }
     val allHabits = state.allHabits
         .filter { it.workspaceId == workspaceId }
         .filter { it.title.contains(query, ignoreCase = true) || it.description.contains(query, ignoreCase = true) }
     val currentHabits = allHabits.filter { it.isLive() }
     val pastHabits = allHabits.filter { !it.isLive() }
-    var showSearchBar by remember { mutableStateOf(false) }
     var showSpacesMenu by remember { mutableStateOf(false) }
     var reorderEnabled by rememberSaveable { mutableStateOf(false) }
     val notificationPermissionLabel = stringResource(R.string.Notification_Permission)
@@ -171,7 +173,7 @@ fun HabitScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            if(showSearchBar){ SpaceSearchBar(query, { query=it }, { showSearchBar=false }) }
+                            if(showSearchBar){ SpaceSearchBar(query, onQueryChange, { onSearchBarVisibilityChange(false) }) }
                             else {
                                 SpacesToolBar(
                                     stringResource(R.string.Habits),
@@ -182,7 +184,7 @@ fun HabitScreen(
                                 )
                                 SpacesMenu(showSpacesMenu, workspace, onSpaceChange) { showSpacesMenu = false }
                                 Row{
-                                    IconButton({ showSearchBar = true }) {
+                                    IconButton({ onSearchBarVisibilityChange(true) }) {
                                         Icon(Icons.Default.Search, null, tint = MaterialTheme.colorScheme.primary)
                                     }
                                     IconButton(onClick = { reorderEnabled = !reorderEnabled }) {

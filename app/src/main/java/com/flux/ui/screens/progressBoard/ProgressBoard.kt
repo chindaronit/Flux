@@ -57,12 +57,15 @@ fun ProgressTrackerScreen(
     onAddCover: () -> Unit,
     onRemoveCover: () -> Unit,
     onDeleteWorkspace: () -> Unit,
-    onToggleLock: () -> Unit
+    onToggleLock: () -> Unit,
+    query: String,
+    onQueryChange: (String) -> Unit,
+    showSearchBar: Boolean,
+    onSearchBarVisibilityChange: (Boolean) -> Unit
 ){
     val workspaceId = workspace.workspaceId
     val isLoading = state.isLoading
     val radius = settings.data.cornerRadius
-    var query by remember { mutableStateOf("") }
     val boardItems = state.allItems.filter {
         it.workspaceId == workspaceId && (
             it.title.contains(query, ignoreCase = true) ||
@@ -74,7 +77,6 @@ fun ProgressTrackerScreen(
     val inProgressItems = boardItems.filter { it.status == 1 }
     val completedItems = boardItems.filter { it.status == 2 }
     var showSpacesMenu by remember { mutableStateOf(false) }
-    var showSearchBar by remember { mutableStateOf(false) }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     Scaffold(
@@ -116,7 +118,7 @@ fun ProgressTrackerScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     item {
-                        if(showSearchBar){ SpaceSearchBar(query, { query = it }, { showSearchBar = false }) }
+                        if(showSearchBar){ SpaceSearchBar(query, onQueryChange, { onSearchBarVisibilityChange(false) }) }
                         else {
                             Row(
                                 Modifier.fillMaxWidth().padding(bottom = 8.dp),
@@ -137,7 +139,7 @@ fun ProgressTrackerScreen(
                                 ) { showSpacesMenu = false }
 
                                 Row {
-                                    IconButton({ showSearchBar = true }) {
+                                    IconButton({ onSearchBarVisibilityChange(true) }) {
                                         Icon(
                                             Icons.Default.Search,
                                             null,

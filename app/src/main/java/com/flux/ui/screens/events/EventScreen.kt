@@ -54,6 +54,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.flux.R
 import com.flux.data.model.WorkspaceModel
+import com.flux.data.model.occurrenceDate
 import com.flux.navigation.Loader
 import com.flux.navigation.NavRoutes
 import com.flux.other.canScheduleReminder
@@ -92,29 +93,45 @@ fun EventScreen(
     onDeleteWorkspace: () -> Unit,
     onToggleLock: () -> Unit,
     onSettingEvents: (SettingEvents) -> Unit,
-    onEvent: (TaskEvents) -> Unit
+    onEvent: (TaskEvents) -> Unit,
+    query: String,
+    onQueryChange: (String) -> Unit,
+    showSearchBar: Boolean,
+    onSearchBarVisibilityChange: (Boolean) -> Unit
 ){
     val context = LocalContext.current
     val workspaceId = workspace.workspaceId
     val selectedDate = state.selectedDate
+    val onSearchQueryChange: (String) -> Unit = { newQuery ->
+        onQueryChange(newQuery)
+        if (newQuery.isNotBlank()) onEvent(TaskEvents.ClearDate)
+    }
+    val onDateSelected: (Long) -> Unit = { date ->
+        onQueryChange("")
+        onEvent(TaskEvents.ChangeDate(date))
+    }
     val isLoading = state.isDatedEventLoading
     val is24HourFormat = settings.data.is24HourFormat
     val radius = settings.data.cornerRadius
     val selectedMonth = state.selectedYearMonth
     val isMonthlyView = settings.data.isCalendarMonthlyView
-    var query by remember { mutableStateOf("") }
-    val datedEvents = state.datedEvents
-        .filter { it.workspaceId==workspaceId }
-        .filter { it.title.contains(query, ignoreCase = true) }
-        .sortedBy {
-            Instant.ofEpochMilli(it.startDateTime)
-                .atZone(ZoneId.systemDefault())
-                .toLocalTime()
-                .toSecondOfDay()
-        }
-    val monthlyEventCount = computeMonthlyEventDates(state.allEvent.filter { it.workspaceId == workspaceId }, selectedMonth)
+    val workspaceEvents = state.allEvent.filter { it.workspaceId == workspaceId }
+    val visibleEvents = if (query.isBlank()) {
+        state.datedEvents
+            .filter { it.workspaceId == workspaceId }
+            .sortedBy {
+                Instant.ofEpochMilli(it.startDateTime)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalTime()
+                    .toSecondOfDay()
+            }
+    } else {
+        workspaceEvents
+            .filter { it.title.contains(query, ignoreCase = true) }
+            .sortedBy { it.startDateTime }
+    }
+    val monthlyEventCount = computeMonthlyEventDates(workspaceEvents, selectedMonth)
     val allEventInstances = state.allEventInstances
-    var showSearchBar by remember { mutableStateOf(false) }
     var showSpacesMenu by remember { mutableStateOf(false) }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val notificationPermissionLabel = stringResource(R.string.Notification_Permission)
@@ -124,13 +141,15 @@ fun EventScreen(
         onEvent(TaskEvents.ImportIcsEvents(context, it))
     }
 
-    val pendingTasks = datedEvents.filter { task ->
-        val instance = allEventInstances.find { it.eventId == task.id && it.instanceDate == selectedDate }
+    val pendingTasks = visibleEvents.filter { task ->
+        val instanceDate = task.occurrenceDate(selectedDate)
+        val instance = allEventInstances.find { it.eventId == task.id && it.instanceDate == instanceDate }
         instance == null
     }
 
-    val completedTasks = datedEvents.filter { task ->
-        val instance = allEventInstances.find { it.eventId == task.id && it.instanceDate == selectedDate }
+    val completedTasks = visibleEvents.filter { task ->
+        val instanceDate = task.occurrenceDate(selectedDate)
+        val instance = allEventInstances.find { it.eventId == task.id && it.instanceDate == instanceDate }
         instance != null
     }
 
@@ -176,7 +195,7 @@ fun EventScreen(
                         ExtendedFloatingActionButton(
                             modifier = buttonModifier,
                             onClick = {
-                                val localDate = LocalDate.ofEpochDay(selectedDate)
+                                val localDate = LocalDate.ofEpochDay(selectedDate ?: LocalDate.now().toEpochDay())
                                 val currentTime = LocalTime.now()
                                 val zonedDateTime = ZonedDateTime.of(localDate, currentTime, ZoneId.systemDefault())
                                 val selectedDateMillis = zonedDateTime.toInstant().toEpochMilli()
@@ -231,7 +250,10 @@ fun EventScreen(
                     verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     item {
-                        if(showSearchBar){ SpaceSearchBar(query, { query=it }, { showSearchBar=false }) }
+                        if(showSearchBar){ SpaceSearchBar(query, onSearchQueryChange, {
+                            onQueryChange("")
+                            onSearchBarVisibilityChange(false)
+                        }) }
                         else {
                             Row(
                                 Modifier.fillMaxWidth().padding(bottom = 8.dp),
@@ -252,7 +274,7 @@ fun EventScreen(
                                 ) { showSpacesMenu = false }
 
                                 Row {
-                                    IconButton({ showSearchBar = true }) {
+                                    IconButton({ onSearchBarVisibilityChange(true) }) {
                                         Icon(
                                             Icons.Default.Search,
                                             null,
@@ -278,19 +300,19 @@ fun EventScreen(
                             MonthlyViewCalendar(
                                 selectedMonth, selectedDate, monthlyEventCount,
                                 onMonthChange = { onEvent(TaskEvents.ChangeMonth(it)) },
-                                onDateChange = { onEvent(TaskEvents.ChangeDate(it)) }
+                                onDateChange = onDateSelected
                             )
                             Spacer(Modifier.height(6.dp))
                         }
                     } else {
                         item {
-                            DailyViewCalendar(selectedMonth, selectedDate, {onEvent(TaskEvents.ChangeDate(it))}){
+                            DailyViewCalendar(selectedMonth, selectedDate, onDateSelected){
                                 onEvent(TaskEvents.ChangeMonth(it))
                             }
                             Spacer(Modifier.height(6.dp))
                         }
                     }
-                    if(datedEvents.isEmpty()) item { EmptyData() }
+                    if(visibleEvents.isEmpty()) item { EmptyData() }
                     if (pendingTasks.isNotEmpty()) {
                         items(pendingTasks) { task ->
                             EventCard(
@@ -300,9 +322,18 @@ fun EventScreen(
                                 title = task.title,
                                 repeat = task.recurrence,
                                 startDateTime = task.startDateTime,
-                                onChangeStatus = { onEvent(TaskEvents.ToggleStatus(true, task.id, workspaceId, selectedDate)) },
-                                onClick = { navController.navigate(NavRoutes.EventDetails.withArgs(workspaceId, task.id, selectedDate)) },
-                                onLongPressed = { navController.navigate(NavRoutes.EventDetails.withArgs(workspaceId, task.id, selectedDate)) }
+                                onChangeStatus = {
+                                    val date = task.occurrenceDate(selectedDate)
+                                    onEvent(TaskEvents.ToggleStatus(true, task.id, workspaceId, date))
+                                },
+                                onClick = {
+                                    val date = task.occurrenceDate(selectedDate)
+                                    navController.navigate(NavRoutes.EventDetails.withArgs(workspaceId, task.id, date))
+                                },
+                                onLongPressed = {
+                                    val date = task.occurrenceDate(selectedDate)
+                                    navController.navigate(NavRoutes.EventDetails.withArgs(workspaceId, task.id, date))
+                                }
                             )
                             Spacer(Modifier.height(8.dp))
                         }
@@ -316,9 +347,18 @@ fun EventScreen(
                                 title = task.title,
                                 repeat = task.recurrence,
                                 startDateTime = task.startDateTime,
-                                onChangeStatus = { onEvent(TaskEvents.ToggleStatus(false, task.id, workspaceId, selectedDate)) },
-                                onClick = { navController.navigate(NavRoutes.EventDetails.withArgs(workspaceId, task.id, selectedDate)) },
-                                onLongPressed = { navController.navigate(NavRoutes.EventDetails.withArgs(workspaceId, task.id, selectedDate)) }
+                                onChangeStatus = {
+                                    val date = task.occurrenceDate(selectedDate)
+                                    onEvent(TaskEvents.ToggleStatus(false, task.id, workspaceId, date))
+                                },
+                                onClick = {
+                                    val date = task.occurrenceDate(selectedDate)
+                                    navController.navigate(NavRoutes.EventDetails.withArgs(workspaceId, task.id, date))
+                                },
+                                onLongPressed = {
+                                    val date = task.occurrenceDate(selectedDate)
+                                    navController.navigate(NavRoutes.EventDetails.withArgs(workspaceId, task.id, date))
+                                }
                             )
                             Spacer(Modifier.height(8.dp))
                         }

@@ -13,4 +13,5 @@ sealed class TaskEvents {
     data class ToggleStatus(val markDone: Boolean, val eventId: String, val workspaceId: String, val date: Long) : TaskEvents()
     data class ChangeMonth(val newYearMonth: YearMonth) : TaskEvents()
     data class ChangeDate(val newLocalDate: Long) : TaskEvents()
+    data object ClearDate : TaskEvents()
 }

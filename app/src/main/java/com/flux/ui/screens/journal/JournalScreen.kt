@@ -94,22 +94,25 @@ fun JournalScreen(
     onRemoveCover: () -> Unit,
     onDeleteWorkspace: () -> Unit,
     onToggleLock: () -> Unit,
-    onEvent: (JournalEvents) -> Unit
+    onEvent: (JournalEvents) -> Unit,
+    query: String,
+    onQueryChange: (String) -> Unit,
+    showSearchBar: Boolean,
+    onSearchBarVisibilityChange: (Boolean) -> Unit,
+    filterState: FilterState,
+    onFilterStateChange: (FilterState) -> Unit
 ){
     val workspaceId = workspace.workspaceId
     val isLoading = state.isLoading
     val is24HoursFormat = settings.data.is24HourFormat
     val radius = settings.data.cornerRadius
     val context = LocalContext.current
-    var query by remember { mutableStateOf("") }
     var showSpacesMenu by remember { mutableStateOf(false) }
-    var showSearchBar by remember { mutableStateOf(false) }
     var isToolsSheetVisible by remember { mutableStateOf(false) }
     var isActionButtonExpanded by remember { mutableStateOf(false) }
     val importSuccess = stringResource(R.string.import_success)
     val importFailed = stringResource(R.string.import_failed)
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    var filterState by remember { mutableStateOf(FilterState()) }
     val labelMap = remember(allLabels) { allLabels.associateBy { it.labelId } }
     val sortByLabel = stringResource(R.string.sort_by)
     val labelName = stringResource(R.string.labels)
@@ -281,7 +284,7 @@ fun JournalScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            if(showSearchBar){ SpaceSearchBar(query, { query=it }, { showSearchBar=false }) }
+                            if(showSearchBar){ SpaceSearchBar(query, onQueryChange, { onSearchBarVisibilityChange(false) }) }
                             else {
                                 SpacesToolBar(
                                     stringResource(R.string.Journal),
@@ -298,7 +301,7 @@ fun JournalScreen(
                                 ) { showSpacesMenu = false }
 
                                 Row {
-                                    IconButton({ showSearchBar = true }) {
+                                    IconButton({ onSearchBarVisibilityChange(true) }) {
                                         Icon(
                                             Icons.Default.Search,
                                             null,
@@ -351,11 +354,11 @@ fun JournalScreen(
             rememberModalBottomSheetState(),
             onDismiss = { isToolsSheetVisible = false },
         ) { single, multi, date ->
-            filterState = FilterState(
+            onFilterStateChange(FilterState(
                 sort = single[sortByLabel],
                 selectedLabelIds = multi[labelName] ?: emptySet(),
                 selectedDate = date
-            )
+            ))
         }
     }
 }
