@@ -55,6 +55,23 @@ fun RecurrenceRule.toIcsRRule(endDateTime: Long): String? {
         }
         RecurrenceRule.Monthly -> "FREQ=MONTHLY"
         RecurrenceRule.Yearly -> "FREQ=YEARLY"
+        is RecurrenceRule.Interval -> {
+            val frequency = when (unit) {
+                com.flux.data.model.IntervalUnit.DAY -> "DAILY"
+                com.flux.data.model.IntervalUnit.WEEK -> "WEEKLY"
+                com.flux.data.model.IntervalUnit.MONTH -> "MONTHLY"
+                com.flux.data.model.IntervalUnit.YEAR -> "YEARLY"
+            }
+            val interval = if (every > 1) ";INTERVAL=$every" else ""
+            val days = if (unit == com.flux.data.model.IntervalUnit.WEEK && daysOfWeek.isNotEmpty()) {
+                ";BYDAY=" + daysOfWeek.sorted().joinToString(",") {
+                    WEEKDAY_CODES.getOrElse(it) { "MO" }
+                }
+            } else {
+                ""
+            }
+            "FREQ=$frequency$interval$days"
+        }
         is RecurrenceRule.Custom -> {
             if (everyXDays <= 1) "FREQ=DAILY" else "FREQ=DAILY;INTERVAL=$everyXDays"
         }
@@ -85,10 +102,23 @@ fun parseIcsRRule(rruleValue: String): Pair<RecurrenceRule, Long?> {
             val days = params["BYDAY"]?.split(",")
                 ?.mapNotNull { code -> WEEKDAY_CODES.indexOf(code).takeIf { it >= 0 } }
                 ?: (0..6).toList()
-            RecurrenceRule.Weekly(daysOfWeek = days)
+            val interval = params["INTERVAL"]?.toIntOrNull()?.coerceAtLeast(1) ?: 1
+            if (interval > 1) {
+                RecurrenceRule.Interval(com.flux.data.model.IntervalUnit.WEEK, interval, days)
+            } else {
+                RecurrenceRule.Weekly(daysOfWeek = days)
+            }
         }
-        "MONTHLY" -> RecurrenceRule.Monthly
-        "YEARLY" -> RecurrenceRule.Yearly
+        "MONTHLY" -> {
+            val interval = params["INTERVAL"]?.toIntOrNull()?.coerceAtLeast(1) ?: 1
+            if (interval > 1) RecurrenceRule.Interval(com.flux.data.model.IntervalUnit.MONTH, interval)
+            else RecurrenceRule.Monthly
+        }
+        "YEARLY" -> {
+            val interval = params["INTERVAL"]?.toIntOrNull()?.coerceAtLeast(1) ?: 1
+            if (interval > 1) RecurrenceRule.Interval(com.flux.data.model.IntervalUnit.YEAR, interval)
+            else RecurrenceRule.Yearly
+        }
         "DAILY" -> RecurrenceRule.Custom(everyXDays = params["INTERVAL"]?.toIntOrNull() ?: 1)
         else -> RecurrenceRule.Custom(1)
     }

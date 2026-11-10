@@ -25,6 +25,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
@@ -53,6 +54,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
@@ -64,7 +66,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.flux.R
+import com.flux.data.model.EventOccurrence
 import com.flux.data.model.EventModel
+import com.flux.data.model.findEventOccurrences
+import com.flux.data.model.initialEventOccurrenceIndex
 import com.flux.data.model.HabitInstanceModel
 import com.flux.data.model.HabitModel
 import com.flux.data.model.JournalModel
@@ -81,7 +86,6 @@ import com.flux.data.model.isLive
 import com.flux.navigation.Loader
 import com.flux.navigation.NavRoutes
 import com.flux.other.canScheduleReminder
-import com.flux.other.computeMonthlyEventDates
 import com.flux.other.isNotificationPermissionGranted
 import com.flux.other.openAppNotificationSettings
 import com.flux.other.requestExactAlarmPermission
@@ -101,9 +105,8 @@ import com.flux.ui.events.ProgressBoardEvents
 import com.flux.ui.events.TaskEvents
 import com.flux.ui.events.TodoEvents
 import com.flux.ui.events.WorkspaceEvents
-import com.flux.ui.screens.events.DailyViewCalendar
 import com.flux.ui.screens.events.EventCard
-import com.flux.ui.screens.events.MonthlyViewCalendar
+import com.flux.ui.screens.events.formatAgendaDate
 import com.flux.ui.screens.habits.HabitPreviewCard
 import com.flux.ui.screens.habits.isDateAllowedForHabit
 import com.flux.ui.screens.journal.JournalCardHeader
@@ -120,10 +123,11 @@ import com.flux.ui.theme.pending
 import com.flux.ui.viewModel.ViewModels
 import java.time.LocalDate
 import java.time.LocalTime
-import java.time.YearMonth
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.util.UUID
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlin.collections.minus
 import kotlin.collections.plus
 
@@ -151,7 +155,6 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
     val notesPreviewMode = states.settings.data.notesPreviewMode
     val radius = states.settings.data.cornerRadius
     val is24HourFormat = states.settings.data.is24HourFormat
-    val isMonthlyView = states.settings.data.isCalendarMonthlyView
     val isLoading =
         states.notesState.isLoading || states.labelState.isLoading ||
         states.journalState.isLoading || states.habitState.isLoading ||
@@ -209,30 +212,10 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
 
     val currentHabits = habits.filter { it.isLive() }
     val pastHabits = habits.filter { !it.isLive() }
-    val selectedDate = states.eventState.selectedDate
-    val selectedMonth = states.eventState.selectedYearMonth
-    val datedEvents = states.eventState.datedEvents
+    val matchingEvents = states.eventState.allEvent
         .filter { selectedWorkspaceIds.contains(it.workspaceId) }
-        .filter { it.title.contains(query, ignoreCase = true)  }
+        .filter { query.isBlank() || it.title.contains(query, ignoreCase = true) }
         .filterNot { lockedWorkspace.contains(it.workspaceId) }
-
-    val pendingTasks = datedEvents.filter { task ->
-        val instance = states.eventState.allEventInstances
-            .find { it.eventId == task.id && it.instanceDate == selectedDate }
-        instance == null
-    }
-    val completedTasks = datedEvents.filter { task ->
-        val instance = states.eventState.allEventInstances
-            .find { it.eventId == task.id && it.instanceDate == selectedDate }
-        instance != null
-    }
-    val monthlyEventCount =
-        computeMonthlyEventDates(
-            states.eventState.allEvent
-                .filter { selectedWorkspaceIds.contains(it.workspaceId) }
-                .filterNot { lockedWorkspace.contains(it.workspaceId) },
-            selectedMonth
-        )
     val boardItems = states.progressBoardState.allItems
         .filter { selectedWorkspaceIds.contains(it.workspaceId) }
         .filter {
@@ -246,6 +229,80 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
     val completedItems = boardItems.filter { it.status == 2 }
     var selectedProgressBoardItem by remember { mutableStateOf<ProgressBoardModel?>(null) }
     val selectedSpace = rememberSaveable { mutableIntStateOf(1) }
+    val eventAgendaStart = remember(query, selectedSpace.intValue) {
+        mutableStateOf(LocalDate.now().minusDays(365))
+    }
+    val eventAgendaEnd = remember(query, selectedSpace.intValue) {
+        mutableStateOf(LocalDate.now().plusDays(365))
+    }
+    val eventSearchListState = rememberLazyListState()
+    val matchingEventOccurrences = remember(
+        query,
+        selectedSpace.intValue,
+        matchingEvents,
+        eventAgendaStart.value,
+        eventAgendaEnd.value
+    ) {
+        if (selectedSpace.intValue != 3) emptyList()
+        else findEventOccurrences(
+            matchingEvents,
+            states.eventState.eventExceptions,
+            eventAgendaStart.value,
+            eventAgendaEnd.value
+        )
+    }
+    val matchingEventGroups = remember(matchingEventOccurrences) {
+        matchingEventOccurrences.groupBy { it.date }.toList()
+    }
+    val initialMatchingOccurrenceIndex = initialEventOccurrenceIndex(matchingEventOccurrences)
+    val initialMatchingListIndex = remember(matchingEventGroups, initialMatchingOccurrenceIndex) {
+        val initialOccurrence = matchingEventOccurrences.getOrNull(initialMatchingOccurrenceIndex)
+        if (initialOccurrence == null) {
+            0
+        } else {
+            val previousGroupsItemCount = matchingEventGroups
+                .takeWhile { (date, _) -> date != initialOccurrence.date }
+                .sumOf { (_, occurrences) -> occurrences.size + 1 }
+            val occurrenceOffset = matchingEventGroups
+                .first { (date, _) -> date == initialOccurrence.date }
+                .second
+                .indexOf(initialOccurrence)
+            previousGroupsItemCount + 1 + occurrenceOffset
+        }
+    }
+    LaunchedEffect(query, selectedSpace.intValue, matchingEventOccurrences.isNotEmpty()) {
+        if (selectedSpace.intValue == 3 && matchingEventOccurrences.isNotEmpty()) {
+            eventSearchListState.scrollToItem(initialMatchingListIndex)
+        }
+    }
+    LaunchedEffect(
+        query,
+        selectedSpace.intValue,
+        eventSearchListState,
+        matchingEventOccurrences.isNotEmpty(),
+        eventAgendaStart.value
+    ) {
+        snapshotFlow {
+            Triple(
+                eventSearchListState.firstVisibleItemIndex,
+                eventSearchListState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0,
+                eventSearchListState.isScrollInProgress
+            )
+        }.distinctUntilChanged().collect { (firstVisible, lastVisible, isScrolling) ->
+            if (selectedSpace.intValue == 3 && isScrolling &&
+                firstVisible <= 1 &&
+                eventAgendaStart.value.isAfter(LocalDate.of(1900, 1, 1))
+            ) {
+                eventAgendaStart.value = eventAgendaStart.value.minusDays(365)
+            }
+            if (selectedSpace.intValue == 3 && isScrolling &&
+                matchingEventOccurrences.isNotEmpty() &&
+                lastVisible >= eventSearchListState.layoutInfo.totalItemsCount - 3
+            ) {
+                eventAgendaEnd.value = eventAgendaEnd.value.plusDays(365)
+            }
+        }
+    }
     val workspacesLabel = stringResource(R.string.workspaces)
     val spacesLabel = stringResource(R.string.spaces)
     var showWorkspaceSelectorDialog by remember { mutableStateOf(false) }
@@ -280,7 +337,7 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     fun navigateToCreateNewSpaceEntry(selectedWorkspaceId: String){
         val newId = UUID.randomUUID().toString()
-        val localDate = LocalDate.ofEpochDay(selectedDate)
+        val localDate = LocalDate.now()
         val currentTime = LocalTime.now()
         val zonedDateTime = ZonedDateTime.of(localDate, currentTime, ZoneId.systemDefault())
         val selectedDateMillis = zonedDateTime.toInstant().toEpochMilli()
@@ -330,7 +387,9 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
                 leadingIcon = Icons.Default.Search,
                 trailingIcon = Icons.Default.FilterList,
                 textFieldState = TextFieldState(query),
-                onSearch = { query = it },
+                onSearch = {
+                    query = it
+                },
                 onAddClicked = { showWorkspaceSelectorDialog = true },
                 onTrailingIconClicked = { isToolsSheetVisible=true },
                 onCloseClicked = { query = "" }
@@ -343,43 +402,45 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
             when {
                 isLoading -> Loader()
                 else -> {
-                    LazyColumn(
-                        Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 12.dp),
-                        contentPadding = PaddingValues(
-                            top = 16.dp,
-                            bottom = 64.dp
-                        ),
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        if(selectedSpaces.isEmpty()){ item { EmptyData() } }
-                        else {
-                            item {
-                                LazyRow(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 4.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                ) {
-                                    items(selectedSpaces){ space->
-                                        FilterChip(
-                                            onClick = { selectedSpace.intValue = space.id },
-                                            label = { Text(space.title) },
-                                            selected = selectedSpace.intValue == space.id,
-                                            leadingIcon = {
-                                                Icon(
-                                                    imageVector = if (selectedSpace.intValue == space.id) Icons.Filled.Done else space.icon,
-                                                    contentDescription = "Done icon",
-                                                    modifier = Modifier.size(FilterChipDefaults.IconSize)
-                                                )
-                                            },
-                                        )
-                                    }
+                    Column(Modifier.fillMaxSize()) {
+                        if (selectedSpaces.isNotEmpty()) {
+                            LazyRow(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(MaterialTheme.colorScheme.surfaceContainerLow)
+                                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                items(selectedSpaces){ space->
+                                    FilterChip(
+                                        onClick = { selectedSpace.intValue = space.id },
+                                        label = { Text(space.title) },
+                                        selected = selectedSpace.intValue == space.id,
+                                        leadingIcon = {
+                                            Icon(
+                                                imageVector = if (selectedSpace.intValue == space.id) Icons.Filled.Done else space.icon,
+                                                contentDescription = "Done icon",
+                                                modifier = Modifier.size(FilterChipDefaults.IconSize)
+                                            )
+                                        },
+                                    )
                                 }
                             }
-
-                            when(selectedSpace.intValue) {
+                        }
+                        LazyColumn(
+                            state = eventSearchListState,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f)
+                                .padding(horizontal = 12.dp),
+                            contentPadding = PaddingValues(
+                                top = 16.dp,
+                                bottom = 64.dp
+                            ),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            if(selectedSpaces.isEmpty()){ item { EmptyData() } }
+                            else when(selectedSpace.intValue) {
                                 1 -> searchedNotes(navController, notesPreviewMode, radius, notes, labels)
                                 2 -> searchedTodo(navController, radius, context, expandedTODOIds.value, todoLists, { id->
                                     val todoItem = todoLists.first { it.id == id }
@@ -392,7 +453,11 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
                                     }
                                     else{ navController.navigate(NavRoutes.TodoDetail.withArgs(workspaceId, id)) }
                                 }, viewModels.todoViewModel::onEvent)
-                                3 -> searchedEvent(navController, radius, is24HourFormat,pendingTasks, completedTasks, selectedDate, selectedMonth, isMonthlyView, monthlyEventCount, viewModels.eventViewModel::onEvent)
+                                3 -> searchedEvent(
+                                    navController, radius, is24HourFormat, matchingEventOccurrences,
+                                    states.eventState.allEventInstances,
+                                    onEvent = viewModels.eventViewModel::onEvent
+                                )
                                 4 -> searchedJournal(navController, radius, journals, labels)
                                 5 -> searchedHabits(navController, radius, is24HourFormat, currentHabits, pastHabits, states.habitState.allInstances, viewModels.habitViewModel::onEvent)
                                 7 -> searchedProgressBoard(navController, radius, notStartedItems, inProgressItems, completedItems)
@@ -554,61 +619,65 @@ fun LazyListScope.searchedEvent(
     navController: NavController,
     radius: Int,
     is24HourFormat: Boolean,
-    pendingTasks: List<EventModel>,
-    completedTasks: List<EventModel>,
-    selectedDate: Long,
-    selectedMonth: YearMonth,
-    isMonthlyView: Boolean,
-    monthlyEventCount: Map<LocalDate, Int>,
+    occurrences: List<EventOccurrence>,
+    instances: List<com.flux.data.model.EventInstanceModel>,
     onEvent: (TaskEvents) -> Unit
 ) {
-    if (isMonthlyView) {
-        item {
-            MonthlyViewCalendar(
-                selectedMonth, selectedDate, monthlyEventCount,
-                onMonthChange = { onEvent(TaskEvents.ChangeMonth(it)) },
-                onDateChange = { onEvent(TaskEvents.ChangeDate(it)) }
-            )
+    if (occurrences.isEmpty()) item { EmptyData() }
+    occurrences.groupBy { it.date }.forEach { (date, dateOccurrences) ->
+        item(key = "date:$date") {
+            JournalCardHeader(formatAgendaDate(date))
         }
-    } else {
-        item {
-            DailyViewCalendar(selectedMonth, selectedDate, { onEvent(TaskEvents.ChangeDate(it))}){
-                onEvent(TaskEvents.ChangeMonth(it) )
+        items(dateOccurrences, key = { "${it.event.id}:${it.instanceDate}" }) { occurrence ->
+            val event = occurrence.event
+            val isPending = instances.none {
+                it.eventId == event.id && it.instanceDate == occurrence.instanceDate
             }
-        }
-    }
-
-    if((pendingTasks + completedTasks).isEmpty()) item { EmptyData() }
-    if (pendingTasks.isNotEmpty()) {
-        items(pendingTasks) { task ->
-            EventCard(
-                radius = radius,
-                is24HourFormat = is24HourFormat,
-                isPending = true,
-                title = task.title,
-                repeat = task.recurrence,
-                startDateTime = task.startDateTime,
-                onChangeStatus = { onEvent(TaskEvents.ToggleStatus(true, task.id, task.workspaceId, selectedDate)) },
-                onClick = { navController.navigate(NavRoutes.EventDetails.withArgs(task.workspaceId, task.id, selectedDate)) },
-                onLongPressed = { navController.navigate(NavRoutes.WorkspaceHome.withArgs(task.workspaceId) + "?spaceId=3") },
-            )
-            Spacer(Modifier.height(8.dp))
-        }
-    }
-    if (completedTasks.isNotEmpty()) {
-        items(completedTasks) { task ->
-            EventCard(
-                radius = radius,
-                is24HourFormat = is24HourFormat,
-                isPending = false,
-                title = task.title,
-                repeat = task.recurrence,
-                startDateTime = task.startDateTime,
-                onChangeStatus = { onEvent(TaskEvents.ToggleStatus(false, task.id, task.workspaceId, selectedDate)) },
-                onClick = { navController.navigate(NavRoutes.EventDetails.withArgs(task.workspaceId, task.id, selectedDate)) },
-                onLongPressed = { navController.navigate(NavRoutes.WorkspaceHome.withArgs(task.workspaceId) + "?spaceId=3") },
-            )
-            Spacer(Modifier.height(8.dp))
+            Row(modifier = Modifier.height(IntrinsicSize.Min)) {
+                TimelineBody(isLast = false)
+                Column {
+                    EventCard(
+                        radius = radius,
+                        is24HourFormat = is24HourFormat,
+                        isPending = isPending,
+                        title = event.title,
+                        repeat = event.recurrence,
+                        startDateTime = event.startDateTime,
+                        occurrenceDate = occurrence.instanceDate,
+                        onChangeStatus = {
+                            onEvent(
+                                TaskEvents.ToggleStatus(
+                                    isPending,
+                                    event.id,
+                                    event.workspaceId,
+                                    occurrence.instanceDate
+                                )
+                            )
+                        },
+                        onClick = {
+                            navController.navigate(
+                                NavRoutes.EventDetails.withArgs(
+                                    event.workspaceId,
+                                    event.id,
+                                    occurrence.instanceDate
+                                )
+                            )
+                        },
+                        onLongPressed = {
+                            navController.navigate(
+                                NavRoutes.EventDetails.withArgs(
+                                    event.workspaceId,
+                                    event.id,
+                                    occurrence.instanceDate
+                                )
+                            )
+                        }
+                    )
+                    if (occurrence != dateOccurrences.last()) {
+                        Spacer(Modifier.height(8.dp))
+                    }
+                }
+            }
         }
     }
 }

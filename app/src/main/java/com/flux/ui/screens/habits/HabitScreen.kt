@@ -4,6 +4,7 @@ import android.os.Build
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,7 +26,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,7 +35,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -80,7 +79,11 @@ fun HabitScreen(
     onRemoveCover: () -> Unit,
     onDeleteWorkspace: () -> Unit,
     onToggleLock: () -> Unit,
-    onEvent: (HabitEvents) -> Unit
+    onEvent: (HabitEvents) -> Unit,
+    query: String,
+    onQueryChange: (String) -> Unit,
+    showSearchBar: Boolean,
+    onSearchBarVisibilityChange: (Boolean) -> Unit
 ){
     val context = LocalContext.current
     val workspaceId = workspace.workspaceId
@@ -88,18 +91,15 @@ fun HabitScreen(
     val allInstances = state.allInstances
     val radius = settings.data.cornerRadius
     val is24HourFormat = settings.data.is24HourFormat
-    var query by remember { mutableStateOf("") }
     val allHabits = state.allHabits
         .filter { it.workspaceId == workspaceId }
         .filter { it.title.contains(query, ignoreCase = true) || it.description.contains(query, ignoreCase = true) }
     val currentHabits = allHabits.filter { it.isLive() }
     val pastHabits = allHabits.filter { !it.isLive() }
-    var showSearchBar by remember { mutableStateOf(false) }
     var showSpacesMenu by remember { mutableStateOf(false) }
     var reorderEnabled by rememberSaveable { mutableStateOf(false) }
     val notificationPermissionLabel = stringResource(R.string.Notification_Permission)
     val reminderPermissionLabel = stringResource(R.string.Reminder_Permission)
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     // Reorderable state for the "current" habits section only
     val habitList = remember(currentHabits) { currentHabits.toMutableStateList() }
@@ -122,7 +122,6 @@ fun HabitScreen(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         topBar = {
             SpaceTopBar(
-                scrollBehavior = scrollBehavior,
                 title            = workspace.title,
                 description      = workspace.description,
                 cover            = workspace.cover,
@@ -156,46 +155,41 @@ fun HabitScreen(
         when {
             isLoading -> Loader()
             else -> {
+                Column(
+                    Modifier.fillMaxSize().padding(innerPadding).padding(12.dp)
+                ) {
+                    Row(
+                        Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        SpacesToolBar(
+                            stringResource(R.string.Habits),
+                            Icons.Default.EventAvailable,
+                            false,
+                            onMainClick = { showSpacesMenu = true },
+                            onEditClick = onShowSpaceBottomSheet
+                        )
+                        SpacesMenu(showSpacesMenu, workspace, onSpaceChange) { showSpacesMenu = false }
+                        IconButton(onClick = { reorderEnabled = !reorderEnabled }) {
+                            Icon(
+                                imageVector = if (reorderEnabled) Icons.Default.LockOpen else Icons.Default.Lock,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                    SpaceSearchBar(
+                        query, onQueryChange, {},
+                        modifier = Modifier.padding(bottom = 12.dp),
+                        horizontalPadding = 0.dp
+                    )
                 LazyColumn(
                     state = lazyListState,
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding)
-                        .padding(12.dp)
-                        .nestedScroll(scrollBehavior.nestedScrollConnection),
+                        .weight(1f),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    item {
-                        Row(
-                            Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            if(showSearchBar){ SpaceSearchBar(query, { query=it }, { showSearchBar=false }) }
-                            else {
-                                SpacesToolBar(
-                                    stringResource(R.string.Habits),
-                                    Icons.Default.EventAvailable,
-                                    false,
-                                    onMainClick = { showSpacesMenu = true },
-                                    onEditClick = onShowSpaceBottomSheet
-                                )
-                                SpacesMenu(showSpacesMenu, workspace, onSpaceChange) { showSpacesMenu = false }
-                                Row{
-                                    IconButton({ showSearchBar = true }) {
-                                        Icon(Icons.Default.Search, null, tint = MaterialTheme.colorScheme.primary)
-                                    }
-                                    IconButton(onClick = { reorderEnabled = !reorderEnabled }) {
-                                        Icon(
-                                            imageVector = if (reorderEnabled) Icons.Default.LockOpen else Icons.Default.Lock,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.primary
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
                     if(allHabits.isEmpty())  item { EmptyData() }
                     itemsIndexed(
                         habitList,
@@ -267,6 +261,7 @@ fun HabitScreen(
                             }
                         )
                     }
+                }
                 }
             }
         }

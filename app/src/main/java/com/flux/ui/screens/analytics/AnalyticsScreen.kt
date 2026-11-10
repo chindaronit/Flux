@@ -29,7 +29,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -42,7 +41,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -102,13 +100,11 @@ fun AnalyticScreen(
     val allHabitInstances = states.habitState.allInstances.filter { it.workspaceId == workspaceId }
     val totalHabits = states.habitState.allHabits.filter { it.workspaceId == workspaceId }.size
     var showSpacesMenu by remember { mutableStateOf(false) }
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         topBar = {
             SpaceTopBar(
-                scrollBehavior   = scrollBehavior,
                 title            = workspace.title,
                 description      = workspace.description,
                 cover            = workspace.cover,
@@ -131,7 +127,6 @@ fun AnalyticScreen(
                         .fillMaxSize()
                         .padding(innerPadding)
                         .padding(12.dp)
-                        .nestedScroll(scrollBehavior.nestedScrollConnection)
                 ) {
                     item {
                         Row(

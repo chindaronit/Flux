@@ -13,6 +13,7 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,12 +23,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.CalendarViewDay
-import androidx.compose.material.icons.filled.CalendarViewMonth
 import androidx.compose.material.icons.filled.Event
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material.icons.outlined.Create
 import androidx.compose.material.icons.outlined.Download
@@ -39,25 +38,26 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.flux.R
 import com.flux.data.model.WorkspaceModel
+import com.flux.data.model.findEventOccurrences
+import com.flux.data.model.initialEventOccurrenceIndex
 import com.flux.navigation.Loader
 import com.flux.navigation.NavRoutes
 import com.flux.other.canScheduleReminder
-import com.flux.other.computeMonthlyEventDates
 import com.flux.other.isNotificationPermissionGranted
 import com.flux.other.openAppNotificationSettings
 import com.flux.other.requestExactAlarmPermission
@@ -65,17 +65,22 @@ import com.flux.ui.common.EmptyData
 import com.flux.ui.common.SpaceSearchBar
 import com.flux.ui.common.SpaceTopBar
 import com.flux.ui.common.SpacesMenu
-import com.flux.ui.events.SettingEvents
 import com.flux.ui.events.TaskEvents
+import com.flux.ui.screens.journal.JournalCardHeader
+import com.flux.ui.screens.journal.TimelineBody
 import com.flux.ui.screens.workspaces.SpacesToolBar
 import com.flux.ui.state.EventState
 import com.flux.ui.state.Settings
-import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
+import java.util.Locale
 import java.util.UUID
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU, Build.VERSION_CODES.S)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -91,32 +96,80 @@ fun EventScreen(
     onRemoveCover: () -> Unit,
     onDeleteWorkspace: () -> Unit,
     onToggleLock: () -> Unit,
-    onSettingEvents: (SettingEvents) -> Unit,
-    onEvent: (TaskEvents) -> Unit
+    onEvent: (TaskEvents) -> Unit,
+    query: String,
+    onQueryChange: (String) -> Unit
 ){
     val context = LocalContext.current
     val workspaceId = workspace.workspaceId
-    val selectedDate = state.selectedDate
-    val isLoading = state.isDatedEventLoading
+    val isLoading = state.isAllEventsLoading
     val is24HourFormat = settings.data.is24HourFormat
     val radius = settings.data.cornerRadius
-    val selectedMonth = state.selectedYearMonth
-    val isMonthlyView = settings.data.isCalendarMonthlyView
-    var query by remember { mutableStateOf("") }
-    val datedEvents = state.datedEvents
-        .filter { it.workspaceId==workspaceId }
-        .filter { it.title.contains(query, ignoreCase = true) }
-        .sortedBy {
-            Instant.ofEpochMilli(it.startDateTime)
-                .atZone(ZoneId.systemDefault())
-                .toLocalTime()
-                .toSecondOfDay()
+    val workspaceEvents = state.allEvent.filter { it.workspaceId == workspaceId }
+    val matchingEvents = remember(query, workspaceEvents) {
+        workspaceEvents.filter { query.isBlank() || it.title.contains(query, ignoreCase = true) }
+    }
+    val agendaStartDate = remember(query, workspaceId) { mutableStateOf(LocalDate.now().minusDays(365)) }
+    val agendaEndDate = remember(query, workspaceId) { mutableStateOf(LocalDate.now().plusDays(365)) }
+    val agendaOccurrences = remember(
+        matchingEvents,
+        agendaStartDate.value,
+        agendaEndDate.value
+    ) {
+        findEventOccurrences(
+            matchingEvents,
+            state.eventExceptions,
+            agendaStartDate.value,
+            agendaEndDate.value
+        )
+    }
+    val agendaGroups = remember(agendaOccurrences) {
+        agendaOccurrences.groupBy { it.date }.toList()
+    }
+    val initialOccurrenceIndex = initialEventOccurrenceIndex(agendaOccurrences)
+    val initialListIndex = remember(agendaGroups, initialOccurrenceIndex) {
+        val initialOccurrence = agendaOccurrences.getOrNull(initialOccurrenceIndex)
+        if (initialOccurrence == null) {
+            0
+        } else {
+            val previousGroupsItemCount = agendaGroups
+                .takeWhile { (date, _) -> date != initialOccurrence.date }
+                .sumOf { (_, occurrences) -> occurrences.size + 1 }
+            val occurrenceOffset = agendaGroups
+                .first { (date, _) -> date == initialOccurrence.date }
+                .second
+                .indexOf(initialOccurrence)
+            previousGroupsItemCount + 1 + occurrenceOffset
         }
-    val monthlyEventCount = computeMonthlyEventDates(state.allEvent.filter { it.workspaceId == workspaceId }, selectedMonth)
+    }
+    val eventListState = rememberLazyListState()
+    LaunchedEffect(query, workspaceId, agendaOccurrences.isNotEmpty()) {
+        if (agendaOccurrences.isNotEmpty()) {
+            eventListState.scrollToItem(initialListIndex)
+        }
+    }
+    LaunchedEffect(query, workspaceId, eventListState, agendaOccurrences.isNotEmpty(), agendaStartDate.value) {
+        snapshotFlow {
+            Triple(
+                eventListState.firstVisibleItemIndex,
+                eventListState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0,
+                eventListState.isScrollInProgress
+            )
+        }.distinctUntilChanged().collect { (firstVisible, lastVisible, isScrolling) ->
+            if (isScrolling && agendaStartDate.value.isAfter(LocalDate.of(1900, 1, 1)) &&
+                firstVisible <= 1
+            ) {
+                agendaStartDate.value = agendaStartDate.value.minusDays(365)
+            }
+            if (isScrolling && agendaOccurrences.isNotEmpty() &&
+                lastVisible >= eventListState.layoutInfo.totalItemsCount - 3
+            ) {
+                agendaEndDate.value = agendaEndDate.value.plusDays(365)
+            }
+        }
+    }
     val allEventInstances = state.allEventInstances
-    var showSearchBar by remember { mutableStateOf(false) }
     var showSpacesMenu by remember { mutableStateOf(false) }
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val notificationPermissionLabel = stringResource(R.string.Notification_Permission)
     val reminderPermissionLabel = stringResource(R.string.Reminder_Permission)
     var isActionButtonExpanded by remember { mutableStateOf(false) }
@@ -124,21 +177,10 @@ fun EventScreen(
         onEvent(TaskEvents.ImportIcsEvents(context, it))
     }
 
-    val pendingTasks = datedEvents.filter { task ->
-        val instance = allEventInstances.find { it.eventId == task.id && it.instanceDate == selectedDate }
-        instance == null
-    }
-
-    val completedTasks = datedEvents.filter { task ->
-        val instance = allEventInstances.find { it.eventId == task.id && it.instanceDate == selectedDate }
-        instance != null
-    }
-
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         topBar = {
             SpaceTopBar(
-                scrollBehavior   = scrollBehavior,
                 title            = workspace.title,
                 description      = workspace.description,
                 cover            = workspace.cover,
@@ -176,7 +218,7 @@ fun EventScreen(
                         ExtendedFloatingActionButton(
                             modifier = buttonModifier,
                             onClick = {
-                                val localDate = LocalDate.ofEpochDay(selectedDate)
+                                val localDate = LocalDate.now()
                                 val currentTime = LocalTime.now()
                                 val zonedDateTime = ZonedDateTime.of(localDate, currentTime, ZoneId.systemDefault())
                                 val selectedDateMillis = zonedDateTime.toInstant().toEpochMilli()
@@ -222,108 +264,94 @@ fun EventScreen(
     ) { innerPadding ->
         when {
             isLoading -> { Loader() }
-            else ->
-                LazyColumn(Modifier
+            else -> Column(
+                modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
                     .padding(12.dp)
-                    .nestedScroll(scrollBehavior.nestedScrollConnection),
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Row(
+                    Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    item {
-                        if(showSearchBar){ SpaceSearchBar(query, { query=it }, { showSearchBar=false }) }
-                        else {
-                            Row(
-                                Modifier.fillMaxWidth().padding(bottom = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                SpacesToolBar(
-                                    stringResource(R.string.Events),
-                                    Icons.Default.Event,
-                                    false,
-                                    onMainClick = { showSpacesMenu = true },
-                                    onEditClick = onShowSpaceBottomSheet
-                                )
-                                SpacesMenu(
-                                    showSpacesMenu,
-                                    workspace,
-                                    onSpaceChange
-                                ) { showSpacesMenu = false }
-
-                                Row {
-                                    IconButton({ showSearchBar = true }) {
-                                        Icon(
-                                            Icons.Default.Search,
-                                            null,
-                                            tint = MaterialTheme.colorScheme.primary
-                                        )
-                                    }
-
-                                    IconButton({ onSettingEvents(SettingEvents.UpdateSettings(
-                                        settings.data.copy(isCalendarMonthlyView = !isMonthlyView)))
-                                    }) {
-                                        Icon(
-                                            if (isMonthlyView) Icons.Default.CalendarViewDay else Icons.Default.CalendarViewMonth,
-                                            null,
-                                            tint = MaterialTheme.colorScheme.primary
-                                        )
+                    SpacesToolBar(
+                        stringResource(R.string.Events),
+                        Icons.Default.Event,
+                        false,
+                        onMainClick = { showSpacesMenu = true },
+                        onEditClick = onShowSpaceBottomSheet
+                    )
+                    SpacesMenu(
+                        showSpacesMenu,
+                        workspace,
+                        onSpaceChange
+                    ) { showSpacesMenu = false }
+                }
+                SpaceSearchBar(
+                    query = query,
+                    onQueryChange = onQueryChange,
+                    onCloseClicked = {},
+                    modifier = Modifier.padding(bottom = 12.dp),
+                    horizontalPadding = 0.dp
+                )
+                LazyColumn(
+                    state = eventListState,
+                    modifier = Modifier.weight(1f, fill = true)
+                ) {
+                    if (agendaOccurrences.isEmpty()) item { EmptyData() }
+                    agendaGroups.forEach { (date, occurrences) ->
+                        item(key = "date:$date") {
+                            JournalCardHeader(formatAgendaDate(date))
+                        }
+                        items(
+                            items = occurrences,
+                            key = { "${it.event.id}:${it.instanceDate}" }
+                        ) { occurrence ->
+                            val task = occurrence.event
+                            val isPending = allEventInstances.none {
+                                it.eventId == task.id && it.instanceDate == occurrence.instanceDate
+                            }
+                            Row(modifier = Modifier.height(IntrinsicSize.Min)) {
+                                TimelineBody(isLast = false)
+                                Column {
+                                    EventCard(
+                                        radius = radius,
+                                        is24HourFormat = is24HourFormat,
+                                        isPending = isPending,
+                                        title = task.title,
+                                        repeat = task.recurrence,
+                                        startDateTime = task.startDateTime,
+                                        occurrenceDate = occurrence.instanceDate,
+                                        onChangeStatus = {
+                                            onEvent(TaskEvents.ToggleStatus(isPending, task.id, workspaceId, occurrence.instanceDate))
+                                        },
+                                        onClick = {
+                                            navController.navigate(
+                                                NavRoutes.EventDetails.withArgs(workspaceId, task.id, occurrence.instanceDate)
+                                            )
+                                        },
+                                        onLongPressed = {
+                                            navController.navigate(
+                                                NavRoutes.EventDetails.withArgs(workspaceId, task.id, occurrence.instanceDate)
+                                            )
+                                        }
+                                    )
+                                    if (occurrence != occurrences.last()) {
+                                        Spacer(Modifier.height(8.dp))
                                     }
                                 }
                             }
                         }
                     }
-                    if (isMonthlyView) {
-                        item {
-                            MonthlyViewCalendar(
-                                selectedMonth, selectedDate, monthlyEventCount,
-                                onMonthChange = { onEvent(TaskEvents.ChangeMonth(it)) },
-                                onDateChange = { onEvent(TaskEvents.ChangeDate(it)) }
-                            )
-                            Spacer(Modifier.height(6.dp))
-                        }
-                    } else {
-                        item {
-                            DailyViewCalendar(selectedMonth, selectedDate, {onEvent(TaskEvents.ChangeDate(it))}){
-                                onEvent(TaskEvents.ChangeMonth(it))
-                            }
-                            Spacer(Modifier.height(6.dp))
-                        }
-                    }
-                    if(datedEvents.isEmpty()) item { EmptyData() }
-                    if (pendingTasks.isNotEmpty()) {
-                        items(pendingTasks) { task ->
-                            EventCard(
-                                radius = radius,
-                                is24HourFormat = is24HourFormat,
-                                isPending = true,
-                                title = task.title,
-                                repeat = task.recurrence,
-                                startDateTime = task.startDateTime,
-                                onChangeStatus = { onEvent(TaskEvents.ToggleStatus(true, task.id, workspaceId, selectedDate)) },
-                                onClick = { navController.navigate(NavRoutes.EventDetails.withArgs(workspaceId, task.id, selectedDate)) },
-                                onLongPressed = { navController.navigate(NavRoutes.EventDetails.withArgs(workspaceId, task.id, selectedDate)) }
-                            )
-                            Spacer(Modifier.height(8.dp))
-                        }
-                    }
-                    if (completedTasks.isNotEmpty()) {
-                        items(completedTasks) { task ->
-                            EventCard(
-                                radius = radius,
-                                is24HourFormat = is24HourFormat,
-                                isPending = false,
-                                title = task.title,
-                                repeat = task.recurrence,
-                                startDateTime = task.startDateTime,
-                                onChangeStatus = { onEvent(TaskEvents.ToggleStatus(false, task.id, workspaceId, selectedDate)) },
-                                onClick = { navController.navigate(NavRoutes.EventDetails.withArgs(workspaceId, task.id, selectedDate)) },
-                                onLongPressed = { navController.navigate(NavRoutes.EventDetails.withArgs(workspaceId, task.id, selectedDate)) }
-                            )
-                            Spacer(Modifier.height(8.dp))
-                        }
-                    }
                 }
+            }
         }
     }
+}
+
+fun formatAgendaDate(date: LocalDate): String {
+    val day = date.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())
+    val formattedDate = date.format(DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.getDefault()))
+    return "$day, $formattedDate"
 }

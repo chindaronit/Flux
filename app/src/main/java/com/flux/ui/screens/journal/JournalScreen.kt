@@ -38,7 +38,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -47,7 +46,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -94,22 +92,24 @@ fun JournalScreen(
     onRemoveCover: () -> Unit,
     onDeleteWorkspace: () -> Unit,
     onToggleLock: () -> Unit,
-    onEvent: (JournalEvents) -> Unit
+    onEvent: (JournalEvents) -> Unit,
+    query: String,
+    onQueryChange: (String) -> Unit,
+    showSearchBar: Boolean,
+    onSearchBarVisibilityChange: (Boolean) -> Unit,
+    filterState: FilterState,
+    onFilterStateChange: (FilterState) -> Unit
 ){
     val workspaceId = workspace.workspaceId
     val isLoading = state.isLoading
     val is24HoursFormat = settings.data.is24HourFormat
     val radius = settings.data.cornerRadius
     val context = LocalContext.current
-    var query by remember { mutableStateOf("") }
     var showSpacesMenu by remember { mutableStateOf(false) }
-    var showSearchBar by remember { mutableStateOf(false) }
     var isToolsSheetVisible by remember { mutableStateOf(false) }
     var isActionButtonExpanded by remember { mutableStateOf(false) }
     val importSuccess = stringResource(R.string.import_success)
     val importFailed = stringResource(R.string.import_failed)
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    var filterState by remember { mutableStateOf(FilterState()) }
     val labelMap = remember(allLabels) { allLabels.associateBy { it.labelId } }
     val sortByLabel = stringResource(R.string.sort_by)
     val labelName = stringResource(R.string.labels)
@@ -199,7 +199,6 @@ fun JournalScreen(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         topBar = {
             SpaceTopBar(
-                scrollBehavior = scrollBehavior,
                 title            = workspace.title,
                 description      = workspace.description,
                 cover            = workspace.cover,
@@ -267,55 +266,34 @@ fun JournalScreen(
     ) { innerPadding ->
         when {
             isLoading -> Loader()
-            else -> {
-                LazyColumn(
-                    Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding)
-                        .padding(12.dp)
-                        .nestedScroll(scrollBehavior.nestedScrollConnection)
+            else -> Column(
+                Modifier.fillMaxSize().padding(innerPadding).padding(12.dp)
+            ) {
+                Row(
+                    Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    item {
-                        Row(
-                            Modifier.fillMaxWidth().padding(bottom=8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            if(showSearchBar){ SpaceSearchBar(query, { query=it }, { showSearchBar=false }) }
-                            else {
-                                SpacesToolBar(
-                                    stringResource(R.string.Journal),
-                                    Icons.Default.AutoStories,
-                                    false,
-                                    onMainClick = { showSpacesMenu = true },
-                                    onEditClick = onShowSpaceBottomSheet
-                                )
-
-                                SpacesMenu(
-                                    showSpacesMenu,
-                                    workspace,
-                                    onSpaceChange
-                                ) { showSpacesMenu = false }
-
-                                Row {
-                                    IconButton({ showSearchBar = true }) {
-                                        Icon(
-                                            Icons.Default.Search,
-                                            null,
-                                            tint = MaterialTheme.colorScheme.primary
-                                        )
-                                    }
-                                    IconButton({ isToolsSheetVisible = true }) {
-                                        Icon(
-                                            Icons.Default.FilterList,
-                                            null,
-                                            tint = MaterialTheme.colorScheme.primary
-                                        )
-                                    }
-                                }
-                            }
-                        }
+                    SpacesToolBar(
+                        stringResource(R.string.Journal),
+                        Icons.Default.AutoStories,
+                        false,
+                        onMainClick = { showSpacesMenu = true },
+                        onEditClick = onShowSpaceBottomSheet
+                    )
+                    SpacesMenu(showSpacesMenu, workspace, onSpaceChange) { showSpacesMenu = false }
+                    IconButton({ isToolsSheetVisible = true }) {
+                        Icon(Icons.Default.FilterList, null, tint = MaterialTheme.colorScheme.primary)
                     }
+                }
+                SpaceSearchBar(
+                    query, onQueryChange, {},
+                    modifier = Modifier.padding(bottom = 12.dp),
+                    horizontalPadding = 0.dp
+                )
+                LazyColumn(
+                    Modifier.fillMaxSize().weight(1f)
+                ) {
                     if(allEntries.isEmpty()) item { EmptyData() }
                     items(allEntries) { entry->
                         JournalCardHeader("${convertMillisToDay(entry.dateTime)}, ${
@@ -351,11 +329,11 @@ fun JournalScreen(
             rememberModalBottomSheetState(),
             onDismiss = { isToolsSheetVisible = false },
         ) { single, multi, date ->
-            filterState = FilterState(
+            onFilterStateChange(FilterState(
                 sort = single[sortByLabel],
                 selectedLabelIds = multi[labelName] ?: emptySet(),
                 selectedDate = date
-            )
+            ))
         }
     }
 }

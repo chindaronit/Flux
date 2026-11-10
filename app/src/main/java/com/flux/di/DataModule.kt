@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import androidx.work.WorkManager
 import com.flux.data.dao.EventDao
+import com.flux.data.dao.EventExceptionDao
 import com.flux.data.dao.EventInstanceDao
 import com.flux.data.dao.HabitInstanceDao
 import com.flux.data.dao.HabitsDao
@@ -20,6 +21,7 @@ import com.flux.data.database.MIGRATION_10_11
 import com.flux.data.database.MIGRATION_11_12
 import com.flux.data.database.MIGRATION_12_13
 import com.flux.data.database.MIGRATION_13_14
+import com.flux.data.database.MIGRATION_14_15
 import com.flux.data.database.MIGRATION_1_2
 import com.flux.data.database.MIGRATION_2_3
 import com.flux.data.database.MIGRATION_3_4
@@ -61,7 +63,8 @@ object DataModule {
             MIGRATION_10_11,
             MIGRATION_11_12,
             MIGRATION_12_13,
-            MIGRATION_13_14
+            MIGRATION_13_14,
+            MIGRATION_14_15
         )
         .build()
 
@@ -88,6 +91,10 @@ object DataModule {
     @Singleton
     @Provides
     fun provideEventInstanceDao(db: FluxDatabase): EventInstanceDao = db.eventInstanceDao
+
+    @Singleton
+    @Provides
+    fun provideEventExceptionDao(db: FluxDatabase): EventExceptionDao = db.eventExceptionDao
 
     @Singleton
     @Provides

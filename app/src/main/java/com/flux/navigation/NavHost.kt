@@ -240,11 +240,21 @@ fun AppNavHost(navController: NavHostController, snackbarHostState: SnackbarHost
                     nullable = false
                 })
             }
+            if (route.contains("{occurrenceDate}")) {
+                arguments.add(navArgument("occurrenceDate") {
+                    type = NavType.LongType
+                    nullable = false
+                })
+            }
 
             bottomSlideComposable(route, arguments) { entry ->
                 val workspaceId = entry.arguments?.getString("workspaceId") ?: ""
                 val eventId = entry.arguments?.getString("eventId") ?: ""
-                val instanceDate = entry.arguments?.getLong("instanceDate") ?: 0L
+                val instanceDate = if (entry.arguments?.containsKey("occurrenceDate") == true) {
+                    entry.arguments?.getLong("occurrenceDate") ?: 0L
+                } else {
+                    entry.arguments?.getLong("instanceDate") ?: 0L
+                }
                 val eventDate = entry.arguments?.getLong("eventDate") ?: 0L
 
                 screen(navController,
@@ -314,4 +324,3 @@ fun AppNavHost(navController: NavHostController, snackbarHostState: SnackbarHost
         }
     }
 }
-

@@ -34,7 +34,9 @@ import com.flux.ui.screens.analytics.AnalyticScreen
 import com.flux.ui.screens.events.EventScreen
 import com.flux.ui.screens.habits.HabitScreen
 import com.flux.ui.screens.journal.JournalScreen
+import com.flux.ui.screens.journal.FilterState as JournalFilterState
 import com.flux.ui.screens.notes.NotesScreen
+import com.flux.ui.screens.notes.FilterState as NotesFilterState
 import com.flux.ui.screens.progressBoard.ProgressTrackerScreen
 import com.flux.ui.screens.todo.TodoScreen
 import com.flux.ui.state.States
@@ -121,6 +123,22 @@ fun WorkspaceDetails(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val workspaceId = workspace.workspaceId
+    var notesSearchQuery by rememberSaveable(workspaceId) { mutableStateOf("") }
+    var isNotesSearchVisible by rememberSaveable(workspaceId) { mutableStateOf(false) }
+    var notesFilterState by remember(workspaceId) { mutableStateOf(NotesFilterState()) }
+    var todoSearchQuery by rememberSaveable(workspaceId) { mutableStateOf("") }
+    var isTodoSearchVisible by rememberSaveable(workspaceId) { mutableStateOf(false) }
+    val expandedTodoIds = rememberSaveable(workspaceId) {
+        mutableStateOf<Set<String>>(emptySet())
+    }
+    var eventSearchQuery by rememberSaveable(workspaceId) { mutableStateOf("") }
+    var journalSearchQuery by rememberSaveable(workspaceId) { mutableStateOf("") }
+    var isJournalSearchVisible by rememberSaveable(workspaceId) { mutableStateOf(false) }
+    var journalFilterState by remember(workspaceId) { mutableStateOf(JournalFilterState()) }
+    var habitSearchQuery by rememberSaveable(workspaceId) { mutableStateOf("") }
+    var isHabitSearchVisible by rememberSaveable(workspaceId) { mutableStateOf(false) }
+    var progressSearchQuery by rememberSaveable(workspaceId) { mutableStateOf("") }
+    var isProgressSearchVisible by rememberSaveable(workspaceId) { mutableStateOf(false) }
     val selectedSpaceId = rememberSaveable {
         mutableIntStateOf(
             when {
@@ -186,6 +204,33 @@ fun WorkspaceDetails(
             onToggleLock = onToggleLock,
             onSpaceChange = {},
             onShowSpaceBottomSheet = onShowSpaceBottomSheet,
+            eventSearchQuery = eventSearchQuery,
+            onEventSearchQueryChange = { eventSearchQuery = it },
+            notesSearchQuery = notesSearchQuery,
+            onNotesSearchQueryChange = { notesSearchQuery = it },
+            isNotesSearchVisible = isNotesSearchVisible,
+            onNotesSearchVisibilityChange = { isNotesSearchVisible = it },
+            notesFilterState = notesFilterState,
+            onNotesFilterStateChange = { notesFilterState = it },
+            todoSearchQuery = todoSearchQuery,
+            onTodoSearchQueryChange = { todoSearchQuery = it },
+            isTodoSearchVisible = isTodoSearchVisible,
+            onTodoSearchVisibilityChange = { isTodoSearchVisible = it },
+            expandedTodoIds = expandedTodoIds,
+            journalSearchQuery = journalSearchQuery,
+            onJournalSearchQueryChange = { journalSearchQuery = it },
+            isJournalSearchVisible = isJournalSearchVisible,
+            onJournalSearchVisibilityChange = { isJournalSearchVisible = it },
+            journalFilterState = journalFilterState,
+            onJournalFilterStateChange = { journalFilterState = it },
+            habitSearchQuery = habitSearchQuery,
+            onHabitSearchQueryChange = { habitSearchQuery = it },
+            isHabitSearchVisible = isHabitSearchVisible,
+            onHabitSearchVisibilityChange = { isHabitSearchVisible = it },
+            progressSearchQuery = progressSearchQuery,
+            onProgressSearchQueryChange = { progressSearchQuery = it },
+            isProgressSearchVisible = isProgressSearchVisible,
+            onProgressSearchVisibilityChange = { isProgressSearchVisible = it },
         )
     } else {
         CircularSpacePager(
@@ -205,6 +250,33 @@ fun WorkspaceDetails(
                 onToggleLock = onToggleLock,
                 onSpaceChange = { selectedSpaceId.intValue = it },
                 onShowSpaceBottomSheet = onShowSpaceBottomSheet,
+                eventSearchQuery = eventSearchQuery,
+                onEventSearchQueryChange = { eventSearchQuery = it },
+                notesSearchQuery = notesSearchQuery,
+                onNotesSearchQueryChange = { notesSearchQuery = it },
+                isNotesSearchVisible = isNotesSearchVisible,
+                onNotesSearchVisibilityChange = { isNotesSearchVisible = it },
+                notesFilterState = notesFilterState,
+                onNotesFilterStateChange = { notesFilterState = it },
+                todoSearchQuery = todoSearchQuery,
+                onTodoSearchQueryChange = { todoSearchQuery = it },
+                isTodoSearchVisible = isTodoSearchVisible,
+                onTodoSearchVisibilityChange = { isTodoSearchVisible = it },
+                expandedTodoIds = expandedTodoIds,
+                journalSearchQuery = journalSearchQuery,
+                onJournalSearchQueryChange = { journalSearchQuery = it },
+                isJournalSearchVisible = isJournalSearchVisible,
+                onJournalSearchVisibilityChange = { isJournalSearchVisible = it },
+                journalFilterState = journalFilterState,
+                onJournalFilterStateChange = { journalFilterState = it },
+                habitSearchQuery = habitSearchQuery,
+                onHabitSearchQueryChange = { habitSearchQuery = it },
+                isHabitSearchVisible = isHabitSearchVisible,
+                onHabitSearchVisibilityChange = { isHabitSearchVisible = it },
+                progressSearchQuery = progressSearchQuery,
+                onProgressSearchQueryChange = { progressSearchQuery = it },
+                isProgressSearchVisible = isProgressSearchVisible,
+                onProgressSearchVisibilityChange = { isProgressSearchVisible = it },
             )
         }
     }
@@ -294,6 +366,33 @@ fun SpaceMapper(
     onToggleLock: () -> Unit,
     onSpaceChange: (Int) -> Unit,
     onShowSpaceBottomSheet: () -> Unit,
+    eventSearchQuery: String,
+    onEventSearchQueryChange: (String) -> Unit,
+    notesSearchQuery: String,
+    onNotesSearchQueryChange: (String) -> Unit,
+    isNotesSearchVisible: Boolean,
+    onNotesSearchVisibilityChange: (Boolean) -> Unit,
+    notesFilterState: NotesFilterState,
+    onNotesFilterStateChange: (NotesFilterState) -> Unit,
+    todoSearchQuery: String,
+    onTodoSearchQueryChange: (String) -> Unit,
+    isTodoSearchVisible: Boolean,
+    onTodoSearchVisibilityChange: (Boolean) -> Unit,
+    expandedTodoIds: androidx.compose.runtime.MutableState<Set<String>>,
+    journalSearchQuery: String,
+    onJournalSearchQueryChange: (String) -> Unit,
+    isJournalSearchVisible: Boolean,
+    onJournalSearchVisibilityChange: (Boolean) -> Unit,
+    journalFilterState: JournalFilterState,
+    onJournalFilterStateChange: (JournalFilterState) -> Unit,
+    habitSearchQuery: String,
+    onHabitSearchQueryChange: (String) -> Unit,
+    isHabitSearchVisible: Boolean,
+    onHabitSearchVisibilityChange: (Boolean) -> Unit,
+    progressSearchQuery: String,
+    onProgressSearchQueryChange: (String) -> Unit,
+    isProgressSearchVisible: Boolean,
+    onProgressSearchVisibilityChange: (Boolean) -> Unit,
 ) {
     when (spaceId) {
         1 -> NotesScreen(
@@ -309,7 +408,13 @@ fun SpaceMapper(
             onDeleteWorkspace,
             onToggleLock,
             viewModels.notesViewModel::onEvent,
-            viewModels.settingsViewModel::onEvent
+            viewModels.settingsViewModel::onEvent,
+            notesSearchQuery,
+            onNotesSearchQueryChange,
+            isNotesSearchVisible,
+            onNotesSearchVisibilityChange,
+            notesFilterState,
+            onNotesFilterStateChange
         )
 
         2 -> TodoScreen(
@@ -323,7 +428,12 @@ fun SpaceMapper(
             onRemoveCover,
             onDeleteWorkspace,
             onToggleLock,
-            viewModels.todoViewModel::onEvent
+            viewModels.todoViewModel::onEvent,
+            todoSearchQuery,
+            onTodoSearchQueryChange,
+            isTodoSearchVisible,
+            onTodoSearchVisibilityChange,
+            expandedTodoIds
         )
 
         3 -> EventScreen(
@@ -337,8 +447,9 @@ fun SpaceMapper(
             onRemoveCover,
             onDeleteWorkspace,
             onToggleLock,
-            viewModels.settingsViewModel::onEvent,
-            viewModels.eventViewModel::onEvent
+            viewModels.eventViewModel::onEvent,
+            eventSearchQuery,
+            onEventSearchQueryChange
         )
 
         4 -> JournalScreen(
@@ -353,7 +464,13 @@ fun SpaceMapper(
             onRemoveCover,
             onDeleteWorkspace,
             onToggleLock,
-            viewModels.journalViewModel::onEvent
+            viewModels.journalViewModel::onEvent,
+            journalSearchQuery,
+            onJournalSearchQueryChange,
+            isJournalSearchVisible,
+            onJournalSearchVisibilityChange,
+            journalFilterState,
+            onJournalFilterStateChange
         )
 
         5 -> HabitScreen(
@@ -367,7 +484,11 @@ fun SpaceMapper(
             onRemoveCover,
             onDeleteWorkspace,
             onToggleLock,
-            viewModels.habitViewModel::onEvent
+            viewModels.habitViewModel::onEvent,
+            habitSearchQuery,
+            onHabitSearchQueryChange,
+            isHabitSearchVisible,
+            onHabitSearchVisibilityChange
         )
 
         6 -> AnalyticScreen(
@@ -393,7 +514,11 @@ fun SpaceMapper(
             onAddCover,
             onRemoveCover,
             onDeleteWorkspace,
-            onToggleLock
+            onToggleLock,
+            progressSearchQuery,
+            onProgressSearchQueryChange,
+            isProgressSearchVisible,
+            onProgressSearchVisibilityChange
         )
 
         else -> EmptyWorkspace(

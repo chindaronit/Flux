@@ -2,6 +2,11 @@ package com.flux.other
 
 import android.text.format.DateUtils
 import com.flux.data.model.RecurrenceRule
+import com.flux.data.model.IntervalUnit
+import com.flux.data.model.isActiveOn
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 import java.util.Calendar
 
 fun getNextOccurrence(rule: RecurrenceRule, startDateTime: Long): Long? {
@@ -23,6 +28,8 @@ fun getNextOccurrence(rule: RecurrenceRule, startDateTime: Long): Long? {
             startDateTime + (nextCycle * rule.everyXDays * DateUtils.DAY_IN_MILLIS)
         }
 
+        is RecurrenceRule.Interval -> findNextIntervalOccurrence(rule, startDateTime, now)
+
         is RecurrenceRule.Weekly -> {
             findNextWeeklyOccurrence(rule, startDateTime, now)
         }
@@ -37,6 +44,34 @@ fun getNextOccurrence(rule: RecurrenceRule, startDateTime: Long): Long? {
 
         else -> null
     }
+}
+
+private fun findNextIntervalOccurrence(
+    rule: RecurrenceRule.Interval,
+    startDateTime: Long,
+    now: Long
+): Long? {
+    val zone = ZoneId.systemDefault()
+    val start = Instant.ofEpochMilli(startDateTime).atZone(zone)
+    val nowDate = Instant.ofEpochMilli(now).atZone(zone).toLocalDate()
+    val firstDate = maxOf(start.toLocalDate(), nowDate)
+    val interval = rule.every.coerceAtLeast(1).toLong()
+    val cycleDays = when (rule.unit) {
+        IntervalUnit.DAY -> interval
+        IntervalUnit.WEEK -> interval * 7
+        IntervalUnit.MONTH -> interval * 31
+        IntervalUnit.YEAR -> interval * 366
+    }
+    val searchDays = (cycleDays + 8).coerceAtMost(366_000)
+
+    for (offset in 0..searchDays) {
+        val date = firstDate.plusDays(offset)
+        if (rule.isActiveOn(date, start.toLocalDate())) {
+            val occurrence = date.atTime(start.toLocalTime()).atZone(zone).toInstant().toEpochMilli()
+            if (occurrence > now) return occurrence
+        }
+    }
+    return null
 }
 
 private fun findNextWeeklyOccurrence(

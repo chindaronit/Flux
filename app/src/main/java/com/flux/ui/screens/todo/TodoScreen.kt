@@ -1,6 +1,7 @@
 package com.flux.ui.screens.todo
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,8 +23,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,7 +33,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -67,14 +67,18 @@ fun TodoScreen(
     onRemoveCover: () -> Unit,
     onDeleteWorkspace: () -> Unit,
     onToggleLock: () -> Unit,
-    onEvent: (TodoEvents) -> Unit
+    onEvent: (TodoEvents) -> Unit,
+    query: String,
+    onQueryChange: (String) -> Unit,
+    showSearchBar: Boolean,
+    onSearchBarVisibilityChange: (Boolean) -> Unit,
+    expandedTODOIds: MutableState<Set<String>>
 ){
     val context = LocalContext.current
     val workspaceId = workspace.workspaceId
     val isLoading = state.isLoading
     val radius = settings.data.cornerRadius
     var showSpacesMenu by remember { mutableStateOf(false) }
-    var query by remember { mutableStateOf("") }
     val allList = state.allLists.filter {
         it.workspaceId == workspaceId && (
             it.title.contains(query, ignoreCase = true) ||
@@ -98,15 +102,10 @@ fun TodoScreen(
         }
     }
 
-    var showSearchBar by remember { mutableStateOf(false) }
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    val expandedTODOIds = rememberSaveable(workspaceId) { mutableStateOf<Set<String>>(emptySet()) }
-
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         topBar = {
             SpaceTopBar(
-                scrollBehavior = scrollBehavior,
                 title            = workspace.title,
                 description      = workspace.description,
                 cover            = workspace.cover,
@@ -131,72 +130,41 @@ fun TodoScreen(
     ) { innerPadding ->
         when {
             isLoading -> Loader()
-            else -> {
+            else -> Column(
+                Modifier.fillMaxSize().padding(innerPadding).padding(12.dp)
+            ) {
+                Row(
+                    Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    SpacesToolBar(
+                        stringResource(R.string.To_Do),
+                        Icons.Default.TaskAlt,
+                        false,
+                        onMainClick = { showSpacesMenu = true },
+                        onEditClick = onShowSpaceBottomSheet
+                    )
+                    SpacesMenu(showSpacesMenu, workspace, onSpaceChange) { showSpacesMenu = false }
+                    IconButton(onClick = { reorderEnabled = !reorderEnabled }) {
+                        Icon(
+                            imageVector = if (reorderEnabled) Icons.Default.LockOpen else Icons.Default.Lock,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+                SpaceSearchBar(
+                    query,
+                    onQueryChange,
+                    { expandedTODOIds.value = emptySet() },
+                    modifier = Modifier.padding(bottom = 12.dp),
+                    horizontalPadding = 0.dp
+                )
                 LazyColumn(
                     state = lazyListState,
-                    modifier = Modifier.fillMaxSize()
-                        .padding(innerPadding)
-                        .padding(12.dp)
-                        .nestedScroll(scrollBehavior.nestedScrollConnection)
+                    modifier = Modifier.weight(1f)
                 ) {
-                    item {
-                        Row(
-                            Modifier.fillMaxWidth().padding(bottom=8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            if(showSearchBar){
-                                SpaceSearchBar(
-                                    query,
-                                    { query=it },
-                                    {
-                                        showSearchBar=false
-                                        expandedTODOIds.value=emptySet()
-                                    }
-                                )
-                            }
-                            else { 
-                                SpacesToolBar(
-                                    stringResource(R.string.To_Do),
-                                    Icons.Default.TaskAlt,
-                                    false,
-                                    onMainClick = { showSpacesMenu = true },
-                                    onEditClick = onShowSpaceBottomSheet
-                                )
-                                SpacesMenu(
-                                    showSpacesMenu,
-                                    workspace,
-                                    onSpaceChange
-                                ) { showSpacesMenu = false }
-
-                                Row {
-                                    IconButton({
-                                        expandedTODOIds.value = emptySet()
-                                        expandedTODOIds.value = allList.map { it.id }.toSet()
-                                        showSearchBar = true
-                                    }) {
-                                        Icon(
-                                            Icons.Default.Search,
-                                            null,
-                                            tint = MaterialTheme.colorScheme.primary
-                                        )
-                                    }
-
-                                    IconButton(onClick = { reorderEnabled = !reorderEnabled }) {
-                                        Icon(
-                                            imageVector =
-                                                if (reorderEnabled) Icons.Default.LockOpen
-                                                else Icons.Default.Lock,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.primary
-                                        )
-                                    }
-                                }
-
-                            }
-                        }
-                    }
-
                     if(allList.isEmpty()) item { EmptyData() }
                     itemsIndexed(
                         todoList,

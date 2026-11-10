@@ -1,6 +1,7 @@
 package com.flux.data.database
 
 import com.flux.data.model.EventInstanceModel
+import com.flux.data.model.EventExceptionModel
 import com.flux.data.model.EventModel
 import com.flux.data.model.HabitInstanceModel
 import com.flux.data.model.HabitModel
@@ -26,6 +27,7 @@ data class FluxBackup(
     val labels: List<LabelModel> = emptyList(),
     val events: List<EventModel> = emptyList(),
     val eventInstances: List<EventInstanceModel> = emptyList(),
+    val eventExceptions: List<EventExceptionModel> = emptyList(),
     val progressBoardItems: List<ProgressBoardModel> = emptyList(),
     val settings: SettingsModel = SettingsModel()
 )
