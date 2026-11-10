@@ -14,11 +14,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -39,13 +37,11 @@ fun EmptyWorkspace(
     onToggleLock: () -> Unit,
 ){
     val workspaceId = workspace.workspaceId
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         topBar = {
             SpaceTopBar(
-                scrollBehavior   = scrollBehavior,
                 title            = workspace.title,
                 description      = workspace.description,
                 cover            = workspace.cover,
@@ -64,7 +60,6 @@ fun EmptyWorkspace(
             Modifier.fillMaxSize()
                 .padding(innerPadding)
                 .padding(12.dp)
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
         ) {
             item {
                 Row(

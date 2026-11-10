@@ -2,6 +2,7 @@ package com.flux.ui.screens.events
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Pending
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.SportsScore
@@ -18,6 +20,8 @@ import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material.icons.outlined.Pending
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -46,6 +50,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.flux.R
 import com.flux.data.model.EventModel
+import com.flux.data.model.EventExceptionModel
+import com.flux.data.model.IntervalUnit
 import com.flux.data.model.RecurrenceRule
 import com.flux.data.model.WorkspaceModel
 import com.flux.navigation.NavRoutes
@@ -59,6 +65,9 @@ import com.flux.ui.state.Settings
 import java.time.ZoneId
 import java.time.Instant
 import java.time.format.DateTimeFormatter
+import java.time.LocalDate
+import java.time.format.FormatStyle
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,20 +89,118 @@ fun EventDetails(
     val currentRecurrenceRule = event.recurrence
     val context = LocalContext.current
     val time = event.startDateTime.toFormattedTime(settings.data.is24HourFormat)
+    val occurrenceDateText = remember(instanceDate) {
+        LocalDate.ofEpochDay(instanceDate).format(
+            DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
+                .withLocale(Locale.getDefault())
+        )
+    }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showDeleteChoiceDialog by remember { mutableStateOf(false) }
+    var deletingOccurrence by remember { mutableStateOf(false) }
     var showDataCopyDialog by remember { mutableStateOf(false) }
+    var showEditChoiceDialog by remember { mutableStateOf(false) }
     val cloneString = stringResource(R.string.clone_created_successfully)
     val contentCopiedString = stringResource(R.string.content_copied)
     val contentMovedString = stringResource(R.string.content_moved)
 
-    if(showDeleteDialog){
+    if (showEditChoiceDialog) {
+        AlertDialog(
+            onDismissRequest = { showEditChoiceDialog = false },
+            title = { Text(stringResource(R.string.edit_event_occurrence_title)) },
+            text = { Text(stringResource(R.string.edit_event_occurrence_message)) },
+            dismissButton = null,
+            confirmButton = {
+                Column(horizontalAlignment = Alignment.End) {
+                    TextButton(onClick = {
+                        showEditChoiceDialog = false
+                        navController.navigate(
+                            NavRoutes.NewEventOccurrence.withArgs(
+                                workspaceId,
+                                event.id,
+                                instanceDate
+                            )
+                        )
+                    }) {
+                        Text(stringResource(R.string.event_scope_this))
+                    }
+                    TextButton(onClick = {
+                        showEditChoiceDialog = false
+                        navController.navigate(
+                            NavRoutes.NewEvent.withArgs(
+                                workspaceId,
+                                event.id,
+                                event.startDateTime
+                            )
+                        )
+                    }) {
+                        Text(stringResource(R.string.event_scope_series))
+                    }
+                    TextButton(onClick = { showEditChoiceDialog = false }) {
+                        Text(stringResource(R.string.Cancel))
+                    }
+                }
+            }
+        )
+    }
+
+    if (showDeleteChoiceDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteChoiceDialog = false },
+            title = { Text(stringResource(R.string.delete_event_scope_title)) },
+            text = { Text(stringResource(R.string.delete_event_scope_message)) },
+            dismissButton = null,
+            confirmButton = {
+                Column(horizontalAlignment = Alignment.End) {
+                    TextButton(onClick = {
+                        showDeleteChoiceDialog = false
+                        deletingOccurrence = true
+                        showDeleteDialog = true
+                    }) {
+                        Text(stringResource(R.string.event_scope_this))
+                    }
+                    TextButton(onClick = {
+                        showDeleteChoiceDialog = false
+                        deletingOccurrence = false
+                        showDeleteDialog = true
+                    }) {
+                        Text(stringResource(R.string.event_scope_series))
+                    }
+                    TextButton(onClick = { showDeleteChoiceDialog = false }) {
+                        Text(stringResource(R.string.Cancel))
+                    }
+                }
+            }
+        )
+    }
+
+    if (showDeleteDialog) {
         DeleteAlert({
-            showDeleteDialog=false
+            showDeleteDialog = false
         }, {
-            onTaskEvents(TaskEvents.DeleteTask(event, context))
+            if (deletingOccurrence) {
+                onTaskEvents(
+                    TaskEvents.DeleteOccurrence(
+                        EventExceptionModel(
+                            eventId = event.id,
+                            occurrenceDate = instanceDate,
+                            workspaceId = workspaceId
+                        )
+                    )
+                )
+            } else {
+                onTaskEvents(TaskEvents.DeleteTask(event, context))
+            }
             navController.popBackStack()
-            showDeleteDialog=false
-        })
+            showDeleteDialog = false
+        },
+            dialogTitle = stringResource(
+                if (deletingOccurrence) R.string.delete_occurrence_title else R.string.deleteDialogTitle
+            ),
+            dialogText = stringResource(
+                if (deletingOccurrence) R.string.delete_occurrence_message else R.string.deleteDialogText
+            )
+        )
     }
 
     Scaffold(
@@ -115,7 +222,19 @@ fun EventDetails(
                     }
                 },
                 actions = {
-                    IconButton({ navController.navigate(NavRoutes.NewEvent.withArgs(workspaceId, event.id, event.startDateTime)) }) {
+                    IconButton({
+                        if (event.recurrence == RecurrenceRule.Once) {
+                            navController.navigate(
+                                NavRoutes.NewEvent.withArgs(
+                                    workspaceId,
+                                    event.id,
+                                    event.startDateTime
+                                )
+                            )
+                        } else {
+                            showEditChoiceDialog = true
+                        }
+                    }) {
                         Icon(
                             imageVector = Icons.Default.Edit,
                             contentDescription = "Edit"
@@ -123,7 +242,14 @@ fun EventDetails(
                     }
                     EventDropdownMenu(
                         { onTaskEvents(TaskEvents.ExportIcsEvents(context, event)) },
-                        {showDeleteDialog=true},
+                        {
+                            if (event.recurrence == RecurrenceRule.Once) {
+                                deletingOccurrence = false
+                                showDeleteDialog = true
+                            } else {
+                                showDeleteChoiceDialog = true
+                            }
+                        },
                         {showDataCopyDialog=true},
                         {
                             onTaskEvents(TaskEvents.UpsertTask(
@@ -158,6 +284,13 @@ fun EventDetails(
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             if(description.isNotBlank()) item { Text(description, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Normal)) }
+            item {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Event, null)
+                    Spacer(Modifier.width(6.dp))
+                    Text(stringResource(R.string.event_occurrence_date, occurrenceDateText))
+                }
+            }
             item{
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Refresh, null)
@@ -254,6 +387,32 @@ fun formatOnce(selectedDateTime: Long): String {
 @Composable
 fun formatCustom(rule: RecurrenceRule.Custom): String {
     return stringResource(R.string.recurrence_every_x_days, rule.everyXDays)
+}
+
+@Composable
+fun intervalRecurrenceText(rule: RecurrenceRule.Interval): String {
+    val resource = when (rule.unit) {
+        IntervalUnit.DAY -> R.string.recurrence_every_days
+        IntervalUnit.WEEK -> R.string.recurrence_every_weeks
+        IntervalUnit.MONTH -> R.string.recurrence_every_months
+        IntervalUnit.YEAR -> R.string.recurrence_every_years
+    }
+    val intervalText = stringResource(resource, rule.every)
+
+    return if (rule.unit == IntervalUnit.WEEK && rule.daysOfWeek.isNotEmpty()) {
+        val weekdays = listOf(
+            stringResource(R.string.monday_short),
+            stringResource(R.string.tuesday_short),
+            stringResource(R.string.wednesday_short),
+            stringResource(R.string.thursday_short),
+            stringResource(R.string.friday_short),
+            stringResource(R.string.saturday_short),
+            stringResource(R.string.sunday_short)
+        )
+        "$intervalText on ${rule.daysOfWeek.sorted().joinToString(", ") { weekdays[it] }}"
+    } else {
+        intervalText
+    }
 }
 
 @Composable

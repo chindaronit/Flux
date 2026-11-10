@@ -1,6 +1,7 @@
 package com.flux.ui.screens.progressBoard
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,7 +17,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -24,7 +24,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -77,13 +76,11 @@ fun ProgressTrackerScreen(
     val inProgressItems = boardItems.filter { it.status == 1 }
     val completedItems = boardItems.filter { it.status == 2 }
     var showSpacesMenu by remember { mutableStateOf(false) }
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         topBar = {
             SpaceTopBar(
-                scrollBehavior = scrollBehavior,
                 title            = workspace.title,
                 description      = workspace.description,
                 cover            = workspace.cover,
@@ -108,48 +105,32 @@ fun ProgressTrackerScreen(
     ) { innerPadding ->
         when {
             isLoading -> Loader()
-            else ->
+            else -> Column(
+                Modifier.fillMaxSize().padding(innerPadding).padding(12.dp)
+            ) {
+                Row(
+                    Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    SpacesToolBar(
+                        stringResource(R.string.progress_tracker),
+                        Icons.Default.TrackChanges,
+                        false,
+                        onMainClick = { showSpacesMenu = true },
+                        onEditClick = onShowSpaceBottomSheet
+                    )
+                    SpacesMenu(showSpacesMenu, workspace, onSpaceChange) { showSpacesMenu = false }
+                }
+                SpaceSearchBar(
+                    query, onQueryChange, {},
+                    modifier = Modifier.padding(bottom = 12.dp),
+                    horizontalPadding = 0.dp
+                )
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding)
-                        .padding(12.dp)
-                        .nestedScroll(scrollBehavior.nestedScrollConnection),
+                    modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    item {
-                        if(showSearchBar){ SpaceSearchBar(query, onQueryChange, { onSearchBarVisibilityChange(false) }) }
-                        else {
-                            Row(
-                                Modifier.fillMaxWidth().padding(bottom = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                SpacesToolBar(
-                                    stringResource(R.string.progress_tracker),
-                                    Icons.Default.TrackChanges,
-                                    false,
-                                    onMainClick = { showSpacesMenu = true },
-                                    onEditClick = onShowSpaceBottomSheet
-                                )
-                                SpacesMenu(
-                                    showSpacesMenu,
-                                    workspace,
-                                    onSpaceChange
-                                ) { showSpacesMenu = false }
-
-                                Row {
-                                    IconButton({ onSearchBarVisibilityChange(true) }) {
-                                        Icon(
-                                            Icons.Default.Search,
-                                            null,
-                                            tint = MaterialTheme.colorScheme.primary
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
                     if(boardItems.isEmpty()) item { EmptyData() }
                     if (notStartedItems.isNotEmpty()) {
                         item {
@@ -182,6 +163,7 @@ fun ProgressTrackerScreen(
                                 completedItems,
                                 { navController.navigate(NavRoutes.NewProgressItem.withArgs(workspaceId, it.itemId)) }
                             ) {  }
+                        }
                         }
                     }
                 }

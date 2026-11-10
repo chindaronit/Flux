@@ -132,7 +132,6 @@ fun WorkspaceDetails(
         mutableStateOf<Set<String>>(emptySet())
     }
     var eventSearchQuery by rememberSaveable(workspaceId) { mutableStateOf("") }
-    var isEventSearchVisible by rememberSaveable(workspaceId) { mutableStateOf(false) }
     var journalSearchQuery by rememberSaveable(workspaceId) { mutableStateOf("") }
     var isJournalSearchVisible by rememberSaveable(workspaceId) { mutableStateOf(false) }
     var journalFilterState by remember(workspaceId) { mutableStateOf(JournalFilterState()) }
@@ -207,8 +206,6 @@ fun WorkspaceDetails(
             onShowSpaceBottomSheet = onShowSpaceBottomSheet,
             eventSearchQuery = eventSearchQuery,
             onEventSearchQueryChange = { eventSearchQuery = it },
-            isEventSearchVisible = isEventSearchVisible,
-            onEventSearchVisibilityChange = { isEventSearchVisible = it },
             notesSearchQuery = notesSearchQuery,
             onNotesSearchQueryChange = { notesSearchQuery = it },
             isNotesSearchVisible = isNotesSearchVisible,
@@ -255,8 +252,6 @@ fun WorkspaceDetails(
                 onShowSpaceBottomSheet = onShowSpaceBottomSheet,
                 eventSearchQuery = eventSearchQuery,
                 onEventSearchQueryChange = { eventSearchQuery = it },
-                isEventSearchVisible = isEventSearchVisible,
-                onEventSearchVisibilityChange = { isEventSearchVisible = it },
                 notesSearchQuery = notesSearchQuery,
                 onNotesSearchQueryChange = { notesSearchQuery = it },
                 isNotesSearchVisible = isNotesSearchVisible,
@@ -373,8 +368,6 @@ fun SpaceMapper(
     onShowSpaceBottomSheet: () -> Unit,
     eventSearchQuery: String,
     onEventSearchQueryChange: (String) -> Unit,
-    isEventSearchVisible: Boolean,
-    onEventSearchVisibilityChange: (Boolean) -> Unit,
     notesSearchQuery: String,
     onNotesSearchQueryChange: (String) -> Unit,
     isNotesSearchVisible: Boolean,
@@ -454,12 +447,9 @@ fun SpaceMapper(
             onRemoveCover,
             onDeleteWorkspace,
             onToggleLock,
-            viewModels.settingsViewModel::onEvent,
             viewModels.eventViewModel::onEvent,
             eventSearchQuery,
-            onEventSearchQueryChange,
-            isEventSearchVisible,
-            onEventSearchVisibilityChange
+            onEventSearchQueryChange
         )
 
         4 -> JournalScreen(

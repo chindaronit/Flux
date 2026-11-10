@@ -144,6 +144,7 @@ class BackupViewModel @Inject constructor(
             labels = db.labelDao.getAll(),
             events = db.eventDao.loadAllEvents(),
             eventInstances = db.eventInstanceDao.getAll(),
+            eventExceptions = db.eventExceptionDao.getAll(),
             settings = db.settingsDao.loadSetting() ?: SettingsModel(),
             progressBoardItems = db.progressBoardDao.getAllBoardItems()
         )
@@ -196,6 +197,7 @@ class BackupViewModel @Inject constructor(
             }
         }
         backup.eventInstances.forEach { ei -> if (!db.eventInstanceDao.exists(ei.eventId, ei.instanceDate)) db.eventInstanceDao.upsertEventInstance(ei) }
+        backup.eventExceptions.forEach { db.eventExceptionDao.upsert(it) }
 
         // --- Settings ---
         val current = db.settingsDao.loadSetting()

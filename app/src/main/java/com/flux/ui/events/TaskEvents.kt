@@ -2,7 +2,7 @@ package com.flux.ui.events
 
 import android.content.Context
 import com.flux.data.model.EventModel
-import java.time.YearMonth
+import com.flux.data.model.EventExceptionModel
 
 sealed class TaskEvents {
     data class DeleteAllWorkspaceEvents(val workspaceId: String, val context: Context) : TaskEvents()
@@ -11,7 +11,10 @@ sealed class TaskEvents {
     data class ExportIcsEvents(val context: Context, val event: EventModel) : TaskEvents()
     data class DeleteTask(val taskEvent: EventModel, val context: Context) : TaskEvents()
     data class ToggleStatus(val markDone: Boolean, val eventId: String, val workspaceId: String, val date: Long) : TaskEvents()
-    data class ChangeMonth(val newYearMonth: YearMonth) : TaskEvents()
-    data class ChangeDate(val newLocalDate: Long) : TaskEvents()
-    data object ClearDate : TaskEvents()
+    data class DetachOccurrence(
+        val context: Context,
+        val exception: EventExceptionModel,
+        val event: EventModel
+    ) : TaskEvents()
+    data class DeleteOccurrence(val exception: EventExceptionModel) : TaskEvents()
 }

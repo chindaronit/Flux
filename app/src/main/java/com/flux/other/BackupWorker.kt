@@ -76,6 +76,7 @@ class BackupWorker @AssistedInject constructor(
                     labels = labelDao.getAll(),
                     events = eventDao.loadAllEvents(),
                     eventInstances = eventInstanceDao.getAll(),
+                    eventExceptions = fluxDatabase.eventExceptionDao.getAll(),
                     settings = settingsDao.loadSetting() ?: SettingsModel(),
                     progressBoardItems = progressBoardDao.getAllBoardItems()
                 )

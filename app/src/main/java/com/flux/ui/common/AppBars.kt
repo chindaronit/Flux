@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
@@ -50,34 +49,26 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.lerp
+import androidx.compose.ui.unit.Dp
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.currentBackStackEntryAsState
-import coil.compose.AsyncImage
 import com.flux.R
 import com.flux.navigation.NavRoutes
 import com.flux.other.icons
@@ -337,7 +328,6 @@ fun CompactCard(icon: ImageVector, title: String, onClick: () -> Unit){
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SpaceTopBar(
-    scrollBehavior: TopAppBarScrollBehavior,
     title: String,
     description: String,
     cover: String,
@@ -352,107 +342,15 @@ fun SpaceTopBar(
 ) {
     val hasCover = cover.isNotBlank()
     val hasDescription = description.isNotBlank()
-    val density = LocalDensity.current
-
     val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-    val coverHeightDp = 180.dp
     val toolbarHeight = 48.dp + statusBarHeight
-
-    // Fallback estimate, used only until the real size is measured
-    val titleStyle = MaterialTheme.typography.titleLarge
-    val bodyStyle = MaterialTheme.typography.bodyMedium
-    val estimatedTitleSectionDp = 12.dp +
-            maxOf(24.dp, with(density) { titleStyle.lineHeight.toDp() }) +
-            if (hasDescription) 2.dp + with(density) { bodyStyle.lineHeight.toDp() } else 0.dp
-
-    var measuredTitlePx by remember { mutableIntStateOf(-1) }
-    val titleSectionHeightDp =
-        if (measuredTitlePx >= 0) with(density) { measuredTitlePx.toDp() }
-        else estimatedTitleSectionDp
-
-    // No fudge constants
-    val expandedHeightDp = (if (hasCover) coverHeightDp else toolbarHeight) + titleSectionHeightDp
-
-    val expandedPx = with(density) { expandedHeightDp.toPx() }
-    val collapsedPx = with(density) { toolbarHeight.toPx() }
-
-    SideEffect {
-        val limit = collapsedPx - expandedPx
-        if (scrollBehavior.state.heightOffsetLimit != limit) {
-            scrollBehavior.state.heightOffsetLimit = limit
-        }
-    }
-
-    val fraction            = scrollBehavior.state.collapsedFraction
-    val currentHeight       = lerp(expandedHeightDp, toolbarHeight, fraction)
-    val coverAlpha          = (1f - fraction * 1.5f).coerceIn(0f, 1f)
-    val expandedTitleAlpha  = (1f - fraction * 2f).coerceIn(0f, 1f)
-    val collapsedTitleAlpha = ((fraction - 0.5f) * 2f).coerceIn(0f, 1f)
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(currentHeight)
-            .clipToBounds()
+            .height(toolbarHeight)
             .background(MaterialTheme.colorScheme.surfaceContainerLow)
     ) {
-        // ── Cover + title/description stacked flush ───────────────────
-        Column(Modifier.fillMaxWidth()) {
-            if (hasCover) {
-                AsyncImage(
-                    model = cover,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(lerp(coverHeightDp, 0.dp, fraction))
-                        .alpha(coverAlpha)
-                )
-            } else {
-                Spacer(Modifier.height(toolbarHeight))
-            }
-
-            // Title + description — always visible, fades on scroll
-            Box(Modifier.fillMaxWidth().wrapContentHeight(Alignment.Top, unbounded = true)) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .onSizeChanged {
-                            measuredTitlePx = it.height
-                        }   // must come BEFORE padding/background
-                        .alpha(expandedTitleAlpha)
-                        .background(MaterialTheme.colorScheme.surfaceContainerLow)
-                        .padding(horizontal = 12.dp, vertical = 6.dp),
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
-                ) {
-                    Row(
-                        Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(icons[icon], null)
-                        Text(
-                            text = title,
-                            style = titleStyle,
-                            fontWeight = FontWeight.Bold,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                    if (hasDescription) {
-                        Text(
-                            text = description,
-                            style = bodyStyle,
-                            fontWeight = FontWeight.ExtraLight,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                }
-            }
-        }
-
-        // ── Toolbar — overlaid, always on top ─────────────────────────
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -474,7 +372,6 @@ fun SpaceTopBar(
                 modifier = Modifier
                     .weight(1f)
                     .padding(horizontal = 8.dp)
-                    .alpha(collapsedTitleAlpha)
             ) {
                 Text(
                     text = title,
@@ -595,12 +492,13 @@ fun SpaceSearchBar(
     onQueryChange: (String) -> Unit,
     onCloseClicked: () -> Unit,
     modifier: Modifier = Modifier,
+    horizontalPadding: Dp = 24.dp,
     placeholder: String = stringResource(R.string.Search_Here)
 ) {
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp)
+            .padding(horizontal = horizontalPadding)
             .height(56.dp)
             .clip(RoundedCornerShape(50))
             .background(MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp))

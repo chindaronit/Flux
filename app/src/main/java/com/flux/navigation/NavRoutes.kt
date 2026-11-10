@@ -59,6 +59,7 @@ sealed class NavRoutes(val route: String) {
     data object NewTodoList : NavRoutes("workspace/todo/newTodo") // TodoList
     data object EditJournal : NavRoutes("workspace/journal/edit") // Journal
     data object NewEvent : NavRoutes("workspace/event/edit") // new event
+    data object NewEventOccurrence : NavRoutes("workspace/event/editOccurrence")
     data object Analytics : NavRoutes("Analytics")
     data object Search : NavRoutes("workspace/search")
     data object NewProgressItem : NavRoutes("workspace/progress/new") // new habit
@@ -288,6 +289,15 @@ val EventScreens =
                 states.eventState.allEvent.find { it.id == eventId } ?: EventModel(workspaceId = workspaceId, startDateTime = eventDate, id = eventId),
                 states.settings,
                 viewModels.eventViewModel::onEvent
+            )
+        },
+        NavRoutes.NewEventOccurrence.route + "/{workspaceId}" + "/{eventId}" + "/{occurrenceDate}" to { navController, states, viewModels, eventId, workspaceId, occurrenceDate, _ ->
+            NewEvent(
+                navController,
+                states.eventState.allEvent.find { it.id == eventId } ?: EventModel(workspaceId = workspaceId, id = eventId),
+                states.settings,
+                viewModels.eventViewModel::onEvent,
+                occurrenceDate
             )
         }
     )

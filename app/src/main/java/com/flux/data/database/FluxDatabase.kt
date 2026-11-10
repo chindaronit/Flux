@@ -8,6 +8,7 @@ import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.flux.data.dao.EventDao
+import com.flux.data.dao.EventExceptionDao
 import com.flux.data.dao.EventInstanceDao
 import com.flux.data.dao.HabitInstanceDao
 import com.flux.data.dao.HabitsDao
@@ -21,6 +22,7 @@ import com.flux.data.dao.TodoInstanceDao
 import com.flux.data.dao.WorkspaceDao
 import com.flux.data.model.Converter
 import com.flux.data.model.EventInstanceModel
+import com.flux.data.model.EventExceptionModel
 import com.flux.data.model.EventModel
 import com.flux.data.model.HabitInstanceModel
 import com.flux.data.model.HabitModel
@@ -39,8 +41,8 @@ import kotlinx.serialization.json.Json
 import java.util.UUID
 
 @Database(
-    entities = [EventModel::class, LabelModel::class, EventInstanceModel::class, SettingsModel::class, NotesModel::class, HabitModel::class, HabitInstanceModel::class, WorkspaceModel::class, TodoModel::class, JournalModel::class, ProgressBoardModel::class, TodoInstance::class],
-    version = 14,
+    entities = [EventModel::class, LabelModel::class, EventInstanceModel::class, EventExceptionModel::class, SettingsModel::class, NotesModel::class, HabitModel::class, HabitInstanceModel::class, WorkspaceModel::class, TodoModel::class, JournalModel::class, ProgressBoardModel::class, TodoInstance::class],
+    version = 15,
     exportSchema = false
 )
 @TypeConverters(Converter::class)
@@ -50,6 +52,7 @@ abstract class FluxDatabase : RoomDatabase() {
     abstract val notesDao: NotesDao
     abstract val workspaceDao: WorkspaceDao
     abstract val eventInstanceDao: EventInstanceDao
+    abstract val eventExceptionDao: EventExceptionDao
     abstract val habitDao: HabitsDao
     abstract val habitInstanceDao: HabitInstanceDao
     abstract val journalDao: JournalDao
@@ -593,6 +596,22 @@ val MIGRATION_13_14 = object : Migration(13, 14) {
             """
             ALTER TABLE SettingsModel
             ADD COLUMN defaultWorkspace TEXT DEFAULT NULL
+            """.trimIndent()
+        )
+    }
+
+}
+
+val MIGRATION_14_15 = object : Migration(14, 15) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `EventExceptionModel` (
+                `eventId` TEXT NOT NULL,
+                `occurrenceDate` INTEGER NOT NULL,
+                `workspaceId` TEXT NOT NULL,
+                PRIMARY KEY(`eventId`, `occurrenceDate`)
+            )
             """.trimIndent()
         )
     }

@@ -26,6 +26,15 @@
     <string name="Amount">Amount</string>
     <string name="at">at</string>
     <string name="on">on</string>
+    <string name="edit_event_occurrence_title">Edit recurring event</string>
+    <string name="edit_event_occurrence_message">Would you like to edit this occurrence or the entire series?</string>
+    <string name="event_scope_this">This Event</string>
+    <string name="event_scope_series">Series</string>
+    <string name="delete_event_scope_title">Delete event</string>
+    <string name="delete_event_scope_message">Delete this event or the entire series?</string>
+    <string name="delete_occurrence_title">Delete this event?</string>
+    <string name="delete_occurrence_message">Only this occurrence will be removed. The rest of the series will remain.</string>
+    <string name="independent_event_notice">Changes will apply only to this occurrence, which will become an independent event.</string>
 
     <!-- Dialog Messages -->
     <string name="deleteDialogTitle">Are you sure?</string>
@@ -279,8 +288,21 @@
     <string name="Mark_As_Completed">Mark as completed</string>
     <string name="Mark_As_Uncompleted">Mark as Uncompleted</string>
     <string name="recurrence_once">Once on %1$s</string>
+    <string name="event_occurrence_date">Occurrence on %1$s</string>
     <string name="recurrence_daily">Daily</string>
     <string name="recurrence_every_x_days">Every %1$d day(s)</string>
+    <string name="recurrence_every_days">Every %1$d days</string>
+    <string name="recurrence_every_weeks">Every %1$d weeks</string>
+    <string name="recurrence_every_months">Every %1$d months</string>
+    <string name="recurrence_every_years">Every %1$d years</string>
+    <string name="repeat_every">Repeat every</string>
+    <string name="Daily">Daily</string>
+    <string name="week">week</string>
+    <string name="weeks">weeks</string>
+    <string name="month">month</string>
+    <string name="months">months</string>
+    <string name="year">year</string>
+    <string name="years">years</string>
     <string name="recurrence_weekly_on">Weekly on %1$s</string>
     <string name="recurrence_monthly_on">Monthly on day %1$d</string>
     <string name="recurrence_yearly_on">Yearly on %1$s</string>

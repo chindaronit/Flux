@@ -57,8 +57,10 @@ import com.flux.ui.screens.settings.CircleWrapper
 import com.flux.ui.screens.settings.shapeManager
 import java.text.SimpleDateFormat
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import java.util.Date
 import java.util.Locale
 import androidx.compose.foundation.background
@@ -85,8 +87,8 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import com.flux.data.model.EventModel
+import com.flux.data.model.IntervalUnit
 import com.flux.other.IcsImporter
-import java.time.LocalDate
 import java.time.YearMonth
 
 // ------------- Dialogs -------------
@@ -290,6 +292,7 @@ fun EventCard(
     title: String,
     repeat: RecurrenceRule,
     startDateTime: Long,
+    occurrenceDate: Long? = null,
     onChangeStatus: () -> Unit,
     onClick: () -> Unit,
     onLongPressed: () -> Unit,
@@ -334,6 +337,15 @@ fun EventCard(
                     .padding(horizontal = 8.dp, vertical = 4.dp)
             ) {
                 Text(title, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                occurrenceDate?.let { date ->
+                    Text(
+                        LocalDate.ofEpochDay(date).format(
+                            DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
+                                .withLocale(java.util.Locale.getDefault())
+                        ),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
                 Spacer(Modifier.height(4.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
@@ -370,6 +382,22 @@ fun getRecurrenceText(context: Context, repeat: RecurrenceRule, startDateTime: L
                 context.getString(R.string.recurrence_daily)
             } else {
                 context.getString(R.string.recurrence_every_x_days, repeat.everyXDays)
+            }
+        }
+
+        is RecurrenceRule.Interval -> {
+            val resource = when (repeat.unit) {
+                IntervalUnit.DAY -> R.string.recurrence_every_days
+                IntervalUnit.WEEK -> R.string.recurrence_every_weeks
+                IntervalUnit.MONTH -> R.string.recurrence_every_months
+                IntervalUnit.YEAR -> R.string.recurrence_every_years
+            }
+            val label = context.getString(resource, repeat.every)
+            if (repeat.unit == IntervalUnit.WEEK && repeat.daysOfWeek.isNotEmpty()) {
+                val days = listOf("M", "T", "W", "T", "F", "S", "S")
+                "$label on ${repeat.daysOfWeek.sorted().joinToString(", ") { days[it] }}"
+            } else {
+                label
             }
         }
 

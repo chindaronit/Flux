@@ -59,6 +59,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.flux.R
 import com.flux.data.model.EventModel
+import com.flux.data.model.IntervalUnit
 import com.flux.data.model.RecurrenceRule
 import com.flux.ui.common.DatePickerModal
 import com.flux.ui.common.DiscardChangesDialog
@@ -68,6 +69,7 @@ import com.flux.ui.common.convertMillisToTime
 import com.flux.ui.common.label
 import com.flux.ui.events.TaskEvents
 import com.flux.ui.state.Settings
+import com.flux.data.model.EventExceptionModel
 import kotlin.math.max
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -76,23 +78,38 @@ fun NewEvent(
     navController: NavController,
     event: EventModel,
     settings: Settings,
-    onTaskEvents: (TaskEvents) -> Unit
+    onTaskEvents: (TaskEvents) -> Unit,
+    occurrenceDate: Long? = null
 ) {
     val context = LocalContext.current
     val originalEvent = remember { event }
+    val isOccurrenceEdit = occurrenceDate != null
+    val occurrenceStartDateTime = remember(event.startDateTime, occurrenceDate) {
+        occurrenceDate?.let { epochDay ->
+            val zone = java.time.ZoneId.systemDefault()
+            java.time.LocalDate.ofEpochDay(epochDay)
+                .atTime(java.time.Instant.ofEpochMilli(event.startDateTime).atZone(zone).toLocalTime())
+                .atZone(zone)
+                .toInstant()
+                .toEpochMilli()
+        }
+    }
     var title by rememberSaveable { mutableStateOf(event.title) }
     var description by rememberSaveable { mutableStateOf(event.description) }
     var showTimePicker by remember { mutableStateOf(false) }
+    var showStartDatePicker by remember { mutableStateOf(false) }
     var showCustomNotificationDialog by remember { mutableStateOf(false) }
     var showRepetitionSheet by remember { mutableStateOf(false) }
     var showNotificationDialog by remember { mutableStateOf(false) }
     var notificationOffset by rememberSaveable { mutableLongStateOf(event.notificationOffset) }
-    var selectedDateTime by rememberSaveable { mutableLongStateOf(event.startDateTime) }
+    var selectedDateTime by rememberSaveable(event.id, occurrenceDate) {
+        mutableLongStateOf(occurrenceStartDateTime ?: event.startDateTime)
+    }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var currentRecurrenceRule by remember { mutableStateOf(event.recurrence) }
     var eventEndsOn by rememberSaveable { mutableLongStateOf(event.endDateTime) }
     var neverEnds by rememberSaveable { mutableStateOf(event.endDateTime==-1L) }
-    var showDatePicker by remember { mutableStateOf(false) }
+    var showEndDatePicker by remember { mutableStateOf(false) }
     var showDiscardDialog by remember { mutableStateOf(false) }
 
     if (showCustomNotificationDialog) {
@@ -119,13 +136,82 @@ fun NewEvent(
         )
     }
 
-    if(showDatePicker){
-        DatePickerModal(onDateSelected = { if(it!=null) eventEndsOn=it }){
-            showDatePicker=false
+    if (showStartDatePicker) {
+        val zone = java.time.ZoneId.systemDefault()
+        DatePickerModal(
+            initialSelectedDateMillis = java.time.Instant.ofEpochMilli(selectedDateTime)
+                .atZone(zone)
+                .toLocalDate()
+                .atStartOfDay(java.time.ZoneOffset.UTC)
+                .toInstant()
+                .toEpochMilli(),
+            onDateSelected = { dateMillis ->
+                if (dateMillis != null) {
+                    val localDate = java.time.Instant.ofEpochMilli(dateMillis)
+                        .atZone(java.time.ZoneOffset.UTC)
+                        .toLocalDate()
+                    val localTime = java.time.Instant.ofEpochMilli(selectedDateTime)
+                        .atZone(zone)
+                        .toLocalTime()
+                    selectedDateTime = localDate.atTime(localTime)
+                        .atZone(zone)
+                        .toInstant()
+                        .toEpochMilli()
+                }
+            }
+        ) {
+            showStartDatePicker = false
+        }
+    }
+
+    if (showEndDatePicker) {
+        DatePickerModal(
+            initialSelectedDateMillis = eventEndsOn.takeIf { it > 0L } ?: selectedDateTime,
+            onDateSelected = { if (it != null) eventEndsOn = it }
+        ) {
+            showEndDatePicker = false
         }
     }
 
     fun saveEventIfPossible(): Boolean {
+        if (isOccurrenceEdit) {
+            val selectedOccurrenceDate = occurrenceDate
+            val originalOccurrenceDateTime = occurrenceStartDateTime ?: event.startDateTime
+            val hasOccurrenceChanges =
+                title != originalEvent.title ||
+                    description != originalEvent.description ||
+                    selectedDateTime != originalOccurrenceDateTime ||
+                    notificationOffset != originalEvent.notificationOffset
+
+            if (!hasOccurrenceChanges) return true
+            if (title.isBlank()) {
+                showDiscardDialog = true
+                return false
+            }
+
+            val detachedEvent = EventModel(
+                title = title,
+                description = description,
+                recurrence = RecurrenceRule.Once,
+                startDateTime = selectedDateTime,
+                endDateTime = -1L,
+                notificationOffset = notificationOffset,
+                workspaceId = originalEvent.workspaceId
+            )
+            onTaskEvents(
+                TaskEvents.DetachOccurrence(
+                    context,
+                    EventExceptionModel(
+                        eventId = originalEvent.id,
+                        occurrenceDate = selectedOccurrenceDate,
+                        workspaceId = originalEvent.workspaceId
+                    ),
+                    detachedEvent
+                )
+            )
+            return true
+        }
+
         val candidate = originalEvent.copy(
             title = title,
             startDateTime = selectedDateTime,
@@ -204,21 +290,48 @@ fun NewEvent(
             }
             HorizontalDivider(Modifier.fillMaxWidth())
             Column(Modifier.padding(12.dp)) {
+                if (isOccurrenceEdit) {
+                    Text(
+                        stringResource(R.string.independent_event_notice),
+                        modifier = Modifier.padding(start = 36.dp, top = 4.dp),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(50))
+                        .clickable { showStartDatePicker = true }
+                        .padding(horizontal = 6.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(Icons.Default.Today, null)
+                    Text(stringResource(R.string.date))
+                    Text(
+                        selectedDateTime.toFormattedDate(),
+                        modifier = Modifier.weight(1f),
+                        textAlign = TextAlign.End
+                    )
+                }
                 Row(
                     Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        Modifier
-                            .clip(RoundedCornerShape(50))
-                            .clickable { showRepetitionSheet = true }
-                            .padding(horizontal = 6.dp, vertical = 2.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Icon(Icons.Default.Repeat, null)
-                        Text(currentRecurrenceRule.label())
+                    if (!isOccurrenceEdit) {
+                        Row(
+                            Modifier
+                                .clip(RoundedCornerShape(50))
+                                .clickable { showRepetitionSheet = true }
+                                .padding(horizontal = 6.dp, vertical = 2.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(Icons.Default.Repeat, null)
+                            Text(currentRecurrenceRule.label())
+                        }
                     }
 
                     Row(
@@ -236,17 +349,19 @@ fun NewEvent(
                         )
                     }
                 }
-                when (val rule = currentRecurrenceRule) {
-                    is RecurrenceRule.Once -> {
-                        Text(
-                            formatOnce(selectedDateTime),
-                            modifier = Modifier.padding(top = 12.dp, start = 6.dp)
-                        )
-                    }
+                if (!isOccurrenceEdit) when (val rule = currentRecurrenceRule) {
+                    is RecurrenceRule.Once -> Unit
 
                     is RecurrenceRule.Custom -> {
                         Text(
                             formatCustom(rule),
+                            modifier = Modifier.padding(top = 12.dp, start = 6.dp)
+                        )
+                    }
+
+                    is RecurrenceRule.Interval -> {
+                        Text(
+                            intervalRecurrenceText(rule),
                             modifier = Modifier.padding(top = 12.dp, start = 6.dp)
                         )
                     }
@@ -324,7 +439,7 @@ fun NewEvent(
             }
             HorizontalDivider(Modifier.fillMaxWidth())
 
-            if(currentRecurrenceRule!= RecurrenceRule.Once){
+            if(!isOccurrenceEdit && currentRecurrenceRule!= RecurrenceRule.Once){
                 Row(Modifier.fillMaxWidth().padding(vertical = 8.dp, horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically){
                         Icon(Icons.Outlined.Flag, null)
@@ -351,7 +466,7 @@ fun NewEvent(
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                             Text(eventEndsOn.toFormattedDate())
-                            FilledTonalIconButton({ showDatePicker=true }) {
+                            FilledTonalIconButton({ showEndDatePicker = true }) {
                                 Icon(
                                     imageVector = Icons.Default.Create,
                                     contentDescription = "Pick Time"
