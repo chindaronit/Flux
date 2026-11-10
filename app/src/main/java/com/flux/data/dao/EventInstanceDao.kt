@@ -30,4 +30,7 @@ interface EventInstanceDao {
 
     @Query("SELECT * FROM EventInstanceModel")
     suspend fun getAll(): List<EventInstanceModel>
+
+    @Query("DELETE FROM EventInstanceModel")
+    suspend fun deleteAll()
 }

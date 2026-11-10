@@ -31,6 +31,13 @@
             user-select: none;
             pointer-events: auto;
         }
+        img[data-pdf="true"], img.pdf-page {
+            display: block;
+            width: 100%;
+            border: 1px solid {{BORDER_COLOR}};
+            border-radius: 8px;
+            margin: 12px 0;
+        }
         a { color: {{LINK_COLOR}}; }
         p code, td code {
             background-color: {{CODE_BACKGROUND}};
@@ -199,11 +206,24 @@
         },
 
         processImages: () => {
-            document.querySelectorAll('img').forEach((img, index) => {
+            document.querySelectorAll('img:not([data-pdf-owner])').forEach((img, index) => {
                 const imageName = img.getAttribute('src');
                 const id = 'img_' + index;
                 img.setAttribute('data-id', id);
                 img.setAttribute('loading', 'lazy');
+                if (imageName && imageName.startsWith('https://flux.local/pdf/')) {
+                    const documentName = decodeURIComponent(
+                        imageName.substring('https://flux.local/pdf/'.length)
+                    );
+                    img.setAttribute('data-pdf', 'true');
+                    img.alt = 'PDF preview: ' + documentName;
+                    if (img.getAttribute('data-pdf-requested') !== 'true') {
+                        img.setAttribute('data-pdf-requested', 'true');
+                        window.mediaPathHandler.processPdf(documentName, id);
+                    }
+                    img.onclick = () => window.mediaPathHandler.openDocument(documentName);
+                    return;
+                }
                 window.mediaPathHandler.processMedia(imageName, id, "image");
 
                 let touchStartTime;

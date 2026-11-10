@@ -27,4 +27,7 @@ interface JournalDao {
 
     @Query("SELECT * FROM JournalModel")
     suspend fun loadAllEntries(): List<JournalModel>
+
+    @Query("DELETE FROM JournalModel")
+    suspend fun deleteAll()
 }

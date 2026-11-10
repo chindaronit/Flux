@@ -119,9 +119,11 @@
 
     <!-- Settings - Backup -->
     <string name="Backup">Backup</string>
-    <string name="Backup_Description">Daten in einer Datei sichern</string>
+    <string name="Backup_Description">Alle Inhalte einschließlich Bildern, Audio, Videos und wiederkehrenden Daten sichern</string>
     <string name="Restore">Wiederherstellen</string>
-    <string name="Restore_Description">Daten aus einer Backup-Datei wiederherstellen</string>
+    <string name="Restore_Description">Alle Inhalte aus einem vollständigen Backup-Ordner wiederherstellen</string>
+    <string name="restore_backup_warning_title">Vollständiges Backup wiederherstellen?</string>
+    <string name="restore_backup_warning_message">Alle Flux-Inhalte und Mediendateien auf diesem Gerät werden durch das ausgewählte Backup ersetzt. App-Einstellungen bleiben erhalten. Dieser Vorgang kann nicht rückgängig gemacht werden.</string>
     <string name="reset">Zurücksetzen</string>
     <string name="backup_frequency">Häufigkeit der automatischen Sicherung</string>
     <string name="reset_database">Datenbank zurücksetzen</string>
@@ -542,16 +544,18 @@
 
     <string name="set_backup_password_title">Backup-Passwort festlegen</string>
     <string name="enter_backup_password_title">Backup-Passwort eingeben</string>
-    <string name="backup_password_setting">Backup-Passwort festlegen</string>
-    <string name="backup_encrypted">Backups sind verschlüsselt</string>
-    <string name="backup_not_encrypted">Backups sind nicht verschlüsselt</string>
+    <string name="backup_password_setting">Backup-Verschlüsselung</string>
+    <string name="backup_encrypted">Neue Backups sind verschlüsselt</string>
+    <string name="backup_not_encrypted">Neue Backups sind nicht verschlüsselt</string>
     <string name="backup_password">Backup-Passwort</string>
     <string name="backup_password_description">Dieses Passwort kann nicht wiederhergestellt werden, wenn es verloren geht. Sie benötigen es, um dieses Backup auf jedem Gerät wiederherzustellen.</string>
     <string name="set_backup_password">Backup-Passwort festlegen</string>
     <string name="auto_backup_requires_password">Die automatische Sicherung ist aktiviert, aber es wurde kein Passwort festgelegt. Deshalb können Sicherungen nicht sicher ausgeführt werden. Legen Sie jetzt ein Passwort fest oder deaktivieren Sie die automatische Sicherung.</string>
     <string name="go_to_settings">Zu den Einstellungen</string>
     <string name="change_backup_password_title">Backup-Passwort ändern?</string>
-    <string name="change_backup_password_message">Bereits mit Ihrem aktuellen Passwort verschlüsselte Backups können nach dieser Änderung nicht mehr wiederhergestellt werden. Neue Backups verwenden das neue Passwort. Dieser Vorgang kann nicht rückgängig gemacht werden.</string>
+    <string name="change_backup_password_message">Neue Backups verwenden das neue Passwort. Ältere Backups können weiterhin mit ihrem ursprünglichen Passwort wiederhergestellt werden.</string>
+    <string name="disable_backup_encryption">Backup-Verschlüsselung deaktivieren</string>
+    <string name="disable_backup_encryption_message">Künftige Backups sind unverschlüsselt. Bestehende verschlüsselte Backups können weiterhin mit ihrem Passwort wiederhergestellt werden.</string>
     <string name="set_password">Passwort festlegen</string>
     <string name="turn_off_auto_backup">Automatische Sicherung deaktivieren</string>
     <string name="unsupported_backup_version">Nicht unterstützte Backup-Version: %1$s</string>

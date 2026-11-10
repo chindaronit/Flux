@@ -119,9 +119,11 @@
 
     <!-- Settings - Backup -->
     <string name="Backup">Backup</string>
-    <string name="Backup_Description">Fazer backup dos seus dados em um arquivo</string>
+    <string name="Backup_Description">Faça backup de todo o conteúdo, incluindo imagens, áudio, vídeos e dados recorrentes</string>
     <string name="Restore">Restaurar</string>
-    <string name="Restore_Description">Restaurar seus dados a partir de um arquivo de backup</string>
+    <string name="Restore_Description">Restaure todo o conteúdo de uma pasta de backup completa</string>
+    <string name="restore_backup_warning_title">Restaurar backup completo?</string>
+    <string name="restore_backup_warning_message">Todo o conteúdo Flux e os arquivos de mídia deste dispositivo serão substituídos pelo backup selecionado. As configurações do app serão mantidas. Esta ação não pode ser desfeita.</string>
     <string name="reset">Redefinir</string>
     <string name="backup_frequency">Frequência do backup automático</string>
     <string name="reset_database">Redefinir banco de dados</string>
@@ -549,16 +551,18 @@
 
     <string name="set_backup_password_title">Definir senha do backup</string>
     <string name="enter_backup_password_title">Inserir senha do backup</string>
-    <string name="backup_password_setting">Definir uma senha para o backup</string>
-    <string name="backup_encrypted">Os backups estão criptografados</string>
-    <string name="backup_not_encrypted">Os backups não estão criptografados</string>
+    <string name="backup_password_setting">Criptografia do backup</string>
+    <string name="backup_encrypted">Os novos backups estão criptografados</string>
+    <string name="backup_not_encrypted">Os novos backups não estão criptografados</string>
     <string name="backup_password">Senha do backup</string>
     <string name="backup_password_description">Esta senha não pode ser recuperada caso seja perdida. Você precisará dela para restaurar este backup em qualquer dispositivo.</string>
     <string name="set_backup_password">Definir uma senha para o backup</string>
     <string name="auto_backup_requires_password">O backup automático está ativado, mas nenhuma senha foi definida, portanto os backups não podem ser executados com segurança. Defina uma senha agora ou desative o backup automático.</string>
     <string name="go_to_settings">Ir para as configurações</string>
     <string name="change_backup_password_title">Alterar senha do backup?</string>
-    <string name="change_backup_password_message">Os backups já criptografados com sua senha atual não poderão mais ser restaurados após esta alteração. Os novos backups usarão a nova senha. Esta ação não pode ser desfeita.</string>
+    <string name="change_backup_password_message">Os novos backups usarão a nova senha. Backups antigos ainda podem ser restaurados com a senha original.</string>
+    <string name="disable_backup_encryption">Desativar criptografia do backup</string>
+    <string name="disable_backup_encryption_message">Os próximos backups não serão criptografados. Backups criptografados existentes ainda podem ser restaurados com a senha correspondente.</string>
     <string name="set_password">Definir senha</string>
     <string name="turn_off_auto_backup">Desativar backup automático</string>
     <string name="unsupported_backup_version">Versão de backup não suportada: %1$s</string>

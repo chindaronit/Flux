@@ -8,6 +8,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -18,7 +19,9 @@ import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.rounded.Backup
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Restore
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -40,7 +43,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -57,17 +59,15 @@ import com.flux.other.canScheduleReminder
 import com.flux.other.isNotificationPermissionGranted
 import com.flux.other.openAppNotificationSettings
 import com.flux.other.requestExactAlarmPermission
-import com.flux.ui.common.AutoBackupNeedsPasswordDialog
+import com.flux.ui.common.ChangeRootProgressDialog
 import com.flux.ui.common.BackupPasswordEntryDialog
 import com.flux.ui.common.ChangePasswordWarningDialog
-import com.flux.ui.common.ChangeRootProgressDialog
 import com.flux.ui.common.DeleteAlert
 import com.flux.ui.events.SettingEvents
 import com.flux.ui.state.RootChangeState
 import com.flux.ui.state.Settings
-import com.flux.ui.viewModel.BackupSettingsViewModel
 import com.flux.ui.viewModel.BackupViewModel
-import kotlinx.coroutines.launch
+import com.flux.ui.viewModel.BackupSettingsViewModel
 import kotlin.math.roundToInt
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -85,51 +85,33 @@ fun Data(
 ) {
     val context = LocalContext.current
     val hapticFeedback = LocalHapticFeedback.current
-    val coroutineScope = rememberCoroutineScope()
     val operationSuccessful = stringResource(R.string.success)
     val operationFailed = stringResource(R.string.Failed)
+    val reminderPermission = stringResource(R.string.Reminder_Permission)
+    val notificationPermission = stringResource(R.string.Notification_Permission)
+    val backupOperation by backupViewModel.operation.collectAsState()
 
     var showRootChangeDialog by remember { mutableStateOf(false) }
     var showWarningDialog by remember { mutableStateOf(false) }
-    var showAutoBackupNeedsPasswordDialog by remember { mutableStateOf(false) }
+    var showRestoreWarning by remember { mutableStateOf(false) }
     var showSetPasswordDialog by remember { mutableStateOf(false) }
     var showChangePasswordWarning by remember { mutableStateOf(false) }
     var showChangePasswordEntry by remember { mutableStateOf(false) }
+    var showPasswordOptions by remember { mutableStateOf(false) }
+    var showDisableEncryptionDialog by remember { mutableStateOf(false) }
     var showImportPasswordDialog by remember { mutableStateOf(false) }
     var pendingImportUri by remember { mutableStateOf<Uri?>(null) }
-    var pendingBackupFrequency by remember {
-        mutableStateOf<BackupFrequency?>(null)
-    }
     val hasPassword by backupSettingsViewModel.hasBackupPassword.collectAsState()
-
-    // --- Migration / startup check: existing users with auto-backup already on, no password yet ---
-    LaunchedEffect(Unit) {
-        if (backupSettingsViewModel.isAutoBackupUnsafe(settings.data.backupFrequency)) {
-            showAutoBackupNeedsPasswordDialog = true
-        }
-    }
-
-    // --- Post-import check: imported settings may enable auto-backup on a device with no password ---
-    LaunchedEffect(Unit) {
-        backupViewModel.importCompleted.collect {
-            if (backupSettingsViewModel.isAutoBackupUnsafe(settings.data.backupFrequency)) {
-                showAutoBackupNeedsPasswordDialog = true
-            }
-        }
-    }
-
-    // --- Import needs a password we don't have / doesn't match the stored one ---
-    LaunchedEffect(Unit) {
-        backupViewModel.passwordRequired.collect { uri ->
-            pendingImportUri = uri
-            showImportPasswordDialog = true
-        }
-    }
-
     val importLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument()
+        contract = ActivityResultContracts.OpenDocumentTree()
     ) { uri ->
-        uri?.let { backupViewModel.importBackup(context, it) }
+        uri?.let {
+            context.contentResolver.takePersistableUriPermission(
+                it,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
+            backupViewModel.importBackup(context, it)
+        }
     }
 
     var pendingNewRootUri by remember { mutableStateOf<Uri?>(null) }
@@ -148,11 +130,22 @@ fun Data(
     }
 
     LaunchedEffect(Unit) {
+        backupViewModel.passwordRequired.collect { uri ->
+            pendingImportUri = uri
+            showImportPasswordDialog = true
+        }
+    }
+
+    LaunchedEffect(Unit) {
         backupViewModel.backupResult.collect { result ->
             if (result.isSuccess) {
                 Toast.makeText(context, operationSuccessful, Toast.LENGTH_LONG).show()
             } else {
-                Toast.makeText(context, operationFailed, Toast.LENGTH_LONG).show()
+                Toast.makeText(
+                    context,
+                    result.exceptionOrNull()?.localizedMessage ?: operationFailed,
+                    Toast.LENGTH_LONG
+                ).show()
             }
         }
     }
@@ -184,49 +177,59 @@ fun Data(
                     icon = Icons.Rounded.Backup,
                     radius = shapeManager(radius = radius, isFirst = true),
                     actionType = ActionType.CUSTOM,
+                    customButton = {
+                        if (backupOperation == com.flux.ui.viewModel.BackupOperation.BACKUP) {
+                            CircularProgressIndicator(
+                                modifier = Modifier
+                                    .padding(12.dp)
+                                    .size(20.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            RenderCustomIcon()
+                        }
+                    },
                     onCustomClick = { backupViewModel.exportBackup(context) }
                 )
             }
 
             item {
-                val reminderPermission = stringResource(R.string.Reminder_Permission)
-                val notificationPermission = stringResource(R.string.Notification_Permission)
-
                 SettingOption(
                     title = stringResource(R.string.Restore),
                     description = stringResource(R.string.Restore_Description),
                     icon = Icons.Rounded.Restore,
                     radius = shapeManager(radius = radius),
                     actionType = ActionType.CUSTOM,
+                    customButton = {
+                        if (backupOperation == com.flux.ui.viewModel.BackupOperation.RESTORE) {
+                            CircularProgressIndicator(
+                                modifier = Modifier
+                                    .padding(12.dp)
+                                    .size(20.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            RenderCustomIcon()
+                        }
+                    },
                     onCustomClick = {
-                        if (!canScheduleReminder(context)) {
-                            Toast.makeText(context, reminderPermission, Toast.LENGTH_SHORT).show()
-                            requestExactAlarmPermission(context)
-                        }
-                        if (!isNotificationPermissionGranted(context)) {
-                            Toast.makeText(context, notificationPermission, Toast.LENGTH_SHORT).show()
-                            openAppNotificationSettings(context)
-                        }
-                        if (canScheduleReminder(context) && isNotificationPermissionGranted(context)) {
-                            importLauncher.launch(arrayOf("application/json"))
-                        }
+                        if (backupOperation == null) showRestoreWarning = true
                     }
                 )
             }
 
-            // --- Backup password setting row ---
             item {
                 SettingOption(
                     title = stringResource(R.string.backup_password_setting),
-                    description =
-                        if (hasPassword) stringResource(R.string.backup_encrypted)
-                        else stringResource(R.string.backup_not_encrypted)
-                    ,
+                    description = stringResource(
+                        if (hasPassword) R.string.backup_encrypted
+                        else R.string.backup_not_encrypted
+                    ),
                     icon = Icons.Rounded.Lock,
                     radius = shapeManager(radius = radius, isLast = true),
                     actionType = ActionType.CUSTOM,
                     onCustomClick = {
-                        if (hasPassword) showChangePasswordWarning = true
+                        if (hasPassword) showPasswordOptions = true
                         else showSetPasswordDialog = true
                     }
                 )
@@ -279,14 +282,7 @@ fun Data(
                                 )
                             )
                         )
-                        coroutineScope.launch {
-                            if (backupSettingsViewModel.isAutoBackupUnsafe(frequency.days)) {
-                                pendingBackupFrequency = frequency
-                                showAutoBackupNeedsPasswordDialog = true
-                            } else {
-                                backupManager.scheduleBackup(frequency)
-                            }
-                        }
+                        backupManager.scheduleBackup(frequency)
                     },
                     valueRange = 0f..3f,
                     steps = 2
@@ -353,68 +349,114 @@ fun Data(
             )
         }
 
-        // --- Mandatory: auto-backup on, no password (migration / post-import / live toggle) ---
-        if (showAutoBackupNeedsPasswordDialog) {
-            AutoBackupNeedsPasswordDialog(
-                onSetPasswordClick = {
-                    showSetPasswordDialog = true
+        if (showRestoreWarning) {
+            AlertDialog(
+                onDismissRequest = { showRestoreWarning = false },
+                title = { Text(stringResource(R.string.restore_backup_warning_title)) },
+                text = { Text(stringResource(R.string.restore_backup_warning_message)) },
+                confirmButton = {
+                    TextButton(onClick = {
+                        showRestoreWarning = false
+                        if (!canScheduleReminder(context)) {
+                            Toast.makeText(context, reminderPermission, Toast.LENGTH_SHORT).show()
+                            requestExactAlarmPermission(context)
+                        }
+                        if (!isNotificationPermissionGranted(context)) {
+                            Toast.makeText(context, notificationPermission, Toast.LENGTH_SHORT).show()
+                            openAppNotificationSettings(context)
+                        }
+                        if (canScheduleReminder(context) && isNotificationPermissionGranted(context)) {
+                            importLauncher.launch(null)
+                        }
+                    }) { Text(stringResource(R.string.Confirm)) }
                 },
-                onTurnOffAutoBackup = {
-                    showAutoBackupNeedsPasswordDialog = false
-                    onSettingsEvents(SettingEvents.UpdateSettings(settings.data.copy(backupFrequency = BackupFrequency.NEVER.days)))
-                    WorkManager.getInstance(context.applicationContext).let { BackupManager(it).scheduleBackup(BackupFrequency.NEVER) }
+                dismissButton = {
+                    TextButton(onClick = { showRestoreWarning = false }) {
+                        Text(stringResource(R.string.Dismiss))
+                    }
                 }
             )
         }
 
-        // --- Initial password setup (first time only) ---
         if (showSetPasswordDialog) {
             BackupPasswordEntryDialog(
-                title = stringResource(R.string.set_backup_password),
-                onConfirm = { pw ->
-                    showAutoBackupNeedsPasswordDialog=false
+                title = stringResource(R.string.set_backup_password_title),
+                onConfirm = { password ->
                     showSetPasswordDialog = false
-                    backupSettingsViewModel.setPassword(pw) {
-                        pendingBackupFrequency?.let { frequency ->
-                            val workManager = WorkManager.getInstance(context.applicationContext)
-                            onSettingsEvents(SettingEvents.UpdateSettings(settings.data.copy(backupFrequency = frequency.days)))
-                            BackupManager(workManager).scheduleBackup(frequency)
-                            pendingBackupFrequency = null
-                        }
-                    }
+                    backupSettingsViewModel.setPassword(password)
                 },
-                onDismiss = {
-                    showSetPasswordDialog = false
+                onDismiss = { showSetPasswordDialog = false }
+            )
+        }
+
+        if (showPasswordOptions) {
+            AlertDialog(
+                onDismissRequest = { showPasswordOptions = false },
+                title = { Text(stringResource(R.string.backup_password_setting)) },
+                text = { Text(stringResource(R.string.backup_encrypted)) },
+                confirmButton = {
+                    TextButton(onClick = {
+                        showPasswordOptions = false
+                        showChangePasswordWarning = true
+                    }) { Text(stringResource(R.string.change_backup_password_title)) }
+                },
+                dismissButton = {
+                    TextButton(onClick = {
+                        showPasswordOptions = false
+                        showDisableEncryptionDialog = true
+                    }) { Text(stringResource(R.string.disable_backup_encryption)) }
                 }
             )
         }
 
-        // --- Rotation warning, then capture new password ---
+        if (showDisableEncryptionDialog) {
+            AlertDialog(
+                onDismissRequest = { showDisableEncryptionDialog = false },
+                title = { Text(stringResource(R.string.disable_backup_encryption)) },
+                text = { Text(stringResource(R.string.disable_backup_encryption_message)) },
+                confirmButton = {
+                    TextButton(onClick = {
+                        showDisableEncryptionDialog = false
+                        backupSettingsViewModel.disableEncryption()
+                    }) { Text(stringResource(R.string.disable_backup_encryption)) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDisableEncryptionDialog = false }) {
+                        Text(stringResource(R.string.Dismiss))
+                    }
+                }
+            )
+        }
+
         if (showChangePasswordWarning) {
             ChangePasswordWarningDialog(
-                onConfirm = { showChangePasswordWarning = false; showChangePasswordEntry = true },
+                onConfirm = {
+                    showChangePasswordWarning = false
+                    showChangePasswordEntry = true
+                },
                 onDismiss = { showChangePasswordWarning = false }
             )
         }
 
         if (showChangePasswordEntry) {
             BackupPasswordEntryDialog(
-                title = stringResource(R.string.set_backup_password),
-                onConfirm = { pw ->
+                title = stringResource(R.string.set_backup_password_title),
+                onConfirm = { password ->
                     showChangePasswordEntry = false
-                    backupSettingsViewModel.changePassword(pw)
+                    backupSettingsViewModel.changePassword(password)
                 },
                 onDismiss = { showChangePasswordEntry = false }
             )
         }
 
-        // --- Per-file password prompt on import (new device, or file predates a rotation) ---
         if (showImportPasswordDialog) {
             BackupPasswordEntryDialog(
                 title = stringResource(R.string.enter_backup_password_title),
-                onConfirm = { pw ->
+                onConfirm = { password ->
                     showImportPasswordDialog = false
-                    pendingImportUri?.let { backupViewModel.importBackupWithPassword(context, it, pw) }
+                    pendingImportUri?.let {
+                        backupViewModel.importBackupWithPassword(context, it, password)
+                    }
                 },
                 onDismiss = { showImportPasswordDialog = false }
             )

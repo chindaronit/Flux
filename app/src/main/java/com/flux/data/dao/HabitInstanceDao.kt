@@ -43,4 +43,7 @@ interface HabitInstanceDao {
 
     @Query("SELECT * FROM HabitInstanceModel")
     suspend fun loadAllInstances(): List<HabitInstanceModel>
+
+    @Query("DELETE FROM HabitInstanceModel")
+    suspend fun deleteAllInstances()
 }

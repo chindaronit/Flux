@@ -119,9 +119,11 @@
 
     <!-- Settings - Backup -->
     <string name="Backup">Respaldo</string>
-    <string name="Backup_Description">Respaldar tus datos a un archivo</string>
+    <string name="Backup_Description">Copia todo el contenido, incluidas imágenes, audio, vídeo y datos recurrentes</string>
     <string name="Restore">Restaurar</string>
-    <string name="Restore_Description">Restaurar tus datos desde un archivo de respaldo</string>
+    <string name="Restore_Description">Restaura todo el contenido desde una carpeta de copia completa</string>
+    <string name="restore_backup_warning_title">¿Restaurar la copia completa?</string>
+    <string name="restore_backup_warning_message">Se reemplazarán todo el contenido y los archivos multimedia de Flux de este dispositivo por los de la copia seleccionada. Se conservarán los ajustes de la aplicación. Esta acción no se puede deshacer.</string>
     <string name="reset">Restablecer</string>
     <string name="backup_frequency">Frecuencia de copia de seguridad automática</string>
     <string name="reset_database">Restablecer base de datos</string>
@@ -546,16 +548,18 @@
 
     <string name="set_backup_password_title">Establecer contraseña de copia de seguridad</string>
     <string name="enter_backup_password_title">Introducir contraseña de copia de seguridad</string>
-    <string name="backup_password_setting">Establecer una contraseña de copia de seguridad</string>
-    <string name="backup_encrypted">Las copias de seguridad están cifradas</string>
-    <string name="backup_not_encrypted">Las copias de seguridad no están cifradas</string>
+    <string name="backup_password_setting">Cifrado de copias de seguridad</string>
+    <string name="backup_encrypted">Las nuevas copias están cifradas</string>
+    <string name="backup_not_encrypted">Las nuevas copias no están cifradas</string>
     <string name="backup_password">Contraseña de copia de seguridad</string>
     <string name="backup_password_description">Esta contraseña no puede recuperarse si se pierde. La necesitará para restaurar esta copia de seguridad en cualquier dispositivo.</string>
     <string name="set_backup_password">Establecer una contraseña de copia de seguridad</string>
     <string name="auto_backup_requires_password">La copia de seguridad automática está activada, pero no se ha configurado una contraseña, por lo que no puede ejecutarse de forma segura. Configure una contraseña ahora o desactive la copia de seguridad automática.</string>
     <string name="go_to_settings">Ir a ajustes</string>
     <string name="change_backup_password_title">¿Cambiar la contraseña de copia de seguridad?</string>
-    <string name="change_backup_password_message">Las copias de seguridad ya cifradas con su contraseña actual dejarán de poder restaurarse después de este cambio. Las nuevas copias de seguridad usarán la nueva contraseña. Esta acción no se puede deshacer.</string>
+    <string name="change_backup_password_message">Las nuevas copias usarán la nueva contraseña. Aún puedes restaurar las copias anteriores con su contraseña original.</string>
+    <string name="disable_backup_encryption">Desactivar el cifrado de copias</string>
+    <string name="disable_backup_encryption_message">Las copias futuras no estarán cifradas. Las copias cifradas existentes se pueden restaurar con su contraseña.</string>
     <string name="set_password">Establecer contraseña</string>
     <string name="turn_off_auto_backup">Desactivar copia de seguridad automática</string>
     <string name="unsupported_backup_version">Versión de copia de seguridad no compatible: %1$s</string>

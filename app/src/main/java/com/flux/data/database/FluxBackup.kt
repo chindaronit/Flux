@@ -9,15 +9,25 @@ import com.flux.data.model.JournalModel
 import com.flux.data.model.LabelModel
 import com.flux.data.model.NotesModel
 import com.flux.data.model.ProgressBoardModel
-import com.flux.data.model.SettingsModel
 import com.flux.data.model.TodoInstance
 import com.flux.data.model.TodoModel
 import com.flux.data.model.WorkspaceModel
 import kotlinx.serialization.Serializable
 
 @Serializable
+data class BackupMediaFile(
+    val directory: String,
+    val name: String,
+    val archivedName: String,
+    val mimeType: String = "application/octet-stream"
+)
+
+@Serializable
 data class FluxBackup(
+    val formatVersion: Int = 3,
     val workspaces: List<WorkspaceModel> = emptyList(),
+    val workspaceCovers: Map<String, String> = emptyMap(),
+    val mediaFiles: List<BackupMediaFile> = emptyList(),
     val notes: List<NotesModel> = emptyList(),
     val todos: List<TodoModel> = emptyList(),
     val todoInstances: List<TodoInstance> = emptyList(),
@@ -28,6 +38,5 @@ data class FluxBackup(
     val events: List<EventModel> = emptyList(),
     val eventInstances: List<EventInstanceModel> = emptyList(),
     val eventExceptions: List<EventExceptionModel> = emptyList(),
-    val progressBoardItems: List<ProgressBoardModel> = emptyList(),
-    val settings: SettingsModel = SettingsModel()
+    val progressBoardItems: List<ProgressBoardModel> = emptyList()
 )

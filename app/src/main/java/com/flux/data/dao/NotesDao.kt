@@ -42,4 +42,7 @@ interface NotesDao {
 
     @Query("SELECT * FROM NotesModel ORDER BY `order` ASC")
     fun loadAllNotes(): List<NotesModel>
+
+    @Query("DELETE FROM NotesModel")
+    suspend fun deleteAll()
 }

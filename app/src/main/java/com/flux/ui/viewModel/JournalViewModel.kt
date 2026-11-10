@@ -12,6 +12,7 @@ import com.flux.data.model.JournalModel
 import com.flux.data.repository.JournalRepository
 import com.flux.data.repository.SettingsRepository
 import com.flux.other.Constants
+import com.flux.other.copyDocumentAttachment
 import com.flux.other.ExportType
 import com.flux.other.HeaderNode
 import com.flux.other.PARSER
@@ -27,6 +28,7 @@ import com.flux.ui.state.TextState
 import com.yangdai.opennote.presentation.util.extension.highlight.HighlightExtension
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -101,6 +103,24 @@ class JournalViewModel @Inject constructor(
             is JournalEvents.DeleteEntry -> deleteEntry(event.entry)
             is JournalEvents.DeleteWorkspaceEntries -> deleteAllWorkspaceEntries(event.workspaceId)
             is JournalEvents.UpsertEntry -> upsertEntry(event.entry)
+
+            is JournalEvents.ImportDocument -> {
+                viewModelScope.launch(Dispatchers.IO) {
+                    try {
+                        val rootUri = settingsRepository.getStorageRoot()
+                        val attachment = copyDocumentAttachment(event.context, rootUri, event.uri)
+                        withContext(Dispatchers.Main) {
+                            event.onImported(attachment.markdown)
+                        }
+                    } catch (exception: CancellationException) {
+                        throw exception
+                    } catch (exception: Exception) {
+                        withContext(Dispatchers.Main) {
+                            event.onFailure(exception.localizedMessage ?: "Could not attach the selected document")
+                        }
+                    }
+                }
+            }
 
             is JournalEvents.CalculateOutline -> {
                 val hash = event.content.hashCode()

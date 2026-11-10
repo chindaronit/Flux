@@ -41,4 +41,7 @@ interface TodoDao {
 
     @Query("SELECT * FROM TodoModel ORDER BY `order` ASC")
     suspend fun loadAllLists(): List<TodoModel>
+
+    @Query("DELETE FROM TodoModel")
+    suspend fun deleteAll()
 }

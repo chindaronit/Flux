@@ -128,9 +128,11 @@
 
     <!-- Settings - Backup -->
     <string name="Backup">Backup</string>
-    <string name="Backup_Description">Backup your data to a file</string>
+    <string name="Backup_Description">Back up all content, including photos, audio, videos, and recurring data</string>
     <string name="Restore">Restore</string>
-    <string name="Restore_Description">Restore your data from backup file</string>
+    <string name="Restore_Description">Restore all content from a full backup folder</string>
+    <string name="restore_backup_warning_title">Restore full backup?</string>
+    <string name="restore_backup_warning_message">This replaces all Flux content and attached media on this device with the selected backup. App settings are kept. This cannot be undone.</string>
     <string name="reset">Reset</string>
     <string name="backup_frequency">Frequency of automatic backup</string>
     <string name="reset_database">Reset Database</string>
@@ -569,20 +571,22 @@
 
     <string name="set_backup_password_title">Set backup password</string>
     <string name="enter_backup_password_title">Enter backup password</string>
-    <string name="backup_password_setting">Set a backup password</string>
-    <string name="backup_encrypted">Backups are encrypted</string>
-    <string name="backup_not_encrypted">Backups are not encrypted</string>
+    <string name="backup_password_setting">Backup encryption</string>
+    <string name="backup_encrypted">New backups are encrypted</string>
+    <string name="backup_not_encrypted">New backups are not encrypted</string>
     <string name="backup_password">Backup password</string>
     <string name="backup_password_description">This password cannot be recovered if lost. You will need it to restore this backup on any device.</string>
     <string name="set_backup_password">Set a backup password</string>
     <string name="auto_backup_requires_password">Automatic backup is turned on, but no password is set, so backups cannot run safely. Set a password now, or turn automatic backup off.</string>
     <string name="go_to_settings">Go to settings</string>
     <string name="change_backup_password_title">Change backup password?</string>
-    <string name="change_backup_password_message">Backups already encrypted with your current password will no longer be restorable after this change. New backups will use the new password. This cannot be undone.</string>
+    <string name="change_backup_password_message">New backups will use the new password. You can still restore older backups by entering their original password.</string>
+    <string name="disable_backup_encryption">Disable backup encryption</string>
+    <string name="disable_backup_encryption_message">Future backups will be unencrypted. Existing encrypted backups remain restorable with their password.</string>
     <string name="set_password">Set password</string>
     <string name="turn_off_auto_backup">Turn off auto-backup</string>
     <string name="unsupported_backup_version">Unsupported backup version: %1$s</string>
-    <string name="backup_wrong_password_or_corrupted">Wrong password, or the file is corrupted or has been tampered with.</string>
+    <string name="backup_wrong_password_or_corrupted">Wrong password, or the backup is corrupted or has been tampered with.</string>
 
     <string name="social_link_removed">Social link removed</string>
     <string name="discard_changes">Discard Changes?</string>

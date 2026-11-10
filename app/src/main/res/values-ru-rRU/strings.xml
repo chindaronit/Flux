@@ -119,9 +119,11 @@
 
     <!-- Settings - Backup -->
     <string name="Backup">Резервное копирование</string>
-    <string name="Backup_Description">Сохранить данные в файл</string>
+    <string name="Backup_Description">Создать копию всех данных, включая изображения, аудио, видео и повторяющиеся события</string>
     <string name="Restore">Восстановить</string>
-    <string name="Restore_Description">Восстановить данные из резервной копии</string>
+    <string name="Restore_Description">Восстановить все данные из полной папки резервной копии</string>
+    <string name="restore_backup_warning_title">Восстановить полную копию?</string>
+    <string name="restore_backup_warning_message">Все данные Flux и медиафайлы на этом устройстве будут заменены выбранной копией. Настройки приложения сохранятся. Это действие нельзя отменить.</string>
     <string name="reset">Сбросить</string>
     <string name="backup_frequency">Частота автоматического резервного копирования</string>
     <string name="reset_database">Сбросить базу данных</string>
@@ -549,16 +551,18 @@
 
     <string name="set_backup_password_title">Установить пароль резервной копии</string>
     <string name="enter_backup_password_title">Введите пароль резервной копии</string>
-    <string name="backup_password_setting">Установить пароль резервной копии</string>
-    <string name="backup_encrypted">Резервные копии зашифрованы</string>
-    <string name="backup_not_encrypted">Резервные копии не зашифрованы</string>
+    <string name="backup_password_setting">Шифрование резервных копий</string>
+    <string name="backup_encrypted">Новые резервные копии зашифрованы</string>
+    <string name="backup_not_encrypted">Новые резервные копии не зашифрованы</string>
     <string name="backup_password">Пароль резервной копии</string>
     <string name="backup_password_description">Этот пароль невозможно восстановить, если он будет утерян. Он потребуется для восстановления этой резервной копии на любом устройстве.</string>
     <string name="set_backup_password">Установить пароль резервной копии</string>
     <string name="auto_backup_requires_password">Автоматическое резервное копирование включено, но пароль не задан, поэтому резервные копии не могут создаваться безопасно. Установите пароль сейчас или отключите автоматическое резервное копирование.</string>
     <string name="go_to_settings">Перейти к настройкам</string>
     <string name="change_backup_password_title">Изменить пароль резервной копии?</string>
-    <string name="change_backup_password_message">Резервные копии, уже зашифрованные текущим паролем, больше нельзя будет восстановить после этого изменения. Новые резервные копии будут использовать новый пароль. Это действие нельзя отменить.</string>
+    <string name="change_backup_password_message">Новые копии будут использовать новый пароль. Старые копии можно восстановить с помощью исходного пароля.</string>
+    <string name="disable_backup_encryption">Отключить шифрование резервных копий</string>
+    <string name="disable_backup_encryption_message">Новые копии не будут зашифрованы. Существующие зашифрованные копии можно восстановить с их паролем.</string>
     <string name="set_password">Установить пароль</string>
     <string name="turn_off_auto_backup">Отключить автоматическое резервное копирование</string>
     <string name="unsupported_backup_version">Неподдерживаемая версия резервной копии: %1$s</string>

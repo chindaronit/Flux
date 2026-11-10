@@ -1955,7 +1955,8 @@ fun MarkdownEditorRow(
     onImageButtonClick: () -> Unit,
     onAudioButtonClick: () -> Unit,
     onRecordAudioClick: () -> Unit,
-    onVideoButtonClick: () -> Unit
+    onVideoButtonClick: () -> Unit,
+    onDocumentButtonClick: () -> Unit
 ) {
 
     var isExpanded by rememberSaveable { mutableStateOf(false) }
@@ -2273,6 +2274,12 @@ fun MarkdownEditorRow(
                 imageVector = Icons.Outlined.Mic,
                 contentDescription = "Record Audio",
                 onClick = onRecordAudioClick
+            )
+
+            CustomIconButton(
+                imageVector = Icons.Default.FilePresent,
+                contentDescription = "Attach document",
+                onClick = onDocumentButtonClick
             )
         }
     }

@@ -254,6 +254,24 @@ fun EditJournal(
     ) { uri: Uri? ->
         uri?.let { onJournalEvents(JournalEvents.ImportAudio(context, uri, contentState)) }
     }
+    val documentPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        uri?.let {
+            onJournalEvents(
+                JournalEvents.ImportDocument(
+                    context = context,
+                    uri = it,
+                    onImported = { markdown ->
+                        onMarkdownKeyPressed(Constants.Editor.TEXT, contentState, "\n$markdown\n")
+                    },
+                    onFailure = { message ->
+                        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                    }
+                )
+            )
+        }
+    }
 
     val renderedHtml by remember(contentState.text) {
         derivedStateOf {
@@ -387,6 +405,13 @@ fun EditJournal(
                             settingsViewModel = settingsViewModel,
                             rootPicker = rootPicker
                         ) { videoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly)) }
+                    },
+                    onDocumentButtonClick = {
+                        ensureStorageRoot(
+                            scope = scope,
+                            settingsViewModel = settingsViewModel,
+                            rootPicker = rootPicker
+                        ) { documentPickerLauncher.launch(arrayOf("*/*")) }
                     }
                 )
             }

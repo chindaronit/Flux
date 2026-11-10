@@ -23,4 +23,7 @@ interface EventExceptionDao {
 
     @Query("DELETE FROM EventExceptionModel WHERE workspaceId = :workspaceId")
     suspend fun deleteForWorkspace(workspaceId: String)
+
+    @Query("DELETE FROM EventExceptionModel")
+    suspend fun deleteAll()
 }

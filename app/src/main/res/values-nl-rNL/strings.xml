@@ -119,9 +119,11 @@
 
     <!-- Settings - Backup -->
     <string name="Backup">Back-up</string>
-    <string name="Backup_Description">Maak een back-up van je gegevens naar een bestand</string>
+    <string name="Backup_Description">Maak een back-up van alle inhoud, inclusief afbeeldingen, audio, video en terugkerende gegevens</string>
     <string name="Restore">Herstellen</string>
-    <string name="Restore_Description">Herstel je gegevens van een back-upbestand</string>
+    <string name="Restore_Description">Herstel alle inhoud vanuit een volledige back-upmap</string>
+    <string name="restore_backup_warning_title">Volledige back-up herstellen?</string>
+    <string name="restore_backup_warning_message">Alle Flux-inhoud en mediabestanden op dit apparaat worden vervangen door de geselecteerde back-up. App-instellingen blijven behouden. Dit kan niet ongedaan worden gemaakt.</string>
     <string name="reset">Resetten</string>
     <string name="backup_frequency">Frequentie van automatische back-up</string>
     <string name="reset_database">Database resetten</string>
@@ -549,16 +551,18 @@
 
     <string name="set_backup_password_title">Back-upwachtwoord instellen</string>
     <string name="enter_backup_password_title">Back-upwachtwoord invoeren</string>
-    <string name="backup_password_setting">Een back-upwachtwoord instellen</string>
-    <string name="backup_encrypted">Back-ups zijn versleuteld</string>
-    <string name="backup_not_encrypted">Back-ups zijn niet versleuteld</string>
+    <string name="backup_password_setting">Back-upversleuteling</string>
+    <string name="backup_encrypted">Nieuwe back-ups zijn versleuteld</string>
+    <string name="backup_not_encrypted">Nieuwe back-ups zijn niet versleuteld</string>
     <string name="backup_password">Back-upwachtwoord</string>
     <string name="backup_password_description">Dit wachtwoord kan niet worden hersteld als u het kwijtraakt. U hebt het nodig om deze back-up op elk apparaat te herstellen.</string>
     <string name="set_backup_password">Een back-upwachtwoord instellen</string>
     <string name="auto_backup_requires_password">Automatische back-up is ingeschakeld, maar er is geen wachtwoord ingesteld. Daardoor kunnen back-ups niet veilig worden uitgevoerd. Stel nu een wachtwoord in of schakel automatische back-up uit.</string>
     <string name="go_to_settings">Ga naar instellingen</string>
     <string name="change_backup_password_title">Back-upwachtwoord wijzigen?</string>
-    <string name="change_backup_password_message">Back-ups die al met uw huidige wachtwoord zijn versleuteld, kunnen na deze wijziging niet meer worden hersteld. Nieuwe back-ups gebruiken het nieuwe wachtwoord. Dit kan niet ongedaan worden gemaakt.</string>
+    <string name="change_backup_password_message">Nieuwe back-ups gebruiken het nieuwe wachtwoord. Oudere back-ups kunnen nog steeds met hun oorspronkelijke wachtwoord worden hersteld.</string>
+    <string name="disable_backup_encryption">Back-upversleuteling uitschakelen</string>
+    <string name="disable_backup_encryption_message">Toekomstige back-ups worden niet versleuteld. Bestaande versleutelde back-ups blijven herstelbaar met hun wachtwoord.</string>
     <string name="set_password">Wachtwoord instellen</string>
     <string name="turn_off_auto_backup">Automatische back-up uitschakelen</string>
     <string name="unsupported_backup_version">Niet-ondersteunde back-upversie: %1$s</string>

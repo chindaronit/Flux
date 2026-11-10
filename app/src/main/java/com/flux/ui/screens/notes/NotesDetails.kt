@@ -261,6 +261,24 @@ fun NoteDetails(
             onNotesEvents(NotesEvents.ImportAudio(context, uri, contentState))
         }
     }
+    val documentPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        uri?.let {
+            onNotesEvents(
+                NotesEvents.ImportDocument(
+                    context = context,
+                    uri = it,
+                    onImported = { markdown ->
+                        onMarkdownKeyPressed(Constants.Editor.TEXT, contentState, "\n$markdown\n")
+                    },
+                    onFailure = { message ->
+                        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                    }
+                )
+            )
+        }
+    }
 
     val renderedHtml by remember(contentState.text) {
         derivedStateOf {
@@ -398,6 +416,13 @@ fun NoteDetails(
                             settingsViewModel = settingsViewModel,
                             rootPicker = rootPicker
                         ) { videoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly)) }
+                    },
+                    onDocumentButtonClick = {
+                        ensureStorageRoot(
+                            scope = scope,
+                            settingsViewModel = settingsViewModel,
+                            rootPicker = rootPicker
+                        ) { documentPickerLauncher.launch(arrayOf("*/*")) }
                     }
                 )
             }

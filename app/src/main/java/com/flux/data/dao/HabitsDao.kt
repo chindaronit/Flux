@@ -54,4 +54,7 @@ interface HabitsDao {
 
     @Query("Select * FROM HabitModel ORDER BY `order` ASC")
     fun loadAllHabits(): List<HabitModel>
+
+    @Query("DELETE FROM HabitModel")
+    suspend fun deleteAll()
 }

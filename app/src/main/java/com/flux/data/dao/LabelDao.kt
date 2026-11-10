@@ -27,4 +27,7 @@ interface LabelDao {
 
     @Query("SELECT * FROM LabelModel")
     suspend fun getAll(): List<LabelModel>
+
+    @Query("DELETE FROM LabelModel")
+    suspend fun deleteAll()
 }

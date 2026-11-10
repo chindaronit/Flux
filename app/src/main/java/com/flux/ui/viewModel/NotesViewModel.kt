@@ -12,6 +12,7 @@ import com.flux.data.model.NotesModel
 import com.flux.data.repository.NoteRepository
 import com.flux.data.repository.SettingsRepository
 import com.flux.other.Constants
+import com.flux.other.copyDocumentAttachment
 import com.flux.other.ExportType
 import com.flux.other.HeaderNode
 import com.flux.other.PARSER
@@ -27,6 +28,7 @@ import com.flux.ui.state.TextState
 import com.yangdai.opennote.presentation.util.extension.highlight.HighlightExtension
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -115,6 +117,24 @@ class NotesViewModel @Inject constructor(
             is NotesEvents.SelectNotes -> { updateState { it.copy(selectedNotes = it.selectedNotes.plus(event.noteId)) } }
             is NotesEvents.UnSelectNotes -> { updateState { it.copy(selectedNotes = it.selectedNotes.minus(event.noteId)) } }
             is NotesEvents.SelectAllNotes -> { updateState { it.copy(selectedNotes = it.allNotes.map { note -> note.notesId }) } }
+
+            is NotesEvents.ImportDocument -> {
+                viewModelScope.launch(Dispatchers.IO) {
+                    try {
+                        val rootUri = settingsRepository.getStorageRoot()
+                        val attachment = copyDocumentAttachment(event.context, rootUri, event.uri)
+                        withContext(Dispatchers.Main) {
+                            event.onImported(attachment.markdown)
+                        }
+                    } catch (exception: CancellationException) {
+                        throw exception
+                    } catch (exception: Exception) {
+                        withContext(Dispatchers.Main) {
+                            event.onFailure(exception.localizedMessage ?: "Could not attach the selected document")
+                        }
+                    }
+                }
+            }
 
             is NotesEvents.ImportImages -> {
                 val context = event.context

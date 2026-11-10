@@ -22,7 +22,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -40,7 +39,6 @@ import com.flux.navigation.NavRoutes
 import com.flux.ui.events.WorkspaceEvents
 import com.flux.R
 import com.flux.data.model.verifyPasskey
-import com.flux.ui.common.AutoBackupNeedsPasswordInfoDialog
 import com.flux.ui.common.BottomBar
 import com.flux.ui.common.SelectedToolBarRow
 import com.flux.ui.state.States
@@ -61,9 +59,6 @@ fun WorkspaceHomeScreen(
     val wrongPassKeyLabel = stringResource(R.string.Wrong_Passkey)
     val selectedWorkspace = remember { mutableStateListOf<WorkspaceModel>() }
     var lockedWorkspace by remember { mutableStateOf<WorkspaceModel?>(null) }
-    var showAutoBackupNeedsPasswordDialog by remember { mutableStateOf(false) }
-    val backupSettingsViewModel = viewModels.backupSettingsViewModel
-    val settings = states.settings.data
 
     lockedWorkspace?.let {
         SetPasskeyDialog(onConfirmRequest = { passkey ->
@@ -83,22 +78,6 @@ fun WorkspaceHomeScreen(
         }
     }
 
-    // --- Migration / startup check: existing users with auto-backup already on, no password yet ---
-    LaunchedEffect(Unit) {
-        if (backupSettingsViewModel.isAutoBackupUnsafe(settings.backupFrequency)) {
-            showAutoBackupNeedsPasswordDialog = true
-        }
-    }
-
-    // --- Mandatory: auto-backup on, no password (migration / post-import / live toggle) ---
-    if (showAutoBackupNeedsPasswordDialog) {
-        AutoBackupNeedsPasswordInfoDialog(
-            onNavigate = {
-                showAutoBackupNeedsPasswordDialog = false
-                navController.navigate(NavRoutes.Backup.route)
-            }
-        )
-    }
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         topBar = {

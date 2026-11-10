@@ -31,4 +31,7 @@ interface TodoInstanceDao {
 
     @Query("DELETE FROM TodoInstance WHERE todoId = :listId")
     suspend fun deleteListInstances(listId: String)
+
+    @Query("DELETE FROM TodoInstance")
+    suspend fun deleteAllInstances()
 }

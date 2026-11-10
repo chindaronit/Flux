@@ -119,9 +119,11 @@
 
     <!-- Settings - Backup -->
     <string name="Backup">Sauvegarde</string>
-    <string name="Backup_Description">Sauvegarder vos données dans un fichier</string>
+    <string name="Backup_Description">Sauvegarder tout le contenu, y compris les images, l’audio, les vidéos et les données récurrentes</string>
     <string name="Restore">Restaurer</string>
-    <string name="Restore_Description">Restaurer vos données depuis un fichier de sauvegarde</string>
+    <string name="Restore_Description">Restaurer tout le contenu depuis un dossier de sauvegarde complète</string>
+    <string name="restore_backup_warning_title">Restaurer la sauvegarde complète ?</string>
+    <string name="restore_backup_warning_message">Tout le contenu Flux et les fichiers multimédias de cet appareil seront remplacés par ceux de la sauvegarde sélectionnée. Les paramètres de l’application seront conservés. Cette action est irréversible.</string>
     <string name="reset">Réinitialiser</string>
     <string name="backup_frequency">Fréquence de sauvegarde automatique</string>
     <string name="reset_database">Réinitialiser la base de données</string>
@@ -550,16 +552,18 @@
 
     <string name="set_backup_password_title">Définir un mot de passe de sauvegarde</string>
     <string name="enter_backup_password_title">Saisir le mot de passe de sauvegarde</string>
-    <string name="backup_password_setting">Définir un mot de passe de sauvegarde</string>
-    <string name="backup_encrypted">Les sauvegardes sont chiffrées</string>
-    <string name="backup_not_encrypted">Les sauvegardes ne sont pas chiffrées</string>
+    <string name="backup_password_setting">Chiffrement des sauvegardes</string>
+    <string name="backup_encrypted">Les nouvelles sauvegardes sont chiffrées</string>
+    <string name="backup_not_encrypted">Les nouvelles sauvegardes ne sont pas chiffrées</string>
     <string name="backup_password">Mot de passe de sauvegarde</string>
     <string name="backup_password_description">Ce mot de passe ne peut pas être récupéré s\'il est perdu. Vous en aurez besoin pour restaurer cette sauvegarde sur n\'importe quel appareil.</string>
     <string name="set_backup_password">Définir un mot de passe de sauvegarde</string>
     <string name="auto_backup_requires_password">La sauvegarde automatique est activée, mais aucun mot de passe n\'est défini. Les sauvegardes ne peuvent donc pas être exécutées en toute sécurité. Définissez un mot de passe maintenant ou désactivez la sauvegarde automatique.</string>
     <string name="go_to_settings">Aller aux paramètres</string>
     <string name="change_backup_password_title">Changer le mot de passe de sauvegarde ?</string>
-    <string name="change_backup_password_message">Les sauvegardes déjà chiffrées avec votre mot de passe actuel ne pourront plus être restaurées après cette modification. Les nouvelles sauvegardes utiliseront le nouveau mot de passe. Cette action est irréversible.</string>
+    <string name="change_backup_password_message">Les nouvelles sauvegardes utiliseront le nouveau mot de passe. Les anciennes restent restaurables avec leur mot de passe d’origine.</string>
+    <string name="disable_backup_encryption">Désactiver le chiffrement des sauvegardes</string>
+    <string name="disable_backup_encryption_message">Les prochaines sauvegardes ne seront pas chiffrées. Les sauvegardes chiffrées existantes restent restaurables avec leur mot de passe.</string>
     <string name="set_password">Définir le mot de passe</string>
     <string name="turn_off_auto_backup">Désactiver la sauvegarde automatique</string>
     <string name="unsupported_backup_version">Version de sauvegarde non prise en charge : %1$s</string>

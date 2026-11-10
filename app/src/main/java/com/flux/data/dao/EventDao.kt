@@ -30,4 +30,7 @@ interface EventDao {
 
     @Query("SELECT * FROM EventModel")
     suspend fun loadAllEvents(): List<EventModel>
+
+    @Query("DELETE FROM EventModel")
+    suspend fun deleteAll()
 }

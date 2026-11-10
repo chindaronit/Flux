@@ -19,6 +19,12 @@ sealed class NotesEvents {
     data class ImportAudio(val context: Context, val sourceUri: Uri, val contentState: TextFieldState): NotesEvents()
     data class ImportImages(val context: Context, val uriList: List<Uri>, val contentState: TextFieldState): NotesEvents()
     data class ImportVideo(val context: Context, val uri: Uri, val contentState: TextFieldState): NotesEvents()
+    data class ImportDocument(
+        val context: Context,
+        val uri: Uri,
+        val onImported: (String) -> Unit,
+        val onFailure: (String) -> Unit
+    ): NotesEvents()
     data class ExportNote(val context: Context, val type: ExportType, val noteTitle: String, val noteDescription: String, val webView: WebView?): NotesEvents()
     data class CalculateOutline(val content: CharSequence): NotesEvents()
     data class CalculateTextState(val content: CharSequence): NotesEvents()

@@ -19,6 +19,7 @@ object Constants {
         const val FLUX_IMAGES = "Images"
         const val FLUX_AUDIO = "Audio"
         const val FLUX_VIDEOS = "Videos"
+        const val FLUX_DOCUMENTS = "Documents"
         const val FLUX_BACKUP = "Backup"
     }
 

@@ -119,9 +119,11 @@
 
     <!-- Settings - Backup -->
     <string name="Backup">बैकअप</string>
-    <string name="Backup_Description">अपने डेटा का बैकअप फ़ाइल में लें</string>
+    <string name="Backup_Description">फ़ोटो, ऑडियो, वीडियो और दोहराए जाने वाले डेटा सहित सभी सामग्री का बैकअप लें</string>
     <string name="Restore">पुनर्स्थापित करें</string>
-    <string name="Restore_Description">बैकअप फ़ाइल से अपना डेटा पुनर्स्थापित करें</string>
+    <string name="Restore_Description">पूर्ण बैकअप फ़ोल्डर से सभी सामग्री पुनर्स्थापित करें</string>
+    <string name="restore_backup_warning_title">पूर्ण बैकअप पुनर्स्थापित करें?</string>
+    <string name="restore_backup_warning_message">इस डिवाइस की सभी Flux सामग्री और मीडिया फ़ाइलें चुने गए बैकअप से बदल दी जाएँगी। ऐप सेटिंग सुरक्षित रहेंगी। इसे पूर्ववत नहीं किया जा सकता।</string>
     <string name="reset">रीसेट करें</string>
     <string name="backup_frequency">स्वचालित बैकअप की आवृत्ति</string>
     <string name="reset_database">डेटाबेस रीसेट करें</string>
@@ -549,16 +551,18 @@
 
     <string name="set_backup_password_title">बैकअप पासवर्ड सेट करें</string>
     <string name="enter_backup_password_title">बैकअप पासवर्ड दर्ज करें</string>
-    <string name="backup_password_setting">बैकअप पासवर्ड सेट करें</string>
-    <string name="backup_encrypted">बैकअप एन्क्रिप्टेड हैं</string>
-    <string name="backup_not_encrypted">बैकअप एन्क्रिप्टेड नहीं हैं</string>
+    <string name="backup_password_setting">बैकअप एन्क्रिप्शन</string>
+    <string name="backup_encrypted">नए बैकअप एन्क्रिप्टेड हैं</string>
+    <string name="backup_not_encrypted">नए बैकअप एन्क्रिप्टेड नहीं हैं</string>
     <string name="backup_password">बैकअप पासवर्ड</string>
     <string name="backup_password_description">यदि यह पासवर्ड खो जाता है तो इसे पुनर्प्राप्त नहीं किया जा सकता। किसी भी डिवाइस पर इस बैकअप को पुनर्स्थापित करने के लिए इसकी आवश्यकता होगी।</string>
     <string name="set_backup_password">बैकअप पासवर्ड सेट करें</string>
     <string name="auto_backup_requires_password">स्वचालित बैकअप चालू है, लेकिन कोई पासवर्ड सेट नहीं है, इसलिए बैकअप सुरक्षित रूप से नहीं चल सकते। अभी पासवर्ड सेट करें या स्वचालित बैकअप बंद करें।</string>
     <string name="go_to_settings">सेटिंग्स पर जाएँ</string>
     <string name="change_backup_password_title">बैकअप पासवर्ड बदलें?</string>
-    <string name="change_backup_password_message">आपके वर्तमान पासवर्ड से पहले से एन्क्रिप्ट किए गए बैकअप इस परिवर्तन के बाद पुनर्स्थापित नहीं किए जा सकेंगे। नए बैकअप नए पासवर्ड का उपयोग करेंगे। इस परिवर्तन को वापस नहीं किया जा सकता।</string>
+    <string name="change_backup_password_message">नए बैकअप नए पासवर्ड से एन्क्रिप्ट होंगे। पुराने बैकअप उनके मूल पासवर्ड से पुनर्स्थापित किए जा सकते हैं।</string>
+    <string name="disable_backup_encryption">बैकअप एन्क्रिप्शन बंद करें</string>
+    <string name="disable_backup_encryption_message">आने वाले बैकअप एन्क्रिप्ट नहीं होंगे। मौजूदा एन्क्रिप्ट किए गए बैकअप अपने पासवर्ड से पुनर्स्थापित किए जा सकते हैं।</string>
     <string name="set_password">पासवर्ड सेट करें</string>
     <string name="turn_off_auto_backup">स्वचालित बैकअप बंद करें</string>
     <string name="unsupported_backup_version">असमर्थित बैकअप संस्करण: %1$s</string>

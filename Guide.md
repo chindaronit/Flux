@@ -101,6 +101,12 @@ This allows users to create richly formatted notes with support for headings, li
 emphasis, code blocks, tables, and mathematical expressions, and allows notes to be exported in
 various formats including TXT, MD (Markdown), and HTML.
 
+Use the document attachment button in a note or journal editor to add a PDF or another file type.
+PDFs show an inline preview of every page and open the full document when tapped; other files appear
+as links that open with a compatible app. Flux stores copied attachments in `Flux/Documents`.
+Full backups include document attachments in the `media/documents` folder and restore them to
+`Flux/Documents`.
+
 # Some Basic Markdown Syntax
 
 |    Element     |               Syntax               |

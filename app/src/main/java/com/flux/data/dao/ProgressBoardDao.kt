@@ -27,4 +27,7 @@ interface ProgressBoardDao {
 
     @Query("SELECT * FROM ProgressBoardModel")
     fun getAllBoardItems(): List<ProgressBoardModel>
+
+    @Query("DELETE FROM ProgressBoardModel")
+    suspend fun deleteAll()
 }

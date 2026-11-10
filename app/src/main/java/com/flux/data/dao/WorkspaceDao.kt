@@ -30,4 +30,7 @@ interface WorkspaceDao {
 
     @Query("SELECT * FROM WorkspaceModel")
     suspend fun getAll(): List<WorkspaceModel>
+
+    @Query("DELETE FROM WorkspaceModel")
+    suspend fun deleteAll()
 }
