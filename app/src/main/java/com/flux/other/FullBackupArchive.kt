@@ -10,13 +10,22 @@ import com.flux.data.database.FluxDatabase
 import com.flux.data.model.RecurrenceRule
 import com.flux.data.model.toScheduleRequest
 import com.flux.other.crypto.BackupEncryptor
+import com.flux.other.crypto.BackupEncryptionSession
 import com.flux.other.crypto.BackupFileFormat
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.json.Json
 import java.io.ByteArrayInputStream
 import java.io.IOException
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 object FullBackupArchive {
+    private const val MAX_CONCURRENT_MEDIA_COPIES = 4
+    private val backupFolderTimestamp = DateTimeFormatter.ofPattern("yyyyMMddHHmmss")
     private const val MANIFEST_FILE = "backup.json"
     private const val COMPLETE_MARKER = ".complete"
     private const val MEDIA_DIRECTORY = "media"
@@ -68,13 +77,16 @@ object FullBackupArchive {
             progressBoardItems = db.progressBoardDao.getAllBoardItems()
         )
 
-        val backupDirectory = createUniqueDirectory(backupParent, "FullBackup-${System.currentTimeMillis()}")
+        val timestamp = LocalDateTime.now().format(backupFolderTimestamp)
+        val backupDirectory = createUniqueDirectory(backupParent, "FullBackup-$timestamp")
+        val encryptionSession = password?.let { encryptor.createSession(it) }
         val mediaDirectory = findOrCreateDirectory(backupDirectory, MEDIA_DIRECTORY)
         val outputDirectories = mediaDirectories.associate { (archiveName, _) ->
             archiveName to findOrCreateDirectory(mediaDirectory, archiveName)
         }
         val archivedNames = mutableMapOf<Pair<String, String>, String>()
         val mediaFiles = mutableListOf<BackupMediaFile>()
+        val copyTasks = mutableListOf<MediaCopyTask>()
         val sourceFluxDirectory = root.findFile(Constants.File.FLUX)
         val sourceImagesDirectory = sourceFluxDirectory?.findFile(Constants.File.FLUX_IMAGES)
         mediaDirectories.forEach { (archiveName, sourceName) ->
@@ -88,15 +100,11 @@ object FullBackupArchive {
                     }
                     val mimeType = source.type ?: "application/octet-stream"
                     mediaFiles += BackupMediaFile(archiveName, name, archivedName, mimeType)
-                    copyDocument(
-                        context,
-                        source,
-                        outputDirectories.getValue(archiveName),
-                        archivedName,
-                        encryptor,
-                        password,
-                        if (password == null) CopyMode.PLAIN else CopyMode.ENCRYPT,
-                        mimeType
+                    copyTasks += MediaCopyTask(
+                        source = source,
+                        destinationDirectory = outputDirectories.getValue(archiveName),
+                        archivedName = archivedName,
+                        mimeType = mimeType
                     )
                 }
             }
@@ -117,18 +125,16 @@ object FullBackupArchive {
             val archiveImages = outputDirectories.getValue(IMAGE_DIRECTORY)
             val mimeType = coverFile.type ?: "application/octet-stream"
             mediaFiles += BackupMediaFile(IMAGE_DIRECTORY, name, archivedName, mimeType)
-            copyDocument(
-                context,
-                coverFile,
-                archiveImages,
-                archivedName,
-                encryptor,
-                password,
-                if (password == null) CopyMode.PLAIN else CopyMode.ENCRYPT,
-                mimeType
+            copyTasks += MediaCopyTask(
+                source = coverFile,
+                destinationDirectory = archiveImages,
+                archivedName = archivedName,
+                mimeType = mimeType
             )
             workspace.workspaceId to name
         }.toMap()
+
+        copyMediaFiles(context, copyTasks, encryptor, encryptionSession)
 
         val portableSnapshot = snapshot.copy(
             workspaces = snapshot.workspaces.map { it.copy(cover = "") },
@@ -140,9 +146,36 @@ object FullBackupArchive {
             backupDirectory,
             json.encodeToString(FluxBackup.serializer(), portableSnapshot),
             encryptor,
-            password
+            encryptionSession
         )
         writeCompleteMarker(context, backupDirectory)
+    }
+
+    private suspend fun copyMediaFiles(
+        context: Context,
+        tasks: List<MediaCopyTask>,
+        encryptor: BackupEncryptor,
+        encryptionSession: BackupEncryptionSession?
+    ) {
+        val mode = if (encryptionSession == null) CopyMode.PLAIN else CopyMode.ENCRYPT
+        tasks.chunked(MAX_CONCURRENT_MEDIA_COPIES).forEach { batch ->
+            coroutineScope {
+                batch.map { task ->
+                    async(Dispatchers.IO) {
+                        copyDocument(
+                            context,
+                            task.source,
+                            task.destinationDirectory,
+                            task.archivedName,
+                            encryptor,
+                            encryptionSession,
+                            mode,
+                            task.mimeType
+                        )
+                    }
+                }.awaitAll()
+            }
+        }
     }
 
     suspend fun restore(
@@ -169,11 +202,12 @@ object FullBackupArchive {
         } ?: throw IOException("Could not read the backup manifest")
         val isEncrypted = BackupFileFormat.isEncrypted(encryptedManifest)
         if (isEncrypted && password == null) throw PasswordRequiredException()
-        val manifestBytes = if (isEncrypted) {
-            encryptor.decrypt(encryptedManifest, password!!)
+        val decryptedManifest = if (isEncrypted) {
+            encryptor.decryptManifest(encryptedManifest, password!!)
         } else {
-            encryptedManifest
+            null
         }
+        val manifestBytes = decryptedManifest?.plaintext ?: encryptedManifest
         val backup = json.decodeFromString<FluxBackup>(manifestBytes.toString(Charsets.UTF_8))
         require(backup.formatVersion in 2..3) {
             "Unsupported backup version: ${backup.formatVersion}"
@@ -198,7 +232,15 @@ object FullBackupArchive {
         }
 
         val restoredMediaUris = if (storageRoot != null) {
-            restoreMedia(context, backup, archiveMedia, storageRoot, encryptor, password, isEncrypted)
+            restoreMedia(
+                context,
+                backup,
+                archiveMedia,
+                storageRoot,
+                encryptor,
+                decryptedManifest?.session,
+                isEncrypted
+            )
                 .also { MediaCache.clearCaches() }
         } else {
             emptyMap()
@@ -262,7 +304,7 @@ object FullBackupArchive {
         archiveMedia: DocumentFile,
         storageRoot: DocumentFile,
         encryptor: BackupEncryptor,
-        password: CharArray?,
+        encryptionSession: BackupEncryptionSession?,
         isEncrypted: Boolean
     ): Map<Pair<String, String>, Uri> {
         val fluxDirectory = findOrCreateDirectory(storageRoot, Constants.File.FLUX)
@@ -301,7 +343,7 @@ object FullBackupArchive {
                             stagedCategory,
                             name,
                             encryptor,
-                            password,
+                            encryptionSession,
                             if (isEncrypted) CopyMode.DECRYPT else CopyMode.PLAIN,
                             mediaEntry?.mimeType
                         )
@@ -328,7 +370,7 @@ object FullBackupArchive {
                         target,
                         name,
                         encryptor,
-                        password,
+                        null,
                         CopyMode.PLAIN
                     )
                     restoredUris[archiveName to name] = restored.uri
@@ -371,7 +413,7 @@ object FullBackupArchive {
         destinationDirectory: DocumentFile,
         name: String,
         encryptor: BackupEncryptor,
-        password: CharArray?,
+        encryptionSession: BackupEncryptionSession?,
         mode: CopyMode,
         mimeType: String? = null
     ): DocumentFile {
@@ -390,14 +432,14 @@ object FullBackupArchive {
                     when (mode) {
                         CopyMode.PLAIN -> sourceStream.copyTo(destinationStream)
                         CopyMode.ENCRYPT -> {
-                            val actualPassword = password
-                                ?: throw IllegalStateException("Encryption password is missing")
-                            encryptor.encrypt(sourceStream, destinationStream, actualPassword)
+                            val session = encryptionSession
+                                ?: throw IllegalStateException("Encryption session is missing")
+                            encryptor.encrypt(sourceStream, destinationStream, session)
                         }
                         CopyMode.DECRYPT -> {
-                            val actualPassword = password
-                                ?: throw PasswordRequiredException()
-                            encryptor.decrypt(sourceStream, destinationStream, actualPassword)
+                            val session = encryptionSession
+                                ?: throw IllegalStateException("Decryption session is missing")
+                            encryptor.decrypt(sourceStream, destinationStream, session)
                         }
                     }
                 }
@@ -414,10 +456,10 @@ object FullBackupArchive {
         directory: DocumentFile,
         text: String,
         encryptor: BackupEncryptor,
-        password: CharArray?
+        encryptionSession: BackupEncryptionSession?
     ) {
         val file = directory.createFile(
-            if (password == null) "application/json" else "application/octet-stream",
+            if (encryptionSession == null) "application/json" else "application/octet-stream",
             MANIFEST_FILE
         )
             ?: throw IOException("Could not create the backup manifest")
@@ -425,10 +467,10 @@ object FullBackupArchive {
             ?: throw IOException("Could not write the backup manifest")
         output.use { destination ->
             val manifestBytes = text.toByteArray(Charsets.UTF_8)
-            if (password == null) {
+            if (encryptionSession == null) {
                 destination.write(manifestBytes)
             } else {
-                encryptor.encrypt(ByteArrayInputStream(manifestBytes), destination, password)
+                encryptor.encrypt(ByteArrayInputStream(manifestBytes), destination, encryptionSession)
             }
         }
     }
@@ -467,4 +509,11 @@ object FullBackupArchive {
         ENCRYPT,
         DECRYPT
     }
+
+    private data class MediaCopyTask(
+        val source: DocumentFile,
+        val destinationDirectory: DocumentFile,
+        val archivedName: String,
+        val mimeType: String
+    )
 }

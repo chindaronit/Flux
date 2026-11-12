@@ -6,7 +6,7 @@ package com.flux.other.crypto
  */
 object BackupFileFormat {
     val MAGIC: ByteArray = "FLUXBK1".toByteArray(Charsets.US_ASCII) // 7 bytes
-    const val VERSION: Byte = 1
+    const val VERSION: Byte = 3
 
     fun isEncrypted(bytes: ByteArray): Boolean =
         bytes.size >= MAGIC.size && bytes.copyOfRange(0, MAGIC.size).contentEquals(MAGIC)
