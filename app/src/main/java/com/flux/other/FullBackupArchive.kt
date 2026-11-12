@@ -3,12 +3,9 @@ package com.flux.other
 import android.content.Context
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
-import androidx.room.withTransaction
 import com.flux.data.database.BackupMediaFile
 import com.flux.data.database.FluxBackup
 import com.flux.data.database.FluxDatabase
-import com.flux.data.model.RecurrenceRule
-import com.flux.data.model.toScheduleRequest
 import com.flux.other.crypto.BackupEncryptor
 import com.flux.other.crypto.BackupEncryptionSession
 import com.flux.other.crypto.BackupFileFormat
@@ -19,6 +16,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.json.Json
 import java.io.ByteArrayInputStream
 import java.io.IOException
+import java.net.URI
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
@@ -60,22 +58,18 @@ object FullBackupArchive {
     ) {
         val root = DocumentFile.fromTreeUri(context, storageRootUri)
             ?: throw IOException("The storage root is unavailable")
+        create(AndroidBackupDocument(context, root), RoomBackupDataStore(context, db), encryptor, password)
+    }
+
+    internal suspend fun create(
+        root: BackupDocument,
+        dataStore: BackupDataStore,
+        encryptor: BackupEncryptor,
+        password: CharArray?
+    ) {
         val fluxDirectory = findOrCreateDirectory(root, Constants.File.FLUX)
         val backupParent = findOrCreateDirectory(fluxDirectory, Constants.File.FLUX_BACKUP)
-        val snapshot = FluxBackup(
-            workspaces = db.workspaceDao.getAll(),
-            notes = db.notesDao.loadAllNotes(),
-            todos = db.todoDao.loadAllLists(),
-            todoInstances = db.todoInstanceDao.loadAllInstances(),
-            habits = db.habitDao.loadAllHabits(),
-            habitInstances = db.habitInstanceDao.loadAllInstances(),
-            journals = db.journalDao.loadAllEntries(),
-            labels = db.labelDao.getAll(),
-            events = db.eventDao.loadAllEvents(),
-            eventInstances = db.eventInstanceDao.getAll(),
-            eventExceptions = db.eventExceptionDao.getAll(),
-            progressBoardItems = db.progressBoardDao.getAllBoardItems()
-        )
+        val snapshot = dataStore.loadBackup()
 
         val timestamp = LocalDateTime.now().format(backupFolderTimestamp)
         val backupDirectory = createUniqueDirectory(backupParent, "FullBackup-$timestamp")
@@ -88,7 +82,6 @@ object FullBackupArchive {
         val mediaFiles = mutableListOf<BackupMediaFile>()
         val copyTasks = mutableListOf<MediaCopyTask>()
         val sourceFluxDirectory = root.findFile(Constants.File.FLUX)
-        val sourceImagesDirectory = sourceFluxDirectory?.findFile(Constants.File.FLUX_IMAGES)
         mediaDirectories.forEach { (archiveName, sourceName) ->
             val sourceDirectory = sourceFluxDirectory?.findFile(sourceName)
             if (sourceDirectory?.isDirectory == true) {
@@ -113,28 +106,17 @@ object FullBackupArchive {
         val coverFiles = snapshot.workspaces.mapNotNull { workspace ->
             if (workspace.cover.isBlank()) return@mapNotNull null
 
-            val coverUri = Uri.parse(workspace.cover)
-            val coverName = coverUri.lastPathSegment
+            val coverName = URI(workspace.cover).path
                 ?.substringAfterLast('/')
                 ?.takeIf { it.isNotBlank() }
                 ?: throw IOException("Could not identify the cover image for ${workspace.title}")
-            val coverFile = sourceImagesDirectory?.findFile(coverName)
-                ?: throw IOException("Could not find the cover image for ${workspace.title} in Flux/Images")
-            val name = "workspace-cover-${UUID.randomUUID()}"
-            val archivedName = if (password == null) name else "media-${UUID.randomUUID()}"
-            val archiveImages = outputDirectories.getValue(IMAGE_DIRECTORY)
-            val mimeType = coverFile.type ?: "application/octet-stream"
-            mediaFiles += BackupMediaFile(IMAGE_DIRECTORY, name, archivedName, mimeType)
-            copyTasks += MediaCopyTask(
-                source = coverFile,
-                destinationDirectory = archiveImages,
-                archivedName = archivedName,
-                mimeType = mimeType
-            )
-            workspace.workspaceId to name
+            if ((IMAGE_DIRECTORY to coverName) !in archivedNames) {
+                throw IOException("Could not find the cover image for ${workspace.title} in Flux/Images")
+            }
+            workspace.workspaceId to coverName
         }.toMap()
 
-        copyMediaFiles(context, copyTasks, encryptor, encryptionSession)
+        copyMediaFiles(copyTasks, encryptor, encryptionSession)
 
         val portableSnapshot = snapshot.copy(
             workspaces = snapshot.workspaces.map { it.copy(cover = "") },
@@ -142,17 +124,15 @@ object FullBackupArchive {
             mediaFiles = mediaFiles
         )
         writeManifest(
-            context,
             backupDirectory,
             json.encodeToString(FluxBackup.serializer(), portableSnapshot),
             encryptor,
             encryptionSession
         )
-        writeCompleteMarker(context, backupDirectory)
+        writeCompleteMarker(backupDirectory)
     }
 
     private suspend fun copyMediaFiles(
-        context: Context,
         tasks: List<MediaCopyTask>,
         encryptor: BackupEncryptor,
         encryptionSession: BackupEncryptionSession?
@@ -163,7 +143,6 @@ object FullBackupArchive {
                 batch.map { task ->
                     async(Dispatchers.IO) {
                         copyDocument(
-                            context,
                             task.source,
                             task.destinationDirectory,
                             task.archivedName,
@@ -188,16 +167,38 @@ object FullBackupArchive {
     ) {
         val backupDirectory = DocumentFile.fromTreeUri(context, backupFolderUri)
             ?: throw IOException("The selected backup folder is unavailable")
+        val storageRoot = storageRootUri?.let { uri ->
+            DocumentFile.fromTreeUri(context, uri)
+        }
+        restore(
+            AndroidBackupDocument(context, backupDirectory),
+            storageRoot?.let { AndroidBackupDocument(context, it) },
+            RoomBackupDataStore(context, db),
+            encryptor,
+            password
+        ) {
+            MediaCache.clearCaches()
+        }
+    }
+
+    internal suspend fun restore(
+        backupDirectory: BackupDocument,
+        storageRoot: BackupDocument?,
+        dataStore: BackupDataStore,
+        encryptor: BackupEncryptor,
+        password: CharArray?,
+        onMediaRestored: () -> Unit = {}
+    ) {
         val completeMarker = backupDirectory.findFile(COMPLETE_MARKER)
         if (completeMarker != null) {
-            val markerContents = context.contentResolver.openInputStream(completeMarker.uri)
+            val markerContents = completeMarker.openInputStream()
                 ?.bufferedReader()
                 ?.use { it.readText() }
             if (markerContents != "2") throw IOException("The backup was not completed successfully")
         }
         val manifest = backupDirectory.findFile(MANIFEST_FILE)
             ?: throw IOException("The selected folder does not contain a Flux backup")
-        val encryptedManifest = context.contentResolver.openInputStream(manifest.uri)?.use {
+        val encryptedManifest = manifest.openInputStream()?.use {
             it.readBytes()
         } ?: throw IOException("Could not read the backup manifest")
         val isEncrypted = BackupFileFormat.isEncrypted(encryptedManifest)
@@ -223,17 +224,12 @@ object FullBackupArchive {
             mediaDirectories.any { (name, _) ->
                 archiveMedia.findFile(name)?.listFiles()?.any { it.isFile } == true
             }
-        val storageRoot = if (hasMediaFiles) {
-            val uri = storageRootUri ?: throw IOException("Select a storage root before restoring media")
-            DocumentFile.fromTreeUri(context, uri)
-                ?: throw IOException("The storage root is unavailable")
-        } else {
-            storageRootUri?.let { DocumentFile.fromTreeUri(context, it) }
+        if (hasMediaFiles && storageRoot == null) {
+            throw IOException("Select a storage root before restoring media")
         }
 
         val restoredMediaUris = if (storageRoot != null) {
             restoreMedia(
-                context,
                 backup,
                 archiveMedia,
                 storageRoot,
@@ -241,7 +237,7 @@ object FullBackupArchive {
                 decryptedManifest?.session,
                 isEncrypted
             )
-                .also { MediaCache.clearCaches() }
+                .also { onMediaRestored() }
         } else {
             emptyMap()
         }
@@ -252,61 +248,21 @@ object FullBackupArchive {
             } else {
                 val coverUri = restoredMediaUris[IMAGE_DIRECTORY to requireSafeFileName(coverName)]
                     ?: throw IOException("The backup is missing workspace cover $coverName")
-                workspace.copy(cover = coverUri.toString())
+                workspace.copy(cover = coverUri)
             }
         }
 
-        val previousTodos = db.todoDao.loadAllLists()
-            .filter { it.recurrence == RecurrenceRule.Weekly }
-        val previousHabits = db.habitDao.loadAllHabits()
-        val previousEvents = db.eventDao.loadAllEvents()
-        db.withTransaction {
-            db.todoInstanceDao.deleteAllInstances()
-            db.eventExceptionDao.deleteAll()
-            db.eventInstanceDao.deleteAll()
-            db.habitInstanceDao.deleteAllInstances()
-            db.progressBoardDao.deleteAll()
-            db.notesDao.deleteAll()
-            db.journalDao.deleteAll()
-            db.labelDao.deleteAll()
-            db.todoDao.deleteAll()
-            db.habitDao.deleteAll()
-            db.eventDao.deleteAll()
-            db.workspaceDao.deleteAll()
-
-            db.workspaceDao.upsertWorkspaces(restoredWorkspaces)
-            backup.notes.forEach { db.notesDao.upsertNote(it) }
-            backup.todos.forEach { db.todoDao.upsertList(it) }
-            backup.todoInstances.forEach { db.todoInstanceDao.upsertTodoInstance(it) }
-            backup.habits.forEach { db.habitDao.upsertHabit(it) }
-            backup.habitInstances.forEach { db.habitInstanceDao.upsertInstance(it) }
-            backup.journals.forEach { db.journalDao.upsertEntry(it) }
-            backup.labels.forEach { db.labelDao.upsertLabel(it) }
-            backup.events.forEach { db.eventDao.upsertEvent(it) }
-            backup.eventInstances.forEach { db.eventInstanceDao.upsertEventInstance(it) }
-            backup.eventExceptions.forEach { db.eventExceptionDao.upsert(it) }
-            backup.progressBoardItems.forEach { db.progressBoardDao.upsertBoardItem(it) }
-        }
-
-        previousTodos.forEach { cancelReminder(context, it.toScheduleRequest()) }
-        previousHabits.forEach { cancelReminder(context, it.toScheduleRequest()) }
-        previousEvents.forEach { cancelReminder(context, it.toScheduleRequest()) }
-        backup.todos
-            .filter { it.recurrence == RecurrenceRule.Weekly }
-            .forEach { scheduleNextReminder(context, it.toScheduleRequest()) }
-        backup.habits.forEach { scheduleNextReminder(context, it.toScheduleRequest()) }
-        backup.events.forEach { scheduleNextReminder(context, it.toScheduleRequest()) }
+        dataStore.replaceWith(backup.copy(workspaces = restoredWorkspaces))
     }
 
     private suspend fun restoreMedia(
-        context: Context,
         backup: FluxBackup,
-        archiveMedia: DocumentFile,
-        storageRoot: DocumentFile,
+        archiveMedia: BackupDocument,
+        storageRoot: BackupDocument,
         encryptor: BackupEncryptor,
         encryptionSession: BackupEncryptionSession?,
         isEncrypted: Boolean
-    ): Map<Pair<String, String>, Uri> {
+    ): Map<Pair<String, String>, String> {
         val fluxDirectory = findOrCreateDirectory(storageRoot, Constants.File.FLUX)
         val stagingDirectory = createUniqueDirectory(
             fluxDirectory,
@@ -338,7 +294,6 @@ object FullBackupArchive {
                         }
                         val name = requireSafeFileName(mediaEntry?.name ?: archivedName)
                         copyDocument(
-                            context,
                             source,
                             stagedCategory,
                             name,
@@ -354,7 +309,7 @@ object FullBackupArchive {
                 throw IOException("Backup is missing one or more media files")
             }
 
-            val restoredUris = mutableMapOf<Pair<String, String>, Uri>()
+            val restoredUris = mutableMapOf<Pair<String, String>, String>()
             mediaDirectories.forEach { (archiveName, storageName) ->
                 if (archiveName == DOCUMENT_DIRECTORY && backup.formatVersion < 3) {
                     return@forEach
@@ -365,7 +320,6 @@ object FullBackupArchive {
                 stagedCategory?.listFiles()?.filterNot { it.isDirectory }?.forEach { stagedFile ->
                     val name = requireSafeFileName(stagedFile.name)
                     val restored = copyDocument(
-                        context,
                         stagedFile,
                         target,
                         name,
@@ -388,7 +342,7 @@ object FullBackupArchive {
         }
     }
 
-    private fun findOrCreateDirectory(parent: DocumentFile, name: String): DocumentFile {
+    private fun findOrCreateDirectory(parent: BackupDocument, name: String): BackupDocument {
         parent.findFile(name)?.let { existing ->
             if (existing.isDirectory) return existing
             throw IOException("$name exists but is not a folder")
@@ -396,7 +350,7 @@ object FullBackupArchive {
         return parent.createDirectory(name) ?: throw IOException("Could not create folder $name")
     }
 
-    private fun createUniqueDirectory(parent: DocumentFile, baseName: String): DocumentFile {
+    private fun createUniqueDirectory(parent: BackupDocument, baseName: String): BackupDocument {
         repeat(100) { suffix ->
             val name = if (suffix == 0) baseName else "$baseName-$suffix"
             if (parent.findFile(name) == null) {
@@ -408,25 +362,24 @@ object FullBackupArchive {
     }
 
     private suspend fun copyDocument(
-        context: Context,
-        source: DocumentFile,
-        destinationDirectory: DocumentFile,
+        source: BackupDocument,
+        destinationDirectory: BackupDocument,
         name: String,
         encryptor: BackupEncryptor,
         encryptionSession: BackupEncryptionSession?,
         mode: CopyMode,
         mimeType: String? = null
-    ): DocumentFile {
+    ): BackupDocument {
         val outputFile = destinationDirectory.createFile(
             if (mode == CopyMode.ENCRYPT) "application/octet-stream"
             else mimeType ?: source.type ?: "application/octet-stream",
             requireSafeFileName(name)
         ) ?: throw IOException("Could not create file $name")
         try {
-            val input = context.contentResolver.openInputStream(source.uri)
+            val input = source.openInputStream()
                 ?: throw IOException("Could not read file $name")
             input.use { sourceStream ->
-                val output = context.contentResolver.openOutputStream(outputFile.uri)
+                val output = outputFile.openOutputStream()
                     ?: throw IOException("Could not write file $name")
                 output.use { destinationStream ->
                     when (mode) {
@@ -452,8 +405,7 @@ object FullBackupArchive {
     }
 
     private suspend fun writeManifest(
-        context: Context,
-        directory: DocumentFile,
+        directory: BackupDocument,
         text: String,
         encryptor: BackupEncryptor,
         encryptionSession: BackupEncryptionSession?
@@ -463,7 +415,7 @@ object FullBackupArchive {
             MANIFEST_FILE
         )
             ?: throw IOException("Could not create the backup manifest")
-        val output = context.contentResolver.openOutputStream(file.uri)
+        val output = file.openOutputStream()
             ?: throw IOException("Could not write the backup manifest")
         output.use { destination ->
             val manifestBytes = text.toByteArray(Charsets.UTF_8)
@@ -475,22 +427,22 @@ object FullBackupArchive {
         }
     }
 
-    private fun writeCompleteMarker(context: Context, directory: DocumentFile) {
+    private fun writeCompleteMarker(directory: BackupDocument) {
         val marker = directory.createFile("text/plain", COMPLETE_MARKER)
             ?: throw IOException("Could not mark the backup as complete")
-        context.contentResolver.openOutputStream(marker.uri)?.bufferedWriter()?.use { writer ->
+        marker.openOutputStream()?.bufferedWriter()?.use { writer ->
             writer.write("2")
         } ?: throw IOException("Could not mark the backup as complete")
     }
 
-    private fun deleteChildren(directory: DocumentFile) {
+    private fun deleteChildren(directory: BackupDocument) {
         directory.listFiles().forEach { child ->
             if (child.isDirectory) deleteChildren(child)
             if (!child.delete()) throw IOException("Could not replace ${child.name}")
         }
     }
 
-    private fun deleteDirectory(directory: DocumentFile) {
+    private fun deleteDirectory(directory: BackupDocument) {
         deleteChildren(directory)
         if (!directory.delete()) throw IOException("Could not remove ${directory.name}")
     }
@@ -511,8 +463,8 @@ object FullBackupArchive {
     }
 
     private data class MediaCopyTask(
-        val source: DocumentFile,
-        val destinationDirectory: DocumentFile,
+        val source: BackupDocument,
+        val destinationDirectory: BackupDocument,
         val archivedName: String,
         val mimeType: String
     )

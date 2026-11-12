@@ -86,6 +86,8 @@ kotlin {
 }
 
 dependencies {
+    testImplementation(libs.junit)
+
     implementation(libs.androidx.compose.ui.text)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.glance.appwidget)
