@@ -10,9 +10,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material3.Card
@@ -25,7 +25,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
@@ -179,30 +178,66 @@ fun RecurrenceBottomSheet(
                 }
 
                 item {
-                    LazyRow(
+                    FlowRow(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.padding(vertical = 8.dp)
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        maxItemsInEachRow = 3
                     ) {
-                        items(options) { (option, labelResource) ->
-                            Row(
-                                modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                RadioButton(
-                                    selected = (option is RecurrenceRule.Once && tempRule is RecurrenceRule.Once) ||
-                                        (option is RecurrenceRule.Interval && option.unit == selectedUnit),
-                                    onClick = {
-                                        tempRule = when (option) {
-                                            is RecurrenceRule.Once -> option
-                                            is RecurrenceRule.Interval ->
-                                                option.copy(
-                                                    every = intervalText.toIntOrNull()?.coerceIn(1, 999) ?: 1
-                                                )
-                                            else -> option
-                                        }
+                        options.forEach { (option, labelResource) ->
+                            val isSelected =
+                                (option is RecurrenceRule.Once && tempRule is RecurrenceRule.Once) ||
+                                    (option is RecurrenceRule.Interval && option.unit == selectedUnit)
+                            Card(
+                                onClick = {
+                                    tempRule = when (option) {
+                                        is RecurrenceRule.Once -> option
+                                        is RecurrenceRule.Interval ->
+                                            option.copy(
+                                                every = intervalText.toIntOrNull()?.coerceIn(1, 999) ?: 1
+                                            )
+                                        else -> option
+                                    }
+                                },
+                                modifier = Modifier.weight(1f),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = if (isSelected) {
+                                        MaterialTheme.colorScheme.secondaryContainer
+                                    } else {
+                                        MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
+                                    },
+                                    contentColor = if (isSelected) {
+                                        MaterialTheme.colorScheme.onSecondaryContainer
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurface
                                     }
                                 )
-                                Text(stringResource(labelResource), modifier = Modifier.padding(start = 4.dp))
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .heightIn(min = 56.dp)
+                                        .padding(horizontal = 8.dp),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = stringResource(labelResource),
+                                        style = MaterialTheme.typography.labelLarge,
+                                        textAlign = TextAlign.Center,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    if (isSelected) {
+                                        Spacer(Modifier.width(4.dp))
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = null
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
