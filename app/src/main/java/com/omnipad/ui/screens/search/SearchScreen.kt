@@ -27,6 +27,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
@@ -37,6 +38,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
@@ -281,6 +283,7 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
     val completedItems = boardItems.filter { it.status == 2 }
     var selectedProgressBoardItem by remember { mutableStateOf<ProgressBoardModel?>(null) }
     var showEventCalendar by rememberSaveable { mutableStateOf(false) }
+    val isEventCalendar = selectedSpace == EVENTS_TYPE && showEventCalendar
     var eventCalendarMonthOffset by rememberSaveable { mutableIntStateOf(0) }
     var showCreateTypeDialog by remember { mutableStateOf(false) }
     var createSpace by remember { mutableIntStateOf(ALL_TYPES) }
@@ -477,26 +480,28 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         topBar = {
-            GeneralSearchBar(
-                leadingIcon = Icons.Default.Search,
-                trailingIcon = Icons.Default.FilterList,
-                trailingIconContentDescription = stringResource(R.string.search_filters),
-                textFieldState = TextFieldState(query),
-                onSearch = {
-                    query = it
-                },
-                onAddClicked = if (selectedSpaces.isEmpty()) null else {
-                    {
-                        if (selectedSpace == ALL_TYPES) showCreateTypeDialog = true
-                        else {
-                            createSpace = selectedSpace
-                            showWorkspaceSelectorDialog = true
+            if (!isEventCalendar) {
+                GeneralSearchBar(
+                    leadingIcon = Icons.Default.Search,
+                    trailingIcon = Icons.Default.FilterList,
+                    trailingIconContentDescription = stringResource(R.string.search_filters),
+                    textFieldState = TextFieldState(query),
+                    onSearch = {
+                        query = it
+                    },
+                    onAddClicked = if (selectedSpaces.isEmpty()) null else {
+                        {
+                            if (selectedSpace == ALL_TYPES) showCreateTypeDialog = true
+                            else {
+                                createSpace = selectedSpace
+                                showWorkspaceSelectorDialog = true
+                            }
                         }
-                    }
-                },
-                onTrailingIconClicked = { isToolsSheetVisible=true },
-                onCloseClicked = { query = "" }
-            )
+                    },
+                    onTrailingIconClicked = { isToolsSheetVisible=true },
+                    onCloseClicked = { query = "" }
+                )
+            }
         }
     ) { innerPadding ->
         Box(Modifier
@@ -507,45 +512,69 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
                 else -> {
                     Column(Modifier.fillMaxSize()) {
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .horizontalScroll(rememberScrollState())
-                                .padding(horizontal = 16.dp, vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            val scopeLabel = when {
-                                selectedSpaces.isEmpty() -> stringResource(R.string.search_no_types)
-                                selectedSpaces.size == allSpaces.size -> stringResource(R.string.search_all_types)
-                                selectedSpaces.size == 1 -> selectedSpaces.first().title
-                                else -> stringResource(R.string.search_type_count, selectedSpaces.size)
-                            }
-                            Text(
-                                text = stringResource(R.string.search_scope, scopeLabel),
-                                style = MaterialTheme.typography.labelLarge,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            if (selectedSpace == EVENTS_TYPE) {
-                                FilterChip(
-                                    selected = !showEventCalendar,
-                                    onClick = { showEventCalendar = false },
-                                    label = { Text(stringResource(R.string.event_agenda)) }
+                            Row(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .horizontalScroll(rememberScrollState())
+                                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                val scopeLabel = when {
+                                    selectedSpaces.isEmpty() -> stringResource(R.string.search_no_types)
+                                    selectedSpaces.size == allSpaces.size -> stringResource(R.string.search_all_types)
+                                    selectedSpaces.size == 1 -> selectedSpaces.first().title
+                                    else -> stringResource(R.string.search_type_count, selectedSpaces.size)
+                                }
+                                Text(
+                                    text = stringResource(R.string.search_scope, scopeLabel),
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
-                                FilterChip(
-                                    selected = showEventCalendar,
-                                    onClick = { showEventCalendar = true },
-                                    label = { Text(stringResource(R.string.Calendar)) }
-                                )
-                                TextButton(
-                                    enabled = showEventCalendar || matchingEventOccurrences.isNotEmpty(),
-                                    onClick = {
-                                        if (showEventCalendar) eventCalendarMonthOffset = 0
-                                        else agendaTodayHeaderIndex(matchingEventOccurrences, LocalDate.now())?.let { index ->
-                                            scope.launch { eventSearchListState.scrollToItem(index) }
+                                if (selectedSpace == EVENTS_TYPE) {
+                                    FilterChip(
+                                        selected = !showEventCalendar,
+                                        onClick = { showEventCalendar = false },
+                                        label = { Text(stringResource(R.string.event_agenda)) }
+                                    )
+                                    FilterChip(
+                                        selected = showEventCalendar,
+                                        onClick = { showEventCalendar = true },
+                                        label = { Text(stringResource(R.string.Calendar)) }
+                                    )
+                                    TextButton(
+                                        enabled = showEventCalendar || matchingEventOccurrences.isNotEmpty(),
+                                        onClick = {
+                                            if (showEventCalendar) eventCalendarMonthOffset = 0
+                                            else agendaTodayHeaderIndex(matchingEventOccurrences, LocalDate.now())?.let { index ->
+                                                scope.launch { eventSearchListState.scrollToItem(index) }
+                                            }
                                         }
+                                    ) {
+                                        Text(stringResource(R.string.Today))
                                     }
-                                ) {
-                                    Text(stringResource(R.string.Today))
+                                }
+                            }
+                            if (isEventCalendar) {
+                                IconButton(onClick = { isToolsSheetVisible = true }) {
+                                    Icon(
+                                        Icons.Default.FilterList,
+                                        contentDescription = stringResource(R.string.search_filters),
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                                IconButton(onClick = {
+                                    createSpace = EVENTS_TYPE
+                                    showWorkspaceSelectorDialog = true
+                                }) {
+                                    Icon(
+                                        Icons.Default.Add,
+                                        contentDescription = stringResource(R.string.add),
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
                                 }
                             }
                         }
@@ -579,14 +608,21 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
                                 }
                             }
                         }
-                        if (selectedSpace == EVENTS_TYPE && showEventCalendar) {
+                        if (isEventCalendar) {
                             if (query.isNotBlank() || !states.settings.data.showCompletedEvents) {
-                                Text(
-                                    text = stringResource(R.string.search_calendar_filtered),
-                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-                                    style = MaterialTheme.typography.labelLarge,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = stringResource(R.string.search_calendar_filtered),
+                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                                        style = MaterialTheme.typography.labelLarge,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                    if (query.isNotBlank()) {
+                                        TextButton(onClick = { query = "" }) {
+                                            Text(stringResource(R.string.clear))
+                                        }
+                                    }
+                                }
                             }
                             EventCalendar(
                                 events = matchingEvents,
