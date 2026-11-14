@@ -65,6 +65,9 @@ object MarkDoneHandler {
         val itemId = intent.getStringExtra("itemId") ?: return
         val itemType = intent.getStringExtra("itemType") ?: return
         val workspaceId = intent.getStringExtra("workspaceId") ?: return
+        val notificationOffsets = intent.getStringExtra("notificationOffsets")
+            ?.let { runCatching { Json.decodeFromString<List<Long>>(it) }.getOrNull() }
+        val notificationOffset = intent.getLongExtra("notificationOffset", 0L)
         val markedDone = context.getString(R.string.marked_done)
         val failed = context.getString(R.string.failed)
         val notificationId = (itemId + itemType).hashCode()
@@ -108,6 +111,11 @@ object MarkDoneHandler {
 
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         manager.cancel(notificationId)
+        if (itemType == ReminderType.EVENT.name) {
+            (notificationOffsets ?: listOf(notificationOffset)).distinct().forEach { offset ->
+                manager.cancel(getReminderNotificationId(itemType, itemId, offset, notificationOffset))
+            }
+        }
     }
 }
 
@@ -126,6 +134,10 @@ object NotificationDispatcher {
             putExtra("itemId", request.itemId)
             putExtra("itemType", request.itemType.name)
             putExtra("workspaceId", request.workspaceId)
+            putExtra("notificationOffset", request.notificationOffset)
+            request.notificationOffsets?.let {
+                putExtra("notificationOffsets", Json.encodeToString(it))
+            }
             request.habitConfig?.let {                           // ADD
                 putExtra("habitConfig", Json.encodeToString(it))
             }
@@ -160,7 +172,15 @@ object NotificationDispatcher {
 
         val notification = builder.build()
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        manager.notify((request.itemId + request.itemType.name).hashCode(), notification)
+        val notificationId = request.activeReminderOffset?.let {
+            getReminderNotificationId(
+                request.itemType.name,
+                request.itemId,
+                it,
+                request.notificationOffset
+            )
+        } ?: (request.itemId + request.itemType.name).hashCode()
+        manager.notify(notificationId, notification)
     }
 
     private fun ensureChannel(context: Context) {
@@ -193,7 +213,9 @@ fun scheduleReminder(context: Context, request: ScheduleRequest, triggerAt: Long
 
     val pendingIntent = PendingIntent.getBroadcast(
         context,
-        getUniqueRequestCode(request.itemType.name, request.itemId),
+        request.activeReminderOffset?.let {
+            getReminderRequestCode(request, it)
+        } ?: getUniqueRequestCode(request.itemType.name, request.itemId),
         intent,
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
     )
@@ -221,18 +243,35 @@ private fun scheduleStandardReminder(
     context: Context,
     request: ScheduleRequest
 ) {
-    val now = System.currentTimeMillis()
-    var candidate = getNextOccurrence(request.recurrence, request.startDateTime) ?: return
-    var finalTime: Long
-
-    while (true) {
-        val alarmTime = candidate - request.notificationOffset
-        if (alarmTime > now) { finalTime = alarmTime; break }
-        candidate = getNextOccurrence(request.recurrence, candidate) ?: return
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        if (!alarmManager.canScheduleExactAlarms()) {
+            requestExactAlarmPermission(context)
+            return
+        }
     }
 
-    if (request.endDateTime != -1L && finalTime > request.endDateTime) return
-    scheduleReminder(context, request, finalTime)
+    val now = System.currentTimeMillis()
+    val offsets = request.activeReminderOffset?.let(::listOf)
+        ?: (request.notificationOffsets ?: listOf(request.notificationOffset))
+
+    offsets.distinct().forEach { offset ->
+        val candidate = getNextOccurrenceAfter(
+            request.recurrence,
+            request.startDateTime,
+            now + offset
+        ) ?: return@forEach
+        if (request.endDateTime != -1L) {
+            val occurrenceDate = Instant.ofEpochMilli(candidate).atZone(zone).toLocalDate()
+            val finalDate = Instant.ofEpochMilli(request.endDateTime).atZone(zone).toLocalDate()
+            if (occurrenceDate.isAfter(finalDate)) return@forEach
+        }
+        scheduleReminder(
+            context,
+            request.copy(activeReminderOffset = offset),
+            candidate - offset
+        )
+    }
 }
 
 private fun scheduleNextCountedReminder(
@@ -342,16 +381,41 @@ fun cancelReminder(
     request: ScheduleRequest
 ) {
     try {
-        val intent = request.toIntent(context)
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            getUniqueRequestCode(request.itemType.name, request.itemId),
-            intent,
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        )
-
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        alarmManager.cancel(pendingIntent)
+        val offsets = request.notificationOffsets ?: listOf(request.notificationOffset)
+        offsets.distinct().forEach { offset ->
+            val reminderRequest = request.copy(activeReminderOffset = offset)
+            val pendingIntent = PendingIntent.getBroadcast(
+                context,
+                getReminderRequestCode(reminderRequest, offset),
+                reminderRequest.toIntent(context),
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
+            alarmManager.cancel(pendingIntent)
+            pendingIntent.cancel()
+        }
+        if (request.itemType == ReminderType.EVENT) {
+            val notificationManager =
+                context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.cancel(
+                getReminderNotificationId(
+                    request.itemType.name,
+                    request.itemId,
+                    request.notificationOffset,
+                    request.notificationOffset
+                )
+            )
+            offsets.distinct().forEach { offset ->
+                notificationManager.cancel(
+                    getReminderNotificationId(
+                        request.itemType.name,
+                        request.itemId,
+                        offset,
+                        request.notificationOffset
+                    )
+                )
+            }
+        }
     } catch (e: SecurityException) {
         e.printStackTrace()
         Toast.makeText(context, context.getString(R.string.Error_Cancel_Alarm_Failed), Toast.LENGTH_LONG).show()
@@ -384,4 +448,22 @@ fun openAppNotificationSettings(context: Context) {
 
 fun getUniqueRequestCode(type: String, uuid: String): Int {
     return (type + uuid).hashCode()
+}
+
+private fun getReminderRequestCode(request: ScheduleRequest, offset: Long): Int =
+    if (offset == request.notificationOffset) {
+        getUniqueRequestCode(request.itemType.name, request.itemId)
+    } else {
+        (request.itemType.name + request.itemId + "reminder:" + offset).hashCode()
+    }
+
+private fun getReminderNotificationId(
+    type: String,
+    itemId: String,
+    offset: Long,
+    primaryOffset: Long
+): Int = if (offset == primaryOffset) {
+    (itemId + type).hashCode()
+} else {
+    (type + itemId + "reminder:" + offset).hashCode()
 }

@@ -104,6 +104,8 @@ various formats including TXT, MD (Markdown), and HTML.
 Use the document attachment button in a note or journal editor to add a PDF or another file type.
 PDFs show an inline preview of every page and open the full document when tapped; other files appear
 as links that open with a compatible app. Flux stores copied attachments in `Flux/Documents`.
+Events can also have files attached from their details screen; tap an attachment name to open it
+with the app associated with that file type.
 Full backups include document attachments in the `media/documents` folder and restore them to
 `Flux/Documents`.
 

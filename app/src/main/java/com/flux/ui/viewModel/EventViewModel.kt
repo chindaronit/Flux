@@ -1,12 +1,14 @@
 package com.flux.ui.viewModel
 
 import android.content.Context
+import android.net.Uri
 import android.widget.Toast
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flux.data.model.EventInstanceModel
 import com.flux.data.model.EventExceptionModel
+import com.flux.data.model.EventOccurrenceColorModel
 import com.flux.data.model.EventModel
 import com.flux.data.model.toScheduleRequest
 import com.flux.data.repository.EventRepository
@@ -14,16 +16,20 @@ import com.flux.data.repository.SettingsRepository
 import com.flux.other.Constants
 import com.flux.other.IcsExporter
 import com.flux.other.cancelReminder
+import com.flux.other.copyDocumentAttachment
 import com.flux.other.getOrCreateDirectory
 import com.flux.other.scheduleNextReminder
+import com.flux.R
 import com.flux.ui.events.TaskEvents
 import com.flux.ui.state.EventState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -50,19 +56,25 @@ class EventViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             combine(
-                repository.loadEventData(),
-                repository.loadEventInstanceData(),
-                repository.loadEventExceptionData()
-            ) { allEvents, allInstances, exceptions ->
-                Triple(allEvents, allInstances, exceptions)
-            }.collect { (allEvents, allInstances, exceptions) ->
-
+                combine(
+                    repository.loadEventData(),
+                    repository.loadEventInstanceData(),
+                    repository.loadEventExceptionData()
+                ) { allEvents, allInstances, exceptions ->
+                    Triple(allEvents, allInstances, exceptions)
+                },
+                repository.loadEventOccurrenceColorData()
+            ) { eventData, occurrenceColors ->
+                eventData to occurrenceColors
+            }.collect { (eventData, occurrenceColors) ->
+                val (allEvents, allInstances, exceptions) = eventData
                 updateState {
                     it.copy(
                         isAllEventsLoading = false,
                         allEvent = allEvents,
                         allEventInstances = allInstances,
-                        eventExceptions = exceptions
+                        eventExceptions = exceptions,
+                        eventOccurrenceColors = occurrenceColors
                     )
                 }
             }
@@ -82,22 +94,53 @@ class EventViewModel @Inject constructor(
                 )
             is TaskEvents.DetachOccurrence -> detachOccurrence(event)
             is TaskEvents.DeleteOccurrence -> deleteOccurrence(event)
+            is TaskEvents.SetEventColor -> setEventColor(event)
             is TaskEvents.DeleteAllWorkspaceEvents -> deleteWorkspaceEvents(event.workspaceId, event.context)
             is TaskEvents.ImportIcsEvents -> importIcsEvents(event.context, event.events)
             is TaskEvents.ExportIcsEvents -> exportICSEvents(event.context, event.event)
+            is TaskEvents.ImportEventAttachments ->
+                importEventAttachments(event.context, event.uris, event.event)
+            is TaskEvents.RemoveEventAttachment ->
+                removeEventAttachment(event.eventId, event.fileName)
         }
     }
 
     private fun detachOccurrence(event: TaskEvents.DetachOccurrence) {
         viewModelScope.launch(Dispatchers.IO) {
-            repository.detachEventOccurrence(event.exception, event.event)
-            scheduleNextReminder(event.context, event.event.toScheduleRequest())
+            val colorArgb = state.value.eventOccurrenceColors.firstOrNull {
+                it.eventId == event.exception.eventId &&
+                    it.occurrenceDate == event.exception.occurrenceDate
+            }?.colorArgb ?: state.value.allEvent.firstOrNull {
+                it.id == event.exception.eventId
+            }?.colorArgb
+            val detachedEvent = event.event.copy(colorArgb = colorArgb)
+            repository.detachEventOccurrence(event.exception, detachedEvent)
+            scheduleNextReminder(event.context, detachedEvent.toScheduleRequest())
         }
     }
 
     private fun deleteOccurrence(event: TaskEvents.DeleteOccurrence) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.deleteEventOccurrence(event.exception)
+        }
+    }
+
+    private fun setEventColor(event: TaskEvents.SetEventColor) {
+        viewModelScope.launch(Dispatchers.IO) {
+            if (event.applyToSeries) {
+                repository.setEventColorForSeries(event.event.copy(colorArgb = event.colorArgb))
+            } else if (event.colorArgb == null) {
+                repository.deleteEventOccurrenceColor(event.event.id, event.occurrenceDate)
+            } else {
+                repository.upsertEventOccurrenceColor(
+                    EventOccurrenceColorModel(
+                        eventId = event.event.id,
+                        workspaceId = event.event.workspaceId,
+                        occurrenceDate = event.occurrenceDate,
+                        colorArgb = event.colorArgb
+                    )
+                )
+            }
         }
     }
 
@@ -127,14 +170,31 @@ class EventViewModel @Inject constructor(
 
     private fun upsertEvent(context: Context, data: EventModel) {
         viewModelScope.launch(Dispatchers.IO) {
-            cancelReminder(context, data.toScheduleRequest())
-            repository.upsertEvent(data)
-            scheduleNextReminder(context = context, data.toScheduleRequest())
+            val existingEvent = repository.loadAllEvents().firstOrNull { it.id == data.id }
+            val isNewEvent = existingEvent == null
+            val eventToSave = if (isNewEvent && data.colorArgb == null) {
+                data.copy(
+                    colorArgb = settingsRepository.loadSettings()
+                        .firstOrNull()
+                        ?.defaultNewEventColorArgb
+                )
+            } else {
+                data
+            }
+            existingEvent?.let { cancelReminder(context, it.toScheduleRequest()) }
+            cancelReminder(context, eventToSave.toScheduleRequest())
+            repository.upsertEvent(eventToSave)
+            scheduleNextReminder(context = context, eventToSave.toScheduleRequest())
         }
     }
 
     private fun importIcsEvents(context: Context, data: List<EventModel>) {
         viewModelScope.launch(Dispatchers.IO) {
+            val existingEvents = repository.loadAllEvents().associateBy { it.id }
+            data.forEach { imported ->
+                existingEvents[imported.id]?.let { cancelReminder(context, it.toScheduleRequest()) }
+                cancelReminder(context, imported.toScheduleRequest())
+            }
             repository.upsertEvents(data)
             data.forEach { event -> scheduleNextReminder(context, event.toScheduleRequest()) }
         }
@@ -144,6 +204,64 @@ class EventViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             state.value.allEvent.forEach { event -> cancelReminder(context, event.toScheduleRequest()) }
             repository.deleteAllWorkspaceEvent(workspaceId)
+        }
+    }
+
+    private fun importEventAttachments(context: Context, uris: List<Uri>, event: EventModel) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val currentEvent = repository.loadAllEvents().firstOrNull { it.id == event.id } ?: event
+            val importedFileNames = mutableListOf<String>()
+            val failures = mutableListOf<String>()
+
+            uris.forEach { uri ->
+                try {
+                    importedFileNames += copyDocumentAttachment(
+                        context,
+                        settingsRepository.getStorageRoot(),
+                        uri
+                    ).fileName
+                } catch (exception: CancellationException) {
+                    throw exception
+                } catch (exception: Exception) {
+                    failures += exception.localizedMessage ?: "Could not attach a selected file"
+                }
+            }
+
+            if (importedFileNames.isNotEmpty()) {
+                repository.upsertEvent(
+                    currentEvent.copy(
+                        attachments = (currentEvent.attachments + importedFileNames).distinct()
+                    )
+                )
+            }
+
+            withContext(Dispatchers.Main) {
+                val message = when {
+                    failures.isEmpty() -> context.getString(
+                        R.string.event_attachments_added,
+                        importedFileNames.size
+                    )
+                    importedFileNames.isEmpty() -> context.getString(
+                        R.string.event_attachments_failed,
+                        failures.joinToString("\n")
+                    )
+                    else -> context.getString(
+                        R.string.event_attachments_partial_failure,
+                        importedFileNames.size,
+                        failures.joinToString("\n")
+                    )
+                }
+                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    private fun removeEventAttachment(eventId: String, fileName: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val event = repository.loadAllEvents().firstOrNull { it.id == eventId } ?: return@launch
+            repository.upsertEvent(
+                event.copy(attachments = event.attachments.filterNot { it == fileName })
+            )
         }
     }
 

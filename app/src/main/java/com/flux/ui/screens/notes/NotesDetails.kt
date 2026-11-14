@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.webkit.WebView
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -50,7 +51,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -78,9 +78,6 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastJoinToString
 import androidx.core.net.toUri
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.flux.R
 import com.flux.data.model.JournalModel
@@ -98,6 +95,7 @@ import com.flux.other.ensureStorageRoot
 import com.flux.other.printPdf
 import com.flux.other.shareNote
 import com.flux.ui.common.DeleteAlert
+import com.flux.ui.common.DiscardChangesDialog
 import com.flux.ui.common.NoteDetailsTopBar
 import com.flux.ui.common.convertMillisToDate
 import com.flux.ui.events.NotesEvents
@@ -163,7 +161,9 @@ fun NoteDetails(
     )
     val titleState = rememberSaveable(saver = textFieldStateSaver) { TextFieldState(note.title) }
     val contentState = rememberSaveable(saver = textFieldStateSaver) { TextFieldState(note.description) }
+    var savedNote by remember(note.notesId) { mutableStateOf(note) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showDiscardDialog by remember { mutableStateOf(false) }
     var showShareNotesDialog by remember { mutableStateOf(false) }
     var showSaveNotesDialog by remember { mutableStateOf(false) }
     var showOutlineSheet by remember { mutableStateOf(false) }
@@ -193,6 +193,7 @@ fun NoteDetails(
     val contentCopiedString = stringResource(R.string.content_copied)
     val contentMovedString = stringResource(R.string.content_moved)
     val successString = stringResource(R.string.success)
+    val unsavedChangesMessage = stringResource(R.string.unsaved_changes_message)
     val socialCategoryList = getSocialCategory()
     val socialLinksSaver = Saver<SnapshotStateList<SocialModel>, String>(
         save = { Json.encodeToString(it.toList()) },
@@ -297,43 +298,56 @@ fun NoteDetails(
 
     val currentNote by rememberUpdatedState(note)
 
-    fun onSaveNote() {
+    val hasUnsavedChanges =
+        titleState.text.toString() != savedNote.title ||
+            contentState.text.toString() != savedNote.description ||
+            isPinned != savedNote.isPinned ||
+            noteLabelIds.toList() != savedNote.labels ||
+            socialLinks.toList() != savedNote.socialLinks
+
+    fun saveNoteChanges() {
         val newTitle = titleState.text.toString()
         val newDescription = contentState.text.toString()
 
-        if (newTitle == currentNote.title &&
-            newDescription == currentNote.description &&
-            isPinned == currentNote.isPinned &&
-            noteLabelIds.toList() == currentNote.labels &&
-            socialLinks.toList() == currentNote.socialLinks
+        if (newTitle == savedNote.title &&
+            newDescription == savedNote.description &&
+            isPinned == savedNote.isPinned &&
+            noteLabelIds.toList() == savedNote.labels &&
+            socialLinks.toList() == savedNote.socialLinks
         ) return
 
-        onNotesEvents(
-            NotesEvents.UpsertNote(
-                currentNote.copy(
-                    title = newTitle,
-                    description = newDescription,
-                    isPinned = isPinned,
-                    lastEdited = System.currentTimeMillis(),
-                    labels = noteLabelIds.toList(),
-                    socialLinks = socialLinks.toList()
-                )
-            )
+        val saved = currentNote.copy(
+            title = newTitle,
+            description = newDescription,
+            isPinned = isPinned,
+            lastEdited = System.currentTimeMillis(),
+            labels = noteLabelIds.toList(),
+            socialLinks = socialLinks.toList()
         )
+        onNotesEvents(NotesEvents.UpsertNote(saved))
+        savedNote = saved
     }
 
-    val lifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_STOP) {
-                onSaveNote()
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
+    LaunchedEffect(
+        titleState.text,
+        contentState.text,
+        isPinned,
+        noteLabelIds.toList(),
+        socialLinks.toList()
+    ) {
+        if (hasUnsavedChanges) {
+            saveNoteChanges()
         }
     }
+
+    fun requestBack() {
+        if (hasUnsavedChanges) {
+            showDiscardDialog = true
+        } else {
+            navController.popBackStack()
+        }
+    }
+    BackHandler(enabled = !showDiscardDialog) { requestBack() }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -344,7 +358,7 @@ fun NoteDetails(
                 isPinned = isPinned,
                 isReadView = isReadView,
                 isSearching= isSearching,
-                onBackPressed = { navController.popBackStack() },
+                onBackPressed = { requestBack() },
                 onOutlineClicked = {
                     onNotesEvents(NotesEvents.CalculateOutline(contentState.text.toString()))
                     showOutlineSheet=true },
@@ -427,6 +441,7 @@ fun NoteDetails(
                 )
             }
         }
+
     ) { innerPadding ->
         Column(modifier = Modifier
             .fillMaxSize()
@@ -570,6 +585,17 @@ fun NoteDetails(
                 }
             }
         }
+    }
+
+    if (showDiscardDialog) {
+        DiscardChangesDialog(
+            onDiscard = {
+                showDiscardDialog = false
+                navController.popBackStack()
+            },
+            onDismiss = { showDiscardDialog = false },
+            message = unsavedChangesMessage
+        )
     }
 
     OutlineBottomSheet(showOutlineSheet, outline, sheetState, onHeaderClick = { selectedHeader = it } ) { showOutlineSheet=false }

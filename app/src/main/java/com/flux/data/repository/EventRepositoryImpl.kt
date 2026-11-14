@@ -3,9 +3,11 @@ package com.flux.data.repository
 import com.flux.data.dao.EventDao
 import com.flux.data.dao.EventInstanceDao
 import com.flux.data.dao.EventExceptionDao
+import com.flux.data.dao.EventOccurrenceColorDao
 import com.flux.data.database.FluxDatabase
 import com.flux.data.model.EventInstanceModel
 import com.flux.data.model.EventExceptionModel
+import com.flux.data.model.EventOccurrenceColorModel
 import com.flux.data.model.EventModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -17,6 +19,7 @@ class EventRepositoryImpl @Inject constructor(
     private val eventDao: EventDao,
     private val eventInstanceDao: EventInstanceDao,
     private val eventExceptionDao: EventExceptionDao,
+    private val eventOccurrenceColorDao: EventOccurrenceColorDao,
     private val database: FluxDatabase
 ) : EventRepository {
     override suspend fun upsertEvent(event: EventModel) {
@@ -42,6 +45,7 @@ class EventRepositoryImpl @Inject constructor(
         withContext(Dispatchers.IO) {
             database.withTransaction {
                 eventExceptionDao.upsert(exception)
+                eventOccurrenceColorDao.deleteForOccurrence(exception.eventId, exception.occurrenceDate)
                 eventDao.upsertEvent(detachedEvent)
             }
         }
@@ -51,6 +55,7 @@ class EventRepositoryImpl @Inject constructor(
         withContext(Dispatchers.IO) {
             database.withTransaction {
                 eventExceptionDao.upsert(exception)
+                eventOccurrenceColorDao.deleteForOccurrence(exception.eventId, exception.occurrenceDate)
                 eventInstanceDao.deleteEventInstance(
                     EventInstanceModel(
                         eventId = exception.eventId,
@@ -77,9 +82,29 @@ class EventRepositoryImpl @Inject constructor(
     override fun loadEventExceptionData(): Flow<List<EventExceptionModel>> =
         eventExceptionDao.loadAll()
 
+    override fun loadEventOccurrenceColorData(): Flow<List<EventOccurrenceColorModel>> =
+        eventOccurrenceColorDao.loadAll()
+
+    override suspend fun upsertEventOccurrenceColor(color: EventOccurrenceColorModel) {
+        withContext(Dispatchers.IO) { eventOccurrenceColorDao.upsert(color) }
+    }
+
+    override suspend fun deleteEventOccurrenceColor(eventId: String, occurrenceDate: Long) {
+        withContext(Dispatchers.IO) {
+            eventOccurrenceColorDao.deleteForOccurrence(eventId, occurrenceDate)
+        }
+    }
+
+    override suspend fun setEventColorForSeries(event: EventModel) {
+        withContext(Dispatchers.IO) {
+            eventDao.upsertEvent(event)
+        }
+    }
+
     override suspend fun deleteEvent(event: EventModel) {
         return withContext(Dispatchers.IO) {
             eventExceptionDao.deleteForEvent(event.id)
+            eventOccurrenceColorDao.deleteForEvent(event.id)
             eventInstanceDao.deleteAllEventInstance(event.id)
             eventDao.deleteEvent(event)
         }
@@ -90,6 +115,7 @@ class EventRepositoryImpl @Inject constructor(
             eventDao.deleteAllWorkspaceEvents(workspaceId)
             eventInstanceDao.deleteAllWorkspaceInstance(workspaceId)
             eventExceptionDao.deleteForWorkspace(workspaceId)
+            eventOccurrenceColorDao.deleteForWorkspace(workspaceId)
         }
     }
 }

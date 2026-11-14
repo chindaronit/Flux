@@ -6,6 +6,7 @@ import androidx.work.WorkManager
 import com.flux.data.dao.EventDao
 import com.flux.data.dao.EventExceptionDao
 import com.flux.data.dao.EventInstanceDao
+import com.flux.data.dao.EventOccurrenceColorDao
 import com.flux.data.dao.HabitInstanceDao
 import com.flux.data.dao.HabitsDao
 import com.flux.data.dao.JournalDao
@@ -22,6 +23,11 @@ import com.flux.data.database.MIGRATION_11_12
 import com.flux.data.database.MIGRATION_12_13
 import com.flux.data.database.MIGRATION_13_14
 import com.flux.data.database.MIGRATION_14_15
+import com.flux.data.database.MIGRATION_15_16
+import com.flux.data.database.MIGRATION_16_17
+import com.flux.data.database.MIGRATION_17_18
+import com.flux.data.database.MIGRATION_18_19
+import com.flux.data.database.MIGRATION_19_20
 import com.flux.data.database.MIGRATION_1_2
 import com.flux.data.database.MIGRATION_2_3
 import com.flux.data.database.MIGRATION_3_4
@@ -64,7 +70,12 @@ object DataModule {
             MIGRATION_11_12,
             MIGRATION_12_13,
             MIGRATION_13_14,
-            MIGRATION_14_15
+            MIGRATION_14_15,
+            MIGRATION_15_16,
+            MIGRATION_16_17,
+            MIGRATION_17_18,
+            MIGRATION_18_19,
+            MIGRATION_19_20
         )
         .build()
 
@@ -95,6 +106,10 @@ object DataModule {
     @Singleton
     @Provides
     fun provideEventExceptionDao(db: FluxDatabase): EventExceptionDao = db.eventExceptionDao
+
+    @Singleton
+    @Provides
+    fun provideEventOccurrenceColorDao(db: FluxDatabase): EventOccurrenceColorDao = db.eventOccurrenceColorDao
 
     @Singleton
     @Provides

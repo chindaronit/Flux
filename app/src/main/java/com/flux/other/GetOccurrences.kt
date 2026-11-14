@@ -9,6 +9,40 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.util.Calendar
 
+/**
+ * Finds the first occurrence strictly after [afterDateTime], preserving the event's
+ * local time. Unlike getNextOccurrence(), this can safely advance from a future
+ * occurrence (which is needed when scheduling a reminder well before that occurrence).
+ */
+fun getNextOccurrenceAfter(
+    rule: RecurrenceRule,
+    startDateTime: Long,
+    afterDateTime: Long
+): Long? {
+    val zone = ZoneId.systemDefault()
+    val start = Instant.ofEpochMilli(startDateTime).atZone(zone)
+    val firstDate = maxOf(
+        start.toLocalDate(),
+        Instant.ofEpochMilli(afterDateTime).atZone(zone).toLocalDate()
+    )
+
+    for (daysFromFirst in 0..366_000) {
+        val date = firstDate.plusDays(daysFromFirst.toLong())
+        val startDate = start.toLocalDate()
+        val isOccurrence = when (rule) {
+            RecurrenceRule.Monthly ->
+                date.dayOfMonth == minOf(startDate.dayOfMonth, date.lengthOfMonth())
+            else -> rule.isActiveOn(date, startDate)
+        }
+        if (!isOccurrence) continue
+
+        val occurrence = date.atTime(start.toLocalTime()).atZone(zone)
+            .toInstant().toEpochMilli()
+        if (occurrence > afterDateTime) return occurrence
+    }
+    return null
+}
+
 fun getNextOccurrence(rule: RecurrenceRule, startDateTime: Long): Long? {
     val now = System.currentTimeMillis()
 

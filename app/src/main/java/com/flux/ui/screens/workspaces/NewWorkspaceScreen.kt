@@ -1,5 +1,6 @@
 package com.flux.ui.screens.workspaces
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -68,6 +69,7 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.platform.LocalContext
 import com.flux.data.model.Space
 import com.flux.ui.common.DeleteAlert
+import com.flux.ui.common.DiscardChangesDialog
 import com.flux.ui.screens.todo.move
 import com.flux.ui.viewModel.ViewModels
 import sh.calvin.reorderable.ReorderableItem
@@ -102,6 +104,8 @@ fun NewWorkspaceScreen(
     }
     var canDrag by remember { mutableStateOf(false) }
     var showSpaceDeleteWarningDialog by remember { mutableStateOf(false) }
+    var showDiscardDialog by remember { mutableStateOf(false) }
+    val unsavedChangesMessage = stringResource(R.string.unsaved_changes_message)
     val originalSpacesId = remember { workspace.selectedSpaces.distinct() }
 
     val removedSpaces by remember {
@@ -129,6 +133,25 @@ fun NewWorkspaceScreen(
         onEvent(WorkspaceEvents.UpsertSpace(resolvedWorkspace))
     }
 
+    fun requestBack() {
+        val hasChanges =
+            title != workspace.title ||
+                description != workspace.description ||
+                icon != workspace.icon ||
+                selectedSpacesId.toList() != workspace.selectedSpaces.distinct() ||
+                isLocked != (workspace.passKeyHash != null) ||
+                !pendingPasskey.isNullOrBlank()
+        if (hasChanges) {
+            showDiscardDialog = true
+        } else {
+            navController.popBackStack()
+        }
+    }
+
+    BackHandler(
+        enabled = !showDiscardDialog && !isDialogVisible && !showSpaceDeleteWarningDialog
+    ) { requestBack() }
+
     if (showSpaceDeleteWarningDialog) {
         DeleteAlert(
             onConfirmation = {
@@ -147,7 +170,7 @@ fun NewWorkspaceScreen(
     EditorScaffold(
         title = if(isNew) stringResource(R.string.Add_Workspace) else stringResource(R.string.Edit_Workspace),
         canSave = title.isNotBlank(),
-        onBackPressed = { navController.popBackStack() },
+        onBackPressed = { requestBack() },
         onDone = {
             if(removedSpaces.isNotEmpty() && !isNew){ showSpaceDeleteWarningDialog=true }
             else{
@@ -314,6 +337,17 @@ fun NewWorkspaceScreen(
                 }
             }
         }
+    }
+
+    if (showDiscardDialog) {
+        DiscardChangesDialog(
+            onDiscard = {
+                showDiscardDialog = false
+                navController.popBackStack()
+            },
+            onDismiss = { showDiscardDialog = false },
+            message = unsavedChangesMessage
+        )
     }
 
     ChangeIconSheet (

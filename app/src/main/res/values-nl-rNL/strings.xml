@@ -571,6 +571,7 @@
     <string name="social_link_removed">Sociale link verwijderd</string>
     <string name="discard_changes">Wijzigingen verwerpen?</string>
     <string name="discard_changes_message">Je hebt wijzigingen aangebracht maar nog geen titel toegevoegd. Voeg een titel toe om op te slaan of verwerp de wijzigingen.</string>
+    <string name="unsaved_changes_message">Je hebt niet-opgeslagen wijzigingen. Wil je deze verwerpen en afsluiten?</string>
     <string name="discard">Verwerpen</string>
     <string name="keep_editing">Doorgaan met bewerken</string>
     <string name="add_social">Sociale link toevoegen</string>

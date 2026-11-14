@@ -568,6 +568,7 @@
     <string name="social_link_removed">Enlace social eliminado</string>
     <string name="discard_changes">¿Descartar cambios?</string>
     <string name="discard_changes_message">Has realizado cambios pero no has agregado un título. Agrega un título para guardar o descarta los cambios.</string>
+    <string name="unsaved_changes_message">Tienes cambios sin guardar. ¿Quieres descartarlos y salir?</string>
     <string name="discard">Descartar</string>
     <string name="keep_editing">Seguir editando</string>
     <string name="add_social">Agregar enlace social</string>

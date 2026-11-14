@@ -58,6 +58,7 @@ internal class RoomBackupDataStore(
         events = db.eventDao.loadAllEvents(),
         eventInstances = db.eventInstanceDao.getAll(),
         eventExceptions = db.eventExceptionDao.getAll(),
+        eventOccurrenceColors = db.eventOccurrenceColorDao.getAll(),
         progressBoardItems = db.progressBoardDao.getAllBoardItems()
     )
 
@@ -69,6 +70,7 @@ internal class RoomBackupDataStore(
         db.withTransaction {
             db.todoInstanceDao.deleteAllInstances()
             db.eventExceptionDao.deleteAll()
+            db.eventOccurrenceColorDao.deleteAll()
             db.eventInstanceDao.deleteAll()
             db.habitInstanceDao.deleteAllInstances()
             db.progressBoardDao.deleteAll()
@@ -91,6 +93,7 @@ internal class RoomBackupDataStore(
             backup.events.forEach { db.eventDao.upsertEvent(it) }
             backup.eventInstances.forEach { db.eventInstanceDao.upsertEventInstance(it) }
             backup.eventExceptions.forEach { db.eventExceptionDao.upsert(it) }
+            backup.eventOccurrenceColors.forEach { db.eventOccurrenceColorDao.upsert(it) }
             backup.progressBoardItems.forEach { db.progressBoardDao.upsertBoardItem(it) }
         }
 

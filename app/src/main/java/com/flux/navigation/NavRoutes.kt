@@ -13,7 +13,6 @@ import com.flux.data.model.ProgressBoardModel
 import com.flux.data.model.TodoModel
 import com.flux.data.model.WorkspaceModel
 import com.flux.ui.screens.auth.AuthScreen
-import com.flux.ui.screens.events.EventDetails
 import com.flux.ui.screens.events.NewEvent
 import com.flux.ui.screens.habits.HabitDetails
 import com.flux.ui.screens.habits.NewHabit
@@ -54,7 +53,6 @@ sealed class NavRoutes(val route: String) {
     data object NoteDetails : NavRoutes("workspace/note/details") // Notes
     data object HabitDetails : NavRoutes("workspace/habit/details") // Habit detail
     data object NewHabit : NavRoutes("workspace/habit/new") // new habit
-    data object EventDetails : NavRoutes("workspace/event/details") //  event detail
     data object TodoDetail : NavRoutes("workspace/todo/details") // TodoList
     data object NewTodoList : NavRoutes("workspace/todo/newTodo") // TodoList
     data object EditJournal : NavRoutes("workspace/journal/edit") // Journal
@@ -85,6 +83,15 @@ sealed class NavRoutes(val route: String) {
             args.forEach { arg ->
                 append("/${arg}")
             }
+        }
+    }
+
+    companion object {
+        fun eventEditor(event: EventModel, occurrenceDate: Long): String =
+            if (event.recurrence == com.flux.data.model.RecurrenceRule.Once) {
+                NewEvent.withArgs(event.workspaceId, event.id, event.startDateTime)
+            } else {
+                NewEventOccurrence.withArgs(event.workspaceId, event.id, occurrenceDate)
         }
     }
 }
@@ -270,34 +277,37 @@ val SettingsScreens =
 
 val EventScreens =
     mapOf<String, @Composable (navController: NavController, states: States, viewModels: ViewModels, eventId: String, workspaceId: String, instanceDate: Long, eventDate: Long) -> Unit>(
-        NavRoutes.EventDetails.route + "/{workspaceId}" + "/{eventId}" + "/{instanceDate}" to { navController, states, viewModels, eventId, workspaceId, instanceDate, _ ->
-            EventDetails(
-                navController,
-                states.workspaceState.allWorkspaces,
-                workspaceId,
-                states.eventState.allEvent.find { it.id == eventId } ?: EventModel(workspaceId = workspaceId),
-                states.eventState.allEventInstances.find { it.eventId == eventId && it.instanceDate == instanceDate } == null,
-                instanceDate,
-                states.settings,
-                viewModels.eventViewModel::onEvent,
-                viewModels.workspaceViewModel::onEvent
-            )
-        },
         NavRoutes.NewEvent.route + "/{workspaceId}" + "/{eventId}" + "/{eventDate}"  to { navController, states, viewModels, eventId, workspaceId, _, eventDate ->
+            val event = states.eventState.allEvent.find { it.id == eventId }
+                ?: EventModel(workspaceId = workspaceId, startDateTime = eventDate, id = eventId)
             NewEvent(
                 navController,
-                states.eventState.allEvent.find { it.id == eventId } ?: EventModel(workspaceId = workspaceId, startDateTime = eventDate, id = eventId),
+                event,
                 states.settings,
-                viewModels.eventViewModel::onEvent
+                viewModels.eventViewModel::onEvent,
+                workspaces = states.workspaceState.allWorkspaces,
+                allEventInstances = states.eventState.allEventInstances,
+                eventOccurrenceColorArgb = event.colorArgb,
+                onWorkspaceEvents = viewModels.workspaceViewModel::onEvent,
+                settingsViewModel = viewModels.settingsViewModel
             )
         },
         NavRoutes.NewEventOccurrence.route + "/{workspaceId}" + "/{eventId}" + "/{occurrenceDate}" to { navController, states, viewModels, eventId, workspaceId, occurrenceDate, _ ->
+            val event = states.eventState.allEvent.find { it.id == eventId }
+                ?: EventModel(workspaceId = workspaceId, id = eventId)
             NewEvent(
                 navController,
-                states.eventState.allEvent.find { it.id == eventId } ?: EventModel(workspaceId = workspaceId, id = eventId),
+                event,
                 states.settings,
                 viewModels.eventViewModel::onEvent,
-                occurrenceDate
+                occurrenceDate,
+                workspaces = states.workspaceState.allWorkspaces,
+                allEventInstances = states.eventState.allEventInstances,
+                eventOccurrenceColorArgb = states.eventState.eventOccurrenceColors.firstOrNull {
+                    it.eventId == eventId && it.occurrenceDate == occurrenceDate
+                }?.colorArgb ?: event.colorArgb,
+                onWorkspaceEvents = viewModels.workspaceViewModel::onEvent,
+                settingsViewModel = viewModels.settingsViewModel
             )
         }
     )

@@ -576,6 +576,7 @@
     <string name="social_link_removed">社交链接已删除</string>
     <string name="discard_changes">放弃更改？</string>
     <string name="discard_changes_message">您已进行了修改，但尚未添加标题。添加标题以保存，或放弃更改。</string>
+    <string name="unsaved_changes_message">有未保存的更改。要放弃更改并离开吗？</string>
     <string name="discard">放弃</string>
     <string name="keep_editing">继续编辑</string>
     <string name="add_social">添加社交链接</string>

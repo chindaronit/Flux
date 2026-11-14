@@ -571,6 +571,7 @@
     <string name="social_link_removed">Социальная ссылка удалена</string>
     <string name="discard_changes">Отменить изменения?</string>
     <string name="discard_changes_message">Вы внесли изменения, но не добавили заголовок. Добавьте заголовок, чтобы сохранить изменения, или отмените их.</string>
+    <string name="unsaved_changes_message">Есть несохранённые изменения. Отменить их и выйти?</string>
     <string name="discard">Отменить</string>
     <string name="keep_editing">Продолжить редактирование</string>
     <string name="add_social">Добавить социальную ссылку</string>

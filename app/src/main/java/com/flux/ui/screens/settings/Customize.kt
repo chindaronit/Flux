@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.AutoMode
 import androidx.compose.material.icons.filled.Colorize
 import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.rounded.FontDownload
 import androidx.compose.material.icons.rounded.RoundedCorner
 import androidx.compose.material.icons.rounded.ViewCompactAlt
@@ -46,6 +47,8 @@ import com.flux.navigation.NavRoutes
 import com.flux.ui.common.BasicScaffold
 import com.flux.ui.common.FontDialog
 import com.flux.ui.events.SettingEvents
+import com.flux.ui.screens.events.EventColorSelectionDialog
+import com.flux.ui.screens.events.eventColorPresets
 import com.flux.ui.state.Settings
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -57,6 +60,40 @@ fun Customize(
 ) {
     var showRadiusDialog by remember { mutableStateOf(false) }
     var showFontDialog by remember { mutableStateOf(false) }
+    var showCompletedColorDialog by remember { mutableStateOf(false) }
+    var showDefaultEventColorDialog by remember { mutableStateOf(false) }
+
+    if (showCompletedColorDialog) {
+        EventColorSelectionDialog(
+            selectedColorArgb = settings.data.completedEventColorArgb,
+            titleRes = R.string.completed_event_color_title,
+            onColorSelected = { colorArgb ->
+                onSettingsEvents(
+                    SettingEvents.UpdateSettings(
+                        settings.data.copy(completedEventColorArgb = colorArgb)
+                    )
+                )
+                showCompletedColorDialog = false
+            },
+            onDismiss = { showCompletedColorDialog = false }
+        )
+    }
+
+    if (showDefaultEventColorDialog) {
+        EventColorSelectionDialog(
+            selectedColorArgb = settings.data.defaultNewEventColorArgb,
+            titleRes = R.string.default_new_event_color_title,
+            onColorSelected = { colorArgb ->
+                onSettingsEvents(
+                    SettingEvents.UpdateSettings(
+                        settings.data.copy(defaultNewEventColorArgb = colorArgb)
+                    )
+                )
+                showDefaultEventColorDialog = false
+            },
+            onDismiss = { showDefaultEventColorDialog = false }
+        )
+    }
 
     if (showFontDialog){
         FontDialog(settings.data.fontNumber, onSelectFont = {
@@ -125,6 +162,36 @@ fun Customize(
                         },
                     )
                 }
+            }
+
+            item {
+                Spacer(Modifier.height(12.dp))
+                val defaultEventColorLabel = eventColorPresets
+                    .firstOrNull { it.argb == settings.data.defaultNewEventColorArgb }
+                    ?.label ?: R.string.event_color_default
+                SettingOption(
+                    title = stringResource(R.string.default_new_event_color_title),
+                    description = "${stringResource(R.string.default_new_event_color_description)} • ${stringResource(defaultEventColorLabel)}",
+                    icon = Icons.Default.Palette,
+                    radius = shapeManager(radius = settings.data.cornerRadius, isBoth = true),
+                    actionType = ActionType.CUSTOM,
+                    onCustomClick = { showDefaultEventColorDialog = true }
+                )
+            }
+
+            item {
+                Spacer(Modifier.height(12.dp))
+                val completedColorLabel = eventColorPresets
+                    .firstOrNull { it.argb == settings.data.completedEventColorArgb }
+                    ?.label ?: R.string.event_color_default
+                SettingOption(
+                    title = stringResource(R.string.completed_event_color_title),
+                    description = "${stringResource(R.string.completed_event_color_description)} • ${stringResource(completedColorLabel)}",
+                    icon = Icons.Default.Palette,
+                    radius = shapeManager(radius = settings.data.cornerRadius, isBoth = true),
+                    actionType = ActionType.CUSTOM,
+                    onCustomClick = { showCompletedColorDialog = true }
+                )
             }
 
             item {

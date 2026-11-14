@@ -564,6 +564,7 @@
     <string name="social_link_removed">Social-Link entfernt</string>
     <string name="discard_changes">Änderungen verwerfen?</string>
     <string name="discard_changes_message">Du hast Änderungen vorgenommen, aber keinen Titel hinzugefügt. Füge einen Titel hinzu, um zu speichern, oder verwerfe die Änderungen.</string>
+    <string name="unsaved_changes_message">Du hast ungespeicherte Änderungen. Möchtest du sie verwerfen und die Seite verlassen?</string>
     <string name="discard">Verwerfen</string>
     <string name="keep_editing">Weiter bearbeiten</string>
     <string name="add_social">Sozialen Link hinzufügen</string>

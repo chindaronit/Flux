@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.webkit.WebView
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -45,7 +46,6 @@ import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -72,6 +72,7 @@ import com.flux.other.ensureStorageRoot
 import com.flux.other.printPdf
 import com.flux.other.shareJournal
 import com.flux.ui.common.DeleteAlert
+import com.flux.ui.common.DiscardChangesDialog
 import com.flux.ui.common.JournalDetailsTopBar
 import com.flux.ui.common.convertMillisToDate
 import com.flux.ui.common.convertMillisToTime
@@ -95,9 +96,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.core.net.toUri
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.flux.R
 import com.flux.data.model.LabelModel
 import com.flux.data.model.NotesModel
@@ -160,6 +158,7 @@ fun EditJournal(
     var isToday by remember { mutableStateOf(LocalDate.now() == Instant.ofEpochMilli(journal.dateTime).atZone(ZoneId.systemDefault()).toLocalDate()) }
     var journalDate by rememberSaveable(journal.journalId) { mutableLongStateOf(journal.dateTime) }
     val contentState = rememberSaveable(saver = textFieldStateSaver) { TextFieldState(journal.text) }
+    var savedJournal by remember(journal.journalId) { mutableStateOf(journal) }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState()
@@ -170,6 +169,7 @@ fun EditJournal(
         pageCount = { 2 }
     )
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showDiscardDialog by remember { mutableStateOf(false) }
     var showShareDialog by remember { mutableStateOf(false) }
     var showSaveDialog by remember { mutableStateOf(false) }
     var showOutlineSheet by remember { mutableStateOf(false) }
@@ -200,6 +200,7 @@ fun EditJournal(
     val contentCopiedString = stringResource(R.string.content_copied)
     val contentMovedString = stringResource(R.string.content_moved)
     val successString = stringResource(R.string.success)
+    val unsavedChangesMessage = stringResource(R.string.unsaved_changes_message)
     val socialCategoryList = getSocialCategory()
     val socialLinksSaver = Saver<SnapshotStateList<SocialModel>, String>(
         save = { Json.encodeToString(it.toList()) },
@@ -298,40 +299,51 @@ fun EditJournal(
     val currentLabels by rememberUpdatedState(currentLabelIds.toList())
     val currentSocialLinks by rememberUpdatedState(socialLinks.toList())
 
-    fun onSaveJournal() {
-        val newText = contentState.text.toString()
-        val hasChanged = newText != currentJournal.text
+    val hasUnsavedChanges =
+        contentState.text.toString() != savedJournal.text ||
+            currentLabelIds.toList() != savedJournal.labels ||
+            journalDate != savedJournal.dateTime ||
+            socialLinks.toList() != savedJournal.socialLinks
 
-        if (!hasChanged &&
-            currentLabels == currentJournal.labels &&
-            currentJournalDate == currentJournal.dateTime &&
-            currentSocialLinks == currentJournal.socialLinks
+    fun saveJournalChanges() {
+        val newText = contentState.text.toString()
+        if (newText == savedJournal.text &&
+            currentLabels == savedJournal.labels &&
+            currentJournalDate == savedJournal.dateTime &&
+            currentSocialLinks == savedJournal.socialLinks
         ) return
 
         if (currentJournal.dateTime == 0L || currentJournalDate == 0L) return // guard from bug #1
 
-        onJournalEvents(
-            JournalEvents.UpsertEntry(
-                currentJournal.copy(
-                    text = newText,
-                    dateTime = currentJournalDate,
-                    labels = currentLabels,
-                    socialLinks = currentSocialLinks
-                )
-            )
+        val saved = currentJournal.copy(
+            text = newText,
+            dateTime = currentJournalDate,
+            labels = currentLabels,
+            socialLinks = currentSocialLinks
         )
+        onJournalEvents(JournalEvents.UpsertEntry(saved))
+        savedJournal = saved
     }
 
-    val lifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_STOP) { onSaveJournal() }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
+    LaunchedEffect(
+        contentState.text,
+        currentLabelIds.toList(),
+        journalDate,
+        socialLinks.toList()
+    ) {
+        if (hasUnsavedChanges) {
+            saveJournalChanges()
         }
     }
+
+    fun requestBack() {
+        if (hasUnsavedChanges) {
+            showDiscardDialog = true
+        } else {
+            navController.popBackStack()
+        }
+    }
+    BackHandler(enabled = !showDiscardDialog) { requestBack() }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -341,7 +353,7 @@ fun EditJournal(
             JournalDetailsTopBar(
                 isReadView = isReadView,
                 isSearching= isSearching,
-                onBackPressed = { navController.popBackStack() },
+                onBackPressed = { requestBack() },
                 onOutlineClicked = {
                     onJournalEvents(JournalEvents.CalculateOutline(contentState.text.toString()))
                     showOutlineSheet=true },
@@ -559,6 +571,17 @@ fun EditJournal(
                 }
             }
         }
+    }
+
+    if (showDiscardDialog) {
+        DiscardChangesDialog(
+            onDiscard = {
+                showDiscardDialog = false
+                navController.popBackStack()
+            },
+            onDismiss = { showDiscardDialog = false },
+            message = unsavedChangesMessage
+        )
     }
 
     OutlineBottomSheet(showOutlineSheet, outline, sheetState, onHeaderClick = { selectedHeader = it } ) { showOutlineSheet=false }

@@ -571,6 +571,7 @@
     <string name="social_link_removed">सोशल लिंक हटाया गया</string>
     <string name="discard_changes">परिवर्तन हटाएँ?</string>
     <string name="discard_changes_message">आपने परिवर्तन किए हैं लेकिन शीर्षक नहीं जोड़ा है। सहेजने के लिए शीर्षक जोड़ें या परिवर्तन हटा दें।</string>
+    <string name="unsaved_changes_message">आपके बदलाव सहेजे नहीं गए हैं। क्या आप उन्हें छोड़कर बाहर जाना चाहते हैं?</string>
     <string name="discard">हटाएँ</string>
     <string name="keep_editing">संपादन जारी रखें</string>
     <string name="add_social">सोशल लिंक जोड़ें</string>

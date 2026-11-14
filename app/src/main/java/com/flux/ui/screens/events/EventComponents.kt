@@ -34,6 +34,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldColors
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
@@ -46,6 +48,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -167,7 +170,7 @@ fun EventNotificationDialog(
                 ) {
                     Text(stringResource(R.string.Custom))
                     RadioButton(
-                        selected = options.none { it.first == currentMinutes },
+                        selected = options.none { it.first / 60_000L == currentMinutes },
                         onClick = {
                             onCustomClick()
                             onDismissRequest()
@@ -293,16 +296,23 @@ fun EventCard(
     repeat: RecurrenceRule,
     startDateTime: Long,
     occurrenceDate: Long? = null,
+    colorArgb: Int? = null,
+    completedColorArgb: Int? = null,
     onChangeStatus: () -> Unit,
     onClick: () -> Unit,
     onLongPressed: () -> Unit,
 ) {
-    val containerColor =
-        if (isPending) MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)
-        else MaterialTheme.colorScheme.primaryContainer
-    val contentColor =
-        if (isPending) MaterialTheme.colorScheme.onSurface
-        else MaterialTheme.colorScheme.onPrimaryContainer
+    val displayedColorArgb = if (!isPending) completedColorArgb ?: colorArgb else colorArgb
+    val containerColor = displayedColorArgb?.let(::Color) ?: if (isPending) {
+        MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)
+    } else {
+        MaterialTheme.colorScheme.primaryContainer
+    }
+    val contentColor = displayedColorArgb?.let(::eventTextColor) ?: if (isPending) {
+        MaterialTheme.colorScheme.onSurface
+    } else {
+        MaterialTheme.colorScheme.onPrimaryContainer
+    }
 
     val context = LocalContext.current
     val time = startDateTime.toFormattedTime(is24HourFormat)
@@ -329,6 +339,8 @@ fun EventCard(
         Row(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
             IconRadioButton(
                 selected = !isPending,
+                uncheckedTint = contentColor,
+                checkedTint = contentColor,
                 onClick = onChangeStatus
             )
             Column(
@@ -835,3 +847,95 @@ fun rememberIcsImportLauncher(
         onImported(imported)
     }
 }
+
+@Composable
+fun formatOnce(selectedDateTime: Long): String {
+    val fullDate = Instant.ofEpochMilli(selectedDateTime)
+        .atZone(ZoneId.systemDefault())
+        .toLocalDate()
+        .format(DateTimeFormatter.ofPattern("dd MMM yyyy"))
+    return stringResource(R.string.recurrence_once, fullDate)
+}
+
+@Composable
+fun formatCustom(rule: RecurrenceRule.Custom): String =
+    stringResource(R.string.recurrence_every_x_days, rule.everyXDays)
+
+@Composable
+fun intervalRecurrenceText(rule: RecurrenceRule.Interval): String {
+    val resource = when (rule.unit) {
+        IntervalUnit.DAY -> R.string.recurrence_every_days
+        IntervalUnit.WEEK -> R.string.recurrence_every_weeks
+        IntervalUnit.MONTH -> R.string.recurrence_every_months
+        IntervalUnit.YEAR -> R.string.recurrence_every_years
+    }
+    val intervalText = stringResource(resource, rule.every)
+
+    return if (rule.unit == IntervalUnit.WEEK && rule.daysOfWeek.isNotEmpty()) {
+        val weekdays = listOf(
+            stringResource(R.string.monday_short),
+            stringResource(R.string.tuesday_short),
+            stringResource(R.string.wednesday_short),
+            stringResource(R.string.thursday_short),
+            stringResource(R.string.friday_short),
+            stringResource(R.string.saturday_short),
+            stringResource(R.string.sunday_short)
+        )
+        "$intervalText on ${rule.daysOfWeek.sorted().joinToString(", ") { weekdays[it] }}"
+    } else {
+        intervalText
+    }
+}
+
+@Composable
+fun formatMonthly(selectedDateTime: Long): String {
+    val dayOfMonth = Instant.ofEpochMilli(selectedDateTime)
+        .atZone(ZoneId.systemDefault())
+        .dayOfMonth
+    return stringResource(R.string.recurrence_monthly_on, dayOfMonth)
+}
+
+@Composable
+fun formatYearly(selectedDateTime: Long): String {
+    val date = Instant.ofEpochMilli(selectedDateTime)
+        .atZone(ZoneId.systemDefault())
+        .toLocalDate()
+        .format(DateTimeFormatter.ofPattern("dd MMM"))
+    return stringResource(R.string.recurrence_yearly_on, date)
+}
+
+@Composable
+fun getNotificationText(offsetMillis: Long): String {
+    val locale = LocalConfiguration.current.locales[0]
+    val isEnglish = locale.language == "en"
+
+    return when (offsetMillis) {
+        0L -> stringResource(R.string.On_Time)
+        5 * 60 * 1000L -> stringResource(R.string.five_minutes_before)
+        30 * 60 * 1000L -> stringResource(R.string.thirty_minutes_before)
+        else -> {
+            val totalMinutes = offsetMillis / (60 * 1000)
+            val days = totalMinutes / (24 * 60)
+            val hours = (totalMinutes % (24 * 60)) / 60
+            val minutes = totalMinutes % 60
+
+            buildString {
+                if (days > 0) append("$days ${stringResource(R.string.day)}${if (isEnglish && days > 1) "s" else ""} ")
+                if (hours > 0) append("$hours ${stringResource(R.string.hour)}${if (isEnglish && hours > 1) "s" else ""} ")
+                if (minutes > 0) append("$minutes ${stringResource(R.string.minute)}${if (isEnglish && minutes > 1) "s" else ""} ")
+                append(stringResource(R.string.before))
+            }.trim()
+        }
+    }
+}
+
+@Composable
+fun getTextFieldColors(): TextFieldColors =
+    TextFieldDefaults.colors(
+        focusedIndicatorColor = Color.Transparent,
+        unfocusedIndicatorColor = Color.Transparent,
+        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp),
+        focusedContainerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp),
+        focusedTextColor = MaterialTheme.colorScheme.primary,
+        focusedPlaceholderColor = MaterialTheme.colorScheme.primary
+    )

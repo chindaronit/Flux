@@ -5,13 +5,16 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -21,13 +24,16 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Timelapse
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBarDefaults
@@ -91,6 +97,8 @@ fun NewProgressItem(
     val startDateString = stringResource(R.string.start_date_after_target_error)
     val targetDateString = stringResource(R.string.target_date_before_start_error)
     var showDiscardDialog by remember { mutableStateOf(false) }
+    var discardMessage by remember { mutableStateOf<String?>(null) }
+    val unsavedChangesMessage = stringResource(R.string.unsaved_changes_message)
     var showDeleteDialog by remember { mutableStateOf(false) }
     val isNew = boardItem.title.isEmpty()
     val topBarTitle = if (isNew) {
@@ -117,6 +125,7 @@ fun NewProgressItem(
         if (!hasContent) { return true }
 
         if (title.isBlank()) {
+            discardMessage = null
             showDiscardDialog = true
             return false
         }
@@ -125,7 +134,23 @@ fun NewProgressItem(
         return true
     }
 
-    BackHandler { if (saveIfPossible()) { navController.popBackStack() } }
+    fun requestBack() {
+        val candidate = originalItem.copy(
+            title = title,
+            description = description,
+            startDate = startDate,
+            endDate = endDate,
+            icon = newIcon,
+            status = selectedStatus
+        )
+        if (candidate != originalItem) {
+            discardMessage = unsavedChangesMessage
+            showDiscardDialog = true
+        } else {
+            navController.popBackStack()
+        }
+    }
+    BackHandler(enabled = !showDiscardDialog) { requestBack() }
 
     if(showDeleteDialog){
         DeleteAlert({
@@ -144,7 +169,7 @@ fun NewProgressItem(
                 colors = TopAppBarDefaults.topAppBarColors(MaterialTheme.colorScheme.surfaceContainerLow),
                 title = { Text(topBarTitle) },
                 navigationIcon = {
-                    IconButton({ if (saveIfPossible()) { navController.popBackStack() } }) {
+                    IconButton({ requestBack() }) {
                         Icon(Icons.AutoMirrored.Default.ArrowBack, null)
                     }
                 },
@@ -155,6 +180,32 @@ fun NewProgressItem(
                 }
             )
         },
+        bottomBar = {
+            Surface(
+                modifier = Modifier
+                    .navigationBarsPadding()
+                    .imePadding(),
+                color = MaterialTheme.colorScheme.surfaceContainerLow,
+                shadowElevation = 8.dp
+            ) {
+                Button(
+                    onClick = {
+                        if (saveIfPossible()) navController.popBackStack()
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    contentPadding = PaddingValues(vertical = 16.dp)
+                ) {
+                    Icon(Icons.Default.Check, contentDescription = null)
+                    Text(
+                        stringResource(R.string.save),
+                        modifier = Modifier.padding(start = 8.dp),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+            }
+        }
     ) { innerPadding ->
         Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(innerPadding)) {
             IconButton(
@@ -304,11 +355,16 @@ fun NewProgressItem(
     }
 
     if (showDiscardDialog) {
-        DiscardChangesDialog({
-            showDiscardDialog = false
-            navController.popBackStack()
-        }) {
-            showDiscardDialog=false
-        }
+        DiscardChangesDialog(
+            onDiscard = {
+                showDiscardDialog = false
+                navController.popBackStack()
+            },
+            onDismiss = {
+                showDiscardDialog=false
+                discardMessage = null
+            },
+            message = discardMessage
+        )
     }
 }

@@ -2,6 +2,7 @@ package com.flux.data.repository
 
 import com.flux.data.model.EventInstanceModel
 import com.flux.data.model.EventExceptionModel
+import com.flux.data.model.EventOccurrenceColorModel
 import com.flux.data.model.EventModel
 import kotlinx.coroutines.flow.Flow
 
@@ -18,4 +19,8 @@ interface EventRepository {
     fun loadEventData(): Flow<List<EventModel>>
     fun loadEventInstanceData(): Flow<List<EventInstanceModel>>
     fun loadEventExceptionData(): Flow<List<EventExceptionModel>>
+    fun loadEventOccurrenceColorData(): Flow<List<EventOccurrenceColorModel>>
+    suspend fun upsertEventOccurrenceColor(color: EventOccurrenceColorModel)
+    suspend fun deleteEventOccurrenceColor(eventId: String, occurrenceDate: Long)
+    suspend fun setEventColorForSeries(event: EventModel)
 }

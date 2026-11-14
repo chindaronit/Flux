@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -22,6 +24,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AcUnit
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AlarmAdd
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.NotificationsActive
@@ -34,6 +37,7 @@ import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.StopCircle
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalIconButton
@@ -44,6 +48,7 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBarDefaults
@@ -107,6 +112,8 @@ fun NewHabit(
     val focusRequesterDesc = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
     var showDiscardDialog by remember { mutableStateOf(false) }
+    var discardMessage by remember { mutableStateOf<String?>(null) }
+    val unsavedChangesMessage = stringResource(R.string.unsaved_changes_message)
     val originalHabit = remember { habit }
     val weekdays = listOf(
         stringResource(R.string.monday_short),
@@ -154,6 +161,7 @@ fun NewHabit(
         }
 
         if (newHabitTitle.isBlank()) {
+            discardMessage = null
             showDiscardDialog = true
             return false
         }
@@ -162,11 +170,23 @@ fun NewHabit(
         return true
     }
 
-    BackHandler {
-        if (saveHabitIfPossible()) {
+    fun requestBack() {
+        val hasChanges = originalHabit.copy(
+            title = newHabitTitle,
+            description = newHabitDescription,
+            startDateTime = newHabitTime,
+            endDateTime = habitEndsOn,
+            recurrence = RecurrenceRule.Weekly(selectedDays.toList()),
+            habitConfig = newHabitConfig
+        ) != originalHabit
+        if (hasChanges) {
+            discardMessage = unsavedChangesMessage
+            showDiscardDialog = true
+        } else {
             navController.popBackStack()
         }
     }
+    BackHandler(enabled = !showDiscardDialog) { requestBack() }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
@@ -175,15 +195,37 @@ fun NewHabit(
                 colors = TopAppBarDefaults.topAppBarColors(MaterialTheme.colorScheme.surfaceContainerLow),
                 title = { Text(topBarTitle) },
                 navigationIcon = {
-                    IconButton({
-                        if (saveHabitIfPossible()) {
-                            navController.popBackStack()
-                        }
-                    }) {
+                    IconButton({ requestBack() }) {
                         Icon(Icons.AutoMirrored.Default.ArrowBack, null)
                     }
                 }
             )
+        },
+        bottomBar = {
+            Surface(
+                modifier = Modifier
+                    .navigationBarsPadding()
+                    .imePadding(),
+                color = MaterialTheme.colorScheme.surfaceContainerLow,
+                shadowElevation = 8.dp
+            ) {
+                Button(
+                    onClick = {
+                        if (saveHabitIfPossible()) navController.popBackStack()
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    contentPadding = PaddingValues(vertical = 16.dp),
+                ) {
+                    Icon(Icons.Default.Check, contentDescription = null)
+                    Text(
+                        stringResource(if (isNewHabit) R.string.create else R.string.save),
+                        modifier = Modifier.padding(start = 8.dp),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+            }
         }
     ) { innerPadding ->
         Box(
@@ -431,9 +473,10 @@ fun NewHabit(
         DiscardChangesDialog({
             showDiscardDialog = false
             navController.popBackStack()
-        }) {
+        }, {
             showDiscardDialog=false
-        }
+            discardMessage = null
+        }, message = discardMessage)
     }
 
     if (showDatePicker) {

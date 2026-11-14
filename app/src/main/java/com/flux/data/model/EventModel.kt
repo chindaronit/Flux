@@ -21,8 +21,16 @@ data class EventModel(
     val startDateTime: Long = System.currentTimeMillis(),
     val endDateTime: Long = -1L,
     val notificationOffset: Long = 0L,
-    val workspaceId: String = ""
+    // Null means this event predates multiple reminders and should use notificationOffset.
+    // An empty list explicitly means that no reminders are configured.
+    val notificationOffsets: List<Long>? = null,
+    val workspaceId: String = "",
+    val colorArgb: Int? = null,
+    val attachments: List<String> = emptyList()
 )
+
+fun EventModel.effectiveReminderOffsets(): List<Long> =
+    (notificationOffsets ?: listOf(notificationOffset)).distinct()
 
 @Serializable
 @Entity(primaryKeys = ["eventId", "instanceDate"])
@@ -38,6 +46,15 @@ data class EventExceptionModel(
     val eventId: String,
     val occurrenceDate: Long,
     val workspaceId: String
+)
+
+@Serializable
+@Entity(primaryKeys = ["eventId", "occurrenceDate"])
+data class EventOccurrenceColorModel(
+    val eventId: String,
+    val workspaceId: String,
+    val occurrenceDate: Long,
+    val colorArgb: Int
 )
 
 data class EventOccurrence(

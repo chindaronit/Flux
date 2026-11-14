@@ -17,7 +17,9 @@ data class ScheduleRequest(
     val endDateTime: Long,
     val notificationOffset: Long,
     val workspaceId: String,
-    val habitConfig: HabitConfig? = null
+    val habitConfig: HabitConfig? = null,
+    val notificationOffsets: List<Long>? = null,
+    val activeReminderOffset: Long? = null
 ) {
     companion object {
         fun fromIntent(intent: Intent): ScheduleRequest? {
@@ -37,7 +39,14 @@ data class ScheduleRequest(
                     notificationOffset = intent.getLongExtra("notificationOffset", 0),
                     workspaceId = intent.getStringExtra("workspaceId") ?: "",
                     habitConfig = intent.getStringExtra("habitConfig")
-                        ?.let { Json.decodeFromString<HabitConfig>(it) }
+                        ?.let { Json.decodeFromString<HabitConfig>(it) },
+                    notificationOffsets = intent.getStringExtra("notificationOffsets")
+                        ?.let { Json.decodeFromString<List<Long>>(it) },
+                    activeReminderOffset = if (intent.hasExtra("activeReminderOffset")) {
+                        intent.getLongExtra("activeReminderOffset", 0L)
+                    } else {
+                        null
+                    }
                 )
             } catch (_: Exception) { null }
         }
@@ -66,7 +75,8 @@ fun EventModel.toScheduleRequest() = ScheduleRequest(
     startDateTime = startDateTime,
     endDateTime = endDateTime,
     notificationOffset = notificationOffset,
-    workspaceId = workspaceId
+    workspaceId = workspaceId,
+    notificationOffsets = notificationOffsets
 )
 
 fun TodoModel.toScheduleRequest() = ScheduleRequest(
@@ -93,5 +103,9 @@ fun ScheduleRequest.toIntent(context: Context): Intent {
         putExtra("notificationOffset", notificationOffset)
         putExtra("workspaceId", workspaceId)
         habitConfig?.let { putExtra("habitConfig", Json.encodeToString(it)) }
+        notificationOffsets?.let {
+            putExtra("notificationOffsets", Json.encodeToString(it))
+        }
+        activeReminderOffset?.let { putExtra("activeReminderOffset", it) }
     }
 }

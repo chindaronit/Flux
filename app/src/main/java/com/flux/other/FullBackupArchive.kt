@@ -210,7 +210,7 @@ object FullBackupArchive {
         }
         val manifestBytes = decryptedManifest?.plaintext ?: encryptedManifest
         val backup = json.decodeFromString<FluxBackup>(manifestBytes.toString(Charsets.UTF_8))
-        require(backup.formatVersion in 2..3) {
+        require(backup.formatVersion in 2..4) {
             "Unsupported backup version: ${backup.formatVersion}"
         }
 

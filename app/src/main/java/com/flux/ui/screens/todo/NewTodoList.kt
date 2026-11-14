@@ -1,11 +1,14 @@
 package com.flux.ui.screens.todo
 
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,12 +19,14 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Alarm
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.SubdirectoryArrowRight
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -32,11 +37,11 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -44,7 +49,6 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
@@ -56,15 +60,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.flux.R
 import com.flux.data.model.RecurrenceRule
 import com.flux.data.model.TodoItem
 import com.flux.data.model.TodoModel
 import com.flux.ui.common.DeleteAlert
+import com.flux.ui.common.DiscardChangesDialog
 import com.flux.ui.events.TodoEvents
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
@@ -85,6 +87,8 @@ fun NewTodoList(
     val context = LocalContext.current
     var title by rememberSaveable { mutableStateOf(list.title) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showDiscardDialog by remember { mutableStateOf(false) }
+    val unsavedChangesMessage = stringResource(R.string.unsaved_changes_message)
     val reminderTime = rememberSaveable { mutableLongStateOf(list.startDateTime) }
     val deleteQueue = remember {
         Channel<Pair<Int, TodoItem>>(Channel.UNLIMITED)
@@ -146,8 +150,6 @@ fun NewTodoList(
         }
     }
 
-    val currentList by rememberUpdatedState(list)
-
     fun saveTodoIfPossible(): Boolean {
         val hasContent = title.isNotBlank() || itemList.isNotEmpty()
 
@@ -158,40 +160,45 @@ fun NewTodoList(
             return false
         }
 
-        onTodoEvents(
-            TodoEvents.UpsertList(
-                context,
-                currentList.recurrence is RecurrenceRule.Weekly && recurrence is RecurrenceRule.NONE,
-                currentList.copy(
-                    title = title,
-                    items = itemList.toList(),
-                    workspaceId = workspaceId,
-                    recurrence = recurrence,
-                    startDateTime = reminderTime.longValue
+        val candidate = list.copy(
+            title = title,
+            items = itemList.toList(),
+            workspaceId = workspaceId,
+            recurrence = recurrence,
+            startDateTime = reminderTime.longValue
+        )
+        if (candidate != list) {
+            onTodoEvents(
+                TodoEvents.UpsertList(
+                    context,
+                    list.recurrence is RecurrenceRule.Weekly && recurrence is RecurrenceRule.NONE,
+                    candidate
                 )
             )
-        )
+        }
 
         return true
     }
 
-    val lifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_STOP) {
-                if(saveTodoIfPossible()){
-                    isReordering = false
-                }
-            }
+    fun requestBack() {
+        val hasChanges = list.copy(
+            title = title,
+            items = itemList.toList(),
+            workspaceId = workspaceId,
+            recurrence = recurrence,
+            startDateTime = reminderTime.longValue
+        ) != list
+        if (hasChanges) {
+            showDiscardDialog = true
+        } else {
+            navController.popBackStack()
         }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-        }
+    }
+    BackHandler(enabled = !showDiscardDialog && !showDeleteDialog && !isReminderDialogVisible) {
+        requestBack()
     }
 
     Scaffold(
-        modifier = Modifier.imePadding(),
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         topBar = {
@@ -221,7 +228,7 @@ fun NewTodoList(
                     )
                 },
                 navigationIcon = {
-                    IconButton({ navController.popBackStack() }) {
+                    IconButton({ requestBack() }) {
                         Icon(Icons.AutoMirrored.Default.ArrowBack, null)
                     }
                 },
@@ -237,6 +244,35 @@ fun NewTodoList(
                     }
                 }
             )
+        },
+        bottomBar = {
+            Surface(
+                modifier = Modifier
+                    .navigationBarsPadding()
+                    .imePadding(),
+                color = MaterialTheme.colorScheme.surfaceContainerLow,
+                shadowElevation = 8.dp
+            ) {
+                Button(
+                    onClick = {
+                        if (saveTodoIfPossible()) {
+                            isReordering = false
+                            navController.popBackStack()
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    contentPadding = PaddingValues(vertical = 16.dp)
+                ) {
+                    Icon(Icons.Default.Check, contentDescription = null)
+                    Text(
+                        stringResource(R.string.save),
+                        modifier = Modifier.padding(start = 8.dp),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+            }
         }
     ) { innerPadding ->
         LazyColumn(
@@ -374,6 +410,17 @@ fun NewTodoList(
             recurrence=newRecurrence
             reminderTime.longValue = newReminderTime
         }
+    }
+
+    if (showDiscardDialog) {
+        DiscardChangesDialog(
+            onDiscard = {
+                showDiscardDialog = false
+                navController.popBackStack()
+            },
+            onDismiss = { showDiscardDialog = false },
+            message = unsavedChangesMessage
+        )
     }
 }
 

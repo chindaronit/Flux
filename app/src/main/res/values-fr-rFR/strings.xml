@@ -572,6 +572,7 @@
     <string name="social_link_removed">Lien social supprimé</string>
     <string name="discard_changes">Ignorer les modifications ?</string>
     <string name="discard_changes_message">Vous avez effectué des modifications mais n\'avez pas ajouté de titre. Ajoutez un titre pour enregistrer ou ignorez les modifications.</string>
+    <string name="unsaved_changes_message">Vous avez des modifications non enregistrées. Les ignorer et quitter ?</string>
     <string name="discard">Ignorer</string>
     <string name="keep_editing">Continuer la modification</string>
     <string name="add_social">Ajouter un lien social</string>

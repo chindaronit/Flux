@@ -2,6 +2,7 @@ package com.flux.other
 
 import com.flux.data.model.EventModel
 import com.flux.data.model.RecurrenceRule
+import com.flux.data.model.effectiveReminderOffsets
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -33,6 +34,40 @@ private fun String.escapeIcsText(): String =
 
 private fun String.unescapeIcsText(): String =
     replace("\\n", "\n").replace("\\,", ",").replace("\\;", ";").replace("\\\\", "\\")
+
+private fun Long.toIcsTrigger(): String {
+    var seconds = (this.coerceAtLeast(0L) / 1_000L)
+    if (seconds == 0L) return "PT0S"
+
+    val days = seconds / 86_400
+    seconds %= 86_400
+    val hours = seconds / 3_600
+    seconds %= 3_600
+    val minutes = seconds / 60
+    seconds %= 60
+    return buildString {
+        append("-P")
+        if (days > 0) append("${days}D")
+        if (hours > 0 || minutes > 0 || seconds > 0) {
+            append('T')
+            if (hours > 0) append("${hours}H")
+            if (minutes > 0) append("${minutes}M")
+            if (seconds > 0) append("${seconds}S")
+        }
+    }
+}
+
+private fun parseIcsTriggerOffset(value: String): Long? {
+    val match = Regex("""^(-)?P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$""")
+        .matchEntire(value.trim()) ?: return null
+    // Positive triggers occur after the event and cannot be represented as a reminder offset.
+    if (match.groupValues[1].isEmpty() && value != "PT0S") return null
+    val days = match.groupValues[2].toLongOrNull() ?: 0L
+    val hours = match.groupValues[3].toLongOrNull() ?: 0L
+    val minutes = match.groupValues[4].toLongOrNull() ?: 0L
+    val seconds = match.groupValues[5].toLongOrNull() ?: 0L
+    return (((days * 24 + hours) * 60 + minutes) * 60 + seconds) * 1_000L
+}
 
 /* ---------- RecurrenceRule <-> RRULE ---------- */
 
@@ -166,12 +201,11 @@ object IcsExporter {
             sb.appendLine("RRULE:$rrule")
         }
 
-        if (event.notificationOffset > 0) {
-            val minutes = event.notificationOffset / 60_000
+        event.effectiveReminderOffsets().forEach { offset ->
             sb.appendLine("BEGIN:VALARM")
             sb.appendLine("ACTION:DISPLAY")
             sb.appendLine("DESCRIPTION:${event.title.escapeIcsText()}")
-            sb.appendLine("TRIGGER:-PT${minutes}M")
+            sb.appendLine("TRIGGER:${offset.toIcsTrigger()}")
             sb.appendLine("END:VALARM")
         }
 
@@ -201,6 +235,7 @@ object IcsImporter {
         var dtStart: Long? = null
         var dtEnd: Long? = null
         var rrule: String? = null
+        val notificationOffsets = mutableListOf<Long>()
 
         fun flush() {
             val start = dtStart ?: return
@@ -217,6 +252,8 @@ object IcsImporter {
                 recurrence = recurrence,
                 startDateTime = start,
                 endDateTime = endDateTime,
+                notificationOffset = notificationOffsets.firstOrNull() ?: 0L,
+                notificationOffsets = notificationOffsets.toList(),
                 workspaceId = workspaceId
             )
         }
@@ -229,6 +266,7 @@ object IcsImporter {
                     inAlarm = false
                     uid = null; summary = ""; description = ""
                     dtStart = null; dtEnd = null; rrule = null
+                    notificationOffsets.clear()
                 }
                 line == "END:VEVENT" -> {
                     if (inEvent) flush()
@@ -238,7 +276,11 @@ object IcsImporter {
                 // must NOT be mistaken for the parent VEVENT's properties.
                 line == "BEGIN:VALARM" -> inAlarm = true
                 line == "END:VALARM" -> inAlarm = false
-                !inEvent || inAlarm -> Unit
+                !inEvent -> Unit
+                inAlarm && line.startsWith("TRIGGER") -> {
+                    parseIcsTriggerOffset(valueOf(line))?.let(notificationOffsets::add)
+                }
+                inAlarm -> Unit
                 line.startsWith("UID") -> uid = valueOf(line)
                 line.startsWith("SUMMARY") -> summary = valueOf(line).unescapeIcsText()
                 line.startsWith("DESCRIPTION") -> description = valueOf(line).unescapeIcsText()

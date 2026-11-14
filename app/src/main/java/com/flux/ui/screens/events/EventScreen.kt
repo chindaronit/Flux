@@ -10,6 +10,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,6 +25,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Event
@@ -47,8 +49,11 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.flux.R
@@ -66,7 +71,6 @@ import com.flux.ui.common.SpaceSearchBar
 import com.flux.ui.common.SpaceTopBar
 import com.flux.ui.common.SpacesMenu
 import com.flux.ui.events.TaskEvents
-import com.flux.ui.screens.journal.JournalCardHeader
 import com.flux.ui.screens.journal.TimelineBody
 import com.flux.ui.screens.workspaces.SpacesToolBar
 import com.flux.ui.state.EventState
@@ -302,7 +306,7 @@ fun EventScreen(
                     if (agendaOccurrences.isEmpty()) item { EmptyData() }
                     agendaGroups.forEach { (date, occurrences) ->
                         item(key = "date:$date") {
-                            JournalCardHeader(formatAgendaDate(date))
+                            EventAgendaDateHeader(formatAgendaDate(date))
                         }
                         items(
                             items = occurrences,
@@ -323,18 +327,18 @@ fun EventScreen(
                                         repeat = task.recurrence,
                                         startDateTime = task.startDateTime,
                                         occurrenceDate = occurrence.instanceDate,
+                                        colorArgb = state.eventOccurrenceColors.firstOrNull {
+                                            it.eventId == task.id && it.occurrenceDate == occurrence.instanceDate
+                                        }?.colorArgb ?: task.colorArgb,
+                                        completedColorArgb = settings.data.completedEventColorArgb,
                                         onChangeStatus = {
                                             onEvent(TaskEvents.ToggleStatus(isPending, task.id, workspaceId, occurrence.instanceDate))
                                         },
                                         onClick = {
-                                            navController.navigate(
-                                                NavRoutes.EventDetails.withArgs(workspaceId, task.id, occurrence.instanceDate)
-                                            )
+                                            navController.navigate(NavRoutes.eventEditor(task, occurrence.instanceDate))
                                         },
                                         onLongPressed = {
-                                            navController.navigate(
-                                                NavRoutes.EventDetails.withArgs(workspaceId, task.id, occurrence.instanceDate)
-                                            )
+                                            navController.navigate(NavRoutes.eventEditor(task, occurrence.instanceDate))
                                         }
                                     )
                                     if (occurrence != occurrences.last()) {
@@ -354,4 +358,37 @@ fun formatAgendaDate(date: LocalDate): String {
     val day = date.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())
     val formattedDate = date.format(DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.getDefault()))
     return "$day, $formattedDate"
+}
+
+@Composable
+fun EventAgendaDateHeader(formattedDate: String) {
+    val colors = MaterialTheme.colorScheme
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(colors.secondaryContainer)
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .width(3.dp)
+                .height(18.dp)
+                .clip(RoundedCornerShape(2.dp))
+                .background(colors.primary)
+        )
+        Text(
+            text = formattedDate,
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 10.dp),
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = colors.onSecondaryContainer,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
 }

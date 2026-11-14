@@ -106,6 +106,7 @@ import com.flux.ui.events.TaskEvents
 import com.flux.ui.events.TodoEvents
 import com.flux.ui.events.WorkspaceEvents
 import com.flux.ui.screens.events.EventCard
+import com.flux.ui.screens.events.EventAgendaDateHeader
 import com.flux.ui.screens.events.formatAgendaDate
 import com.flux.ui.screens.habits.HabitPreviewCard
 import com.flux.ui.screens.habits.isDateAllowedForHabit
@@ -456,6 +457,8 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
                                 3 -> searchedEvent(
                                     navController, radius, is24HourFormat, matchingEventOccurrences,
                                     states.eventState.allEventInstances,
+                                    states.eventState.eventOccurrenceColors,
+                                    states.settings.data.completedEventColorArgb,
                                     onEvent = viewModels.eventViewModel::onEvent
                                 )
                                 4 -> searchedJournal(navController, radius, journals, labels)
@@ -621,12 +624,14 @@ fun LazyListScope.searchedEvent(
     is24HourFormat: Boolean,
     occurrences: List<EventOccurrence>,
     instances: List<com.flux.data.model.EventInstanceModel>,
+    occurrenceColors: List<com.flux.data.model.EventOccurrenceColorModel>,
+    completedColorArgb: Int?,
     onEvent: (TaskEvents) -> Unit
 ) {
     if (occurrences.isEmpty()) item { EmptyData() }
     occurrences.groupBy { it.date }.forEach { (date, dateOccurrences) ->
         item(key = "date:$date") {
-            JournalCardHeader(formatAgendaDate(date))
+            EventAgendaDateHeader(formatAgendaDate(date))
         }
         items(dateOccurrences, key = { "${it.event.id}:${it.instanceDate}" }) { occurrence ->
             val event = occurrence.event
@@ -644,6 +649,10 @@ fun LazyListScope.searchedEvent(
                         repeat = event.recurrence,
                         startDateTime = event.startDateTime,
                         occurrenceDate = occurrence.instanceDate,
+                        colorArgb = occurrenceColors.firstOrNull {
+                            it.eventId == event.id && it.occurrenceDate == occurrence.instanceDate
+                        }?.colorArgb ?: event.colorArgb,
+                        completedColorArgb = completedColorArgb,
                         onChangeStatus = {
                             onEvent(
                                 TaskEvents.ToggleStatus(
@@ -655,22 +664,10 @@ fun LazyListScope.searchedEvent(
                             )
                         },
                         onClick = {
-                            navController.navigate(
-                                NavRoutes.EventDetails.withArgs(
-                                    event.workspaceId,
-                                    event.id,
-                                    occurrence.instanceDate
-                                )
-                            )
+                            navController.navigate(NavRoutes.eventEditor(event, occurrence.instanceDate))
                         },
                         onLongPressed = {
-                            navController.navigate(
-                                NavRoutes.EventDetails.withArgs(
-                                    event.workspaceId,
-                                    event.id,
-                                    occurrence.instanceDate
-                                )
-                            )
+                            navController.navigate(NavRoutes.eventEditor(event, occurrence.instanceDate))
                         }
                     )
                     if (occurrence != dateOccurrences.last()) {

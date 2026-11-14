@@ -738,12 +738,13 @@ fun SocialCategoryCard(
 @Composable
 fun DiscardChangesDialog(
     onDiscard: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    message: String? = null
 ){
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.discard_changes)) },
-        text = { Text(stringResource(R.string.discard_changes_message)) },
+        text = { Text(message ?: stringResource(R.string.discard_changes_message)) },
         confirmButton = {
             TextButton(onClick = onDiscard) {
                 Text(stringResource(R.string.discard))

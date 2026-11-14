@@ -76,6 +76,15 @@ class Converter {
     }
 
     @TypeConverter
+    fun fromLongList(value: List<Long>?): String? =
+        value?.joinToString(separator = ",")
+
+    @TypeConverter
+    fun toLongList(value: String?): List<Long>? =
+        value?.takeIf { it.isNotBlank() }?.split(",")?.mapNotNull { it.toLongOrNull() }
+            ?: value?.let { emptyList() }
+
+    @TypeConverter
     fun fromStringList(value: List<String>): String {
         return Gson().toJson(value)
     }

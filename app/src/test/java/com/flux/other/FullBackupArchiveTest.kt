@@ -4,6 +4,7 @@ import com.flux.data.database.FluxBackup
 import com.flux.data.model.EventExceptionModel
 import com.flux.data.model.EventInstanceModel
 import com.flux.data.model.EventModel
+import com.flux.data.model.EventOccurrenceColorModel
 import com.flux.data.model.HabitInstanceModel
 import com.flux.data.model.HabitModel
 import com.flux.data.model.JournalModel
@@ -185,6 +186,14 @@ class FullBackupArchiveTest {
             eventInstances = listOf(EventInstanceModel(eventId = "event")),
             eventExceptions = listOf(
                 EventExceptionModel(eventId = "event", occurrenceDate = 123, workspaceId = "workspace")
+            ),
+            eventOccurrenceColors = listOf(
+                EventOccurrenceColorModel(
+                    eventId = "event",
+                    occurrenceDate = 123,
+                    workspaceId = "workspace",
+                    colorArgb = 0xFFE57373.toInt()
+                )
             ),
             progressBoardItems = listOf(ProgressBoardModel(itemId = "progress", title = "progress title"))
         )

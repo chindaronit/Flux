@@ -11,9 +11,12 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import com.flux.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -95,7 +98,12 @@ fun EditorScaffold(
                 colors = TopAppBarDefaults.topAppBarColors(MaterialTheme.colorScheme.surfaceContainerLow),
                 title = { Text(title) },
                 navigationIcon = { IconButton(onBackPressed) { Icon(Icons.AutoMirrored.Default.ArrowBack, null) } },
-                actions = { IconButton(onDone, enabled = canSave) { Icon(Icons.Default.Done, null) } }
+                actions = {
+                    TextButton(onClick = onDone, enabled = canSave) {
+                        Icon(Icons.Default.Done, contentDescription = null)
+                        Text(stringResource(R.string.save))
+                    }
+                }
             )
         },
         content = content

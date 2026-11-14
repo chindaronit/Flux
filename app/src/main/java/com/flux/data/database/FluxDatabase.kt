@@ -9,6 +9,7 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.flux.data.dao.EventDao
 import com.flux.data.dao.EventExceptionDao
+import com.flux.data.dao.EventOccurrenceColorDao
 import com.flux.data.dao.EventInstanceDao
 import com.flux.data.dao.HabitInstanceDao
 import com.flux.data.dao.HabitsDao
@@ -23,6 +24,7 @@ import com.flux.data.dao.WorkspaceDao
 import com.flux.data.model.Converter
 import com.flux.data.model.EventInstanceModel
 import com.flux.data.model.EventExceptionModel
+import com.flux.data.model.EventOccurrenceColorModel
 import com.flux.data.model.EventModel
 import com.flux.data.model.HabitInstanceModel
 import com.flux.data.model.HabitModel
@@ -41,8 +43,8 @@ import kotlinx.serialization.json.Json
 import java.util.UUID
 
 @Database(
-    entities = [EventModel::class, LabelModel::class, EventInstanceModel::class, EventExceptionModel::class, SettingsModel::class, NotesModel::class, HabitModel::class, HabitInstanceModel::class, WorkspaceModel::class, TodoModel::class, JournalModel::class, ProgressBoardModel::class, TodoInstance::class],
-    version = 15,
+    entities = [EventModel::class, LabelModel::class, EventInstanceModel::class, EventExceptionModel::class, EventOccurrenceColorModel::class, SettingsModel::class, NotesModel::class, HabitModel::class, HabitInstanceModel::class, WorkspaceModel::class, TodoModel::class, JournalModel::class, ProgressBoardModel::class, TodoInstance::class],
+    version = 20,
     exportSchema = false
 )
 @TypeConverters(Converter::class)
@@ -53,6 +55,7 @@ abstract class FluxDatabase : RoomDatabase() {
     abstract val workspaceDao: WorkspaceDao
     abstract val eventInstanceDao: EventInstanceDao
     abstract val eventExceptionDao: EventExceptionDao
+    abstract val eventOccurrenceColorDao: EventOccurrenceColorDao
     abstract val habitDao: HabitsDao
     abstract val habitInstanceDao: HabitInstanceDao
     abstract val journalDao: JournalDao
@@ -614,5 +617,46 @@ val MIGRATION_14_15 = object : Migration(14, 15) {
             )
             """.trimIndent()
         )
+    }
+}
+
+val MIGRATION_15_16 = object : Migration(15, 16) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE EventModel ADD COLUMN colorArgb INTEGER")
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `EventOccurrenceColorModel` (
+                `eventId` TEXT NOT NULL,
+                `workspaceId` TEXT NOT NULL,
+                `occurrenceDate` INTEGER NOT NULL,
+                `colorArgb` INTEGER NOT NULL,
+                PRIMARY KEY(`eventId`, `occurrenceDate`)
+            )
+            """.trimIndent()
+        )
+    }
+}
+
+val MIGRATION_16_17 = object : Migration(16, 17) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE SettingsModel ADD COLUMN completedEventColorArgb INTEGER")
+    }
+}
+
+val MIGRATION_17_18 = object : Migration(17, 18) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE SettingsModel ADD COLUMN defaultNewEventColorArgb INTEGER")
+    }
+}
+
+val MIGRATION_18_19 = object : Migration(18, 19) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE EventModel ADD COLUMN notificationOffsets TEXT DEFAULT NULL")
+    }
+}
+
+val MIGRATION_19_20 = object : Migration(19, 20) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE EventModel ADD COLUMN attachments TEXT NOT NULL DEFAULT '[]'")
     }
 }

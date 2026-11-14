@@ -30,5 +30,7 @@ data class SettingsModel(
     val storageRootUri: String? = null,
     val backupFrequency: Int = 0,
     val notesPreviewMode: Int = 1,
-    val defaultWorkspace: String? = null
+    val defaultWorkspace: String? = null,
+    val completedEventColorArgb: Int? = null,
+    val defaultNewEventColorArgb: Int? = null
 )

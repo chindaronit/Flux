@@ -2,6 +2,7 @@ package com.flux.data.database
 
 import com.flux.data.model.EventInstanceModel
 import com.flux.data.model.EventExceptionModel
+import com.flux.data.model.EventOccurrenceColorModel
 import com.flux.data.model.EventModel
 import com.flux.data.model.HabitInstanceModel
 import com.flux.data.model.HabitModel
@@ -24,7 +25,7 @@ data class BackupMediaFile(
 
 @Serializable
 data class FluxBackup(
-    val formatVersion: Int = 3,
+    val formatVersion: Int = 4,
     val workspaces: List<WorkspaceModel> = emptyList(),
     val workspaceCovers: Map<String, String> = emptyMap(),
     val mediaFiles: List<BackupMediaFile> = emptyList(),
@@ -38,5 +39,6 @@ data class FluxBackup(
     val events: List<EventModel> = emptyList(),
     val eventInstances: List<EventInstanceModel> = emptyList(),
     val eventExceptions: List<EventExceptionModel> = emptyList(),
+    val eventOccurrenceColors: List<EventOccurrenceColorModel> = emptyList(),
     val progressBoardItems: List<ProgressBoardModel> = emptyList()
 )
