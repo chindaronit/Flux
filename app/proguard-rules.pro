@@ -30,7 +30,7 @@
 -keep @kotlinx.serialization.Serializable class * { *; }
 
 # Keep sealed subclasses of RecurrenceRule
--keep class com.flux.data.model.RecurrenceRule** { *; }
+-keep class com.omnipad.data.model.RecurrenceRule** { *; }
 
 # Keep enum constants
 -keepclassmembers enum * {

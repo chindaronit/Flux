@@ -1,0 +1,476 @@
+package com.omnipad.ui.viewModel
+
+import android.content.Context
+import android.graphics.Bitmap
+import android.webkit.WebView
+import android.widget.Toast
+import androidx.compose.ui.util.fastJoinToString
+import androidx.documentfile.provider.DocumentFile
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.omnipad.data.model.NotesModel
+import com.omnipad.data.repository.NoteRepository
+import com.omnipad.data.repository.SettingsRepository
+import com.omnipad.other.Constants
+import com.omnipad.other.copyDocumentAttachment
+import com.omnipad.other.ExportType
+import com.omnipad.other.HeaderNode
+import com.omnipad.other.PARSER
+import com.omnipad.other.convertHtmlToBitmap
+import com.omnipad.other.getFileExtension
+import com.omnipad.other.getFileName
+import com.omnipad.other.getOrCreateDirectory
+import com.omnipad.other.hasFileWithName
+import com.omnipad.ui.events.NotesEvents
+import com.omnipad.ui.screens.notes.add
+import com.omnipad.ui.state.NotesState
+import com.omnipad.ui.state.TextState
+import com.yangdai.opennote.presentation.util.extension.highlight.HighlightExtension
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
+import org.commonmark.Extension
+import org.commonmark.ext.autolink.AutolinkExtension
+import org.commonmark.ext.footnotes.FootnotesExtension
+import org.commonmark.ext.front.matter.YamlFrontMatterExtension
+import org.commonmark.ext.gfm.strikethrough.StrikethroughExtension
+import org.commonmark.ext.gfm.tables.TablesExtension
+import org.commonmark.ext.heading.anchor.HeadingAnchorExtension
+import org.commonmark.ext.image.attributes.ImageAttributesExtension
+import org.commonmark.ext.ins.InsExtension
+import org.commonmark.ext.task.list.items.TaskListItemsExtension
+import org.commonmark.node.AbstractVisitor
+import org.commonmark.node.Heading
+import org.commonmark.parser.Parser
+import org.commonmark.renderer.html.HtmlRenderer
+import java.io.OutputStreamWriter
+import javax.inject.Inject
+import kotlin.collections.forEachIndexed
+
+@OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
+@HiltViewModel
+class NotesViewModel @Inject constructor(
+    val repository: NoteRepository,
+    private val settingsRepository: SettingsRepository
+) : ViewModel() {
+
+    private val mutex = Mutex()
+    private val _state: MutableStateFlow<NotesState> = MutableStateFlow(NotesState())
+    val state: StateFlow<NotesState> = _state.asStateFlow()
+
+    // Markdown
+    private var extensions: List<Extension> = listOf(
+        TablesExtension.create(),
+        AutolinkExtension.create(),
+        FootnotesExtension.create(),
+        HighlightExtension.create(),
+        HeadingAnchorExtension.create(),
+        InsExtension.create(),
+        ImageAttributesExtension.create(),
+        StrikethroughExtension.create(),
+        TaskListItemsExtension.create(),
+        YamlFrontMatterExtension.create()
+    )
+
+    private var parser: Parser = Parser.builder().extensions(extensions).build()
+    private var renderer: HtmlRenderer = HtmlRenderer.builder().extensions(extensions).softbreak("<br>\n").build()
+    private var lastOutlineContentHash: Int? = null
+
+    fun renderMarkdown(markdown: String): String {
+        return renderer.render(parser.parse(markdown))
+    }
+
+    fun onEvent(event: NotesEvents) {
+        viewModelScope.launch { reduce(event = event) }
+    }
+
+    private suspend fun updateState(reducer: (NotesState) -> NotesState) {
+        mutex.withLock { _state.value = reducer(_state.value) }
+    }
+
+    init {
+        viewModelScope.launch {
+            repository.loadNotesData()
+                .collect { notes ->
+                    updateState { it.copy(isLoading = false, allNotes = notes) }
+                }
+        }
+    }
+
+    private suspend fun reduce(event: NotesEvents) {
+        when (event) {
+            is NotesEvents.UpsertNote -> updateNotes(event.data)
+            is NotesEvents.DeleteNotes -> deleteNotes(event.data)
+            is NotesEvents.TogglePinMultiple -> togglePinMultiple(event.data)
+            is NotesEvents.DeleteNote -> deleteNote(event.data)
+            is NotesEvents.DeleteAllWorkspaceNotes -> deleteWorkspaceNotes(event.workspaceId)
+            is NotesEvents.ClearSelection -> { updateState { it.copy(selectedNotes = emptyList()) } }
+            is NotesEvents.SelectNotes -> { updateState { it.copy(selectedNotes = it.selectedNotes.plus(event.noteId)) } }
+            is NotesEvents.UnSelectNotes -> { updateState { it.copy(selectedNotes = it.selectedNotes.minus(event.noteId)) } }
+            is NotesEvents.SelectAllNotes -> { updateState { it.copy(selectedNotes = it.allNotes.map { note -> note.notesId }) } }
+
+            is NotesEvents.ImportDocument -> {
+                viewModelScope.launch(Dispatchers.IO) {
+                    try {
+                        val rootUri = settingsRepository.getStorageRoot()
+                        val attachment = copyDocumentAttachment(event.context, rootUri, event.uri)
+                        withContext(Dispatchers.Main) {
+                            event.onImported(attachment.markdown)
+                        }
+                    } catch (exception: CancellationException) {
+                        throw exception
+                    } catch (exception: Exception) {
+                        withContext(Dispatchers.Main) {
+                            event.onFailure(exception.localizedMessage ?: "Could not attach the selected document")
+                        }
+                    }
+                }
+            }
+
+            is NotesEvents.ImportImages -> {
+                val context = event.context
+                val contentResolver = context.contentResolver
+                val uriList = event.uriList
+                val contentState = event.contentState
+
+                viewModelScope.launch(Dispatchers.IO) {
+                    val rootUri = settingsRepository.getStorageRoot()
+                    val baseDir = getOrCreateDirectory(context, rootUri, Constants.File.OMNIPAD)
+                    val imagesDir = baseDir?.let { dir -> getOrCreateDirectory(context, dir.uri, Constants.File.OMNIPAD_IMAGES) }
+                    val savedUriList = mutableListOf<String>()
+                    imagesDir?.let { dir ->
+                        uriList.forEachIndexed { _, uri ->
+
+                            val timestamp = System.currentTimeMillis()
+                            val name = getFileName(context, uri)
+                            val fileName = "${name?.substringBeforeLast(".")}_${timestamp}.${name?.substringAfterLast(".")}"
+
+                            try {
+                                contentResolver.openInputStream(uri)?.use { input ->
+                                    val mimeType = contentResolver.getType(uri) ?: "image/*"
+                                    val newFile = dir.createFile(mimeType, fileName)
+
+                                    newFile?.let { file ->
+                                        contentResolver.openOutputStream(file.uri)?.use { output -> input.copyTo(output) }
+                                        savedUriList.add("![](${fileName})")
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
+                        }
+                    }
+
+                    withContext(Dispatchers.Main) {
+                        contentState.edit { add(savedUriList.fastJoinToString(separator = "\n")) }
+                    }
+                }
+            }
+
+            is NotesEvents.ImportVideo -> {
+                val context = event.context
+                val uri = event.uri
+                val contentState = event.contentState
+
+                viewModelScope.launch(Dispatchers.IO) {
+                    val rootUri = settingsRepository.getStorageRoot()
+                    val baseDir = getOrCreateDirectory(context, rootUri, Constants.File.OMNIPAD)
+                    val videosDir = baseDir?.let { dir -> getOrCreateDirectory(context, dir.uri, Constants.File.OMNIPAD_VIDEOS) }
+
+                    videosDir?.let { dir ->
+                        val name = getFileName(context, uri)
+                        val fileName =
+                            "${name?.substringBeforeLast(".")}_${System.currentTimeMillis()}.${
+                                name?.substringAfterLast(".")
+                            }"
+                        val newFile = dir.createFile("video/*", fileName)
+                        newFile?.let { file ->
+                            context.contentResolver.openInputStream(uri)?.use { input ->
+                                context.contentResolver.openOutputStream(file.uri)?.use { output ->
+                                    input.copyTo(output)
+                                    withContext(Dispatchers.Main) {
+                                        contentState.edit { add("<video src=\"$fileName\" controls></video>") }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            is NotesEvents.ImportAudio -> {
+                val context = event.context
+                val sourceUri = event.sourceUri
+                val contentState = event.contentState
+
+                viewModelScope.launch(Dispatchers.IO) {
+                    val rootUri = settingsRepository.getStorageRoot()
+                    val baseDir =
+                        getOrCreateDirectory(context, rootUri, Constants.File.OMNIPAD)
+                    val audioDir = baseDir?.let { dir ->
+                        getOrCreateDirectory(context, dir.uri, Constants.File.OMNIPAD_AUDIO)
+                    }
+
+                    audioDir?.let { dir ->
+                        val sourceFile = DocumentFile.fromSingleUri(context, sourceUri)
+                        val sourceFileName = sourceFile?.name
+
+                        if (sourceFileName != null && hasFileWithName(dir, sourceFileName)) {
+                            contentState.edit { add("<audio src=\"$sourceFileName\" controls></audio>") }
+                            return@launch
+                        }
+
+                        val extension = getFileExtension(context, sourceUri)
+                        val fileName = "audio_${System.currentTimeMillis()}.$extension"
+                        val mimeType = sourceFile?.type ?: "audio/*"
+
+                        dir.createFile(mimeType, fileName)?.let { newFile ->
+                            context.contentResolver.openInputStream(sourceUri)?.use { input ->
+                                context.contentResolver.openOutputStream(newFile.uri)
+                                    ?.use { output ->
+                                        input.copyTo(output)
+                                    }
+                            }
+                            contentState.edit { add("<audio src=\"$fileName\" controls></audio>") }
+                        }
+                    }
+                }
+            }
+
+            is NotesEvents.ExportNote -> {
+                viewModelScope.launch(Dispatchers.IO) {
+                    val success = exportNoteToStorage(
+                        context = event.context,
+                        noteTitle = event.noteTitle,
+                        noteDescription = event.noteDescription,
+                        type = event.type,
+                        webView = event.webView
+                    )
+
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            event.context,
+                            if (success) {
+                                "Note exported successfully"
+                            } else {
+                                "Failed to export note"
+                            },
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            }
+
+            is NotesEvents.CalculateOutline -> {
+                val hash = event.content.hashCode()
+                if (hash == lastOutlineContentHash) return
+
+                viewModelScope.launch(Dispatchers.IO) {
+                    val outline = buildOutline(event.content)
+                    lastOutlineContentHash = hash
+                    updateState { it.copy(outline = outline) }
+                }
+            }
+
+            is NotesEvents.CalculateTextState -> {
+                viewModelScope.launch(Dispatchers.IO) {
+                    updateState { it.copy(textState = TextState.fromText(event.content)) }
+                }
+            }
+
+            is NotesEvents.UpdateOrder -> updateNotesOrder(event.notesIds)
+        }
+    }
+
+    fun buildOutline(markdown: CharSequence): HeaderNode {
+        val document = PARSER.parse(markdown.toString())
+        val root = HeaderNode("", 0, IntRange.EMPTY)
+        val headerStack = mutableListOf(root)
+
+        document.accept(object : AbstractVisitor() {
+            override fun visit(heading: Heading) {
+                val span = heading.sourceSpans.firstOrNull() ?: return
+                val range = span.inputIndex until (span.inputIndex + span.length)
+
+                val title = markdown
+                    .substring(range)
+                    .trimStart('#')
+                    .trim()
+
+                val node = HeaderNode(title, heading.level, range)
+
+                while (headerStack.last().level >= heading.level) {
+                    headerStack.removeAt(headerStack.lastIndex)
+                }
+
+                headerStack.last().children.add(node)
+                headerStack.add(node)
+            }
+        })
+
+        return root
+    }
+
+    private suspend fun exportNoteToStorage(
+        context: Context,
+        noteTitle: String,
+        noteDescription: String,
+        type: ExportType,
+        webView: WebView?
+    ): Boolean {
+        val rootUri = settingsRepository.getStorageRoot()
+
+        val dir = getOrCreateDirectory(
+            context,
+            rootUri,
+            Constants.File.OMNIPAD
+        ) ?: return false
+
+        return when (type) {
+            ExportType.TXT,
+            ExportType.MARKDOWN,
+            ExportType.HTML -> {
+                exportAsText(
+                    dir = dir,
+                    context = context,
+                    noteTitle = noteTitle,
+                    noteDescription = noteDescription,
+                    type = type
+                )
+            }
+
+            ExportType.IMAGE -> {
+                val view = webView ?: return false
+
+                exportAsImage(
+                    dir = dir,
+                    context = context,
+                    webView = view,
+                    noteTitle = noteTitle
+                )
+            }
+
+            ExportType.PDF -> {
+                false
+            }
+        }
+    }
+
+    private fun exportAsText(
+        dir: DocumentFile,
+        context: Context,
+        noteTitle: String,
+        noteDescription: String,
+        type: ExportType
+    ): Boolean {
+        val (mime, extension, content) = when (type) {
+            ExportType.TXT ->
+                Triple("text/plain", ".txt", noteDescription)
+
+            ExportType.MARKDOWN ->
+                Triple("text/markdown", ".md", noteDescription)
+
+            ExportType.HTML ->
+                Triple("text/html", ".html", renderMarkdown(noteDescription))
+
+            else -> return false
+        }
+
+        val file = dir.createFile(
+            mime,
+            noteTitle.trim() + extension
+        ) ?: return false
+
+        return try {
+            context.contentResolver
+                .openOutputStream(file.uri)
+                ?.use { stream ->
+                    OutputStreamWriter(stream).use {
+                        it.write(content)
+                    }
+                } ?: return false
+
+            true
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    private fun exportAsImage(
+        dir: DocumentFile,
+        context: Context,
+        webView: WebView,
+        noteTitle: String
+    ): Boolean {
+        val bitmap = convertHtmlToBitmap(webView) ?: return false
+
+        return try {
+            val file = dir.createFile(
+                "image/jpeg",
+                "${noteTitle.trim()}.jpg"
+            ) ?: return false
+
+            context.contentResolver
+                .openOutputStream(file.uri)
+                ?.use { stream ->
+                    bitmap.compress(
+                        Bitmap.CompressFormat.JPEG,
+                        85,
+                        stream
+                    )
+                } ?: return false
+
+            true
+        } catch (_: Exception) {
+            false
+        } finally {
+            bitmap.recycle()
+        }
+    }
+
+    private fun deleteNotes(data: List<NotesModel>) {
+        viewModelScope.launch(Dispatchers.IO) { repository.deleteNotes(data.map { it.notesId }) }
+    }
+
+    private fun deleteNote(data: NotesModel) {
+        viewModelScope.launch(Dispatchers.IO) { repository.deleteNote(data) }
+    }
+
+    private fun deleteWorkspaceNotes(workspaceId: String) {
+        viewModelScope.launch(Dispatchers.IO) { repository.deleteAllWorkspaceNotes(workspaceId) }
+    }
+
+    private fun togglePinMultiple(data: List<NotesModel>) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val isAllPinned = data.all { it.isPinned }
+            if (isAllPinned) {
+                val updatedNotes = data.map { it.copy(isPinned = false) }
+                repository.upsertNotes(updatedNotes)
+            } else {
+                val updatedNotes = data.map { it.copy(isPinned = true) }
+                repository.upsertNotes(updatedNotes)
+            }
+        }
+    }
+
+    private fun updateNotes(data: NotesModel) {
+        val isNewNote = state.value.allNotes.none { it.notesId == data.notesId }
+        val isBlankNote = data.title.trim().isBlank() && data.labels.isEmpty() && data.description.trim().isBlank()
+        if (isNewNote && isBlankNote) return
+
+        viewModelScope.launch(Dispatchers.IO) { repository.upsertNote(data) }
+    }
+
+    private fun updateNotesOrder(notesIds: List<String>){
+        viewModelScope.launch(Dispatchers.IO) { repository.updateOrder(notesIds) }
+    }
+}

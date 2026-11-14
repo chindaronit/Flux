@@ -5,8 +5,8 @@
 - [What is GitHub Flavored Markdown?](#what-is-github-flavored-markdown)
 - [What is LaTeX?](#what-is-latex)
 - [How to use LaTeX in Markdown?](#how-to-use-latex-in-markdown)
-- [What is Flux?](#what-is-flux-approach)
-- [What has Flux offered?](#what-has-flux-offered)
+- [What is OmniPad?](#what-is-omnipad-approach)
+- [What has OmniPad offered?](#what-has-omnipad-offered)
 - [Some Basic Markdown Syntax](#some-basic-markdown-syntax)
 - [Some Extended Markdown Syntax](#some-extended-markdown-syntax)
 - [LaTeX Math Syntax](#latex-math-syntax)
@@ -69,9 +69,9 @@ scientists, and mathematicians.
 
 You can use the $ and $$ delimiters in GFM to insert math expressions in TeX and LaTeX style syntax.
 
-# What is Flux Approach
+# What is OmniPad Approach
 
-Flux is built around the idea that information should be organized based on context, intent, and workflow rather than being confined to a single linear note system.
+OmniPad is built around the idea that information should be organized based on context, intent, and workflow rather than being confined to a single linear note system.
 
 At the core of this approach is the concept of **Workspaces**.
 
@@ -79,7 +79,7 @@ A workspace acts as an independent environment that users can create based on sp
 
 Each workspace functions as a self-contained organizational unit, allowing users to keep related data structured and isolated without interference from other contexts.
 
-Within every workspace, Flux provides multiple **Templates** designed for different types of information and productivity workflows. These templates include, but are not limited to:
+Within every workspace, OmniPad provides multiple **Templates** designed for different types of information and productivity workflows. These templates include, but are not limited to:
 
 * **Notes** — Rich Markdown documents with media and LaTeX support
 * **Todo** — Task tracking with completion states and prioritization
@@ -90,11 +90,11 @@ Within every workspace, Flux provides multiple **Templates** designed for differ
 
 This modular structure allows users to mix and match templates depending on their requirements. A research workspace might emphasize notes and analytics, while a personal workspace may focus on journals, todos, and events.
 
-By separating data into workspaces and structuring content through templates, Flux enables scalable organization, reduces cognitive clutter, and supports diverse productivity systems within a single unified platform.
+By separating data into workspaces and structuring content through templates, OmniPad enables scalable organization, reduces cognitive clutter, and supports diverse productivity systems within a single unified platform.
 
-# What has Flux offered?
+# What has OmniPad offered?
 
-Flux supports CommonMark and GitHub Flavored Markdown (GFM) syntax, as well as LaTeX math
+OmniPad supports CommonMark and GitHub Flavored Markdown (GFM) syntax, as well as LaTeX math
 syntax.
 
 This allows users to create richly formatted notes with support for headings, lists, links,
@@ -103,11 +103,12 @@ various formats including TXT, MD (Markdown), and HTML.
 
 Use the document attachment button in a note or journal editor to add a PDF or another file type.
 PDFs show an inline preview of every page and open the full document when tapped; other files appear
-as links that open with a compatible app. Flux stores copied attachments in `Flux/Documents`.
+as links that open with a compatible app. OmniPad stores copied attachments in `OmniPad/Documents`.
 Events can also have files attached from their details screen; tap an attachment name to open it
 with the app associated with that file type.
 Full backups include document attachments in the `media/documents` folder and restore them to
-`Flux/Documents`.
+`OmniPad/Documents`. Document and PDF links from the original application remain usable after
+restoring a backup.
 
 # Some Basic Markdown Syntax
 

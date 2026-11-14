@@ -1,0 +1,94 @@
+package com.omnipad.ui.screens.settings
+
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.widget.Toast
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Lightbulb
+import androidx.compose.material.icons.rounded.Email
+import androidx.compose.material.icons.rounded.Feedback
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
+import androidx.navigation.NavController
+import com.omnipad.R
+import com.omnipad.ui.common.BasicScaffold
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun Contact(navController: NavController, radius: Int) {
+    val context = LocalContext.current
+    val noEmailAppLabel = stringResource(R.string.no_email_app)
+
+    BasicScaffold(
+        title = stringResource(R.string.Contact),
+        onBackClicked = { navController.popBackStack() }
+    ) { innerPadding ->
+        LazyColumn(
+            modifier = Modifier
+                .padding(innerPadding)
+                .padding(16.dp, 8.dp, 16.dp)
+        ) {
+            item {
+                SettingOption(
+                    title = stringResource(R.string.feature_request),
+                    description = stringResource(R.string.feature_request_desc),
+                    icon = Icons.Default.Lightbulb,
+                    radius = shapeManager(radius = radius, isFirst = true),
+                    actionType = ActionType.LINK,
+                    linkClicked = {
+                        val intent = Intent(
+                            Intent.ACTION_VIEW,
+                            "https://github.com/chindaronit/OmniPad/discussions/61".toUri()
+                        )
+                        context.startActivity(intent)
+                    }
+                )
+            }
+
+            item {
+                SettingOption(
+                    title = stringResource(R.string.bug_report),
+                    description = stringResource(R.string.Contact_desc2),
+                    icon = Icons.Rounded.Feedback,
+                    radius = shapeManager(radius = radius),
+                    actionType = ActionType.LINK,
+                    linkClicked = {
+                        val intent = Intent(
+                            Intent.ACTION_VIEW,
+                            "https://github.com/chindaronit/OmniPad/issues".toUri()
+                        )
+                        context.startActivity(intent)
+                    }
+                )
+            }
+
+            item {
+                SettingOption(
+                    title = stringResource(R.string.email),
+                    description = stringResource(R.string.email_desc),
+                    icon = Icons.Rounded.Email,
+                    radius = shapeManager(radius = radius, isLast = true),
+                    actionType = ActionType.LINK,
+                    linkClicked = {
+                        val intent = Intent(Intent.ACTION_SENDTO).apply {
+                            data = "mailto:ronitchinda100@gmail.com".toUri()
+                        }
+                        try {
+                            context.startActivity(intent)
+                        } catch (_: ActivityNotFoundException) {
+                            Toast.makeText(context, noEmailAppLabel, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                )
+            }
+
+        }
+    }
+}

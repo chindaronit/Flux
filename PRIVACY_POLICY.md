@@ -1,17 +1,17 @@
 ## Privacy Policy of Open Note
 
-Flux is an open-source Android app developed by Ronit Chinda.  
+OmniPad is an open-source Android app developed by Ronit Chinda.
 The source code is available on GitHub under the GPL-3.0 license.
 
 ### Data Collection
 
-Flux does not collect any personal or confidential information such as addresses, names, or email addresses.
+OmniPad does not collect any personal or confidential information such as addresses, names, or email addresses.
 
 ### Permissions Requested
 
 The app requires the following permissions, as listed in the `AndroidManifest.xml` file:
 
-https://github.com/chindaronit/Flux/blob/master/app/src/main/AndroidManifest.xml
+https://github.com/chindaronit/OmniPad/blob/master/app/src/main/AndroidManifest.xml
 
 | Permission                      | Purpose                                                                                                       |
 |---------------------------------|---------------------------------------------------------------------------------------------------------------|
@@ -31,7 +31,7 @@ The app uses the following dependencies:
 - **CommonMark**: For markdown rendering and parsing.
 
 ### Data Sharing
-Flux does not share any personal or sensitive user data with third parties.
+OmniPad does not share any personal or sensitive user data with third parties.
 
 ### Data Deletion
 Usually all data is stored locally and can be cleared by the user at any time.

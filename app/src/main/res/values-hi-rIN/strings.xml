@@ -123,7 +123,7 @@
     <string name="Restore">पुनर्स्थापित करें</string>
     <string name="Restore_Description">पूर्ण बैकअप फ़ोल्डर से सभी सामग्री पुनर्स्थापित करें</string>
     <string name="restore_backup_warning_title">पूर्ण बैकअप पुनर्स्थापित करें?</string>
-    <string name="restore_backup_warning_message">इस डिवाइस की सभी Flux सामग्री और मीडिया फ़ाइलें चुने गए बैकअप से बदल दी जाएँगी। ऐप सेटिंग सुरक्षित रहेंगी। इसे पूर्ववत नहीं किया जा सकता।</string>
+    <string name="restore_backup_warning_message">इस डिवाइस की सभी OmniPad सामग्री और मीडिया फ़ाइलें चुने गए बैकअप से बदल दी जाएँगी। ऐप सेटिंग सुरक्षित रहेंगी। इसे पूर्ववत नहीं किया जा सकता।</string>
     <string name="reset">रीसेट करें</string>
     <string name="backup_frequency">स्वचालित बैकअप की आवृत्ति</string>
     <string name="reset_database">डेटाबेस रीसेट करें</string>
@@ -362,11 +362,11 @@
     <string name="editing_view">संपादन दृश्य</string>
 
     <string name="shareContent">
-        Flux एक आधुनिक Android प्रोडक्टिविटी ऐप है जिसे पूरी तरह Compose से बनाया गया है।\n
+        OmniPad एक आधुनिक Android प्रोडक्टिविटी ऐप है जिसे पूरी तरह Compose से बनाया गया है।\n
         यह आपको Notes, Habits, Journal, To-Do, Events आदि जैसे टेम्पलेट्स के साथ वर्कस्पेस बनाने, संपादित करने और हटाने की सुविधा देता है, साथ ही find &amp; replace, note templates, लोकल इमेज/वीडियो/ऑडियो इम्पोर्ट, Markdown, LaTeX गणित सूत्र और Mermaid डायग्राम सपोर्ट जैसी उन्नत सुविधाएँ प्रदान करता है।\n
         अभी डाउनलोड करें:\n
-        - GitHub:  https://github.com/chindaronit/Flux/releases\n
-        - F-Droid: https://f-droid.org/packages/com.flux/
+        - GitHub:  https://github.com/chindaronit/OmniPad/releases\n
+        - F-Droid: https://f-droid.org/packages/com.omnipad/
     </string>
 
     <string name="select_folder">फ़ोल्डर चुनें</string>
@@ -530,7 +530,7 @@
     <string name="longest_streak">सबसे लंबी श्रृंखला</string>
     <string name="personal_best">सर्वश्रेष्ठ रिकॉर्ड</string>
     <string name="last_30_days">पिछले 30 दिन</string>
-    <string name="tracked_by_flux">\@Flux द्वारा ट्रैक किया गया</string>
+    <string name="tracked_by_omnipad">\@OmniPad द्वारा ट्रैक किया गया</string>
     <string name="available_on_fdroid_izzyondroid">F-Droid, IzzyOnDroid पर उपलब्ध</string>
     <string name="share_achievement">उपलब्धि साझा करें</string>
     <string name="not_scheduled">निर्धारित नहीं</string>
@@ -579,7 +579,7 @@
     <string name="changelog_description">हर संस्करण के परिवर्तनों को देखें।</string>
 
     <string name="change">बदलें</string>
-    <string name="change_root_directory">Flux डेटा की रूट डायरेक्टरी बदलें</string>
+    <string name="change_root_directory">OmniPad डेटा की रूट डायरेक्टरी बदलें</string>
     <string name="change_storage_root">स्टोरेज रूट बदलें</string>
     <string name="couldnt_move_data">डेटा स्थानांतरित नहीं किया जा सका</string>
     <string name="please_dont_close_app">कृपया ऐप को बंद न करें</string>
@@ -590,7 +590,7 @@
     <string name="welcome_back">आपका स्वागत है</string>
     <string name="authenticate">प्रमाणित करें</string>
     <string name="private_secure">निजी और सुरक्षित</string>
-    <string name="biometric_unlock_description">अपने Flux डेटा को सुरक्षित रूप से अनलॉक करने के लिए अपने डिवाइस की बायोमेट्रिक सुविधा का उपयोग करें।</string>
+    <string name="biometric_unlock_description">अपने OmniPad डेटा को सुरक्षित रूप से अनलॉक करने के लिए अपने डिवाइस की बायोमेट्रिक सुविधा का उपयोग करें।</string>
     <string name="biometric_data_never_leaves">आपका बायोमेट्रिक डेटा आपके डिवाइस से कभी बाहर नहीं जाता</string>
 
     <string name="default_screen">डिफ़ॉल्ट स्क्रीन</string>

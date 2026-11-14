@@ -211,9 +211,12 @@
                 const id = 'img_' + index;
                 img.setAttribute('data-id', id);
                 img.setAttribute('loading', 'lazy');
-                if (imageName && imageName.startsWith('https://flux.local/pdf/')) {
+                const pdfPrefix = ['{{ATTACHMENT_HOST}}', '{{LEGACY_ATTACHMENT_HOST}}']
+                    .map(host => `https://${host}/pdf/`)
+                    .find(prefix => imageName && imageName.startsWith(prefix));
+                if (pdfPrefix) {
                     const documentName = decodeURIComponent(
-                        imageName.substring('https://flux.local/pdf/'.length)
+                        imageName.substring(pdfPrefix.length)
                     );
                     img.setAttribute('data-pdf', 'true');
                     img.alt = 'PDF preview: ' + documentName;

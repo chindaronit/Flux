@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    namespace = "com.flux"
+    namespace = "com.omnipad"
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.flux"
+        applicationId = "com.omnipad"
         minSdk = 29
         targetSdk = 37
         versionCode = 22

@@ -1,0 +1,919 @@
+package com.omnipad.ui.screens.search
+
+import android.content.Context
+import android.os.Build
+import android.widget.Toast
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SheetState
+import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import com.omnipad.R
+import com.omnipad.data.model.EventOccurrence
+import com.omnipad.data.model.EventModel
+import com.omnipad.data.model.filterCompletedEventOccurrences
+import com.omnipad.data.model.findEventOccurrences
+import com.omnipad.data.model.initialEventOccurrenceIndex
+import com.omnipad.data.model.HabitInstanceModel
+import com.omnipad.data.model.HabitModel
+import com.omnipad.data.model.JournalModel
+import com.omnipad.data.model.LabelModel
+import com.omnipad.data.model.NotesModel
+import com.omnipad.data.model.ProgressBoardModel
+import com.omnipad.data.model.RecurrenceRule
+import com.omnipad.data.model.Space
+import com.omnipad.data.model.TodoModel
+import com.omnipad.data.model.WorkspaceModel
+import com.omnipad.data.model.getSpacesList
+import com.omnipad.data.model.isCounted
+import com.omnipad.data.model.isLive
+import com.omnipad.navigation.Loader
+import com.omnipad.navigation.NavRoutes
+import com.omnipad.other.canScheduleReminder
+import com.omnipad.other.isNotificationPermissionGranted
+import com.omnipad.other.openAppNotificationSettings
+import com.omnipad.other.requestExactAlarmPermission
+import com.omnipad.ui.common.BottomBar
+import com.omnipad.ui.common.CategoryRow
+import com.omnipad.ui.common.EmptyData
+import com.omnipad.ui.common.GeneralSearchBar
+import com.omnipad.ui.common.MultiOptionRow
+import com.omnipad.ui.common.SearchFilterCategory
+import com.omnipad.ui.common.SearchFilterOption
+import com.omnipad.ui.common.SelectWorkspaceDialog
+import com.omnipad.ui.common.SelectionType
+import com.omnipad.ui.common.convertMillisToDate
+import com.omnipad.ui.common.convertMillisToTime
+import com.omnipad.ui.events.HabitEvents
+import com.omnipad.ui.events.ProgressBoardEvents
+import com.omnipad.ui.events.TaskEvents
+import com.omnipad.ui.events.TodoEvents
+import com.omnipad.ui.events.WorkspaceEvents
+import com.omnipad.ui.screens.events.EventCard
+import com.omnipad.ui.screens.events.EventAgendaDateHeader
+import com.omnipad.ui.screens.events.formatAgendaDate
+import com.omnipad.ui.screens.habits.HabitPreviewCard
+import com.omnipad.ui.screens.habits.isDateAllowedForHabit
+import com.omnipad.ui.screens.journal.JournalCardHeader
+import com.omnipad.ui.screens.journal.JournalPreview
+import com.omnipad.ui.screens.journal.TimelineBody
+import com.omnipad.ui.screens.notes.NotesPreviewCard
+import com.omnipad.ui.screens.progressBoard.BoardContainer
+import com.omnipad.ui.screens.progressBoard.NewBoardItemSheet
+import com.omnipad.ui.screens.todo.TodoExpandableCard
+import com.omnipad.ui.state.States
+import com.omnipad.ui.theme.completed
+import com.omnipad.ui.theme.failed
+import com.omnipad.ui.theme.pending
+import com.omnipad.ui.viewModel.ViewModels
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.util.UUID
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlin.collections.minus
+import kotlin.collections.plus
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SearchScreen(navController: NavController, states: States, viewModels: ViewModels){
+    val context = LocalContext.current
+    var query by rememberSaveable { mutableStateOf("") }
+    val allSpaces = getSpacesList().filter { it.id!=6 }
+    val lockedWorkspace = states.workspaceState.allWorkspaces.filter { it.isLocked }.map { it.workspaceId }
+    var filterState by remember {
+        mutableStateOf(
+            FilterState(
+                selectedWorkspaceIds = states.workspaceState.allWorkspaces
+                    .filterNot { lockedWorkspace.contains(it.workspaceId) }
+                    .map { it.workspaceId }
+                    .toSet(),
+
+                selectedSpacesIds = allSpaces
+                    .map { it.id.toString() }
+                    .toSet()
+            )
+        )
+    }
+    val notesPreviewMode = states.settings.data.notesPreviewMode
+    val radius = states.settings.data.cornerRadius
+    val is24HourFormat = states.settings.data.is24HourFormat
+    val isLoading =
+        states.notesState.isLoading || states.labelState.isLoading ||
+        states.journalState.isLoading || states.habitState.isLoading ||
+        states.eventState.isAllEventsLoading || states.progressBoardState.isLoading ||
+        states.todoState.isLoading
+
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val selectedWorkspaceIds = states.workspaceState.allWorkspaces
+        .filterNot { lockedWorkspace.contains(it.workspaceId) }
+        .filter { it.workspaceId in filterState.selectedWorkspaceIds }.map { it.workspaceId }
+    val selectedSpaces = allSpaces.filter { it.id.toString() in filterState.selectedSpacesIds }
+
+    val labels = states.labelState.allLabels
+        .filterNot { lockedWorkspace.contains(it.workspaceId) }
+        .filter { selectedWorkspaceIds.contains(it.workspaceId) }
+
+    val labelMap = remember(labels) { labels.associateBy { it.labelId } }
+    var isToolsSheetVisible by remember { mutableStateOf(false) }
+
+    val notes = states.notesState.allNotes
+        .filter { selectedWorkspaceIds.contains(it.workspaceId) }
+        .filter { note ->
+            val matchesText = note.title.contains(query, true) || note.description.contains(query, true)
+            val matchesLabel = note.labels.any { labelId -> labelMap[labelId]?.value?.contains(query, true) == true }
+
+            matchesText || matchesLabel
+        }
+        .filterNot { lockedWorkspace.contains(it.workspaceId) }
+
+    val todoLists = states.todoState.allLists
+        .filter { selectedWorkspaceIds.contains(it.workspaceId) }
+        .filter { it.title.contains(query, ignoreCase = true) || it.items.any { item -> item.value.contains(query, ignoreCase = true) } }
+        .filterNot { lockedWorkspace.contains(it.workspaceId) }
+
+    val expandedTODOIds = rememberSaveable { mutableStateOf<Set<String>>(emptySet()) }
+
+    val journals = states.journalState.data
+        .filter { selectedWorkspaceIds.contains(it.workspaceId) }
+        .filter { entry ->
+            val matchesText = entry.text.contains(query, ignoreCase = true)
+            val matchesTime = convertMillisToTime(entry.dateTime).contains(query, ignoreCase = true) ||
+                    convertMillisToDate(entry.dateTime).contains(query, ignoreCase = true)
+
+            val matchesLabel = entry.labels.any { labelId -> labelMap[labelId]?.value?.contains(query, true) == true }
+
+            matchesText || matchesLabel || matchesTime
+        }.filterNot { lockedWorkspace.contains(it.workspaceId) }
+
+    val habits = states.habitState.allHabits
+        .filter { selectedWorkspaceIds.contains(it.workspaceId) }
+        .filter {
+            it.title.contains(query, ignoreCase = true) ||
+            it.description.contains(query, ignoreCase = true)
+        }.filterNot { lockedWorkspace.contains(it.workspaceId) }
+
+    val currentHabits = habits.filter { it.isLive() }
+    val pastHabits = habits.filter { !it.isLive() }
+    val matchingEvents = states.eventState.allEvent
+        .filter { selectedWorkspaceIds.contains(it.workspaceId) }
+        .filter { query.isBlank() || it.title.contains(query, ignoreCase = true) }
+        .filterNot { lockedWorkspace.contains(it.workspaceId) }
+    val boardItems = states.progressBoardState.allItems
+        .filter { selectedWorkspaceIds.contains(it.workspaceId) }
+        .filter {
+            it.title.contains(query, ignoreCase = true) ||
+            convertMillisToDate(it.startDate).contains(query, ignoreCase = true) ||
+            convertMillisToDate(it.endDate).contains(query, ignoreCase = true) }
+        .filterNot { lockedWorkspace.contains(it.workspaceId) }
+
+    val notStartedItems = boardItems.filter { it.status == 0 }
+    val inProgressItems = boardItems.filter { it.status == 1 }
+    val completedItems = boardItems.filter { it.status == 2 }
+    var selectedProgressBoardItem by remember { mutableStateOf<ProgressBoardModel?>(null) }
+    val selectedSpace = rememberSaveable { mutableIntStateOf(1) }
+    val eventAgendaStart = remember(query, selectedSpace.intValue) {
+        mutableStateOf(LocalDate.now().minusDays(365))
+    }
+    val eventAgendaEnd = remember(query, selectedSpace.intValue) {
+        mutableStateOf(LocalDate.now().plusDays(365))
+    }
+    val eventSearchListState = rememberLazyListState()
+    val matchingEventOccurrences = remember(
+        query,
+        selectedSpace.intValue,
+        matchingEvents,
+        eventAgendaStart.value,
+        eventAgendaEnd.value,
+        states.eventState.allEventInstances,
+        states.eventState.eventExceptions,
+        states.settings.data.showCompletedEvents
+    ) {
+        if (selectedSpace.intValue != 3) emptyList()
+        else filterCompletedEventOccurrences(
+            findEventOccurrences(
+                matchingEvents,
+                states.eventState.eventExceptions,
+                eventAgendaStart.value,
+                eventAgendaEnd.value
+            ),
+            states.eventState.allEventInstances,
+            states.settings.data.showCompletedEvents
+        )
+    }
+    val matchingEventGroups = remember(matchingEventOccurrences) {
+        matchingEventOccurrences.groupBy { it.date }.toList()
+    }
+    val initialMatchingOccurrenceIndex = initialEventOccurrenceIndex(matchingEventOccurrences)
+    val initialMatchingListIndex = remember(matchingEventGroups, initialMatchingOccurrenceIndex) {
+        val initialOccurrence = matchingEventOccurrences.getOrNull(initialMatchingOccurrenceIndex)
+        if (initialOccurrence == null) {
+            0
+        } else {
+            val previousGroupsItemCount = matchingEventGroups
+                .takeWhile { (date, _) -> date != initialOccurrence.date }
+                .sumOf { (_, occurrences) -> occurrences.size + 1 }
+            val occurrenceOffset = matchingEventGroups
+                .first { (date, _) -> date == initialOccurrence.date }
+                .second
+                .indexOf(initialOccurrence)
+            previousGroupsItemCount + 1 + occurrenceOffset
+        }
+    }
+    LaunchedEffect(query, selectedSpace.intValue, matchingEventOccurrences.isNotEmpty()) {
+        if (selectedSpace.intValue == 3 && matchingEventOccurrences.isNotEmpty()) {
+            eventSearchListState.scrollToItem(initialMatchingListIndex)
+        }
+    }
+    LaunchedEffect(
+        query,
+        selectedSpace.intValue,
+        eventSearchListState,
+        matchingEventOccurrences.isNotEmpty(),
+        eventAgendaStart.value
+    ) {
+        snapshotFlow {
+            Triple(
+                eventSearchListState.firstVisibleItemIndex,
+                eventSearchListState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0,
+                eventSearchListState.isScrollInProgress
+            )
+        }.distinctUntilChanged().collect { (firstVisible, lastVisible, isScrolling) ->
+            if (selectedSpace.intValue == 3 && isScrolling &&
+                firstVisible <= 1 &&
+                eventAgendaStart.value.isAfter(LocalDate.of(1900, 1, 1))
+            ) {
+                eventAgendaStart.value = eventAgendaStart.value.minusDays(365)
+            }
+            if (selectedSpace.intValue == 3 && isScrolling &&
+                matchingEventOccurrences.isNotEmpty() &&
+                lastVisible >= eventSearchListState.layoutInfo.totalItemsCount - 3
+            ) {
+                eventAgendaEnd.value = eventAgendaEnd.value.plusDays(365)
+            }
+        }
+    }
+    val workspacesLabel = stringResource(R.string.workspaces)
+    val spacesLabel = stringResource(R.string.spaces)
+    var showWorkspaceSelectorDialog by remember { mutableStateOf(false) }
+    val notificationPermissionLabel = stringResource(R.string.Notification_Permission)
+    val reminderPermissionLabel = stringResource(R.string.Reminder_Permission)
+
+    LaunchedEffect(query) {
+        if(query.isNotBlank() && expandedTODOIds.value.isEmpty()){
+            expandedTODOIds.value = todoLists.map { it.id }.toSet()
+        }
+        else if(query.isBlank()) { expandedTODOIds.value = emptySet() }
+    }
+
+    LaunchedEffect(selectedSpaces) {
+        val availableIds = selectedSpaces.filter { it.id != 6 }.map { it.id }
+        if (availableIds.isNotEmpty() && selectedSpace.intValue !in availableIds) {
+            selectedSpace.intValue = availableIds.first()
+        }
+    }
+
+    fun hasOrAppendSpace(workspaceId: String, spaceId: Int){
+        val workspaces = states.workspaceState.allWorkspaces
+        val selectedWorkspace = workspaces.find { it.workspaceId == workspaceId }
+        val currentSpaces = selectedWorkspace!!.selectedSpaces
+
+        if(!currentSpaces.contains(spaceId)){
+            val updatedWorkspace = selectedWorkspace.copy(selectedSpaces = currentSpaces.plus(spaceId))
+            viewModels.workspaceViewModel.onEvent(WorkspaceEvents.UpsertSpace(updatedWorkspace))
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    fun navigateToCreateNewSpaceEntry(selectedWorkspaceId: String){
+        val newId = UUID.randomUUID().toString()
+        val localDate = LocalDate.now()
+        val currentTime = LocalTime.now()
+        val zonedDateTime = ZonedDateTime.of(localDate, currentTime, ZoneId.systemDefault())
+        val selectedDateMillis = zonedDateTime.toInstant().toEpochMilli()
+
+        hasOrAppendSpace(selectedWorkspaceId, selectedSpace.intValue)
+
+        when(selectedSpace.intValue){
+            1-> navController.navigate(NavRoutes.NoteDetails.withArgs(selectedWorkspaceId, newId))
+            2-> navController.navigate(NavRoutes.NewTodoList.withArgs(selectedWorkspaceId, newId))
+            3-> navController.navigate(NavRoutes.NewEvent.withArgs(selectedWorkspaceId, newId, selectedDateMillis))
+            4-> navController.navigate(NavRoutes.EditJournal.withArgs(selectedWorkspaceId, newId, System.currentTimeMillis()))
+            5-> {
+                if (!canScheduleReminder(context)) {
+                    Toast.makeText(context, reminderPermissionLabel, Toast.LENGTH_SHORT).show()
+                    requestExactAlarmPermission(context)
+                }
+                if (!isNotificationPermissionGranted(context)) {
+                    Toast.makeText(context, notificationPermissionLabel, Toast.LENGTH_SHORT).show()
+                    openAppNotificationSettings(context)
+                }
+                if (canScheduleReminder(context) && isNotificationPermissionGranted(context)) {
+                    navController.navigate(NavRoutes.NewHabit.withArgs(selectedSpace, newId))
+                }
+            }
+            7-> navController.navigate(NavRoutes.NewProgressItem.withArgs(selectedWorkspaceId, newId))
+            else -> {}
+        }
+
+        showWorkspaceSelectorDialog = false
+    }
+
+    if(showWorkspaceSelectorDialog){
+        SelectWorkspaceDialog(
+            workspaces = states.workspaceState.allWorkspaces,
+            onDismiss = { showWorkspaceSelectorDialog = false },
+            onConfirm = {
+                navigateToCreateNewSpaceEntry(it)
+                showWorkspaceSelectorDialog = false
+            }
+        )
+    }
+
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        topBar = {
+            GeneralSearchBar(
+                leadingIcon = Icons.Default.Search,
+                trailingIcon = Icons.Default.FilterList,
+                textFieldState = TextFieldState(query),
+                onSearch = {
+                    query = it
+                },
+                onAddClicked = { showWorkspaceSelectorDialog = true },
+                onTrailingIconClicked = { isToolsSheetVisible=true },
+                onCloseClicked = { query = "" }
+            )
+        }
+    ) { innerPadding ->
+        Box(Modifier
+            .fillMaxSize()
+            .padding(innerPadding)) {
+            when {
+                isLoading -> Loader()
+                else -> {
+                    Column(Modifier.fillMaxSize()) {
+                        if (selectedSpaces.isNotEmpty()) {
+                            LazyRow(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(MaterialTheme.colorScheme.surfaceContainerLow)
+                                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                items(selectedSpaces){ space->
+                                    FilterChip(
+                                        onClick = { selectedSpace.intValue = space.id },
+                                        label = { Text(space.title) },
+                                        selected = selectedSpace.intValue == space.id,
+                                        leadingIcon = {
+                                            Icon(
+                                                imageVector = if (selectedSpace.intValue == space.id) Icons.Filled.Done else space.icon,
+                                                contentDescription = "Done icon",
+                                                modifier = Modifier.size(FilterChipDefaults.IconSize)
+                                            )
+                                        },
+                                    )
+                                }
+                            }
+                        }
+                        LazyColumn(
+                            state = eventSearchListState,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f)
+                                .padding(horizontal = 12.dp),
+                            contentPadding = PaddingValues(
+                                top = 16.dp,
+                                bottom = 64.dp
+                            ),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            if(selectedSpaces.isEmpty()){ item { EmptyData() } }
+                            else when(selectedSpace.intValue) {
+                                1 -> searchedNotes(navController, notesPreviewMode, radius, notes, labels)
+                                2 -> searchedTodo(navController, radius, context, expandedTODOIds.value, todoLists, { id->
+                                    val todoItem = todoLists.first { it.id == id }
+                                    val workspaceId = todoItem.workspaceId
+
+                                    if(todoItem.recurrence is RecurrenceRule.NONE){
+                                        expandedTODOIds.value =
+                                            if (id in expandedTODOIds.value) expandedTODOIds.value - id
+                                            else expandedTODOIds.value + id
+                                    }
+                                    else{ navController.navigate(NavRoutes.TodoDetail.withArgs(workspaceId, id)) }
+                                }, viewModels.todoViewModel::onEvent)
+                                3 -> searchedEvent(
+                                    navController, radius, is24HourFormat, matchingEventOccurrences,
+                                    states.eventState.allEventInstances,
+                                    states.eventState.eventOccurrenceColors,
+                                    states.settings.data.completedEventColorArgb,
+                                    onEvent = viewModels.eventViewModel::onEvent
+                                )
+                                4 -> searchedJournal(navController, radius, journals, labels)
+                                5 -> searchedHabits(navController, radius, is24HourFormat, currentHabits, pastHabits, states.habitState.allInstances, viewModels.habitViewModel::onEvent)
+                                7 -> searchedProgressBoard(navController, radius, notStartedItems, inProgressItems, completedItems)
+                                else -> {}
+                            }
+                        }
+                    }
+                    BottomBar(
+                        navController = navController,
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(bottom = 16.dp)
+                    )
+                }
+            }
+        }
+    }
+
+    selectedProgressBoardItem?.let { item ->
+        NewBoardItemSheet(
+            true,
+            sheetState,
+            item,
+            { selectedProgressBoardItem = null },
+            { viewModels.progressBoardViewModel.onEvent(ProgressBoardEvents.UpsertProgressItem(it)) }
+        ) { viewModels.progressBoardViewModel.onEvent(ProgressBoardEvents.DeleteProgressItem(it)) }
+    }
+
+    if(isToolsSheetVisible){
+        FilterSheet(
+            filterState,
+            states.workspaceState.allWorkspaces.filterNot { lockedWorkspace.contains(it.workspaceId) },
+            allSpaces,
+            sheetState,
+            { isToolsSheetVisible=false }
+        ) { map ->
+
+            filterState = FilterState(
+                selectedWorkspaceIds = map[workspacesLabel] ?: emptySet(),
+                selectedSpacesIds = map[spacesLabel] ?: emptySet()
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+fun LazyListScope.searchedNotes(navController: NavController, notesPreviewMode: Int, radius: Int, notes: List<NotesModel>, labels: List<LabelModel>){
+    if (notes.isEmpty()) item { EmptyData() }
+    items(notes, key = { it.notesId }) { note ->
+        NotesPreviewCard(
+            radius = radius,
+            isSelected = false,
+            note = note,
+            notesPreviewMode = notesPreviewMode,
+            labels = labels.filter { note.labels.contains(it.labelId) }.map { it.value },
+            onClick = { navController.navigate(NavRoutes.NoteDetails.withArgs(note.workspaceId, note.notesId)) },
+            onLongPressed = { navController.navigate(NavRoutes.WorkspaceHome.withArgs(note.workspaceId) + "?spaceId=1") },
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+fun LazyListScope.searchedJournal(navController: NavController, radius: Int, allEntries: List<JournalModel>, labels: List<LabelModel>){
+    if(allEntries.isEmpty()) item { EmptyData() }
+    items(allEntries, key = { it.journalId }) { journal ->
+        JournalCardHeader(convertMillisToDate(journal.dateTime) + ", " + convertMillisToTime(journal.dateTime))
+        Row(modifier = Modifier.height(IntrinsicSize.Min)) {
+            TimelineBody(isLast = false)
+            JournalPreview(
+                radius,
+                journal.text,
+                labels.filter { journal.labels.contains(it.labelId) },{
+                    navController.navigate(
+                        NavRoutes.EditJournal.withArgs(
+                            journal.workspaceId,
+                            journal.journalId,
+                            0L
+                        )
+                    )
+                }) {
+                navController.navigate(NavRoutes.WorkspaceHome.withArgs(journal.workspaceId) + "?spaceId=4")
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+fun LazyListScope.searchedHabits(
+    navController: NavController,
+    radius: Int,
+    is24HourFormat: Boolean,
+    currentHabits: List<HabitModel>,
+    pastHabits: List<HabitModel>,
+    instances: List<HabitInstanceModel>,
+    onEvent: (HabitEvents) -> Unit
+) {
+    if((currentHabits+pastHabits).isEmpty())  item { EmptyData() }
+    items(currentHabits) { habit ->
+        val habitInstances = instances.filter { it.habitId == habit.id }
+        HabitPreviewCard(
+            radius = radius,
+            habit = habit,
+            is24HourFormat = is24HourFormat,
+            instances = habitInstances,
+            onClick = { date ->
+                if (isDateAllowedForHabit(habit.recurrence, date)) {
+                    val oldInstance = habitInstances.find { it.instanceDate == date }
+                    val count = if(habit.isCounted){
+                        if(oldInstance!=null) oldInstance.count+1
+                        else 1
+                    } else 0
+
+                    val newInstance = HabitInstanceModel(
+                        instanceDate = date,
+                        habitId = habit.id,
+                        workspaceId = habit.workspaceId,
+                        count = count
+                    )
+                    onEvent(HabitEvents.UpdateInstance(newInstance, habit.habitConfig))
+                }
+            },
+            onLongPressed = { navController.navigate(NavRoutes.WorkspaceHome.withArgs(habit.workspaceId) + "?spaceId=5") },
+            onAnalyticsClicked = { navController.navigate(NavRoutes.HabitDetails.withArgs(habit.workspaceId, habit.id)) }
+        )
+    }
+    if(pastHabits.isNotEmpty()) {
+        item {
+            Text(
+                stringResource(R.string.past_habits),
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+        }
+    }
+    items(pastHabits) { habit ->
+        val habitInstances = instances.filter { it.habitId == habit.id }
+        HabitPreviewCard (
+            radius = radius,
+            is24HourFormat = is24HourFormat,
+            habit = habit,
+            instances = habitInstances,
+            onClick = {},
+            onLongPressed = { navController.navigate(NavRoutes.WorkspaceHome.withArgs(habit.workspaceId) + "?spaceId=5") },
+            onAnalyticsClicked = {
+                navController.navigate(
+                    NavRoutes.HabitDetails.withArgs(
+                        habit.workspaceId,
+                        habit.id
+                    )
+                )
+            }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+fun LazyListScope.searchedEvent(
+    navController: NavController,
+    radius: Int,
+    is24HourFormat: Boolean,
+    occurrences: List<EventOccurrence>,
+    instances: List<com.omnipad.data.model.EventInstanceModel>,
+    occurrenceColors: List<com.omnipad.data.model.EventOccurrenceColorModel>,
+    completedColorArgb: Int?,
+    onEvent: (TaskEvents) -> Unit
+) {
+    if (occurrences.isEmpty()) item { EmptyData() }
+    occurrences.groupBy { it.date }.forEach { (date, dateOccurrences) ->
+        item(key = "date:$date") {
+            EventAgendaDateHeader(formatAgendaDate(date))
+        }
+        items(dateOccurrences, key = { "${it.event.id}:${it.instanceDate}" }) { occurrence ->
+            val event = occurrence.event
+            val isPending = instances.none {
+                it.eventId == event.id && it.instanceDate == occurrence.instanceDate
+            }
+            Row(modifier = Modifier.height(IntrinsicSize.Min)) {
+                TimelineBody(isLast = false)
+                Column {
+                    EventCard(
+                        radius = radius,
+                        is24HourFormat = is24HourFormat,
+                        isPending = isPending,
+                        title = event.title,
+                        repeat = event.recurrence,
+                        startDateTime = event.startDateTime,
+                        isAllDay = event.isAllDay,
+                        occurrenceDate = occurrence.instanceDate,
+                        colorArgb = occurrenceColors.firstOrNull {
+                            it.eventId == event.id && it.occurrenceDate == occurrence.instanceDate
+                        }?.colorArgb ?: event.colorArgb,
+                        completedColorArgb = completedColorArgb,
+                        onChangeStatus = {
+                            onEvent(
+                                TaskEvents.ToggleStatus(
+                                    isPending,
+                                    event.id,
+                                    event.workspaceId,
+                                    occurrence.instanceDate
+                                )
+                            )
+                        },
+                        onClick = {
+                            navController.navigate(NavRoutes.eventEditor(event, occurrence.instanceDate))
+                        },
+                        onLongPressed = {
+                            navController.navigate(NavRoutes.eventEditor(event, occurrence.instanceDate))
+                        }
+                    )
+                    if (occurrence != dateOccurrences.last()) {
+                        Spacer(Modifier.height(8.dp))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+fun LazyListScope.searchedProgressBoard(
+    navController: NavController,
+    radius: Int,
+    notStartedItems: List<ProgressBoardModel>,
+    inProgressItems: List<ProgressBoardModel>,
+    completedItems: List<ProgressBoardModel>
+) {
+    if((notStartedItems + inProgressItems + completedItems).isEmpty()) item { EmptyData() }
+    if (notStartedItems.isNotEmpty()) {
+        item {
+            BoardContainer(
+                failed,
+                stringResource(R.string.not_started),
+                radius,
+                notStartedItems,
+                { navController.navigate(NavRoutes.NewProgressItem.withArgs(it.workspaceId, it.itemId)) }
+            ) { navController.navigate(NavRoutes.WorkspaceHome.withArgs(it.workspaceId) + "?spaceId=7") }
+        }
+    }
+    if (inProgressItems.isNotEmpty()) {
+        item {
+            BoardContainer(
+                pending,
+                stringResource(R.string.in_progress),
+                radius,
+                inProgressItems,
+                { navController.navigate(NavRoutes.NewProgressItem.withArgs(it.workspaceId, it.itemId)) }
+            ) { navController.navigate(NavRoutes.WorkspaceHome.withArgs(it.workspaceId) + "?spaceId=7") }
+        }
+    }
+    if (completedItems.isNotEmpty()) {
+        item {
+            BoardContainer(
+                completed,
+                stringResource(R.string.Completed),
+                radius,
+                completedItems,
+                { navController.navigate(NavRoutes.NewProgressItem.withArgs(it.workspaceId, it.itemId)) }
+            ) { navController.navigate(NavRoutes.WorkspaceHome.withArgs(it.workspaceId) + "?spaceId=7") }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+fun LazyListScope.searchedTodo(
+    navController: NavController,
+    radius: Int,
+    context: Context,
+    expandedTODOIds: Set<String>,
+    todoList: List<TodoModel>,
+    onExpandToggle: (String) -> Unit,
+    onEvent: (TodoEvents) -> Unit
+) {
+    if(todoList.isEmpty()) item { EmptyData() }
+    items(todoList, key = { it.id }) { todoItem ->
+        TodoExpandableCard(
+            navController = navController,
+            radius = radius,
+            item = todoItem,
+            context = context,
+            workspaceId = todoItem.workspaceId,
+            isExpanded = todoItem.id in expandedTODOIds,
+            onExpandToggle = onExpandToggle,
+            onTodoEvents = onEvent,
+            isReordering = false,
+            onLongPressed = { navController.navigate(NavRoutes.WorkspaceHome.withArgs(todoItem.workspaceId) + "?spaceId=2") },
+        )
+    }
+}
+
+fun buildSearchFilterCategories(context: Context, workspaces: List<WorkspaceModel>, spaces: List<Space>): List<SearchFilterCategory> {
+    return listOf(
+        SearchFilterCategory(
+            name = context.getString(R.string.workspaces),
+            options = workspaces.map { SearchFilterOption(it.workspaceId, it.title) },
+            type = SelectionType.MULTIPLE
+        ),
+        SearchFilterCategory(
+            name = context.getString(R.string.spaces),
+            options = spaces.map { SearchFilterOption(it.id.toString(), it.title) },
+            type = SelectionType.MULTIPLE
+        )
+    )
+}
+
+data class FilterState(
+    val selectedWorkspaceIds: Set<String>,
+    val selectedSpacesIds: Set<String>
+)
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FilterSheet(
+    filterState: FilterState,
+    workspaces: List<WorkspaceModel>,
+    spaces: List<Space>,
+    sheetState: SheetState,
+    onDismiss: () -> Unit = {},
+    onApply: (Map<String, Set<String>>) -> Unit
+) {
+    val context = LocalContext.current
+    val windowInfo = LocalWindowInfo.current
+    val density = LocalDensity.current
+    val maxHeight = with(density) { windowInfo.containerSize.height.toDp() } * 0.4f
+    val categories = remember(workspaces, spaces) {
+        buildSearchFilterCategories(context, workspaces, spaces)
+    }
+    val workspacesLabel = stringResource(R.string.workspaces)
+    val spacesLabel = stringResource(R.string.spaces)
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+    ) {
+        // key resets all remembered state whenever filterState changes
+        key(filterState) {
+            var selectedCategory by remember { mutableStateOf(categories.first()) }
+
+            val multiSelections = remember {
+                mutableStateMapOf<String, SnapshotStateList<String>>().apply {
+                    categories.forEach { category ->
+                        val selected = when (category.name) {
+                            workspacesLabel -> filterState.selectedWorkspaceIds
+                            spacesLabel     -> filterState.selectedSpacesIds
+                            else         -> emptySet()
+                        }
+                        put(category.name, mutableStateListOf<String>().apply { addAll(selected) })
+                    }
+                }
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = maxHeight)
+                    .padding(top = 8.dp)
+            ) {
+                Row(modifier = Modifier.weight(1f)) {
+                    // LEFT PANEL
+                    LazyColumn(
+                        modifier = Modifier
+                            .width(150.dp)
+                            .background(MaterialTheme.colorScheme.surfaceContainer)
+                    ) {
+                        items(categories) { category ->
+                            CategoryRow(
+                                label = category.name,
+                                isSelected = category.name == selectedCategory.name,
+                                onClick = { selectedCategory = category }
+                            )
+                        }
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .width(0.5.dp)
+                            .fillMaxHeight()
+                            .background(MaterialTheme.colorScheme.onSurface)
+                    )
+
+                    // RIGHT PANEL
+                    LazyColumn(modifier = Modifier.weight(1f)) {
+                        if (selectedCategory.options.isEmpty()) {
+                            item {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(24.dp),
+                                    contentAlignment = Alignment.Center
+                                ) { Text(stringResource(R.string.no_options_available)) }
+                            }
+                        }
+
+                        items(selectedCategory.options) { option ->
+                            when (selectedCategory.type) {
+                                SelectionType.MULTIPLE -> {
+                                    val list = multiSelections[selectedCategory.name] ?: return@items
+                                    val isSelected = option.id in list
+                                    MultiOptionRow(
+                                        label = option.label,
+                                        isSelected = isSelected,
+                                        onClick = {
+                                            if (isSelected) list.remove(option.id)
+                                            else list.add(option.id)
+                                        }
+                                    )
+                                }
+                                else -> {}
+                            }
+                        }
+                    }
+                }
+
+                HorizontalDivider()
+
+                // FOOTER
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    OutlinedButton(
+                        modifier = Modifier.weight(1f),
+                        onClick = {
+                            categories.forEach { category ->
+                                val list = multiSelections[category.name] ?: return@forEach
+                                list.clear()
+                                list.addAll(category.options.map { it.id })
+                            }
+                        }
+                    ) { Text(stringResource(R.string.reset)) }
+
+                    Button(
+                        modifier = Modifier.weight(2f),
+                        onClick = {
+                            onApply(multiSelections.mapValues { it.value.toSet() })
+                            onDismiss()
+                        }
+                    ) { Text(stringResource(R.string.Confirm)) }
+                }
+
+                Spacer(Modifier.navigationBarsPadding())
+            }
+        }
+    }
+}

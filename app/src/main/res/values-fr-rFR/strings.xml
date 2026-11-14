@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <string name="app_name">Flux</string>
+    <string name="app_name">OmniPad</string>
 
     <!-- Authentication -->
     <string name="Auth_with_Biometric">S\'authentifier avec les biométries</string>
@@ -123,7 +123,7 @@
     <string name="Restore">Restaurer</string>
     <string name="Restore_Description">Restaurer tout le contenu depuis un dossier de sauvegarde complète</string>
     <string name="restore_backup_warning_title">Restaurer la sauvegarde complète ?</string>
-    <string name="restore_backup_warning_message">Tout le contenu Flux et les fichiers multimédias de cet appareil seront remplacés par ceux de la sauvegarde sélectionnée. Les paramètres de l’application seront conservés. Cette action est irréversible.</string>
+    <string name="restore_backup_warning_message">Tout le contenu OmniPad et les fichiers multimédias de cet appareil seront remplacés par ceux de la sauvegarde sélectionnée. Les paramètres de l’application seront conservés. Cette action est irréversible.</string>
     <string name="reset">Réinitialiser</string>
     <string name="backup_frequency">Fréquence de sauvegarde automatique</string>
     <string name="reset_database">Réinitialiser la base de données</string>
@@ -362,11 +362,11 @@
     <string name="editing_view">Vue d’édition</string>
 
     <string name="shareContent">
-        Flux est une application moderne de productivité Android entièrement conçue avec Compose.\n
+        OmniPad est une application moderne de productivité Android entièrement conçue avec Compose.\n
         Elle permet de créer, modifier et supprimer des espaces de travail avec des modèles comme Notes, Habitudes, Journal, Tâches, Événements, etc., ainsi que des fonctionnalités avancées telles que rechercher/remplacer, modèles de notes, import local d’images/vidéos/audio, Markdown, formules LaTeX et diagrammes Mermaid.\n
         Téléchargez-la dès maintenant :\n
-        - GitHub :  https://github.com/chindaronit/Flux/releases\n
-        - F-Droid : https://f-droid.org/packages/com.flux/
+        - GitHub :  https://github.com/chindaronit/OmniPad/releases\n
+        - F-Droid : https://f-droid.org/packages/com.omnipad/
     </string>
 
     <string name="select_folder">Sélectionner un dossier</string>
@@ -532,7 +532,7 @@
     <string name="longest_streak">Plus longue série</string>
     <string name="personal_best">Record personnel</string>
     <string name="last_30_days">30 derniers jours</string>
-    <string name="tracked_by_flux">Suivi par @Flux</string>
+    <string name="tracked_by_omnipad">Suivi par @OmniPad</string>
     <string name="available_on_fdroid_izzyondroid">Disponible sur F-Droid, IzzyOnDroid</string>
     <string name="share_achievement">Partager le résultat</string>
     <string name="not_scheduled">Non planifié</string>
@@ -580,7 +580,7 @@
     <string name="changelog_description">Suivez les modifications de chaque version.</string>
 
     <string name="change">Modifier</string>
-    <string name="change_root_directory">Modifier le répertoire racine des données Flux</string>
+    <string name="change_root_directory">Modifier le répertoire racine des données OmniPad</string>
     <string name="change_storage_root">Modifier la racine de stockage</string>
     <string name="couldnt_move_data">Impossible de déplacer les données</string>
     <string name="please_dont_close_app">Veuillez ne pas fermer l’application</string>
@@ -591,7 +591,7 @@
     <string name="welcome_back">Bon retour sur</string>
     <string name="authenticate">S’authentifier</string>
     <string name="private_secure">Privé &amp; sécurisé</string>
-    <string name="biometric_unlock_description">Utilisez la biométrie de votre appareil pour déverrouiller vos données Flux en toute sécurité.</string>
+    <string name="biometric_unlock_description">Utilisez la biométrie de votre appareil pour déverrouiller vos données OmniPad en toute sécurité.</string>
     <string name="biometric_data_never_leaves">Vos données biométriques ne quittent jamais votre appareil</string>
 
     <string name="default_screen">Écran par défaut</string>

@@ -1,0 +1,814 @@
+package com.omnipad.ui.screens.journal
+
+import android.app.Activity
+import android.content.Intent
+import android.net.Uri
+import android.webkit.WebView
+import android.widget.Toast
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.LabelImportant
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastJoinToString
+import androidx.navigation.NavController
+import com.omnipad.data.model.JournalModel
+import com.omnipad.other.AudioRecorder
+import com.omnipad.other.Constants
+import com.omnipad.other.HeaderNode
+import com.omnipad.other.ensureStorageRoot
+import com.omnipad.other.printPdf
+import com.omnipad.other.shareJournal
+import com.omnipad.ui.common.DeleteAlert
+import com.omnipad.ui.common.DiscardChangesDialog
+import com.omnipad.ui.common.JournalDetailsTopBar
+import com.omnipad.ui.common.convertMillisToDate
+import com.omnipad.ui.common.convertMillisToTime
+import com.omnipad.ui.events.JournalEvents
+import com.omnipad.ui.screens.notes.FindAndReplaceField
+import com.omnipad.ui.screens.notes.FindAndReplaceState
+import com.omnipad.ui.screens.notes.ReadView
+import com.omnipad.ui.screens.notes.StandardTextField
+import com.omnipad.ui.screens.notes.onMarkdownKeyPressed
+import com.omnipad.ui.state.TextState
+import com.omnipad.ui.viewModel.JournalViewModel
+import com.omnipad.ui.viewModel.SettingsViewModel
+import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
+import androidx.core.net.toUri
+import com.omnipad.R
+import com.omnipad.data.model.LabelModel
+import com.omnipad.data.model.NotesModel
+import com.omnipad.data.model.SocialModel
+import com.omnipad.data.model.TodoItem
+import com.omnipad.data.model.TodoModel
+import com.omnipad.data.model.WorkspaceModel
+import com.omnipad.data.model.getSocialCategory
+import com.omnipad.navigation.NavRoutes
+import com.omnipad.other.ConvertType
+import com.omnipad.other.DataCopyType
+import com.omnipad.ui.common.DataCopyDialog
+import com.omnipad.ui.common.DatePickerModal
+import com.omnipad.ui.common.SocialCategoryCard
+import com.omnipad.ui.common.SocialDialog
+import com.omnipad.ui.events.NotesEvents
+import com.omnipad.ui.events.TodoEvents
+import com.omnipad.ui.events.WorkspaceEvents
+import com.omnipad.ui.screens.notes.LinkDialog
+import com.omnipad.ui.screens.notes.ListDialog
+import com.omnipad.ui.screens.notes.MarkdownEditorRow
+import com.omnipad.ui.screens.notes.NotesInfoBottomSheet
+import com.omnipad.ui.screens.notes.OutlineBottomSheet
+import com.omnipad.ui.screens.notes.PendingSocialDelete
+import com.omnipad.ui.screens.notes.RecordAudioDialog
+import com.omnipad.ui.screens.notes.SelectLabelDialog
+import com.omnipad.ui.screens.notes.ShareDialog
+import com.omnipad.ui.screens.notes.TableDialog
+import com.omnipad.ui.screens.notes.TaskDialog
+import com.omnipad.ui.screens.notes.TaskItem
+import kotlinx.coroutines.channels.Channel
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@Composable
+fun EditJournal(
+    navController: NavController,
+    workspaces: List<WorkspaceModel>,
+    workspaceId: String,
+    journal: JournalModel,
+    outline: HeaderNode,
+    aboutJournal: TextState,
+    fontNumber: Int,
+    isDarkMode: Boolean,
+    isLintValid: Boolean,
+    isLineNumbersVisible: Boolean,
+    startWithReadView: Boolean,
+    rootUri: String?,
+    allLabels: List<LabelModel>,
+    journalViewModel: JournalViewModel,
+    settingsViewModel: SettingsViewModel,
+    onJournalEvents: (JournalEvents) -> Unit,
+    onNotesEvents: (NotesEvents) -> Unit,
+    onTodoEvents: (TodoEvents) -> Unit,
+    onWorkspaceEvents: (WorkspaceEvents) -> Unit
+) {
+    val textFieldStateSaver = Saver<TextFieldState, String>(
+        save = { it.text.toString() },
+        restore = { TextFieldState(it) }
+    )
+    var isToday by remember { mutableStateOf(LocalDate.now() == Instant.ofEpochMilli(journal.dateTime).atZone(ZoneId.systemDefault()).toLocalDate()) }
+    var journalDate by rememberSaveable(journal.journalId) { mutableLongStateOf(journal.dateTime) }
+    val contentState = rememberSaveable(saver = textFieldStateSaver) { TextFieldState(journal.text) }
+    var savedJournal by remember(journal.journalId) { mutableStateOf(journal) }
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val sheetState = rememberModalBottomSheetState()
+    val hasContent = remember(journal.journalId) { journal.text.isNotBlank() }
+    val currentWorkspace = workspaces.find { it.workspaceId == workspaceId }
+    val pagerState = rememberPagerState(
+        initialPage = if (startWithReadView && hasContent) 1 else 0,
+        pageCount = { 2 }
+    )
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var showDiscardDialog by remember { mutableStateOf(false) }
+    var showShareDialog by remember { mutableStateOf(false) }
+    var showSaveDialog by remember { mutableStateOf(false) }
+    var showOutlineSheet by remember { mutableStateOf(false) }
+    var selectedHeader by remember { mutableStateOf<IntRange?>(null) }
+    var searchState by remember { mutableStateOf(FindAndReplaceState()) }
+    var isSearching by remember { mutableStateOf(false) }
+    var showDateDialog by rememberSaveable { mutableStateOf(false) }
+    var showAboutNotes by rememberSaveable { mutableStateOf(false) }
+    var showLinkDialog by rememberSaveable { mutableStateOf(false) }
+    var showTaskDialog by rememberSaveable { mutableStateOf(false) }
+    var showTableDialog by rememberSaveable { mutableStateOf(false) }
+    var showListDialog by rememberSaveable { mutableStateOf(false) }
+    val isReadView by remember { derivedStateOf { pagerState.currentPage == 1 } }
+    var showAudioRecorder by rememberSaveable { mutableStateOf(false) }
+    var readWebView by remember { mutableStateOf<WebView?>(null) }
+    var showLabelDialog by rememberSaveable { mutableStateOf(false) }
+    var showSocialDialog by rememberSaveable { mutableStateOf(false) }
+    val currentLabelIds = rememberSaveable {
+        mutableStateListOf<String>().apply {
+            addAll(journal.labels)
+        }
+    }
+    var showDataCopyDialog by remember { mutableStateOf(false) }
+    var showConvertDialog by remember { mutableStateOf(false) }
+    val recorder = AudioRecorder(context)
+
+    val cloneString = stringResource(R.string.clone_created_successfully)
+    val contentCopiedString = stringResource(R.string.content_copied)
+    val contentMovedString = stringResource(R.string.content_moved)
+    val successString = stringResource(R.string.success)
+    val unsavedChangesMessage = stringResource(R.string.unsaved_changes_message)
+    val socialCategoryList = getSocialCategory()
+    val socialLinksSaver = Saver<SnapshotStateList<SocialModel>, String>(
+        save = { Json.encodeToString(it.toList()) },
+        restore = { encoded ->
+            mutableStateListOf<SocialModel>().apply {
+                addAll(Json.decodeFromString<List<SocialModel>>(encoded))
+            }
+        }
+    )
+
+    val socialLinks = rememberSaveable(saver = socialLinksSaver) {
+        mutableStateListOf<SocialModel>().apply { addAll(journal.socialLinks) }
+    }
+    var selectedSocialModel by remember { mutableStateOf<SocialModel?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val deleteChannel = remember { Channel<PendingSocialDelete>(Channel.UNLIMITED) }
+    val undoLabel = stringResource(R.string.undo)
+    val socialRemovedLabel = stringResource(R.string.social_link_removed)
+
+    LaunchedEffect(Unit) {
+        for (pending in deleteChannel) {
+            val result = snackbarHostState.showSnackbar(
+                message = socialRemovedLabel,
+                actionLabel = undoLabel,
+                withDismissAction = true,
+                duration = SnackbarDuration.Short
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                socialLinks.add(pending.index.coerceAtMost(socialLinks.size), pending.item)
+            }
+        }
+    }
+
+    val rootPicker =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            val uri = result.data?.data ?: return@rememberLauncherForActivityResult
+            settingsViewModel.saveRootUri(uri)
+        }
+
+    val photoPicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 10)
+    ) { uris -> if (uris.isNotEmpty()) { onJournalEvents(JournalEvents.ImportImages(context, uris, contentState)) } }
+
+    val videoPicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri -> if (uri != null) { onJournalEvents(JournalEvents.ImportVideo(context, uri, contentState)) } }
+
+    val audioPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let { onJournalEvents(JournalEvents.ImportAudio(context, uri, contentState)) }
+    }
+    val documentPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        uri?.let {
+            onJournalEvents(
+                JournalEvents.ImportDocument(
+                    context = context,
+                    uri = it,
+                    onImported = { markdown ->
+                        onMarkdownKeyPressed(Constants.Editor.TEXT, contentState, "\n$markdown\n")
+                    },
+                    onFailure = { message ->
+                        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                    }
+                )
+            )
+        }
+    }
+
+    val renderedHtml by remember(contentState.text) {
+        derivedStateOf {
+            journalViewModel.renderMarkdown(contentState.text.toString())
+        }
+    }
+
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val focusManager = LocalFocusManager.current
+    val futureDateNotAllowed = stringResource(R.string.future_journal_entries_not_allowed)
+
+    LaunchedEffect(isReadView) {
+        keyboardController?.hide()
+        focusManager.clearFocus()
+        isSearching = false
+    }
+
+    LaunchedEffect(journalDate) {
+        isToday = LocalDate.now() == Instant.ofEpochMilli(journalDate).atZone(ZoneId.systemDefault()).toLocalDate()
+    }
+
+    val currentJournal by rememberUpdatedState(journal)
+    val currentJournalDate by rememberUpdatedState(journalDate)
+    val currentLabels by rememberUpdatedState(currentLabelIds.toList())
+    val currentSocialLinks by rememberUpdatedState(socialLinks.toList())
+
+    val hasUnsavedChanges =
+        contentState.text.toString() != savedJournal.text ||
+            currentLabelIds.toList() != savedJournal.labels ||
+            journalDate != savedJournal.dateTime ||
+            socialLinks.toList() != savedJournal.socialLinks
+
+    fun saveJournalChanges() {
+        val newText = contentState.text.toString()
+        if (newText == savedJournal.text &&
+            currentLabels == savedJournal.labels &&
+            currentJournalDate == savedJournal.dateTime &&
+            currentSocialLinks == savedJournal.socialLinks
+        ) return
+
+        if (currentJournal.dateTime == 0L || currentJournalDate == 0L) return // guard from bug #1
+
+        val saved = currentJournal.copy(
+            text = newText,
+            dateTime = currentJournalDate,
+            labels = currentLabels,
+            socialLinks = currentSocialLinks
+        )
+        onJournalEvents(JournalEvents.UpsertEntry(saved))
+        savedJournal = saved
+    }
+
+    LaunchedEffect(
+        contentState.text,
+        currentLabelIds.toList(),
+        journalDate,
+        socialLinks.toList()
+    ) {
+        if (hasUnsavedChanges) {
+            saveJournalChanges()
+        }
+    }
+
+    fun requestBack() {
+        if (hasUnsavedChanges) {
+            showDiscardDialog = true
+        } else {
+            navController.popBackStack()
+        }
+    }
+    BackHandler(enabled = !showDiscardDialog) { requestBack() }
+
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        modifier = Modifier.imePadding(),
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        topBar = {
+            JournalDetailsTopBar(
+                isReadView = isReadView,
+                isSearching= isSearching,
+                onBackPressed = { requestBack() },
+                onOutlineClicked = {
+                    onJournalEvents(JournalEvents.CalculateOutline(contentState.text.toString()))
+                    showOutlineSheet=true },
+                onReadClick = { scope.launch { pagerState.animateScrollToPage(1) } },
+                onEditClick = { scope.launch { pagerState.animateScrollToPage(0) } },
+                onSearchClick = { isSearching= !isSearching },
+                onDelete = { showDeleteDialog=true },
+                onAboutClicked = {
+                    onJournalEvents(JournalEvents.CalculateTextState(contentState.text.toString()))
+                    showAboutNotes=true },
+                onShareNote = { showShareDialog = true },
+                onSaveNote = { showSaveDialog = true },
+                onAddLabel = { showLabelDialog = true },
+                onPrintNote = { printPdf(context as Activity, readWebView, convertMillisToDate(journal.dateTime)+"_"+ convertMillisToTime(journal.dateTime)) },
+                onCloneNote = {
+                    onJournalEvents(JournalEvents.UpsertEntry(JournalModel(text = contentState.text.toString(), workspaceId = workspaceId, labels = currentLabelIds, socialLinks = socialLinks)))
+                    Toast.makeText(context, cloneString, Toast.LENGTH_SHORT).show()
+                },
+                onCopyNote = { showDataCopyDialog = true },
+                onConvertNote = { showConvertDialog = true }
+            )
+        },
+        bottomBar = {
+            AnimatedVisibility(
+                visible = !isReadView,
+                enter = slideInVertically { fullHeight -> fullHeight },
+                exit = slideOutVertically { fullHeight -> fullHeight }) {
+                MarkdownEditorRow(
+                    canRedo = contentState.undoState.canRedo,
+                    canUndo = contentState.undoState.canUndo,
+                    onEdit = { onMarkdownKeyPressed(it, contentState, null) },
+                    onTableButtonClick = { showTableDialog = true },
+                    onListButtonClick = { showListDialog = true },
+                    onTaskButtonClick = { showTaskDialog = true },
+                    onLinkButtonClick = { showLinkDialog = true },
+                    onSocialButtonClick = { showSocialDialog = true },
+                    onRecordAudioClick = {
+                        ensureStorageRoot(
+                            scope = scope,
+                            settingsViewModel = settingsViewModel,
+                            rootPicker = rootPicker
+                        ) {
+                            showAudioRecorder=true
+                        }
+                    },
+                    onImageButtonClick = {
+                        ensureStorageRoot(
+                            scope = scope,
+                            settingsViewModel = settingsViewModel,
+                            rootPicker = rootPicker
+                        ) { photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) } },
+                    onAudioButtonClick = {
+                        ensureStorageRoot(
+                            scope = scope,
+                            settingsViewModel = settingsViewModel,
+                            rootPicker = rootPicker
+                        ) { audioPickerLauncher.launch("audio/*") } },
+                    onVideoButtonClick = {
+                        ensureStorageRoot(
+                            scope = scope,
+                            settingsViewModel = settingsViewModel,
+                            rootPicker = rootPicker
+                        ) { videoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly)) }
+                    },
+                    onDocumentButtonClick = {
+                        ensureStorageRoot(
+                            scope = scope,
+                            settingsViewModel = settingsViewModel,
+                            rootPicker = rootPicker
+                        ) { documentPickerLauncher.launch(arrayOf("*/*")) }
+                    }
+                )
+            }
+        }
+    ) { innerPadding ->
+        Column(modifier = Modifier
+            .fillMaxSize()
+            .padding(innerPadding)) {
+            AnimatedContent(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 4.dp),
+                targetState = isSearching,
+                contentAlignment = Alignment.TopCenter
+            ) {
+                Column {
+                    if (it) FindAndReplaceField(
+                        state = searchState,
+                        onStateUpdate = { state -> searchState = state })
+                }
+            }
+
+            LazyRow(
+                modifier = Modifier.padding(start = 12.dp, top = 2.dp, bottom = 2.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(50))
+                            .background(MaterialTheme.colorScheme.primaryContainer)
+                            .clickable { showDateDialog=true }
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(2.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.CalendarToday,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Text(
+                                convertMillisToDate(journalDate),
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                style = MaterialTheme.typography.labelLarge
+                            )
+                        }
+                    }
+                }
+                items(allLabels.filter { l -> currentLabelIds.contains(l.labelId) }) { label ->
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(50))
+                            .background(MaterialTheme.colorScheme.primaryContainer)
+                            .clickable { showLabelDialog = true }
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(2.dp)
+                        ) {
+                            Icon(
+                                Icons.AutoMirrored.Default.LabelImportant,
+                                contentDescription = "Label",
+                                modifier = Modifier.size(18.dp),
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Text(
+                                label.value,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                style = MaterialTheme.typography.labelLarge
+                            )
+                        }
+                    }
+                }
+                items(socialLinks) { item ->
+                    val category = socialCategoryList[item.category]
+
+                    SocialCategoryCard(
+                        title = item.title,
+                        cardContainerColor = category.containerColor,
+                        cardContentColor = category.contentColor,
+                        icon = category.icon,
+                        onClick = {
+                            if(isReadView){
+                                val intent = Intent(
+                                    Intent.ACTION_VIEW,
+                                    item.link.toUri()
+                                )
+                                context.startActivity(intent)
+                            }
+                            else{
+                                val index = socialLinks.indexOf(item)
+                                if (index != -1) {
+                                    socialLinks.removeAt(index)
+                                    deleteChannel.trySend(PendingSocialDelete(index, item))
+                                }
+                            }
+                        },
+                        onLongPress = {
+                            selectedSocialModel=item
+                            showSocialDialog=true
+                        }
+                    )
+                }
+            }
+
+            /*-------------------------------------------------*/
+            val scrollState = rememberScrollState()
+            HorizontalPager(
+                modifier = Modifier.padding(top=2.dp),
+                state = pagerState,
+                beyondViewportPageCount = 1,
+                userScrollEnabled = false
+            ) { currentPage: Int ->
+                when (currentPage) {
+                    0 -> {
+                        StandardTextField(
+                            modifier = Modifier.fillMaxSize(),
+                            state = contentState,
+                            readMode = isReadView,
+                            showLineNumbers = isLineNumbersVisible,
+                            scrollState = scrollState,
+                            isLintActive = isLintValid,
+                            headerRange = selectedHeader,
+                            findAndReplaceState = searchState,
+                            onFindAndReplaceUpdate = { searchState = it }
+                        )
+                    }
+
+                    1 -> {
+                        ReadView(
+                            modifier = Modifier.fillMaxSize(),
+                            html = renderedHtml,
+                            scrollState = scrollState,
+                            rootUri = rootUri,
+                            isAppInDarkMode = isDarkMode,
+                            fontNumber = fontNumber,
+                            onWebViewReady = { readWebView = it }
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    if (showDiscardDialog) {
+        DiscardChangesDialog(
+            onDiscard = {
+                showDiscardDialog = false
+                navController.popBackStack()
+            },
+            onDismiss = { showDiscardDialog = false },
+            message = unsavedChangesMessage
+        )
+    }
+
+    OutlineBottomSheet(showOutlineSheet, outline, sheetState, onHeaderClick = { selectedHeader = it } ) { showOutlineSheet=false }
+
+    if(showDateDialog){
+        DatePickerModal(
+            initialSelectedDateMillis = journalDate,
+            onDateSelected = { selectedDate ->
+                if (selectedDate == null) return@DatePickerModal
+                val now = System.currentTimeMillis()
+                val selectedLocalDate = Instant.ofEpochMilli(selectedDate)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate()
+                val today = LocalDate.now()
+
+                when {
+                    selectedLocalDate.isAfter(today) -> {
+                        Toast.makeText(
+                            context,
+                            futureDateNotAllowed,
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+
+                    selectedLocalDate.isEqual(today) -> {
+                        journalDate = now
+                    }
+
+                    else -> {
+                        val currentTime = Instant.ofEpochMilli(now)
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalTime()
+
+                        journalDate = selectedLocalDate
+                            .atTime(currentTime)
+                            .atZone(ZoneId.systemDefault())
+                            .toInstant()
+                            .toEpochMilli()
+                    }
+                }
+            },
+            onDismiss = {
+                showDateDialog = false
+            }
+        )
+    }
+
+    if (showLinkDialog) {
+        LinkDialog(onDismissRequest = { showLinkDialog = false }) { linkName, linkUri ->
+            val insertText = "[${linkName}](${linkUri})"
+            onMarkdownKeyPressed(Constants.Editor.TEXT, contentState, insertText)
+        }
+    }
+
+    if (showTableDialog) {
+        TableDialog(onDismissRequest = { showTableDialog = false }) { row, column ->
+            onMarkdownKeyPressed(Constants.Editor.TABLE, contentState, "$row,$column")
+        }
+    }
+
+    if (showListDialog) {
+        ListDialog(onDismissRequest = { showListDialog = false }) {
+            onMarkdownKeyPressed(Constants.Editor.LIST, contentState, it.fastJoinToString(separator = "\n"))
+        }
+    }
+
+    if (showTaskDialog) {
+        TaskDialog(onDismissRequest = { showTaskDialog = false }) {
+            onMarkdownKeyPressed(Constants.Editor.TASK, contentState, Json.encodeToString<List<TaskItem>>(it))
+        }
+    }
+
+    if(showShareDialog){
+        ShareDialog( true, {
+            shareJournal(context, it, convertMillisToDate(journal.dateTime)+"_"+ convertMillisToTime(journal.dateTime),contentState.text.toString(), journalViewModel, readWebView)
+            showShareDialog = false
+        }){ showShareDialog = false }
+    }
+
+    if(showSaveDialog){
+        ShareDialog( false, {
+            onJournalEvents(
+                JournalEvents.ExportJournal(
+                    context,
+                    it,
+                    convertMillisToDate(journal.dateTime)+"_"+ convertMillisToTime(journal.dateTime),
+                    contentState.text.toString(),
+                    readWebView
+                ))
+            showSaveDialog = false
+        }){
+            showSaveDialog = false
+        }
+    }
+
+    if(showDeleteDialog){
+        DeleteAlert({
+            showDeleteDialog=false
+        }, {
+            onJournalEvents(JournalEvents.DeleteEntry(journal))
+            navController.popBackStack()
+            showDeleteDialog=false
+        })
+    }
+
+    if(showAudioRecorder){
+        RecordAudioDialog(context, recorder, {onJournalEvents(JournalEvents.ImportAudio(context, it!!, contentState))}) {
+            showAudioRecorder=false
+        }
+    }
+
+    if (showLabelDialog) {
+        SelectLabelDialog(currentLabelIds, allLabels,
+            onConfirmation = {
+                currentLabelIds.clear()
+                currentLabelIds.addAll(it)
+            },
+            onDismissRequest = { showLabelDialog = false },
+            onAddLabel = { navController.navigate(NavRoutes.EditLabels.withArgs(journal.workspaceId)) }
+        )
+    }
+
+    if(showSocialDialog){
+        SocialDialog(
+            socialModel = selectedSocialModel,
+            {social->
+                val updated = social.copy(
+                    notesId = journal.journalId,
+                    workspaceId = journal.workspaceId
+                )
+
+                val index = socialLinks.indexOfFirst { it.socialId == updated.socialId }
+
+                if (index == -1) { socialLinks.add(updated) }
+                else { socialLinks[index] = updated }
+            },
+            {
+                showSocialDialog=false
+                selectedSocialModel=null
+            }
+        )
+    }
+
+    if(showDataCopyDialog){
+        DataCopyDialog(
+            workspaces.filterNot { it.workspaceId == workspaceId },
+            { dataCopyType, selectedWorkspaces ->
+                if(selectedWorkspaces.isEmpty()) return@DataCopyDialog
+                when(dataCopyType){
+                    DataCopyType.COPY -> {
+                        selectedWorkspaces.forEach { workspace ->
+                            if(!workspace.selectedSpaces.contains(4)){
+                                onWorkspaceEvents(WorkspaceEvents.UpsertSpace(workspace.copy(selectedSpaces = workspace.selectedSpaces + 4)))
+                            }
+                            onJournalEvents(JournalEvents.UpsertEntry(JournalModel(text = contentState.text.toString(), workspaceId = workspace.workspaceId)))
+                        }
+
+                        Toast.makeText(context, contentCopiedString, Toast.LENGTH_SHORT).show()
+                    }
+                    DataCopyType.MOVE -> {
+                        selectedWorkspaces.forEach { workspace ->
+                            if(!workspace.selectedSpaces.contains(4)){
+                                onWorkspaceEvents(WorkspaceEvents.UpsertSpace(workspace.copy(selectedSpaces = workspace.selectedSpaces + 4)))
+                            }
+                            onJournalEvents(JournalEvents.UpsertEntry(JournalModel(text = contentState.text.toString(), workspaceId = workspace.workspaceId)))
+                        }
+
+                        navController.popBackStack()
+                        Toast.makeText(context, contentMovedString, Toast.LENGTH_SHORT).show()
+                        onJournalEvents(JournalEvents.DeleteEntry(journal))
+                    }
+                }
+            }
+        ) { showDataCopyDialog = false }
+    }
+
+    if(showConvertDialog){
+        ConvertJournalDialog ({ type ->
+            when(type){
+                ConvertType.TODO -> {
+                    val todo = TodoModel(
+                        workspaceId = journal.workspaceId,
+                        title = "Journal ${convertMillisToDate(System.currentTimeMillis())}",
+                        items = contentState.text.toString()
+                            .lineSequence()
+                            .map { it.trim() }
+                            .filter { it.isNotEmpty() }
+                            .map { line ->
+                                TodoItem(value = line)
+                            }
+                            .toList()
+                    )
+                    if(!currentWorkspace!!.selectedSpaces.contains(2)){
+                        onWorkspaceEvents(WorkspaceEvents.UpsertSpace(currentWorkspace.copy(selectedSpaces = currentWorkspace.selectedSpaces + 2)))
+                    }
+                    onTodoEvents(TodoEvents.UpsertList(context, false, todo))
+
+                    navController.popBackStack()
+                    onJournalEvents(JournalEvents.DeleteEntry(journal))
+                }
+                ConvertType.NOTE -> {
+                    if(!currentWorkspace!!.selectedSpaces.contains(1)){
+                        onWorkspaceEvents(WorkspaceEvents.UpsertSpace(currentWorkspace.copy(selectedSpaces = currentWorkspace.selectedSpaces + 1)))
+                    }
+                    onNotesEvents(NotesEvents.UpsertNote(NotesModel(title = "Journal ${convertMillisToDate(System.currentTimeMillis())}", description = contentState.text.toString(), workspaceId = workspaceId, labels = currentLabelIds)))
+
+                    navController.popBackStack()
+                    onJournalEvents(JournalEvents.DeleteEntry(journal))
+                }
+                else -> {}
+            }
+
+            Toast.makeText(context, successString, Toast.LENGTH_SHORT).show()
+            showConvertDialog=false
+        }) {
+            showConvertDialog=false
+        }
+    }
+
+    NotesInfoBottomSheet(
+        isVisible = showAboutNotes,
+        words = aboutJournal.wordCountWithPunctuation,
+        characters = aboutJournal.charCount,
+        lastEdited = "${convertMillisToDate(journal.dateTime)}, ${convertMillisToTime(journal.dateTime)}",
+        sheetState = sheetState,
+        paragraph = aboutJournal.paragraphCount,
+        wordsWithoutPunctuations = aboutJournal.wordCountWithoutPunctuation,
+        lines = aboutJournal.lineCount
+    ) { showAboutNotes=false }
+}

@@ -1,0 +1,2568 @@
+package com.omnipad.ui.screens.habits
+
+import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.filled.AcUnit
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CheckCircleOutline
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.EventAvailable
+import androidx.compose.material.icons.filled.HourglassTop
+import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.Numbers
+import androidx.compose.material.icons.filled.OutlinedFlag
+import androidx.compose.material.icons.filled.Percent
+import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.SportsScore
+import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.TrackChanges
+import androidx.compose.material.icons.outlined.Circle
+import androidx.compose.material.icons.outlined.IncompleteCircle
+import androidx.compose.material.icons.outlined.NotificationsActive
+import androidx.compose.material.icons.outlined.StopCircle
+import androidx.compose.material.icons.outlined.Timer
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
+import androidx.compose.material3.surfaceColorAtElevation
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import com.omnipad.R
+import com.omnipad.data.model.HabitConfig
+import com.omnipad.data.model.HabitInstanceModel
+import com.omnipad.data.model.HabitModel
+import com.omnipad.data.model.isCompleted
+import com.omnipad.ui.common.convertMillisToDate
+import com.omnipad.ui.common.convertMillisToTime
+import com.omnipad.ui.events.HabitEvents
+import kotlinx.coroutines.flow.distinctUntilChanged
+import java.time.LocalDate
+import java.time.temporal.ChronoUnit
+import android.widget.Toast
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material.icons.automirrored.filled.ArrowBackIos
+import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
+import androidx.compose.material.icons.filled.Analytics
+import androidx.compose.material3.IconButton
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.text.style.TextOverflow
+import com.omnipad.data.model.RecurrenceRule
+import com.omnipad.ui.screens.events.IconRadioButton
+import java.time.DayOfWeek
+import java.time.Instant
+import java.time.YearMonth
+import java.time.ZoneId
+import java.time.format.TextStyle
+import kotlin.collections.filter
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DragIndicator
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.layer.drawLayer
+import androidx.compose.ui.graphics.rememberGraphicsLayer
+import androidx.compose.ui.platform.LocalContext
+import com.omnipad.data.model.isCounted
+import com.omnipad.data.model.isLive
+import com.omnipad.data.model.isTimed
+import com.omnipad.ui.screens.settings.CircleWrapper
+import com.omnipad.ui.screens.settings.shapeManager
+import androidx.compose.ui.platform.LocalLocale
+import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.Dp
+import com.omnipad.data.model.HabitAchievementStats
+import com.omnipad.data.model.isActiveOn
+import com.omnipad.other.saveBitmapAndGetUri
+import com.omnipad.other.shareImageUri
+import com.omnipad.ui.common.BarChart
+import com.omnipad.ui.common.HeatMapCard
+import com.omnipad.ui.common.WeeklyAnalytics
+import com.omnipad.ui.common.WeeklyProgressChart
+import com.omnipad.ui.theme.completed
+import com.omnipad.ui.theme.flameOrange
+import com.omnipad.ui.theme.trophyGold
+import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
+
+fun toMillis(hours: Int, minutes: Int): Long =
+    (hours * 60L * 60_000L) + (minutes * 60_000L)
+
+// ------------- Dialogs -------------
+@Composable
+fun TimerDialog(
+    durationMillis: Long,
+    onDismiss: () -> Unit,
+    onConfirm: (Long) -> Unit
+) {
+    val totalMinutes = durationMillis / 60_000L
+    var hours by remember { mutableIntStateOf((totalMinutes / 60).toInt()) }
+    var minutes by remember { mutableIntStateOf((totalMinutes % 60).toInt()) }
+
+    // Prevent invalid state
+    LaunchedEffect(hours, minutes) {
+        if (hours == 0 && minutes == 0) {
+            minutes = 1
+        }
+    }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(shape = RoundedCornerShape(24.dp)) {
+            Column(Modifier
+                .padding(16.dp)
+                .fillMaxWidth()) {
+                NumberPickerRow(Modifier.fillMaxWidth(), hours, minutes, { hours = it }) {
+                    minutes = it
+                }
+                Spacer(Modifier.height(16.dp))
+                FilledTonalButton(
+                    onClick = {
+                        onDismiss()
+                        onConfirm(toMillis(hours, minutes))
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(stringResource(R.string.Confirm))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun CountedHabitStatus(
+    radius: Int,
+    habit: HabitModel,
+    instance: HabitInstanceModel?,
+    onHabitEvents: (HabitEvents) -> Unit
+) {
+
+    val goal = (habit.habitConfig as HabitConfig.Counted).goal
+
+    // Single source of truth
+    val currentCount = instance?.count ?: 0
+
+    val completion = (currentCount.toFloat() / goal.toFloat())
+        .coerceIn(0f, 1f)
+
+    val completionPercentage = (completion * 100).toInt()
+
+    val todayEpoch = LocalDate.now().toEpochDay()
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = shapeManager(radius = radius * 2),
+        colors = CardDefaults.cardColors(
+            MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)
+        ),
+        onClick = {}
+    ) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+
+            Text(
+                stringResource(R.string.current_habit_status),
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.SemiBold
+                ),
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier.weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        progress = { completion },
+                        modifier = Modifier.size(120.dp),
+                        color = MaterialTheme.colorScheme.primary,
+                        strokeWidth = 12.dp,
+                        trackColor = MaterialTheme.colorScheme.primary.copy(0.35f),
+                        strokeCap = StrokeCap.Round,
+                    )
+                }
+
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    HabitInfoComponent(
+                        Icons.Outlined.IncompleteCircle,
+                        stringResource(R.string.current),
+                        currentCount.toString()
+                    )
+
+                    HabitInfoComponent(
+                        Icons.Default.TrackChanges,
+                        stringResource(R.string.goal),
+                        goal.toString()
+                    )
+
+                    HabitInfoComponent(
+                        Icons.Default.Percent,
+                        stringResource(R.string.completion),
+                        completionPercentage.toString()
+                    )
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                FilledTonalButton(
+                    onClick = {
+                        val count = maxOf(currentCount - 1, 0)
+                        val newInstance = HabitInstanceModel( instanceDate = todayEpoch, habitId = habit.id, workspaceId = habit.workspaceId, count = count )
+                        onHabitEvents( HabitEvents.UpdateInstance( newInstance, habit.habitConfig ) )
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(
+                        Icons.Default.Remove,
+                        null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+
+                    Spacer(Modifier.width(4.dp))
+
+                    Text(
+                        text = stringResource(R.string.decrement),
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+                }
+
+                FilledTonalButton(
+                    onClick = {
+                        val count = currentCount + 1
+                        val newInstance = HabitInstanceModel( instanceDate = todayEpoch, habitId = habit.id, workspaceId = habit.workspaceId, count = count )
+                        onHabitEvents( HabitEvents.UpdateInstance( newInstance, habit.habitConfig ) )
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(
+                        Icons.Default.Add,
+                        null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+
+                    Spacer(Modifier.width(4.dp))
+
+                    Text(
+                        text = stringResource(R.string.increment),
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TimedHabitStatus (
+    radius: Int,
+    habit: HabitModel,
+    instance: HabitInstanceModel?,
+    onHabitEvents: (HabitEvents) -> Unit
+) {
+    val goal = (habit.habitConfig as HabitConfig.Timed).durationMillis
+    var timeSpent by remember { mutableLongStateOf(instance?.timeSpent?: 0L) }
+    val completion = (timeSpent.toDouble()/goal.toDouble()).toFloat()
+    val completionPercentage = (completion*100).toInt()
+    val todayEpoch = LocalDate.now().toEpochDay()
+    var hours by remember { mutableIntStateOf(0) }
+    var minutes by remember { mutableIntStateOf(0) }
+
+    // Prevent invalid state
+    LaunchedEffect(hours, minutes) {
+        if (hours == 0 && minutes == 0) {
+            minutes = 1
+        }
+    }
+
+    var selectedIndex by remember { mutableIntStateOf(0) }
+    val options = listOf("Countdown", "Manual")
+    val icons = listOf(Icons.Default.HourglassTop, Icons.Default.Edit)
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = shapeManager(radius = radius * 2),
+        colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)),
+        onClick = {}
+    ) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                stringResource(R.string.current_habit_status),
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                CircularProgressIndicator(
+                    progress = { completion },
+                    modifier = Modifier.size(120.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                    strokeWidth = 12.dp,
+                    trackColor = MaterialTheme.colorScheme.primary.copy(0.35f),
+                    strokeCap = StrokeCap.Round,
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    HabitInfoComponent(
+                        Icons.Outlined.IncompleteCircle,
+                        stringResource(R.string.current),
+                        formatDuration(timeSpent)
+                    )
+                    HabitInfoComponent(
+                        Icons.Default.TrackChanges,
+                        stringResource(R.string.goal),
+                        formatDuration(goal)
+                    )
+                    HabitInfoComponent(
+                        Icons.Default.Percent,
+                        stringResource(R.string.completion),
+                        completionPercentage.toString()
+                    )
+                }
+            }
+
+            SingleChoiceSegmentedButtonRow(modifier = Modifier.padding(vertical = 6.dp)) {
+                options.forEachIndexed { index, label ->
+                    SegmentedButton(
+                        shape = SegmentedButtonDefaults.itemShape(
+                            index = index,
+                            count = options.size
+                        ),
+                        onClick = { selectedIndex = index },
+                        selected = index == selectedIndex,
+                        label = { Text(label) },
+                        icon = { Icon(icons[index], null) }
+                    )
+                }
+            }
+
+            NumberPickerRow(Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 32.dp), hours, minutes, {hours=it}) { minutes=it }
+
+            FilledTonalButton(
+                {
+                    timeSpent += toMillis(hours, minutes)
+
+                    val newInstance = HabitInstanceModel(
+                        instanceDate = todayEpoch,
+                        habitId = habit.id,
+                        workspaceId = habit.workspaceId,
+                        timeSpent = timeSpent
+                    )
+                    onHabitEvents(HabitEvents.UpdateInstance(newInstance, habit.habitConfig))
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp),
+                colors = ButtonDefaults.filledTonalButtonColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ){
+                    Icon(Icons.Default.Add, null)
+                    Text(stringResource(R.string.log_time))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun NumberPickerRow(
+    modifier: Modifier = Modifier,
+    hours: Int,
+    minutes: Int,
+    onHourChange: (Int)-> Unit,
+    onMinutesChange: (Int)->Unit
+) {
+    Row(modifier, horizontalArrangement = Arrangement.SpaceEvenly) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(stringResource(R.string.hours), color = MaterialTheme.colorScheme.primary)
+            NumberPicker(
+                range = 0..23,
+                selected = hours,
+                onValueChange = onHourChange
+            )
+        }
+
+        VerticalDivider(
+            modifier = Modifier
+                .height(150.dp)
+                .align(Alignment.CenterVertically),
+            color = Color.Gray
+        )
+
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(stringResource(R.string.minutes), color = MaterialTheme.colorScheme.primary)
+            NumberPicker(
+                range = 0..59,
+                selected = minutes,
+                onValueChange = onMinutesChange,
+                invalidValue = if (hours == 0) 0 else null
+            )
+        }
+    }
+}
+
+@Composable
+fun NumberPicker(
+    range: IntRange,
+    selected: Int,
+    onValueChange: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+    invalidValue: Int? = null
+) {
+    val count = range.count()
+    val startOffset = (Int.MAX_VALUE / 2) - (Int.MAX_VALUE / 2) % count
+
+    val listState = rememberLazyListState()
+    val flingBehavior = rememberSnapFlingBehavior(lazyListState = listState)
+
+    val itemHeightDp = 50.dp
+    val itemHeightPx = with(LocalDensity.current) { itemHeightDp.toPx() }
+
+    val initialIndex = startOffset + (selected - range.first)
+
+    val haptic = LocalHapticFeedback.current
+
+    // Sync scroll with selected value
+    LaunchedEffect(selected, range) {
+        listState.scrollToItem(initialIndex)
+    }
+
+    val centeredIndex by remember(listState, itemHeightPx) {
+        derivedStateOf {
+            val offset = listState.firstVisibleItemScrollOffset
+            if (offset > itemHeightPx / 2)
+                listState.firstVisibleItemIndex + 1
+            else
+                listState.firstVisibleItemIndex
+        }
+    }
+
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.firstVisibleItemIndex }
+            .distinctUntilChanged()
+            .collect {
+                haptic.performHapticFeedback(HapticFeedbackType.SegmentTick)
+            }
+    }
+
+    var lastCenter by remember { mutableIntStateOf(centeredIndex) }
+
+    LaunchedEffect(listState, range, invalidValue) {
+        snapshotFlow { centeredIndex }
+            .distinctUntilChanged()
+            .collect { index ->
+
+                if (index != lastCenter) {
+                    // stronger feedback on snap
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    lastCenter = index
+                }
+
+                val normalized =
+                    ((index - startOffset) % count + count) % count
+
+                var value = range.first + normalized
+
+                // prevent invalid selection BEFORE applying
+                if (invalidValue != null && value == invalidValue) {
+                    value = range.first + ((normalized + 1) % count)
+                }
+
+                onValueChange(value)
+            }
+    }
+
+    LazyColumn(
+        state = listState,
+        flingBehavior = flingBehavior,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        contentPadding = PaddingValues(vertical = itemHeightDp),
+        modifier = modifier.height(itemHeightDp * 3)
+    ) {
+        items(Int.MAX_VALUE) { index ->
+            val normalized =
+                ((index - startOffset) % count + count) % count
+            val value = range.first + normalized
+            val isSelected = index == centeredIndex
+
+            val isInvalid = invalidValue != null && value == invalidValue
+
+            Text(
+                text = value.toString().padStart(2, '0'),
+                fontSize = if (isSelected) 28.sp else 18.sp,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                color = when {
+                    isInvalid -> Color.LightGray
+                    isSelected -> MaterialTheme.colorScheme.primary
+                    else -> Color.Gray
+                },
+                modifier = Modifier
+                    .height(itemHeightDp)
+                    .wrapContentHeight(Alignment.CenterVertically)
+            )
+        }
+    }
+}
+
+//@Composable
+//fun TimedHabitDialog(
+//    durationMillis: Long,
+//    onDismiss: () -> Unit,
+//    onConfirm: (Long) -> Unit
+//){
+//    val totalMinutes = durationMillis / 60_000L
+//    var hours by remember { mutableIntStateOf((totalMinutes / 60).toInt()) }
+//    var minutes by remember { mutableIntStateOf((totalMinutes % 60).toInt()) }
+//
+//    // Prevent invalid state
+//    LaunchedEffect(hours, minutes) {
+//        if (hours == 0 && minutes == 0) {
+//            minutes = 1
+//        }
+//    }
+//
+//    var selectedIndex by remember { mutableIntStateOf(0) }
+//    val options = listOf("Countdown", "Manual")
+//    val icons = listOf(Icons.Default.HourglassTop, Icons.Default.Edit)
+//
+//    Dialog(onDismissRequest = onDismiss) {
+//        Surface(shape = RoundedCornerShape(24.dp)) {
+//            Column(Modifier
+//                .padding(16.dp)
+//                .fillMaxWidth()) {
+//                SingleChoiceSegmentedButtonRow(modifier = Modifier.padding(vertical = 6.dp)) {
+//                    options.forEachIndexed { index, label ->
+//                        SegmentedButton(
+//                            shape = SegmentedButtonDefaults.itemShape(
+//                                index = index,
+//                                count = options.size
+//                            ),
+//                            onClick = { selectedIndex = index },
+//                            selected = index == selectedIndex,
+//                            label = { Text(label) },
+//                            icon = { Icon(icons[index], null) }
+//                        )
+//                    }
+//                }
+//
+//                NumberPickerRow(
+//                    Modifier
+//                        .fillMaxWidth()
+//                        .padding(horizontal = 32.dp),
+//                    hours,
+//                    minutes,
+//                    { hours=it }
+//                ) { minutes=it }
+//                Spacer(Modifier.height(16.dp))
+//                FilledTonalButton(
+//                    onClick = {
+//                        onDismiss()
+//                        onConfirm(toMillis(hours, minutes))
+//                    },
+//                    modifier = Modifier.fillMaxWidth()
+//                ) {
+//                    Text(stringResource(R.string.Confirm))
+//                }
+//            }
+//        }
+//    }
+//}
+
+@Composable
+fun HabitDetailedInfo(
+    radius: Int,
+    habit: HabitModel,
+    instances: List<HabitInstanceModel>
+){
+    val streakData = remember(habit, instances) {
+        calculateStreaks(habit.recurrence, habit.startDateTime, habit.habitConfig, instances)
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = shapeManager(radius = radius * 2),
+        colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)),
+        onClick = {}
+    ) {
+        Column(
+            Modifier
+                .fillMaxSize()
+                .padding(8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center)
+            {
+                Icon(Icons.Default.EventAvailable, null, tint = MaterialTheme.colorScheme.primary)
+                Spacer(Modifier.width(4.dp))
+                Text(
+                    text = habit.title,
+                    style = MaterialTheme.typography.titleLarge,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            if(habit.description.isNotBlank()){
+                Text(
+                    text = habit.description,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Light),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            val windowInfo = LocalWindowInfo.current
+            val density = LocalDensity.current
+
+            val screenWidthDp = with(density) { windowInfo.containerSize.width.toDp() }
+
+            val columns = when {
+                density.fontScale > 1.5f -> 1
+
+                screenWidthDp < 360.dp -> 1
+                screenWidthDp < 480.dp -> 2
+
+                else -> 3
+            }
+
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(columns),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 1000.dp)
+                    .padding(vertical = 12.dp)
+            ) {
+                item {
+                    HabitInfoComponent(
+                        Icons.Default.OutlinedFlag,
+                        stringResource(R.string.Started),
+                        convertMillisToDate(habit.startDateTime))
+                }
+                if(habit.endDateTime != -1L){
+                    item {
+                        HabitInfoComponent(
+                            Icons.Default.SportsScore,
+                            stringResource(R.string.ends_on),
+                            convertMillisToDate(habit.endDateTime)
+                        )
+                    }
+                }
+                item {
+                    HabitInfoComponent(
+                        Icons.Default.LocalFireDepartment,
+                        "Current ${streakData.currentStreak}",
+                        "${stringResource(R.string.Best_Streak)} ${streakData.bestStreak}"
+                    )
+                }
+
+                item {
+                    val habitTypeIcon = when (habit.habitConfig) {
+                        is HabitConfig.Simple -> Icons.Default.CheckCircleOutline
+                        is HabitConfig.Counted -> Icons.Default.Numbers
+                        else ->  Icons.Default.Timer
+                    }
+                    val habitTypeText = when (habit.habitConfig) {
+                        is HabitConfig.Timed -> stringResource(R.string.habit_type_timed)
+                        is HabitConfig.Counted -> stringResource(R.string.habit_type_counter)
+                        else -> stringResource(R.string.habit_type_simple)
+                    }
+                    HabitInfoComponent(
+                        habitTypeIcon,
+                        stringResource(R.string.type),
+                        habitTypeText
+                    )
+                }
+
+                if(habit.habitConfig is HabitConfig.Simple || habit.habitConfig is HabitConfig.Timed) {
+                    item {
+                        HabitInfoComponent(
+                            Icons.Outlined.NotificationsActive,
+                            stringResource(R.string.remind_at),
+                            convertMillisToTime(habit.startDateTime)
+                        )
+                    }
+                }
+
+                if(habit.habitConfig is HabitConfig.Timed) {
+                    item {
+                        HabitInfoComponent(
+                            Icons.Outlined.Timer,
+                            stringResource(R.string.timer),
+                            formatDuration(habit.habitConfig.durationMillis)
+                        )
+                    }
+                }
+
+                if(habit.habitConfig is HabitConfig.Counted) {
+                    item {
+                        HabitInfoComponent(
+                            Icons.Outlined.Circle,
+                            stringResource(R.string.active_from),
+                            convertMillisToTime(habit.habitConfig.activeStartTime)
+                        )
+                    }
+
+                    item {
+                        HabitInfoComponent(
+                            Icons.Outlined.StopCircle,
+                            stringResource(R.string.active_until),
+                            convertMillisToTime(habit.habitConfig.activeEndTime)
+                        )
+                    }
+
+                    item {
+                        HabitInfoComponent(
+                            Icons.Outlined.NotificationsActive,
+                            stringResource(R.string.notify_every),
+                            formatDuration(habit.habitConfig.intervalMillis)
+                        )
+                    }
+
+                    item {
+                        HabitInfoComponent(
+                            Icons.Default.TrackChanges,
+                            stringResource(R.string.goal),
+                            habit.habitConfig.goal.toString()
+                        )
+                    }
+
+                    if(habit.habitConfig.unit.isNotBlank()){
+                        item {
+                            HabitInfoComponent(
+                                Icons.Default.AcUnit,
+                                stringResource(R.string.unit),
+                                habit.habitConfig.unit
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun HabitInfoComponent(
+    icon: ImageVector,
+    title: String,
+    description: String
+) {
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+
+        CircleWrapper(MaterialTheme.colorScheme.primaryContainer) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
+                tint = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        }
+
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+
+            Text(
+                text = title,
+                style = MaterialTheme.typography.labelMedium,
+                modifier = Modifier.alpha(0.85f),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            Spacer(Modifier.height(2.dp))
+
+            Text(
+                text = description,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+    }
+}
+
+@Composable
+fun SingleHabitHeatMap(
+    radius: Int,
+    habit: HabitModel,
+    instances: List<HabitInstanceModel>,
+){
+    val today = LocalDate.now()
+    val yearStart = LocalDate.of(today.year, 1, 1)
+
+    // Calculate the offset from Monday for January 1st
+    val jan1DayOfWeek = yearStart.dayOfWeek.value // Monday = 1, Sunday = 7
+    val offsetFromMonday = jan1DayOfWeek - 1 // 0 for Monday, 6 for Sunday
+
+    val totalDays = ChronoUnit.DAYS.between(yearStart, today).toInt() + 1
+    val allDates = (0 until totalDays).map { yearStart.plusDays(it.toLong()) }
+
+    val heatMap = remember(instances, habit) {
+        instances
+            .groupBy { LocalDate.ofEpochDay(it.instanceDate) }
+            .mapValues { (_, instancesForDay) ->
+                instancesForDay.count { instance ->
+                    instance.isCompleted(habit)
+                }
+            }
+    }
+
+    // Create week columns with proper day alignment
+    val weekColumns = mutableListOf<List<LocalDate?>>()
+    var currentWeek = MutableList<LocalDate?>(7) { null }
+
+    // Fill the first week with nulls for days before January 1st
+    for (i in 0 until offsetFromMonday) {
+        currentWeek[i] = null
+    }
+
+    // Add all dates starting from the correct day of week
+    allDates.forEachIndexed { index, date ->
+        val dayIndex = (offsetFromMonday + index) % 7
+        currentWeek[dayIndex] = date
+
+        // When we complete a week (reach Sunday) or it's the last date
+        if (dayIndex == 6 || index == allDates.size - 1) {
+            weekColumns.add(currentWeek.toList())
+            currentWeek = MutableList(7) { null }
+        }
+    }
+    val boxSize = 24.dp
+    val lazyListState = rememberLazyListState()
+
+    // Calculate the index of the current month's first week
+    val currentMonthStartIndex = remember(weekColumns) {
+        val currentMonth = today.month
+        weekColumns.indexOfFirst { week ->
+            week.any { date -> date?.month == currentMonth }
+        }.takeIf { it != -1 } ?: 0
+    }
+
+    // Auto-scroll to current month on first composition
+    LaunchedEffect(currentMonthStartIndex) {
+        if (currentMonthStartIndex > 0) {
+            lazyListState.scrollToItem(index = maxOf(0, currentMonthStartIndex - 2))
+        }
+    }
+
+    HeatMapCard(
+        radius,
+        stringResource(R.string.this_year),
+        "",
+        boxSize,
+        2,
+        lazyListState,
+        weekColumns,
+        heatMap.toMap()
+    )
+}
+
+// ------------- Card -------------
+@Composable
+fun HabitDateCard(
+    radius: Int,
+    isTodayDone: Boolean,
+    isDone: Boolean,
+    day: String,
+    date: Int,
+    modifier: Modifier = Modifier
+) {
+    val containerColor = when {
+        isTodayDone && isDone -> MaterialTheme.colorScheme.primary
+        isTodayDone && !isDone -> MaterialTheme.colorScheme.primaryContainer
+        isDone -> MaterialTheme.colorScheme.primary
+        else -> MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)
+    }
+
+    val contentColor = when {
+        isDone -> MaterialTheme.colorScheme.onPrimary
+        else -> MaterialTheme.colorScheme.onSurface
+    }
+
+    Card(
+        modifier = modifier,
+        shape = shapeManager(radius = radius),
+        colors = CardDefaults.cardColors(
+            containerColor = containerColor,
+            contentColor = contentColor
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                day.uppercase(),
+                style = MaterialTheme.typography.labelMedium,
+                modifier = Modifier.alpha(0.95f)
+            )
+            Text(
+                date.toString(),
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.ExtraLight),
+                modifier = Modifier.alpha(0.85f)
+            )
+        }
+    }
+}
+
+@Composable
+fun HabitPreviewCard(
+    modifier: Modifier = Modifier,
+    radius: Int,
+    is24HourFormat: Boolean,
+    habit: HabitModel,
+    instances: List<HabitInstanceModel>,
+    isReordering: Boolean = false,
+    dragHandleModifier: Modifier = Modifier,
+    onClick: (Long) -> Unit,
+    onLongPressed: () -> Unit,
+    onAnalyticsClicked: () -> Unit
+) {
+    val todayEpoch = LocalDate.now().toEpochDay()
+    val instance = instances.firstOrNull { it.instanceDate == todayEpoch }
+    val isTodayDone = instance?.isCompleted(habit) ?: false
+
+    // Get Monday of this week
+    val mondayEpoch = LocalDate.now().with(DayOfWeek.MONDAY).toEpochDay()
+    val weekDates = (0L..6L).map { mondayEpoch + it }
+    val (currentStreak, _) = calculateStreaks(habit.recurrence, habit.startDateTime, habit.habitConfig, instances)
+    val habitTypeIcon = when (habit.habitConfig) {
+        is HabitConfig.Simple -> Icons.Default.CheckCircleOutline
+        is HabitConfig.Counted -> Icons.Default.Numbers
+        else ->  Icons.Default.Timer
+    }
+
+    val habitTypeText = when (habit.habitConfig) {
+        is HabitConfig.Timed -> formatDuration(habit.habitConfig.durationMillis)
+        is HabitConfig.Counted -> habit.habitConfig.goal.toString()
+        else -> ""
+    }
+
+    val habitTimeText = when (habit.habitConfig) {
+        is HabitConfig.Counted -> "${convertMillisToTime(habit.habitConfig.activeStartTime, is24HourFormat)} - ${convertMillisToTime(habit.habitConfig.activeEndTime, is24HourFormat)}"
+        else -> convertMillisToTime(habit.startDateTime, is24HourFormat)
+    }
+
+    val hapticFeedback = LocalHapticFeedback.current
+    val handleLongPress = {
+        hapticFeedback.performHapticFeedback(
+            HapticFeedbackType.LongPress
+        )
+        onLongPressed()
+    }
+
+    Card(
+        modifier = modifier.fillMaxWidth()
+            .combinedClickable(
+                onClick = { onClick(todayEpoch) },
+                onLongClick = handleLongPress
+            ),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isTodayDone) MaterialTheme.colorScheme.primaryContainer
+            else MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)
+        ),
+        shape = shapeManager(radius = radius * 2)
+    ) {
+        Column {
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row {
+                    IconRadioButton(
+                        selected = isTodayDone,
+                    ) { onClick(todayEpoch) }
+
+                    Column(Modifier.padding(top = 8.dp)) {
+                        Text(
+                            habit.title,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                        )
+                        Text(
+                            habitTimeText,
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.ExtraLight),
+                            modifier = Modifier.alpha(0.9f)
+                        )
+                    }
+                }
+
+                Row(modifier = Modifier.padding(end = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                    if (isReordering) {
+                        Icon(
+                            imageVector = Icons.Default.DragIndicator,
+                            contentDescription = null,
+                            modifier = dragHandleModifier
+                                .size(36.dp)
+                                .padding(8.dp)
+                        )
+                    } else {
+                        IconButton({}, modifier = Modifier.size(36.dp)) { Icon(Icons.Default.LocalFireDepartment, null) }
+                        Text("$currentStreak", modifier = Modifier.padding(end = 4.dp), style = MaterialTheme.typography.labelLarge)
+                        IconButton({}, modifier = Modifier.size(36.dp)) { Icon(habitTypeIcon, null) }
+                        if(habit.habitConfig is HabitConfig.Counted || habit.habitConfig is HabitConfig.Timed){
+                            Text(habitTypeText, modifier = Modifier.padding(end = 4.dp), style = MaterialTheme.typography.labelLarge)
+                        }
+                        IconButton(onAnalyticsClicked, modifier = Modifier.size(36.dp)) { Icon(Icons.Default.Analytics, null) }
+                    }
+                }
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp, vertical = 6.dp),
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                weekDates.forEach { epochDay ->
+                    val localDate = LocalDate.ofEpochDay(epochDay)
+                    val instance = instances.firstOrNull { it.instanceDate == epochDay }
+                    val isCardDone = instance?.isCompleted(habit) ?: false
+
+                    when(habit.habitConfig) {
+                        is HabitConfig.Simple ->
+                            HabitDateCard(
+                                radius = radius,
+                                isTodayDone = isTodayDone,
+                                isDone = isCardDone,
+                                day = localDate.dayOfWeek.name.take(3),
+                                date = localDate.dayOfMonth,
+                                modifier = Modifier.weight(1f)
+                            )
+                        else ->
+                            OtherConfigCard(
+                                radius = radius,
+                                instance = instance,
+                                isTimed = habit.isTimed,
+                                isTodayDone=isTodayDone,
+                                isDone = isCardDone,
+                                day = localDate.dayOfWeek.name.take(1),
+                                date = localDate.dayOfMonth,
+                                modifier = Modifier.weight(1f)
+                            )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun OtherConfigCard(
+    radius: Int,
+    isTimed: Boolean,
+    instance: HabitInstanceModel?,
+    isTodayDone: Boolean,
+    isDone: Boolean,
+    day: String,
+    date: Int,
+    modifier: Modifier = Modifier
+) {
+    val containerColor = when {
+        isTodayDone && isDone -> MaterialTheme.colorScheme.primary
+        isTodayDone && !isDone -> MaterialTheme.colorScheme.primaryContainer
+        isDone -> MaterialTheme.colorScheme.primary
+        else -> MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)
+    }
+
+    val contentColor = when {
+        isDone -> MaterialTheme.colorScheme.onPrimary
+        else -> MaterialTheme.colorScheme.onSurface
+    }
+
+    val text = if (isTimed) { formatDuration(instance?.timeSpent ?: 0L) } else { (instance?.count ?: 0).toString() }
+    Card(
+        modifier = modifier,
+        shape = shapeManager(radius = radius),
+        colors = CardDefaults.cardColors(
+            containerColor = containerColor,
+            contentColor = contentColor
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Row{
+                Text(
+                    "$date, ",
+                    style = MaterialTheme.typography.labelMedium,
+                    modifier = Modifier.alpha(0.95f)
+                )
+
+                Text(
+                    day.uppercase(),
+                    style = MaterialTheme.typography.labelMedium,
+                    modifier = Modifier.alpha(0.95f)
+                )
+            }
+            Text(
+                text,
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.ExtraLight),
+                modifier = Modifier.alpha(0.85f)
+            )
+        }
+    }
+}
+
+@Composable
+fun HabitCalendarCard(
+    radius: Int,
+    habit: HabitModel,
+    habitInstances: List<HabitInstanceModel>,
+    onHabitEvents: (HabitEvents) -> Unit
+) {
+    val context = LocalContext.current
+    val startDateTime = habit.startDateTime
+    val endDateTime = habit.endDateTime
+    val recurrence = habit.recurrence
+    val workspaceId = habit.workspaceId
+
+    val habitStartMonth =
+        Instant.ofEpochMilli(startDateTime).atZone(ZoneId.systemDefault()).toLocalDate()
+            .let { YearMonth.of(it.year, it.month) }
+
+    var currentMonth by remember { mutableStateOf(YearMonth.now()) }
+    val currentYearMonth = YearMonth.now()
+    val endOfYear = YearMonth.of(currentYearMonth.year, 12)
+
+    val canGoBack = currentMonth > habitStartMonth
+    val canGoForward = currentMonth < endOfYear
+
+    val daysInMonth = currentMonth.lengthOfMonth()
+    val firstDayOfWeek = currentMonth.atDay(1).dayOfWeek.value % 7
+    val dates = (1..daysInMonth).map { currentMonth.atDay(it) }
+
+    val daysOfWeek = listOf(
+        stringResource(R.string.sunday_short),
+        stringResource(R.string.monday_short),
+        stringResource(R.string.tuesday_short),
+        stringResource(R.string.wednesday_short),
+        stringResource(R.string.thursday_short),
+        stringResource(R.string.friday_short),
+        stringResource(R.string.saturday_short)
+
+    )
+    val today = LocalDate.now()
+    val habitStartDate = Instant.ofEpochMilli(startDateTime).atZone(ZoneId.systemDefault()).toLocalDate()
+    val habitEndEpochDay = if (endDateTime == -1L) null else Instant.ofEpochMilli(endDateTime)
+        .atZone(ZoneId.systemDefault())
+        .toLocalDate()
+        .toEpochDay()
+    val locale = LocalLocale.current.platformLocale
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(330.dp),
+        onClick = {},
+        shape = shapeManager(radius = radius * 2),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)
+        )
+    ) {
+        Column(Modifier.padding(16.dp)) {
+            // Month navigation
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = currentMonth.month.getDisplayName(TextStyle.FULL, locale) +
+                            " ${currentMonth.year}",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Row {
+                    IconButton(
+                        onClick = { if (canGoBack) currentMonth = currentMonth.minusMonths(1) },
+                        enabled = canGoBack
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Default.ArrowBackIos,
+                            contentDescription = "Previous Month",
+                            modifier = Modifier
+                                .alpha(if (canGoBack) 0.8f else 0.3f)
+                                .size(16.dp)
+                        )
+                    }
+                    IconButton(
+                        onClick = { if (canGoForward) currentMonth = currentMonth.plusMonths(1) },
+                        enabled = canGoForward
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Default.ArrowForwardIos,
+                            contentDescription = "Next Month",
+                            modifier = Modifier
+                                .alpha(if (canGoForward) 0.8f else 0.3f)
+                                .size(16.dp)
+                        )
+                    }
+                }
+            }
+
+            // Days of week row
+            Row(Modifier.fillMaxWidth().padding(bottom = 6.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                daysOfWeek.forEach {
+                    Text(
+                        text = it,
+                        modifier = Modifier.weight(1f),
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
+                    )
+                }
+            }
+
+            // Calendar grid
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(7),
+                userScrollEnabled = false,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // Empty cells before 1st day
+                items(firstDayOfWeek) { Box(modifier = Modifier.size(32.dp)) }
+
+                items(dates) { date ->
+                    val epochDay = date.toEpochDay()
+                    val instance = habitInstances.find { it.instanceDate == epochDay }
+                    val isMarked = instance?.isCompleted(habit) ?: false
+                    val isBeforeStart = epochDay < habitStartDate.toEpochDay()
+                    val isAfterToday = epochDay > today.toEpochDay()
+                    val isAfterEnd = habitEndEpochDay != null && epochDay > habitEndEpochDay
+                    val isAllowedByRecurrence = isDateAllowedForHabit(recurrence, epochDay)
+
+                    val backgroundColor = when {
+                        isMarked -> MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                        isAllowedByRecurrence && !isBeforeStart && !isAfterEnd -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                        else -> Color.Transparent
+                    }
+
+                    val textColor = when {
+                        isMarked -> MaterialTheme.colorScheme.onPrimary
+                        isAllowedByRecurrence && !isBeforeStart && !isAfterEnd -> MaterialTheme.colorScheme.onSurface
+                        else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                    }
+
+                    val dateAlpha = when {
+                        isBeforeStart -> 0.2f
+                        isAfterToday || isAfterEnd -> 0.4f
+                        !isAllowedByRecurrence -> 0.4f
+                        else -> 1f
+                    }
+
+                    val habitAlreadyEnded = stringResource(R.string.habit_already_ended)
+                    val cantMarkFutureDate = stringResource(R.string.cannot_mark_future_dates)
+                    val habitStartsLater = stringResource(R.string.habit_starts_later)
+                    val notInSchedule = stringResource(R.string.date_not_in_schedule)
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(backgroundColor)
+                            .alpha(dateAlpha)
+                            .clickable {
+                                when {
+                                    isAfterEnd -> Toast.makeText(
+                                        context,
+                                        habitAlreadyEnded,
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+
+                                    isAfterToday -> Toast.makeText(
+                                        context,
+                                        cantMarkFutureDate,
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+
+                                    isBeforeStart -> Toast.makeText(
+                                        context,
+                                        habitStartsLater,
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+
+                                    !isAllowedByRecurrence -> Toast.makeText(
+                                        context,
+                                        notInSchedule,
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+
+                                    else -> {
+                                        val oldInstance =
+                                            habitInstances.find { it.instanceDate == epochDay }
+                                        val count = if (habit.isCounted) {
+                                            if (oldInstance != null) {
+                                                val goal =
+                                                    (habit.habitConfig as HabitConfig.Counted).goal
+                                                if (oldInstance.count == goal) 0
+                                                else goal
+                                            } else (habit.habitConfig as HabitConfig.Counted).goal
+                                        } else 0
+
+                                        val newInstance = HabitInstanceModel(
+                                            instanceDate = epochDay,
+                                            habitId = habit.id,
+                                            workspaceId = workspaceId,
+                                            count = count
+                                        )
+                                        onHabitEvents(
+                                            HabitEvents.UpdateInstance(
+                                                newInstance,
+                                                habit.habitConfig
+                                            )
+                                        )
+                                    }
+                                }
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(date.dayOfMonth.toString(), color = textColor)
+                    }
+                }
+
+            }
+        }
+    }
+}
+
+@Composable
+fun WeeklyHabitAnalyticsCard(
+    radius: Int,
+    habit: HabitModel,
+    instances: List<HabitInstanceModel>
+) {
+    val today = LocalDate.now()
+    val startOfWeek = today.with(DayOfWeek.MONDAY)
+
+    val instanceMap = remember(instances) {
+        instances.associateBy { it.instanceDate }
+    }
+
+    val daysOfWeek = listOf(
+        stringResource(R.string.monday_short),
+        stringResource(R.string.tuesday_short),
+        stringResource(R.string.wednesday_short),
+        stringResource(R.string.thursday_short),
+        stringResource(R.string.friday_short),
+        stringResource(R.string.saturday_short),
+        stringResource(R.string.sunday_short)
+    )
+
+    val dayStatus = List(daysOfWeek.size) { index ->
+        val date = startOfWeek.plusDays(index.toLong())
+        val epoch = date.toEpochDay()
+
+        val instance = instanceMap[epoch]
+
+        when (val config = habit.habitConfig) {
+            is HabitConfig.Simple -> {
+                instance?.isCompleted(habit) == true
+            }
+
+            is HabitConfig.Counted -> {
+                (instance?.count ?: 0) >= config.goal
+            }
+
+            is HabitConfig.Timed -> {
+                (instance?.timeSpent ?: 0L) >= config.durationMillis
+            }
+        }
+    }
+
+    WeeklyAnalytics(radius, dayStatus)
+}
+
+@Composable
+fun MonthlyHabitAnalyticsCard(
+    radius: Int,
+    habit: HabitModel,
+    instances: List<HabitInstanceModel>
+) {
+    val today = LocalDate.now()
+    val currentYearMonth = YearMonth.of(today.year, today.month)
+    val daysInMonth = currentYearMonth.lengthOfMonth()
+
+    val instanceMap = remember(instances) {
+        instances.associateBy { it.instanceDate }
+    }
+
+    val weekRanges = remember(daysInMonth) {
+        val ranges = mutableListOf<IntRange>()
+        var start = 1
+        while (start <= daysInMonth) {
+            val end = minOf(start + 6, daysInMonth)
+            ranges.add(start..end)
+            start = end + 1
+        }
+        ranges
+    }
+
+    val weekCounts = remember(instances, habit) {
+        val counts = MutableList(weekRanges.size) { 0 }
+
+        for (day in 1..daysInMonth) {
+            val date = currentYearMonth.atDay(day)
+            val epoch = date.toEpochDay()
+
+            val instance = instanceMap[epoch]
+
+            val isCompleted = when (val config = habit.habitConfig) {
+                is HabitConfig.Simple ->
+                    instance?.isCompleted(habit) == true
+
+                is HabitConfig.Counted ->
+                    (instance?.count ?: 0) >= config.goal
+
+                is HabitConfig.Timed ->
+                    (instance?.timeSpent ?: 0L) >= config.durationMillis
+            }
+
+            if (isCompleted) {
+                weekRanges.forEachIndexed { index, range ->
+                    if (day in range) {
+                        counts[index]++
+                        return@forEachIndexed
+                    }
+                }
+            }
+        }
+
+        counts
+    }
+
+    val completedDays = weekCounts.sum()
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = shapeManager(radius = radius * 2),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)
+        ),
+        onClick = {}
+    ) {
+        Column(
+            Modifier
+                .fillMaxSize()
+                .padding(12.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.This_Month),
+                style = MaterialTheme.typography.titleMedium,
+            )
+
+            Text(
+                text = stringResource(R.string.completed_habits, completedDays),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(bottom = 24.dp)
+            )
+
+            BarChart(
+                weekCounts = weekCounts,
+                weekLabels = weekRanges.map { "${it.first}-${it.last}" }
+            )
+        }
+    }
+}
+
+@Composable
+fun SingleHabitWeeklyProgressChart(
+    radius: Int,
+    habit: HabitModel,
+    instances: List<HabitInstanceModel>,
+    modifier: Modifier = Modifier
+) {
+    val today = LocalDate.now()
+    val startOfWeek = today.with(DayOfWeek.MONDAY)
+    val weekDays = (0..6).map { startOfWeek.plusDays(it.toLong()) }
+    val instanceMap = remember(instances) { instances.associateBy { it.instanceDate } }
+
+    val percentages = weekDays.map { day ->
+        val dayEpoch = day.toEpochDay()
+        val dayOfWeekIndex = (day.dayOfWeek.value + 6) % 7
+
+        val weekly = habit.recurrence as? RecurrenceRule.Weekly
+
+        val isScheduled =
+            weekly?.daysOfWeek?.contains(dayOfWeekIndex) == true &&
+                    habit.isLive()
+
+        if (!isScheduled) return@map 0f
+
+        val instance = instanceMap[dayEpoch]
+
+        when (val config = habit.habitConfig) {
+            is HabitConfig.Simple -> {
+                if (instance?.isCompleted(habit) == true) 100f else 0f
+            }
+
+            is HabitConfig.Counted -> {
+                val progress = (instance?.count ?: 0).toFloat() / config.goal
+                (progress.coerceIn(0f, 1f)) * 100f
+            }
+
+            is HabitConfig.Timed -> {
+                val progress = (instance?.timeSpent ?: 0L).toFloat() / config.durationMillis
+                (progress.coerceIn(0f, 1f)) * 100f
+            }
+        }
+    }
+
+    WeeklyProgressChart(radius, modifier, percentages)
+}
+
+@Composable
+fun HabitsWeeklyProgressAnalysis(
+    radius: Int,
+    habits: List<HabitModel>,
+    habitInstances: List<HabitInstanceModel>,
+    modifier: Modifier = Modifier
+) {
+    val today = LocalDate.now()
+    val startOfWeek = today.with(DayOfWeek.MONDAY)
+    val weekDays = (0..6).map { startOfWeek.plusDays(it.toLong()) }
+    val instanceMap = habitInstances.associateBy { it.habitId to it.instanceDate }
+
+    val percentages = weekDays.map { day ->
+        val dayEpoch = day.toEpochDay()
+        val dayOfWeekIndex = (day.dayOfWeek.value + 6) % 7
+
+        val scheduledHabits = habits.filter { habit ->
+            val weekly = habit.recurrence as? RecurrenceRule.Weekly
+
+            weekly?.daysOfWeek?.contains(dayOfWeekIndex) == true && habit.isLive()
+        }
+
+        val completed = scheduledHabits.count { habit ->
+            val instance = instanceMap[habit.id to dayEpoch]
+            instance?.isCompleted(habit) == true
+        }
+
+        if (scheduledHabits.isNotEmpty()) {
+            (completed.toFloat() / scheduledHabits.size) * 100f
+        } else 0f
+    }
+
+    WeeklyProgressChart(radius, modifier, percentages)
+}
+
+data class StreakData(
+    val currentStreak: Int,
+    val bestStreak: Int
+)
+
+fun calculateStreaks(
+    recurrence: RecurrenceRule,
+    startDateTime: Long,
+    habitConfig: HabitConfig,
+    instances: List<HabitInstanceModel>
+): StreakData {
+
+    if (instances.isEmpty()) {
+        return StreakData(
+            currentStreak = 0,
+            bestStreak = 0
+        )
+    }
+
+    val expectedDates =
+        getExpectedDates(
+            recurrence = recurrence,
+            startDateTime = startDateTime
+        )
+
+    val completedDates =
+        getCompletedDates(
+            habitConfig = habitConfig,
+            instances = instances
+        )
+
+    val currentStreak =
+        calculateCurrentStreak(
+            expectedDates = expectedDates,
+            completedDates = completedDates
+        )
+
+    val bestStreak =
+        calculateBestStreak(
+            expectedDates = expectedDates,
+            completedDates = completedDates
+        )
+
+    return StreakData(
+        currentStreak = currentStreak,
+        bestStreak = bestStreak
+    )
+}
+
+private fun getCompletedDates(
+    habitConfig: HabitConfig,
+    instances: List<HabitInstanceModel>
+): Set<Long> {
+
+    return when (habitConfig) {
+
+        is HabitConfig.Simple -> { instances.map { it.instanceDate }.toSet() }
+
+        is HabitConfig.Counted -> {
+            instances
+                .filter { instance ->
+                    val count = instance.count
+                    count >= habitConfig.goal
+                }
+                .map { it.instanceDate }
+                .toSet()
+        }
+
+        is HabitConfig.Timed -> { instances.map { it.instanceDate }.toSet() }
+    }
+}
+
+private fun getExpectedDates(
+    recurrence: RecurrenceRule,
+    startDateTime: Long
+): List<Long> {
+
+    val today = LocalDate.now()
+
+    val startDate =
+        Instant.ofEpochMilli(startDateTime)
+            .atZone(ZoneId.systemDefault())
+            .toLocalDate()
+
+    val expectedDates = mutableListOf<Long>()
+    var current = startDate
+
+    while (!current.isAfter(today)) {
+        if (recurrence.isActiveOn(date = current, startDate = startDate)) {
+            expectedDates.add(current.toEpochDay())
+        }
+        current = current.plusDays(1)
+    }
+
+    return expectedDates
+}
+
+private fun calculateCurrentStreak(
+    expectedDates: List<Long>,
+    completedDates: Set<Long>
+): Int {
+
+    if (expectedDates.isEmpty()) return 0
+
+    val todayEpoch = LocalDate.now().toEpochDay()
+    var streak = 0
+    var skippedToday = false
+
+    for (expectedDate in expectedDates.asReversed()) {
+
+        if (expectedDate in completedDates) {
+            streak++
+        } else if (expectedDate == todayEpoch && !skippedToday) {
+            skippedToday = true
+            continue
+        } else {
+            break
+        }
+    }
+
+    return streak
+}
+
+private fun calculateBestStreak(expectedDates: List<Long>, completedDates: Set<Long>): Int {
+
+    if (expectedDates.isEmpty()) return 0
+
+    var bestStreak = 0
+    var currentStreak = 0
+
+    for (expectedDate in expectedDates) {
+
+        if (expectedDate in completedDates) {
+
+            currentStreak++
+
+            bestStreak =
+                maxOf(bestStreak, currentStreak)
+
+        } else {
+
+            currentStreak = 0
+        }
+    }
+
+    return bestStreak
+}
+
+@Composable
+fun HabitConfigRow(
+    modifier: Modifier,
+    config: HabitConfig,
+    onChangeConfig: (HabitConfig)->Unit
+) {
+    Row(
+        modifier
+            .height(48.dp)
+            .clip(RoundedCornerShape(50))
+            .background(MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        HabitConfigCard(isExpanded = config is HabitConfig.Simple, config = HabitConfig.Simple) { onChangeConfig(HabitConfig.Simple) }
+        HabitConfigCard(isExpanded = config is HabitConfig.Counted, config = HabitConfig.Counted()) { onChangeConfig(HabitConfig.Counted()) }
+        // HabitConfigCard(isExpanded = config is HabitConfig.Timed, config = HabitConfig.Timed()) { onChangeConfig(HabitConfig.Timed()) }
+    }
+}
+
+@Composable
+fun HabitConfigCard(
+    isExpanded: Boolean,
+    config: HabitConfig,
+    onClick: () -> Unit
+){
+    val title = when(config) {
+        is HabitConfig.Simple -> stringResource(R.string.habit_type_simple)
+        is HabitConfig.Counted -> stringResource(R.string.habit_type_counter)
+        is HabitConfig.Timed -> stringResource(R.string.habit_type_timed)
+    }
+
+    val icon = when(config) {
+        is HabitConfig.Simple -> Icons.Default.Check
+        is HabitConfig.Counted -> Icons.Default.Numbers
+        is HabitConfig.Timed -> Icons.Default.Timer
+    }
+
+    Card(
+        modifier = Modifier
+            .clip(RoundedCornerShape(50))
+            .padding(horizontal = 2.dp),
+        shape = RoundedCornerShape(50),
+        onClick = onClick,
+        colors = CardDefaults.cardColors(
+            containerColor = if(isExpanded) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp),
+            contentColor = MaterialTheme.colorScheme.primary
+        )
+    ) {
+        Row(Modifier.padding(4.dp), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+            if(isExpanded){
+                IconButton(
+                    onClick = onClick,
+                    modifier = Modifier.size(32.dp),
+                    colors = IconButtonDefaults.iconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
+                ) { Icon(icon, null, Modifier.size(18.dp)) }
+
+                Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier
+                    .padding(end = 8.dp)
+                    .widthIn(max = 150.dp), style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+            }
+            else{
+                IconButton(onClick = onClick, modifier = Modifier.size(32.dp),
+                ) { Icon(icon, null, Modifier.size(18.dp)) }
+            }
+        }
+    }
+}
+
+//fun buildFilterCategories(recurrence: RecurrenceRule): List<FilterCategory> {
+//    return listOf(
+//        FilterCategory(
+//            name = "Sort By",
+//            options = listOf(
+//                FilterOption("latest", "Latest"),
+//                FilterOption("oldest", "Oldest")
+//            ),
+//            type = SelectionType.SINGLE
+//        ),
+//        FilterCategory(
+//            name = "Recurrence",
+//            options = listOf(
+//                FilterOption("recurrence", "Occurs On", null, recurrence)
+//            ),
+//            type = SelectionType.RECURRENCE
+//        ),
+//        FilterCategory(
+//            name = "Type",
+//            options = listOf(
+//                FilterOption("simple", "Simple"),
+//                FilterOption("timed", "Timed")
+//            ),
+//            type = SelectionType.SINGLE
+//        ),
+//        FilterCategory(
+//            name = "Active",
+//            options = listOf(
+//                FilterOption("live", "Live"),
+//                FilterOption("ended", "Ended")
+//            ),
+//            type = SelectionType.SINGLE
+//        )
+//    )
+//}
+
+@Composable
+fun AchievementCard(
+    stats: HabitAchievementStats,
+    habit: HabitModel
+) {
+    Card(
+        modifier = Modifier.padding(8.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp),
+        ),
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
+        Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Row(
+                    verticalAlignment = Alignment.Top,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    CircleWrapper(color = MaterialTheme.colorScheme.primary, size = 0.dp) {
+                        Icon(
+                            painter = painterResource(R.mipmap.ic_launcher_foreground),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(40.dp)
+                        )
+                    }
+
+                    Column(horizontalAlignment = Alignment.Start) {
+                        Text(
+                            "OmniPad",
+                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            stringResource(R.string.habit_achievement),
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+                }
+                Text(
+                    convertMillisToDate(System.currentTimeMillis()),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(horizontalAlignment = Alignment.Start) {
+                    Text(
+                        stats.habitTitle,
+                        maxLines = 1,
+                        modifier = Modifier.widthIn(max = 280.dp),
+                        overflow = TextOverflow.Ellipsis,
+                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.SemiBold),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    if(stats.habitDescription.isNotBlank()){
+                        Text(
+                            stats.habitDescription,
+                            maxLines = 2,
+                            modifier = Modifier.widthIn(max = 280.dp),
+                            overflow = TextOverflow.Ellipsis,
+                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.ExtraLight)
+                        )
+                    }
+
+                }
+
+                Icon(
+                    painterResource(R.drawable.calendar),
+                    contentDescription = null,
+                    modifier = Modifier.size(48.dp),
+                    tint = Color.Unspecified
+                )
+            }
+            Spacer(Modifier.height(16.dp))
+
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Card(
+                    Modifier.weight(1f),
+                    colors = CardDefaults.cardColors(
+                        MaterialTheme.colorScheme.surfaceColorAtElevation(
+                            12.dp
+                        )
+                    ),
+                    elevation = CardDefaults.cardElevation(4.dp)
+                ) {
+                    Row(Modifier.fillMaxWidth().padding(8.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            painterResource(R.drawable.approved),
+                            contentDescription = null,
+                            modifier = Modifier.size(36.dp),
+                            tint = Color.Unspecified
+                        )
+
+                        Column(
+                            Modifier.weight(1f),
+                            horizontalAlignment = Alignment.Start,
+                            verticalArrangement = Arrangement.Top
+                        ) {
+                            Text(
+                                stringResource(R.string.completion),
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.ExtraLight),
+                                modifier = Modifier.alpha(0.75f)
+                            )
+
+                            Text(
+                                stats.totalCompletions.toString(),
+                                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                                color = completed
+                            )
+                            Text(
+                                stringResource(R.string.days),
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                                color = completed
+                            )
+                        }
+                    }
+                }
+
+                Card(
+                    Modifier.weight(1f),
+                    colors = CardDefaults.cardColors(
+                        MaterialTheme.colorScheme.surfaceColorAtElevation(
+                            12.dp
+                        )
+                    ),
+                    elevation = CardDefaults.cardElevation(4.dp)
+                ) {
+                    Row(Modifier.fillMaxWidth().padding(8.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            painterResource(R.drawable.consistency),
+                            contentDescription = null,
+                            modifier = Modifier.size(36.dp),
+                            tint = Color.Unspecified
+                        )
+
+                        Column(
+                            Modifier.weight(1f),
+                            horizontalAlignment = Alignment.Start,
+                            verticalArrangement = Arrangement.Top
+                        ) {
+                            Text(
+                                stringResource(R.string.consistency),
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.ExtraLight),
+                                modifier = Modifier.alpha(0.75f)
+                            )
+
+                            Text(
+                                "${stats.consistencyPercent} %",
+                                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.primary
+                            )
+
+                            Text(
+                                stringResource(R.string.percent),
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                }
+            }
+
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Card(
+                    Modifier.weight(1f),
+                    colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceColorAtElevation(12.dp)),
+                    elevation = CardDefaults.cardElevation(4.dp)
+                ) {
+                    Row(Modifier.fillMaxWidth().padding(8.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            painterResource(R.drawable.fire),
+                            contentDescription = null,
+                            modifier = Modifier.size(36.dp),
+                            tint = Color.Unspecified
+                        )
+
+                        Column(
+                            Modifier.weight(1f),
+                            horizontalAlignment = Alignment.Start,
+                            verticalArrangement = Arrangement.Top
+                        ) {
+                            Text(
+                                stringResource(R.string.current_streak_text),
+                                style = MaterialTheme.typography.labelSmall,
+                                modifier = Modifier.alpha(0.75f)
+                            )
+
+                            Text(
+                                stats.currentStreak.toString(),
+                                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                                color = flameOrange
+                            )
+
+                            Text(
+                                stringResource(R.string.keep_it_going),
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                                color = flameOrange
+                            )
+                        }
+                    }
+                }
+
+                Card(
+                    Modifier.weight(1f),
+                    colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceColorAtElevation(12.dp)),
+                    elevation = CardDefaults.cardElevation(4.dp)
+                ) {
+                    Row(Modifier.fillMaxWidth().padding(8.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            painterResource(R.drawable.trophy_star),
+                            contentDescription = null,
+                            tint = Color.Unspecified,
+                            modifier = Modifier.size(36.dp)
+                        )
+
+                        Column(
+                            Modifier.weight(1f),
+                            horizontalAlignment = Alignment.Start,
+                            verticalArrangement = Arrangement.Top
+                        ) {
+                            Text(
+                                stringResource(R.string.longest_streak),
+                                style = MaterialTheme.typography.labelSmall,
+                                modifier = Modifier.alpha(0.75f)
+                            )
+
+                            Text(
+                                stats.longestStreak.toString(),
+                                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                                color = trophyGold
+                            )
+
+                            Text(
+                                stringResource(R.string.personal_best),
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                                modifier = Modifier.alpha(0.75f),
+                                color = trophyGold
+                            )
+                        }
+                    }
+                }
+            }
+
+            Last30DaysHeatMapCard(
+                title = stringResource(R.string.last_30_days),
+                boxSize = 16.dp,
+                habit = habit,
+                heatMap = stats.heatMapData
+            )
+        }
+    }
+}
+
+private fun calculateConsistencyPercent(
+    habit: HabitModel,
+    instances: List<HabitInstanceModel>
+): Int {
+
+    val habitStart = Instant.ofEpochMilli(habit.startDateTime)
+        .atZone(ZoneId.systemDefault())
+        .toLocalDate()
+
+    val today = LocalDate.now()
+
+    val habitEnd = when {
+        habit.endDateTime == -1L -> today
+        else -> {
+            val end = Instant.ofEpochMilli(habit.endDateTime)
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate()
+
+            minOf(end, today)
+        }
+    }
+
+    val instanceMap = instances.associateBy { it.instanceDate }
+
+    var scheduledDays = 0
+    var completedDays = 0
+
+    var date = habitStart
+
+    while (!date.isAfter(habitEnd)) {
+
+        if (habit.recurrence.isActiveOn(date, habitStart)) {
+
+            scheduledDays++
+
+            val instance = instanceMap[date.toEpochDay()]
+
+            if (instance?.isCompleted(habit) == true) {
+                completedDays++
+            }
+        }
+
+        date = date.plusDays(1)
+    }
+
+    return if (scheduledDays == 0) {
+        100
+    } else {
+        ((completedDays * 100f) / scheduledDays).roundToInt()
+    }
+}
+
+fun computeAchievementStats(
+    habit: HabitModel,
+    instances: List<HabitInstanceModel>
+): HabitAchievementStats {
+
+    val totalCompletions = instances.filter { it.isCompleted(habit) }.size
+    val consistencyPercent = calculateConsistencyPercent(habit, instances)
+    val streakData = calculateStreaks(habit.recurrence, habit.startDateTime, habit.habitConfig, instances)
+    val today = LocalDate.now()
+    val rangeStart = today.minusDays(29)
+
+    val heatMapData = instances
+        .asSequence()
+        .filter { LocalDate.ofEpochDay(it.instanceDate) >= rangeStart }
+        .groupBy { LocalDate.ofEpochDay(it.instanceDate) }
+        .mapValues { (_, instancesForDay) ->
+            instancesForDay.count { instance ->
+                instance.isCompleted(habit)
+            }
+        }
+
+    return HabitAchievementStats(
+        habitTitle = habit.title,
+        habitDescription = habit.description,
+        currentStreak = streakData.currentStreak,
+        longestStreak = streakData.bestStreak,
+        consistencyPercent = consistencyPercent,
+        totalCompletions = totalCompletions,
+        heatMapData = heatMapData
+    )
+}
+
+@Composable
+fun ShareCard(
+    content: @Composable (BoxScope.()->Unit)
+){
+    Card(Modifier.fillMaxWidth().padding(4.dp)){
+        Column {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(4.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color(0x857149FD))
+                    .drawBehind {
+                        // Vivid purple (top-left)
+                        drawRect(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    Color(0x4DAC89FC),
+                                    Color(0x77D3C4FD),
+                                    Color.Transparent
+                                ),
+                                center = Offset(size.width * 0.15f, size.height * 0.1f),
+                                radius = size.width * 0.9f
+                            )
+                        )
+
+                        // Hot pink / magenta (right side)
+                        drawRect(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    Color(0x79FF81BD),
+                                    Color(0x72FFC7E2),
+                                    Color.Transparent
+                                ),
+                                center = Offset(size.width * 0.95f, size.height * 0.35f),
+                                radius = size.width * 0.85f
+                            )
+                        )
+
+                        // Electric blue (bottom-left)
+                        drawRect(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    Color(0x83609BFF),
+                                    Color(0x7898C0FF),
+                                    Color.Transparent
+                                ),
+                                center = Offset(size.width * 0.1f, size.height * 0.9f),
+                                radius = size.width * 0.9f
+                            )
+                        )
+
+                        // Warm orange glow (bottom-right) — picks up the yellow tint from your reference
+                        drawRect(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    Color(0x78FAAD2D),
+                                    Color(0x78FFBF6F),
+                                    Color.Transparent
+                                ),
+                                center = Offset(size.width * 0.9f, size.height * 0.95f),
+                                radius = size.width * 0.8f
+                            )
+                        )
+                    },
+                content = content
+            )
+
+            Column(modifier = Modifier.padding(12.dp)) {
+                Text(
+                    stringResource(R.string.tracked_by_omnipad),
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                    color = MaterialTheme.colorScheme.primary.copy(0.75f)
+                )
+                Text(
+                    stringResource(R.string.available_on_fdroid_izzyondroid),
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.ExtraLight),
+                    color = MaterialTheme.colorScheme.primary.copy(0.75f)
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ShareAchievementSheet(
+    habit: HabitModel,
+    stats: HabitAchievementStats,
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val graphicsLayer = rememberGraphicsLayer()
+
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        LazyColumn (
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            item{
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(stringResource(R.string.share_achievement), style = MaterialTheme.typography.titleLarge)
+                    IconButton(onDismiss) {
+                        Icon(Icons.Default.Close, null)
+                    }
+                }
+                Spacer(Modifier.height(12.dp))
+            }
+            item{
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .drawWithContent {
+                            graphicsLayer.record { this@drawWithContent.drawContent() }
+                            drawLayer(graphicsLayer)
+                        }
+                ) {
+                    ShareCard { AchievementCard(stats, habit) }
+                }
+
+                Spacer(Modifier.height(8.dp))
+            }
+
+            item{
+                FilledTonalButton (
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    onClick = {
+                        scope.launch {
+                            val bitmap = graphicsLayer.toImageBitmap().asAndroidBitmap()
+                            val uri = saveBitmapAndGetUri(context, bitmap)
+                            shareImageUri(context, uri)
+                        }
+                    }
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Icon(Icons.Default.Share, null)
+                        Text(stringResource(R.string.share))
+                    }
+                }
+
+                Spacer(Modifier.height(16.dp))
+            }
+        }
+    }
+}
+
+@Composable
+fun Last30DaysHeatMapCard(
+    title: String,
+    boxSize: Dp = 8.dp,
+    habit: HabitModel,
+    heatMap: Map<LocalDate, Int>
+) {
+    val today = remember { LocalDate.now() }
+
+    val habitStartDate = remember(habit.startDateTime) {
+        Instant.ofEpochMilli(habit.startDateTime)
+            .atZone(ZoneId.systemDefault())
+            .toLocalDate()
+    }
+
+    val habitEndDate = remember(habit.endDateTime) {
+        if (habit.endDateTime == -1L) null
+        else Instant.ofEpochMilli(habit.endDateTime)
+            .atZone(ZoneId.systemDefault())
+            .toLocalDate()
+    }
+
+    val dayColumns = remember(today, heatMap) {
+        (29 downTo 0).map { today.minusDays(it.toLong()) }.chunked(7)
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(12.dp),
+        ),
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                title,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.primary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                dayColumns.forEach { column ->
+                    column.forEach { date ->
+                        val isCompleted = (heatMap[date] ?: 0) > 0
+                        val isWithinRange = date >= habitStartDate &&
+                                (habitEndDate == null || date <= habitEndDate)
+                        val isScheduled = isWithinRange &&
+                                habit.recurrence.isActiveOn(date, habitStartDate)
+
+                        val color = when {
+                            isCompleted -> MaterialTheme.colorScheme.primary
+                            isScheduled -> MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) // active, missed
+                            else -> MaterialTheme.colorScheme.primaryFixedDim.copy(alpha = 0.4f) // not scheduled
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .size(boxSize)
+                                .background(color, RoundedCornerShape(3.dp))
+                        )
+                    }
+                }
+            }
+
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth().padding(top = 6.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(12.dp)
+                            .clip(RoundedCornerShape(50))
+                            .background(MaterialTheme.colorScheme.primary)
+                    )
+                    Text(
+                        stringResource(R.string.completed),
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(4.dp)
+                    )
+                }
+                Spacer(Modifier.width(8.dp))
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(12.dp)
+                            .clip(RoundedCornerShape(50))
+                            .background(MaterialTheme.colorScheme.primaryFixedDim.copy(alpha = 0.4f))
+                    )
+                    Text(
+                        stringResource(R.string.not_scheduled),
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(4.dp)
+                    )
+                }
+                Spacer(Modifier.width(8.dp))
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(12.dp)
+                            .clip(RoundedCornerShape(50))
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
+                    )
+                    Text(
+                        stringResource(R.string.missed),
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(4.dp)
+                    )
+                }
+            }
+        }
+    }
+}

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Flux</string>
+    <string name="app_name">OmniPad</string>
 
     <!-- Authentication -->
     <string name="Auth_with_Biometric">Authenticate with Biometrics</string>
@@ -180,7 +180,7 @@
     <string name="Restore">Restore</string>
     <string name="Restore_Description">Restore all content from a full backup folder</string>
     <string name="restore_backup_warning_title">Restore full backup?</string>
-    <string name="restore_backup_warning_message">This replaces all Flux content and attached media on this device with the selected backup. App settings are kept. This cannot be undone.</string>
+    <string name="restore_backup_warning_message">This replaces all OmniPad content and attached media on this device with the selected backup. App settings are kept. This cannot be undone.</string>
     <string name="reset">Reset</string>
     <string name="backup_frequency">Frequency of automatic backup</string>
     <string name="reset_database">Reset Database</string>
@@ -436,11 +436,11 @@
 
 
     <string name="shareContent">
-        Flux is a modern Android productivity app built entirely with Compose.\n
+        OmniPad is a modern Android productivity app built entirely with Compose.\n
         It allows you to create, edit, and delete workspace which has various templates such as Notes, Habits, Journal, To-Do, Events, etc. along with advanced functionalities such as find and replace, note templates, local image/video/audio import, Markdown, LaTeX math formulas, and Mermaid diagram support.\n
         Download and try it now:\n
-        - [GitHub]  https://github.com/chindaronit/Flux/releases\n
-        - [F-droid] https://f-droid.org/packages/com.flux/
+        - [GitHub]  https://github.com/chindaronit/OmniPad/releases\n
+        - [F-droid] https://f-droid.org/packages/com.omnipad/
     </string>
 
     <string name="select_folder">Select Folder</string>
@@ -599,7 +599,7 @@
     <string name="longest_streak">Longest Streak</string>
     <string name="personal_best">Personal Best</string>
     <string name="last_30_days">Last 30 Days</string>
-    <string name="tracked_by_flux">Tracked By @Flux</string>
+    <string name="tracked_by_omnipad">Tracked By @OmniPad</string>
     <string name="available_on_fdroid_izzyondroid">Available on F-Droid, IzzyOnDroid</string>
     <string name="share_achievement">Share Achievement</string>
     <string name="not_scheduled">Not Scheduled</string>
@@ -647,7 +647,7 @@
     <string name="changelog_description">Track the changes in every version.</string>
 
     <string name="change">Change</string>
-    <string name="change_root_directory">Change root directory for Flux data</string>
+    <string name="change_root_directory">Change root directory for OmniPad data</string>
     <string name="change_storage_root">Change storage root</string>
     <string name="couldnt_move_data">Couldn\'t move data</string>
     <string name="please_dont_close_app">Please don\'t close the app</string>
@@ -658,7 +658,7 @@
     <string name="welcome_back">Welcome back to</string>
     <string name="authenticate">Authenticate</string>
     <string name="private_secure">Private &amp; secure</string>
-    <string name="biometric_unlock_description">Use your device biometric to securely unlock your Flux data.</string>
+    <string name="biometric_unlock_description">Use your device biometric to securely unlock your OmniPad data.</string>
     <string name="biometric_data_never_leaves">Your biometric data never leaves your device</string>
 
     <string name="default_screen">Default Screen</string>
