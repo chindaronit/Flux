@@ -69,6 +69,7 @@ import com.omnipad.data.model.WorkspaceModel
 import com.omnipad.data.model.EventExceptionModel
 import com.omnipad.data.model.EventOccurrence
 import com.omnipad.data.model.RecurrenceRule
+import com.omnipad.data.model.eventColorForOccurrence
 import com.omnipad.data.model.filterCompletedEventOccurrences
 import com.omnipad.data.model.findEventOccurrences
 import com.omnipad.data.model.initialEventOccurrenceIndex
@@ -475,9 +476,9 @@ fun EventScreen(
                                                 startDateTime = task.startDateTime,
                                                 isAllDay = task.isAllDay,
                                                 occurrenceDate = occurrence.instanceDate,
-                                                colorArgb = state.eventOccurrenceColors.firstOrNull {
-                                                    it.eventId == task.id && it.occurrenceDate == occurrence.instanceDate
-                                                }?.colorArgb ?: task.colorArgb,
+                                                colorArgb = eventColorForOccurrence(
+                                                    task, occurrence.instanceDate, state.eventOccurrenceColors
+                                                ),
                                                 completedColorArgb = settings.data.completedEventColorArgb,
                                                 onClick = {
                                                     navController.navigate(NavRoutes.eventEditor(task, occurrence.instanceDate))

@@ -68,6 +68,31 @@ data class EventOccurrence(
     val instanceDate: Long get() = date.toEpochDay()
 }
 
+fun eventColorForOccurrence(
+    event: EventModel,
+    occurrenceDate: Long,
+    colors: List<EventOccurrenceColorModel>
+): Int? = colors.firstOrNull {
+    it.eventId == event.id && it.occurrenceDate == occurrenceDate
+}?.colorArgb ?: event.colorArgb
+
+fun displayedEventColor(colorArgb: Int?, completedColorArgb: Int?, isPending: Boolean): Int? =
+    if (isPending) colorArgb else completedColorArgb ?: colorArgb
+
+fun eventEditorPreviewColor(
+    selectedColorArgb: Int?,
+    seriesColorArgb: Int?,
+    useSeriesFallback: Boolean,
+    isNewEvent: Boolean,
+    defaultNewEventColorArgb: Int?,
+    completedColorArgb: Int?,
+    isPending: Boolean
+): Int? {
+    val eventColor = selectedColorArgb ?: if (useSeriesFallback) seriesColorArgb else null
+    return if (isNewEvent) eventColor ?: defaultNewEventColorArgb
+    else displayedEventColor(eventColor, completedColorArgb, isPending)
+}
+
 fun filterCompletedEventOccurrences(
     occurrences: List<EventOccurrence>,
     instances: List<EventInstanceModel>,

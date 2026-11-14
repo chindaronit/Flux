@@ -62,6 +62,7 @@ import com.omnipad.data.model.EventInstanceModel
 import com.omnipad.data.model.EventModel
 import com.omnipad.data.model.EventOccurrence
 import com.omnipad.data.model.EventOccurrenceColorModel
+import com.omnipad.data.model.displayedEventColor
 import com.omnipad.data.model.filterCompletedEventOccurrences
 import com.omnipad.data.model.findEventOccurrences
 import java.time.DayOfWeek
@@ -375,7 +376,7 @@ fun EventCalendar(
                                     }
                                     val isCompleted = key in completed
                                     val eventColor = colors[key] ?: occurrence.event.colorArgb
-                                    val displayColor = if (isCompleted) completedColorArgb ?: eventColor else eventColor
+                                    val displayColor = displayedEventColor(eventColor, completedColorArgb, !isCompleted)
                                     val background = displayColor?.let(::Color)
                                         ?: if (isCompleted) MaterialTheme.colorScheme.primaryContainer
                                         else MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)

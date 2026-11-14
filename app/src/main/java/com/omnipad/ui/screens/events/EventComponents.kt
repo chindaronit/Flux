@@ -90,6 +90,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import com.omnipad.data.model.EventModel
+import com.omnipad.data.model.displayedEventColor
 import com.omnipad.data.model.IntervalUnit
 import com.omnipad.other.IcsImporter
 import java.time.YearMonth
@@ -304,7 +305,7 @@ fun EventCard(
     onLongPressed: () -> Unit,
     trailingContent: @Composable (() -> Unit)? = null,
 ) {
-    val displayedColorArgb = if (!isPending) completedColorArgb ?: colorArgb else colorArgb
+    val displayedColorArgb = displayedEventColor(colorArgb, completedColorArgb, isPending)
     val containerColor = displayedColorArgb?.let(::Color) ?: if (isPending) {
         MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)
     } else {
