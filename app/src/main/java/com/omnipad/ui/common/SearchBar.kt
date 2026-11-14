@@ -2,6 +2,7 @@ package com.omnipad.ui.common
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.text.input.TextFieldState
@@ -44,6 +45,7 @@ fun GeneralSearchBar(
     onSearch: (String) -> Unit,
     onCloseClicked: () -> Unit,
     trailingIconContentDescription: String? = null,
+    windowInsets: WindowInsets = SearchBarDefaults.windowInsets,
 ) {
     val query = textFieldState.text.toString()
     var expanded by rememberSaveable { mutableStateOf(false) }
@@ -87,6 +89,7 @@ fun GeneralSearchBar(
                 )
             },
             colors = SearchBarDefaults.colors(MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)),
+            windowInsets = windowInsets,
             expanded = expanded,
             onExpandedChange = { },
         ) {}

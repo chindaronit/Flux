@@ -26,6 +26,33 @@ class SearchEventsTest {
     }
 
     @Test
+    fun workspaceSearchIncludesOnlyTheEnteredWorkspaceEvenWhenLocked() {
+        val workspaces = listOf(
+            WorkspaceModel(workspaceId = "one"),
+            WorkspaceModel(workspaceId = "locked", passKeyHash = "hash"),
+            WorkspaceModel(workspaceId = "two")
+        )
+        assertEquals(listOf("one"), searchableWorkspaceIds(workspaces, "one"))
+        assertEquals(listOf("locked"), searchableWorkspaceIds(workspaces, "locked"))
+        assertEquals(emptyList<String>(), searchableWorkspaceIds(workspaces, "missing"))
+
+        val events = listOf(
+            EventModel(id = "one", workspaceId = "one", title = "Planning"),
+            EventModel(id = "locked", workspaceId = "locked", title = "Planning"),
+            EventModel(id = "two", workspaceId = "two", title = "Planning")
+        )
+        assertEquals(
+            listOf("locked"),
+            matchingSearchEvents(
+                events,
+                searchableWorkspaceIds(workspaces, "locked"),
+                workspaces.filter { it.isLocked && it.workspaceId != "locked" }.map { it.workspaceId },
+                "plan"
+            ).map { it.id }
+        )
+    }
+
+    @Test
     fun selectedTypesDetermineResultScope() {
         assertEquals(0, searchResultType(emptyList()))
         assertEquals(3, searchResultType(listOf(3)))

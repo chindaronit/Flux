@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -43,6 +44,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -147,8 +149,14 @@ private const val EVENTS_TYPE = 3
 internal fun searchResultType(selectedTypeIds: List<Int>): Int =
     selectedTypeIds.singleOrNull() ?: ALL_TYPES
 
-internal fun searchableWorkspaceIds(workspaces: List<WorkspaceModel>): List<String> =
+internal fun searchableWorkspaceIds(
+    workspaces: List<WorkspaceModel>,
+    workspaceId: String? = null
+): List<String> = if (workspaceId == null) {
     workspaces.filterNot { it.isLocked }.map { it.workspaceId }
+} else {
+    workspaces.filter { it.workspaceId == workspaceId }.map { it.workspaceId }
+}
 
 internal fun matchingSearchEvents(
     events: List<EventModel>,
@@ -193,7 +201,15 @@ internal fun searchSectionStartIndices(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchScreen(navController: NavController, states: States, viewModels: ViewModels){
+fun SearchScreen(
+    navController: NavController,
+    states: States,
+    viewModels: ViewModels,
+    workspaceId: String? = null,
+    initialSpaceId: Int = -1,
+    workspaceHeader: @Composable (() -> Unit)? = null,
+    workspaceControls: @Composable (() -> Unit)? = null
+){
     val context = LocalContext.current
     var query by rememberSaveable { mutableStateOf("") }
     if (states.workspaceState.isLoading) {
@@ -201,7 +217,8 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
         return
     }
     val allSpaces = getSpacesList().filter { it.id!=6 }
-    val lockedWorkspace = states.workspaceState.allWorkspaces.filter { it.isLocked }.map { it.workspaceId }
+    val lockedWorkspace = states.workspaceState.allWorkspaces
+        .filter { it.isLocked && it.workspaceId != workspaceId }.map { it.workspaceId }
     var selectedSpaceIds by remember { mutableStateOf(allSpaces.map { it.id }.toSet()) }
     val notesPreviewMode = states.settings.data.notesPreviewMode
     val radius = states.settings.data.cornerRadius
@@ -213,7 +230,7 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
         states.todoState.isLoading
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val selectedWorkspaceIds = searchableWorkspaceIds(states.workspaceState.allWorkspaces)
+    val selectedWorkspaceIds = searchableWorkspaceIds(states.workspaceState.allWorkspaces, workspaceId)
     val selectedSpaces = allSpaces.filter { it.id in selectedSpaceIds }
     val selectedSpace = searchResultType(selectedSpaces.map { it.id })
 
@@ -358,6 +375,15 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
     )
     val currentSectionStartIndices by rememberUpdatedState(sectionStartIndices)
     val populatedSpaces = selectedSpaces.filter { it.id in sectionStartIndices }
+    var pendingInitialSpace by rememberSaveable(workspaceId, initialSpaceId) {
+        mutableIntStateOf(initialSpaceId)
+    }
+    LaunchedEffect(isLoading, sectionStartIndices, pendingInitialSpace) {
+        if (!isLoading && pendingInitialSpace != -1) {
+            sectionStartIndices[pendingInitialSpace]?.let { eventSearchListState.scrollToItem(it) }
+            pendingInitialSpace = -1
+        }
+    }
     val initialMatchingOccurrenceIndex = initialEventOccurrenceIndex(matchingEventOccurrences)
     val initialMatchingListIndex = remember(matchingEventGroups, initialMatchingOccurrenceIndex) {
         val initialOccurrence = matchingEventOccurrences.getOrNull(initialMatchingOccurrenceIndex)
@@ -464,6 +490,12 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
         showWorkspaceSelectorDialog = false
     }
 
+    fun startCreating(spaceId: Int) {
+        createSpace = spaceId
+        if (workspaceId == null) showWorkspaceSelectorDialog = true
+        else navigateToCreateNewSpaceEntry(workspaceId)
+    }
+
     if(showWorkspaceSelectorDialog){
         SelectWorkspaceDialog(
             workspaces = states.workspaceState.allWorkspaces,
@@ -482,9 +514,8 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
                 Column {
                     selectedSpaces.forEach { space ->
                         TextButton(onClick = {
-                            createSpace = space.id
                             showCreateTypeDialog = false
-                            showWorkspaceSelectorDialog = true
+                            startCreating(space.id)
                         }) {
                             Icon(space.icon, contentDescription = null)
                             Text(space.title, Modifier.padding(start = 8.dp))
@@ -547,27 +578,26 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         topBar = {
-            if (!isEventCalendar) {
-                GeneralSearchBar(
-                    leadingIcon = Icons.Default.Search,
-                    trailingIcon = Icons.Default.FilterList,
-                    trailingIconContentDescription = stringResource(R.string.search_filters),
-                    textFieldState = TextFieldState(query),
-                    onSearch = {
-                        query = it
-                    },
-                    onAddClicked = if (selectedSpaces.isEmpty()) null else {
-                        {
-                            if (selectedSpace == ALL_TYPES) showCreateTypeDialog = true
-                            else {
-                                createSpace = selectedSpace
-                                showWorkspaceSelectorDialog = true
+            Column {
+                workspaceHeader?.invoke()
+                if (!isEventCalendar) {
+                    GeneralSearchBar(
+                        leadingIcon = Icons.Default.Search,
+                        trailingIcon = Icons.Default.FilterList,
+                        trailingIconContentDescription = stringResource(R.string.search_filters),
+                        windowInsets = if (workspaceId == null) SearchBarDefaults.windowInsets else WindowInsets(0, 0, 0, 0),
+                        textFieldState = TextFieldState(query),
+                        onSearch = { query = it },
+                        onAddClicked = if (selectedSpaces.isEmpty()) null else {
+                            {
+                                if (selectedSpace == ALL_TYPES) showCreateTypeDialog = true
+                                else startCreating(selectedSpace)
                             }
-                        }
-                    },
-                    onTrailingIconClicked = { isToolsSheetVisible=true },
-                    onCloseClicked = { query = "" }
-                )
+                        },
+                        onTrailingIconClicked = { isToolsSheetVisible=true },
+                        onCloseClicked = { query = "" }
+                    )
+                }
             }
         }
     ) { innerPadding ->
@@ -578,6 +608,7 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
                 isLoading -> Loader()
                 else -> {
                     Column(Modifier.fillMaxSize()) {
+                        workspaceControls?.invoke()
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
@@ -632,8 +663,7 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
                             }
                             if (isEventCalendar) {
                                 IconButton(onClick = {
-                                    createSpace = EVENTS_TYPE
-                                    showWorkspaceSelectorDialog = true
+                                    startCreating(EVENTS_TYPE)
                                 }) {
                                     Icon(
                                         Icons.Default.Add,
@@ -705,7 +735,7 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
                                 onEventClick = { occurrence ->
                                     navController.navigate(NavRoutes.eventEditor(occurrence.event, occurrence.instanceDate))
                                 },
-                                modifier = Modifier.weight(1f).padding(start = 12.dp, end = 12.dp, bottom = 80.dp),
+                                modifier = Modifier.weight(1f).padding(start = 12.dp, end = 12.dp, bottom = if (workspaceId == null) 80.dp else 0.dp),
                                 focusRequest = eventCalendarFocus
                             )
                         } else {
@@ -717,7 +747,7 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
                                 .padding(horizontal = 12.dp),
                             contentPadding = PaddingValues(
                                 top = 16.dp,
-                                bottom = 64.dp
+                                bottom = if (workspaceId == null) 64.dp else 16.dp
                             ),
                             verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
@@ -773,12 +803,14 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
                         }
                         }
                     }
-                    BottomBar(
-                        navController = navController,
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(bottom = 16.dp)
-                    )
+                    if (workspaceId == null) {
+                        BottomBar(
+                            navController = navController,
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(bottom = 16.dp)
+                        )
+                    }
                 }
             }
         }

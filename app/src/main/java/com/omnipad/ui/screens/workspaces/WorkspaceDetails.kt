@@ -7,6 +7,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -23,6 +25,7 @@ import com.omnipad.data.model.lockWith
 import com.omnipad.data.model.removePasskey
 import com.omnipad.other.ensureStorageRoot
 import com.omnipad.ui.common.DeleteAlert
+import com.omnipad.ui.common.SpaceTopBar
 import com.omnipad.ui.events.HabitEvents
 import com.omnipad.ui.events.JournalEvents
 import com.omnipad.ui.events.NotesEvents
@@ -38,16 +41,23 @@ import com.omnipad.ui.screens.journal.FilterState as JournalFilterState
 import com.omnipad.ui.screens.notes.NotesScreen
 import com.omnipad.ui.screens.notes.FilterState as NotesFilterState
 import com.omnipad.ui.screens.progressBoard.ProgressTrackerScreen
+import com.omnipad.ui.screens.search.SearchScreen
 import com.omnipad.ui.screens.todo.TodoScreen
 import com.omnipad.ui.state.States
 import com.omnipad.ui.viewModel.ViewModels
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import com.omnipad.R
+import com.omnipad.navigation.NavRoutes
 
 private const val VIRTUAL_PAGE_COUNT = 100_000
 
@@ -153,6 +163,8 @@ fun WorkspaceDetails(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val spacesList = getSpacesList()
     var showBottomSheet by remember { mutableStateOf(false) }
+    var showAnalytics by rememberSaveable(workspaceId) { mutableStateOf(initialSpaceId == 6) }
+    var searchInitialSpaceId by rememberSaveable(workspaceId) { mutableIntStateOf(initialSpaceId) }
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
@@ -191,7 +203,45 @@ fun WorkspaceDetails(
     }
     val onShowSpaceBottomSheet: () -> Unit = { showBottomSheet = true }
 
-    if (workspace.selectedSpaces.isEmpty()) {
+    if (!showAnalytics) {
+        SearchScreen(
+            navController = navController,
+            states = states,
+            viewModels = viewModels,
+            workspaceId = workspaceId,
+            initialSpaceId = searchInitialSpaceId,
+            workspaceHeader = {
+                SpaceTopBar(
+                    title = workspace.title,
+                    description = workspace.description,
+                    cover = workspace.cover,
+                    icon = workspace.icon,
+                    isLocked = workspace.isLocked,
+                    onBackPressed = { navController.popBackStack() },
+                    onAddCover = onAddCover,
+                    onRemoveCover = onRemoveCover,
+                    onToggleLock = onToggleLock,
+                    onDeleteWorkspace = onDeleteWorkspace,
+                    onEditWorkspace = { navController.navigate(NavRoutes.NewWorkspace.withArgs(workspaceId)) }
+                )
+            },
+            workspaceControls = {
+                Row(Modifier.padding(horizontal = 8.dp)) {
+                    TextButton(onClick = onShowSpaceBottomSheet) {
+                        Text(stringResource(R.string.Add_Space))
+                    }
+                    if (6 in workspace.selectedSpaces) {
+                        TextButton(onClick = {
+                            selectedSpaceId.intValue = 6
+                            showAnalytics = true
+                        }) {
+                            Text(stringResource(R.string.Analytics))
+                        }
+                    }
+                }
+            }
+        )
+    } else if (workspace.selectedSpaces.isEmpty()) {
         SpaceMapper(
             navController = navController,
             workspace = workspace,
@@ -236,7 +286,13 @@ fun WorkspaceDetails(
         CircularSpacePager(
             spaces = workspace.selectedSpaces,
             selectedSpaceId = selectedSpaceId.intValue,
-            onPageSettled = { selectedSpaceId.intValue = it },
+            onPageSettled = {
+                selectedSpaceId.intValue = it
+                if (it != 6) {
+                    searchInitialSpaceId = it
+                    showAnalytics = false
+                }
+            },
         ) { id ->
             SpaceMapper(
                 navController = navController,
@@ -248,7 +304,13 @@ fun WorkspaceDetails(
                 onRemoveCover = onRemoveCover,
                 onDeleteWorkspace = onDeleteWorkspace,
                 onToggleLock = onToggleLock,
-                onSpaceChange = { selectedSpaceId.intValue = it },
+                onSpaceChange = {
+                    selectedSpaceId.intValue = it
+                    if (it != 6) {
+                        searchInitialSpaceId = it
+                        showAnalytics = false
+                    }
+                },
                 onShowSpaceBottomSheet = onShowSpaceBottomSheet,
                 eventSearchQuery = eventSearchQuery,
                 onEventSearchQueryChange = { eventSearchQuery = it },
@@ -309,6 +371,10 @@ fun WorkspaceDetails(
         onRemove = { spaceId ->
             val newSelected = workspace.selectedSpaces.firstOrNull { it != spaceId } ?: -1
             selectedSpaceId.intValue = newSelected
+            if (spaceId == 6 && showAnalytics) {
+                searchInitialSpaceId = newSelected
+                showAnalytics = false
+            }
 
             viewModels.workspaceViewModel.onEvent(
                 WorkspaceEvents.UpsertSpace(
