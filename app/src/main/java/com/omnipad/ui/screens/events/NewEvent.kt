@@ -46,6 +46,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -62,6 +63,7 @@ import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -131,6 +133,51 @@ fun NewEvent(
     hasOccurrenceColorOverride: Boolean,
     onWorkspaceEvents: (WorkspaceEvents) -> Unit,
     settingsViewModel: SettingsViewModel
+) {
+    var editingOccurrence by rememberSaveable(event.id, occurrenceDate) {
+        mutableStateOf(occurrenceDate != null)
+    }
+    key(event.id, editingOccurrence) {
+        EventEditor(
+            navController = navController,
+            event = event,
+            settings = settings,
+            onTaskEvents = onTaskEvents,
+            occurrenceDate = occurrenceDate.takeIf { editingOccurrence },
+            isNewEvent = isNewEvent,
+            workspaces = workspaces,
+            allEventInstances = allEventInstances,
+            eventOccurrenceColorArgb = if (editingOccurrence || occurrenceDate == null) {
+                eventOccurrenceColorArgb
+            } else {
+                event.colorArgb
+            },
+            hasOccurrenceColorOverride = hasOccurrenceColorOverride,
+            onWorkspaceEvents = onWorkspaceEvents,
+            settingsViewModel = settingsViewModel,
+            onSwitchScope = if (!isNewEvent && occurrenceDate != null && event.recurrence != RecurrenceRule.Once) {
+                { editingOccurrence = !editingOccurrence }
+            } else null
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EventEditor(
+    navController: NavController,
+    event: EventModel,
+    settings: Settings,
+    onTaskEvents: (TaskEvents) -> Unit,
+    occurrenceDate: Long?,
+    isNewEvent: Boolean,
+    workspaces: List<WorkspaceModel>,
+    allEventInstances: List<EventInstanceModel>,
+    eventOccurrenceColorArgb: Int?,
+    hasOccurrenceColorOverride: Boolean,
+    onWorkspaceEvents: (WorkspaceEvents) -> Unit,
+    settingsViewModel: SettingsViewModel,
+    onSwitchScope: (() -> Unit)?
 ) {
     val context = LocalContext.current
     var originalEvent by remember(event.id) { mutableStateOf(event) }
@@ -204,6 +251,7 @@ fun NewEvent(
     var showEndDatePicker by remember { mutableStateOf(false) }
     var showDiscardDialog by remember { mutableStateOf(false) }
     var discardMessage by remember { mutableStateOf<String?>(null) }
+    var switchScopeAfterDiscard by remember { mutableStateOf(false) }
     var showColorPicker by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showDeleteChoiceDialog by remember { mutableStateOf(false) }
@@ -241,6 +289,7 @@ fun NewEvent(
         }
     }
     val unsavedChangesMessage = stringResource(R.string.unsaved_changes_message)
+    val switchScopeChangesMessage = stringResource(R.string.event_switch_scope_changes_message)
     val contentCopiedString = stringResource(R.string.content_copied)
     val contentMovedString = stringResource(R.string.content_moved)
 
@@ -523,7 +572,7 @@ fun NewEvent(
         return true
     }
 
-    fun requestBack() {
+    fun requestExit(switchScope: Boolean = false) {
         val hasChanges = if (isOccurrenceEdit) {
             title != originalEvent.title ||
                 description != originalEvent.description ||
@@ -544,13 +593,16 @@ fun NewEvent(
             ) != originalEvent
         }
         if (hasChanges) {
-            discardMessage = unsavedChangesMessage
+            discardMessage = if (switchScope) switchScopeChangesMessage else unsavedChangesMessage
+            switchScopeAfterDiscard = switchScope
             showDiscardDialog = true
+        } else if (switchScope) {
+            onSwitchScope?.invoke()
         } else {
             navController.popBackStack()
         }
     }
-    BackHandler(enabled = !showDiscardDialog) { requestBack() }
+    BackHandler(enabled = !showDiscardDialog) { requestExit() }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
@@ -571,7 +623,7 @@ fun NewEvent(
                     )
                 },
                 navigationIcon = {
-                    IconButton({ requestBack() }) {
+                    IconButton({ requestExit() }) {
                         Icon(
                             Icons.AutoMirrored.Default.ArrowBack,
                             null
@@ -693,6 +745,20 @@ fun NewEvent(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Spacer(Modifier.size(width = 1.dp, height = 16.dp))
+            if (onSwitchScope != null) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilterChip(
+                        selected = isOccurrenceEdit,
+                        onClick = { if (!isOccurrenceEdit) requestExit(switchScope = true) },
+                        label = { Text(stringResource(R.string.event_scope_this)) }
+                    )
+                    FilterChip(
+                        selected = !isOccurrenceEdit,
+                        onClick = { if (isOccurrenceEdit) requestExit(switchScope = true) },
+                        label = { Text(stringResource(R.string.event_scope_series)) }
+                    )
+                }
+            }
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -791,7 +857,8 @@ fun NewEvent(
                 }
             }
 
-            if (title.isNotBlank()) {
+            val canAddAttachments = isNewEvent || isOccurrenceEdit || event.recurrence == RecurrenceRule.Once
+            if (title.isNotBlank() && (canAddAttachments || event.attachments.isNotEmpty())) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     EventFormSectionTitle(stringResource(R.string.event_attachments))
                     Card(
@@ -804,16 +871,18 @@ fun NewEvent(
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                             verticalArrangement = Arrangement.spacedBy(2.dp)
                         ) {
-                            TextButton(
-                                onClick = {
-                                    ensureStorageRoot(scope, settingsViewModel, rootPicker) {
-                                        attachmentPicker.launch(arrayOf("*/*"))
+                            if (canAddAttachments) {
+                                TextButton(
+                                    onClick = {
+                                        ensureStorageRoot(scope, settingsViewModel, rootPicker) {
+                                            attachmentPicker.launch(arrayOf("*/*"))
+                                        }
                                     }
+                                ) {
+                                    Icon(Icons.Default.AttachFile, contentDescription = null)
+                                    Spacer(Modifier.size(8.dp))
+                                    Text(stringResource(R.string.event_add_attachments))
                                 }
-                            ) {
-                                Icon(Icons.Default.AttachFile, contentDescription = null)
-                                Spacer(Modifier.size(8.dp))
-                                Text(stringResource(R.string.event_add_attachments))
                             }
                             event.attachments.forEach { fileName ->
                                 Row(
@@ -1174,11 +1243,16 @@ fun NewEvent(
         DiscardChangesDialog(
             onDiscard = {
                 showDiscardDialog = false
-                navController.popBackStack()
+                if (switchScopeAfterDiscard) {
+                    onSwitchScope?.invoke()
+                } else {
+                    navController.popBackStack()
+                }
             },
             onDismiss = {
                 showDiscardDialog=false
                 discardMessage = null
+                switchScopeAfterDiscard = false
             },
             message = discardMessage
         )

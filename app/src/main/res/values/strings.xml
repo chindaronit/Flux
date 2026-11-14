@@ -30,6 +30,7 @@
     <string name="edit_event_occurrence_message">Would you like to edit this occurrence or the entire series?</string>
     <string name="event_scope_this">This Event</string>
     <string name="event_scope_series">Series</string>
+    <string name="event_switch_scope_changes_message">Discard your unsaved changes and switch editing scope?</string>
     <string name="delete_event_scope_title">Delete event</string>
     <string name="delete_event_scope_message">Delete this event or the entire series?</string>
     <string name="delete_occurrence_title">Delete this event?</string>
@@ -81,7 +82,7 @@
     <string name="event_choose_reminder">Choose a reminder time</string>
     <string name="event_add_another_reminder">Add another reminder</string>
     <string name="event_remove_reminder">Remove reminder</string>
-    <string name="event_edit_series">Edit series</string>
+    <string name="event_edit_series">Edit Series</string>
     <string name="event_series_schedule">Series schedule</string>
 
     <!-- Dialog Messages -->
