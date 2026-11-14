@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Flux</string>
+    <string name="app_name">OmniPad</string>
 
     <!-- Authentication -->
     <string name="Auth_with_Biometric">Mit Biometrie authentifizieren</string>
@@ -123,7 +123,7 @@
     <string name="Restore">Wiederherstellen</string>
     <string name="Restore_Description">Alle Inhalte aus einem vollständigen Backup-Ordner wiederherstellen</string>
     <string name="restore_backup_warning_title">Vollständiges Backup wiederherstellen?</string>
-    <string name="restore_backup_warning_message">Alle Flux-Inhalte und Mediendateien auf diesem Gerät werden durch das ausgewählte Backup ersetzt. App-Einstellungen bleiben erhalten. Dieser Vorgang kann nicht rückgängig gemacht werden.</string>
+    <string name="restore_backup_warning_message">Alle OmniPad-Inhalte und Mediendateien auf diesem Gerät werden durch das ausgewählte Backup ersetzt. App-Einstellungen bleiben erhalten. Dieser Vorgang kann nicht rückgängig gemacht werden.</string>
     <string name="reset">Zurücksetzen</string>
     <string name="backup_frequency">Häufigkeit der automatischen Sicherung</string>
     <string name="reset_database">Datenbank zurücksetzen</string>
@@ -355,11 +355,11 @@
     <string name="editing_view">Bearbeitungsansicht</string>
 
     <string name="shareContent">
-        Flux ist eine moderne Android-Produktivitäts-App, die vollständig mit Compose entwickelt wurde.\n
+        OmniPad ist eine moderne Android-Produktivitäts-App, die vollständig mit Compose entwickelt wurde.\n
         Sie ermöglicht das Erstellen, Bearbeiten und Löschen von Workspaces mit Vorlagen wie Notizen, Gewohnheiten, Journal, To-Do, Ereignissen usw. sowie erweiterten Funktionen wie Suchen und Ersetzen, Notizvorlagen, lokalem Import von Bildern/Videos/Audio, Markdown, LaTeX-Formeln und Mermaid-Diagrammen.\n
         Jetzt herunterladen und ausprobieren:\n
-        - GitHub:  https://github.com/chindaronit/Flux/releases\n
-        - F-Droid: https://f-droid.org/packages/com.flux/
+        - GitHub:  https://github.com/chindaronit/OmniPad/releases\n
+        - F-Droid: https://f-droid.org/packages/com.omnipad/
     </string>
 
     <string name="select_folder">Ordner auswählen</string>
@@ -524,7 +524,7 @@
     <string name="longest_streak">Längste Serie</string>
     <string name="personal_best">Persönlicher Rekord</string>
     <string name="last_30_days">Letzte 30 Tage</string>
-    <string name="tracked_by_flux">Erfasst von @Flux</string>
+    <string name="tracked_by_omnipad">Erfasst von @OmniPad</string>
     <string name="available_on_fdroid_izzyondroid">Verfügbar auf F-Droid, IzzyOnDroid</string>
     <string name="share_achievement">Leistung teilen</string>
     <string name="not_scheduled">Nicht geplant</string>
@@ -572,7 +572,7 @@
     <string name="changelog_description">Verfolge die Änderungen jeder Version.</string>
 
     <string name="change">Ändern</string>
-    <string name="change_root_directory">Stammverzeichnis für Flux-Daten ändern</string>
+    <string name="change_root_directory">Stammverzeichnis für OmniPad-Daten ändern</string>
     <string name="change_storage_root">Speicherstamm ändern</string>
     <string name="couldnt_move_data">Daten konnten nicht verschoben werden</string>
     <string name="please_dont_close_app">Bitte schließen Sie die App nicht</string>
@@ -583,7 +583,7 @@
     <string name="welcome_back">Willkommen zurück bei</string>
     <string name="authenticate">Authentifizieren</string>
     <string name="private_secure">Privat &amp; sicher</string>
-    <string name="biometric_unlock_description">Verwende die Biometrie deines Geräts, um deine Flux-Daten sicher zu entsperren.</string>
+    <string name="biometric_unlock_description">Verwende die Biometrie deines Geräts, um deine OmniPad-Daten sicher zu entsperren.</string>
     <string name="biometric_data_never_leaves">Deine biometrischen Daten verlassen dein Gerät niemals</string>
 
     <string name="default_screen">Standardbildschirm</string>

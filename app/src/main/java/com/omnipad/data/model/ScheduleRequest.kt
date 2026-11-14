@@ -1,0 +1,112 @@
+package com.omnipad.data.model
+
+import android.content.Context
+import android.content.Intent
+import com.omnipad.other.ReminderReceiver
+import kotlinx.serialization.json.Json
+
+enum class ReminderType { EVENT, HABIT, TODO }
+
+data class ScheduleRequest(
+    val itemId: String,
+    val itemType: ReminderType,
+    val title: String,
+    val description: String,
+    val recurrence: RecurrenceRule,
+    val startDateTime: Long,
+    val endDateTime: Long,
+    val notificationOffset: Long,
+    val workspaceId: String,
+    val habitConfig: HabitConfig? = null,
+    val notificationOffsets: List<Long>? = null,
+    val activeReminderOffset: Long? = null
+) {
+    companion object {
+        fun fromIntent(intent: Intent): ScheduleRequest? {
+            return try {
+                ScheduleRequest(
+                    itemId = intent.getStringExtra("itemId") ?: return null,
+                    itemType = ReminderType.valueOf(
+                        intent.getStringExtra("itemType") ?: return null
+                    ),
+                    title = intent.getStringExtra("title") ?: "",
+                    description = intent.getStringExtra("description") ?: "",
+                    recurrence = Json.decodeFromString(
+                        RecurrenceRuleCompatSerializer,
+                        intent.getStringExtra("recurrence") ?: return null
+                    ),
+                    startDateTime = intent.getLongExtra("startDateTime", -1),
+                    endDateTime = intent.getLongExtra("endDateTime", -1),
+                    notificationOffset = intent.getLongExtra("notificationOffset", 0),
+                    workspaceId = intent.getStringExtra("workspaceId") ?: "",
+                    habitConfig = intent.getStringExtra("habitConfig")
+                        ?.let { Json.decodeFromString<HabitConfig>(it) },
+                    notificationOffsets = intent.getStringExtra("notificationOffsets")
+                        ?.let { Json.decodeFromString<List<Long>>(it) },
+                    activeReminderOffset = if (intent.hasExtra("activeReminderOffset")) {
+                        intent.getLongExtra("activeReminderOffset", 0L)
+                    } else {
+                        null
+                    }
+                )
+            } catch (_: Exception) { null }
+        }
+    }
+}
+
+fun HabitModel.toScheduleRequest() = ScheduleRequest(
+    itemId = id,
+    itemType = ReminderType.HABIT,
+    title = title,
+    description = description,
+    recurrence = recurrence,
+    startDateTime = startDateTime,
+    endDateTime = endDateTime,
+    notificationOffset = notificationOffset,
+    workspaceId = workspaceId,
+    habitConfig = habitConfig
+)
+
+fun EventModel.toScheduleRequest() = ScheduleRequest(
+    itemId = id,
+    itemType = ReminderType.EVENT,
+    title = title,
+    description = description,
+    recurrence = recurrence,
+    startDateTime = startDateTime,
+    endDateTime = endDateTime,
+    notificationOffset = notificationOffset,
+    workspaceId = workspaceId,
+    notificationOffsets = notificationOffsets
+)
+
+fun TodoModel.toScheduleRequest() = ScheduleRequest(
+    itemId = id,
+    itemType = ReminderType.TODO,
+    title = title,
+    description = "",
+    recurrence = recurrence,
+    startDateTime = startDateTime,
+    endDateTime = -1L,
+    notificationOffset = 0L,
+    workspaceId = workspaceId
+)
+
+fun ScheduleRequest.toIntent(context: Context): Intent {
+    return Intent(context, ReminderReceiver::class.java).apply {
+        putExtra("itemId", itemId)
+        putExtra("itemType", itemType.name)
+        putExtra("title", title)
+        putExtra("description", description)
+        putExtra("recurrence", Json.encodeToString(RecurrenceRuleCompatSerializer, recurrence))
+        putExtra("startDateTime", startDateTime)
+        putExtra("endDateTime", endDateTime)
+        putExtra("notificationOffset", notificationOffset)
+        putExtra("workspaceId", workspaceId)
+        habitConfig?.let { putExtra("habitConfig", Json.encodeToString(it)) }
+        notificationOffsets?.let {
+            putExtra("notificationOffsets", Json.encodeToString(it))
+        }
+        activeReminderOffset?.let { putExtra("activeReminderOffset", it) }
+    }
+}

@@ -1,0 +1,285 @@
+package com.omnipad.ui.screens.habits
+
+import android.os.Build
+import android.widget.Toast
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.EventAvailable
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.LockOpen
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.toMutableStateList
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import com.omnipad.R
+import com.omnipad.data.model.HabitInstanceModel
+import com.omnipad.data.model.RecurrenceRule
+import com.omnipad.data.model.WorkspaceModel
+import com.omnipad.data.model.isCounted
+import com.omnipad.data.model.isLive
+import com.omnipad.navigation.Loader
+import com.omnipad.navigation.NavRoutes
+import com.omnipad.other.canScheduleReminder
+import com.omnipad.other.isNotificationPermissionGranted
+import com.omnipad.other.openAppNotificationSettings
+import com.omnipad.other.requestExactAlarmPermission
+import com.omnipad.ui.common.EmptyData
+import com.omnipad.ui.common.SpaceSearchBar
+import com.omnipad.ui.common.SpaceTopBar
+import com.omnipad.ui.common.SpacesMenu
+import com.omnipad.ui.events.HabitEvents
+import com.omnipad.ui.screens.todo.move
+import com.omnipad.ui.screens.workspaces.SpacesToolBar
+import com.omnipad.ui.state.HabitState
+import com.omnipad.ui.state.Settings
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
+import java.time.LocalDate
+import java.util.UUID
+
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun HabitScreen(
+    navController: NavController,
+    state: HabitState,
+    settings: Settings,
+    workspace: WorkspaceModel,
+    onShowSpaceBottomSheet: () -> Unit,
+    onSpaceChange: (Int) -> Unit,
+    onAddCover: () -> Unit,
+    onRemoveCover: () -> Unit,
+    onDeleteWorkspace: () -> Unit,
+    onToggleLock: () -> Unit,
+    onEvent: (HabitEvents) -> Unit,
+    query: String,
+    onQueryChange: (String) -> Unit,
+    showSearchBar: Boolean,
+    onSearchBarVisibilityChange: (Boolean) -> Unit
+){
+    val context = LocalContext.current
+    val workspaceId = workspace.workspaceId
+    val isLoading = state.isLoading
+    val allInstances = state.allInstances
+    val radius = settings.data.cornerRadius
+    val is24HourFormat = settings.data.is24HourFormat
+    val allHabits = state.allHabits
+        .filter { it.workspaceId == workspaceId }
+        .filter { it.title.contains(query, ignoreCase = true) || it.description.contains(query, ignoreCase = true) }
+    val currentHabits = allHabits.filter { it.isLive() }
+    val pastHabits = allHabits.filter { !it.isLive() }
+    var showSpacesMenu by remember { mutableStateOf(false) }
+    var reorderEnabled by rememberSaveable { mutableStateOf(false) }
+    val notificationPermissionLabel = stringResource(R.string.Notification_Permission)
+    val reminderPermissionLabel = stringResource(R.string.Reminder_Permission)
+
+    // Reorderable state for the "current" habits section only
+    val habitList = remember(currentHabits) { currentHabits.toMutableStateList() }
+    val lazyListState = rememberLazyListState()
+    val headerOffset = 1
+
+    val reorderState = rememberReorderableLazyListState(lazyListState = lazyListState) { from, to ->
+        if (!reorderEnabled) return@rememberReorderableLazyListState
+
+        val fromIndex = from.index - headerOffset
+        val toIndex = to.index - headerOffset
+
+        if (fromIndex in habitList.indices && toIndex in habitList.indices) {
+            habitList.move(fromIndex, toIndex)
+            onEvent(HabitEvents.UpdateOrder(habitList.map { it.id }))
+        }
+    }
+
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        topBar = {
+            SpaceTopBar(
+                title            = workspace.title,
+                description      = workspace.description,
+                cover            = workspace.cover,
+                icon             = workspace.icon,
+                isLocked         = workspace.isLocked,
+                onBackPressed    = { navController.popBackStack() },
+                onAddCover       = onAddCover,
+                onRemoveCover    = onRemoveCover,
+                onToggleLock     = onToggleLock,
+                onDeleteWorkspace = onDeleteWorkspace,
+                onEditWorkspace   = { navController.navigate(NavRoutes.NewWorkspace.withArgs(workspaceId)) }
+            )
+        },
+        floatingActionButton = {
+            FloatingActionButton({
+                if (!canScheduleReminder(context)) {
+                    Toast.makeText(context, reminderPermissionLabel, Toast.LENGTH_SHORT).show()
+                    requestExactAlarmPermission(context)
+                }
+                if (!isNotificationPermissionGranted(context)) {
+                    Toast.makeText(context, notificationPermissionLabel, Toast.LENGTH_SHORT).show()
+                    openAppNotificationSettings(context)
+                }
+                if (canScheduleReminder(context) && isNotificationPermissionGranted(context)) {
+                    val newId = UUID.randomUUID().toString()
+                    navController.navigate(NavRoutes.NewHabit.withArgs(workspaceId, newId))
+                }
+            }) { Icon(Icons.Default.Add, null) }
+        }
+    ) { innerPadding ->
+        when {
+            isLoading -> Loader()
+            else -> {
+                Column(
+                    Modifier.fillMaxSize().padding(innerPadding).padding(12.dp)
+                ) {
+                    Row(
+                        Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        SpacesToolBar(
+                            stringResource(R.string.Habits),
+                            Icons.Default.EventAvailable,
+                            false,
+                            onMainClick = { showSpacesMenu = true },
+                            onEditClick = onShowSpaceBottomSheet
+                        )
+                        SpacesMenu(showSpacesMenu, workspace, onSpaceChange) { showSpacesMenu = false }
+                        IconButton(onClick = { reorderEnabled = !reorderEnabled }) {
+                            Icon(
+                                imageVector = if (reorderEnabled) Icons.Default.LockOpen else Icons.Default.Lock,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                    SpaceSearchBar(
+                        query, onQueryChange, {},
+                        modifier = Modifier.padding(bottom = 12.dp),
+                        horizontalPadding = 0.dp
+                    )
+                LazyColumn(
+                    state = lazyListState,
+                    modifier = Modifier
+                        .weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    if(allHabits.isEmpty())  item { EmptyData() }
+                    itemsIndexed(
+                        habitList,
+                        key = { _, habit -> habit.id }
+                    ) { _, habit ->
+                        ReorderableItem(
+                            state = reorderState,
+                            key = habit.id
+                        ) {
+                            val cardDragModifier = if (reorderEnabled) Modifier.longPressDraggableHandle() else Modifier
+                            val iconDragModifier = if (reorderEnabled) Modifier.draggableHandle() else Modifier
+
+                            val habitInstances = allInstances.filter { it.habitId == habit.id }
+                            HabitPreviewCard(
+                                modifier = Modifier.animateItem().then(cardDragModifier),
+                                radius = radius,
+                                habit = habit,
+                                is24HourFormat = is24HourFormat,
+                                instances = habitInstances,
+                                isReordering = reorderEnabled,
+                                dragHandleModifier = iconDragModifier,
+                                onClick = { date ->
+                                    if (isDateAllowedForHabit(habit.recurrence, date)) {
+                                        val oldInstance = habitInstances.find { it.instanceDate == date }
+                                        val count = if(habit.isCounted){
+                                            if(oldInstance!=null) oldInstance.count+1
+                                            else 1
+                                        } else 0
+
+                                        val newInstance = HabitInstanceModel(
+                                            instanceDate = date,
+                                            habitId = habit.id,
+                                            workspaceId = workspaceId,
+                                            count = count
+                                        )
+                                        onEvent(HabitEvents.UpdateInstance(newInstance, habit.habitConfig))
+                                    }
+                                },
+                                onLongPressed = { },
+                                onAnalyticsClicked = { navController.navigate(NavRoutes.HabitDetails.withArgs(workspaceId, habit.id)) }
+                            )
+                        }
+                    }
+                    if(pastHabits.isNotEmpty()) {
+                        item {
+                            Text(
+                                stringResource(R.string.past_habits),
+                                style = MaterialTheme.typography.titleLarge,
+                                modifier = Modifier.padding(vertical = 8.dp)
+                            )
+                        }
+                    }
+                    items(pastHabits, key = { it.id }) { habit ->
+                        val habitInstances = allInstances.filter { it.habitId == habit.id }
+                        HabitPreviewCard (
+                            radius = radius,
+                            is24HourFormat = is24HourFormat,
+                            habit = habit,
+                            instances = habitInstances,
+                            onClick = {},
+                            onLongPressed = {},
+                            onAnalyticsClicked = {
+                                navController.navigate(
+                                    NavRoutes.HabitDetails.withArgs(
+                                        workspaceId,
+                                        habit.id
+                                    )
+                                )
+                            }
+                        )
+                    }
+                }
+                }
+            }
+        }
+    }
+}
+
+// Helper function to check if a date is allowed for the habit's recurrence
+fun isDateAllowedForHabit(recurrence: RecurrenceRule, epochDay: Long): Boolean {
+    return when (recurrence) {
+        is RecurrenceRule.Weekly -> {
+            val localDate = LocalDate.ofEpochDay(epochDay)
+            val dayOfWeek = (localDate.dayOfWeek.value + 6) % 7
+            dayOfWeek in recurrence.daysOfWeek
+        }
+        is RecurrenceRule.Custom -> true
+        is RecurrenceRule.Once -> true
+        is RecurrenceRule.Monthly -> true
+        is RecurrenceRule.Yearly -> true
+        else -> false
+    }
+}

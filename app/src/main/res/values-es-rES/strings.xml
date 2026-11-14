@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Flux</string>
+    <string name="app_name">OmniPad</string>
 
     <!-- Authentication -->
     <string name="Auth_with_Biometric">Autenticarse con biometría</string>
@@ -123,7 +123,7 @@
     <string name="Restore">Restaurar</string>
     <string name="Restore_Description">Restaura todo el contenido desde una carpeta de copia completa</string>
     <string name="restore_backup_warning_title">¿Restaurar la copia completa?</string>
-    <string name="restore_backup_warning_message">Se reemplazarán todo el contenido y los archivos multimedia de Flux de este dispositivo por los de la copia seleccionada. Se conservarán los ajustes de la aplicación. Esta acción no se puede deshacer.</string>
+    <string name="restore_backup_warning_message">Se reemplazarán todo el contenido y los archivos multimedia de OmniPad de este dispositivo por los de la copia seleccionada. Se conservarán los ajustes de la aplicación. Esta acción no se puede deshacer.</string>
     <string name="reset">Restablecer</string>
     <string name="backup_frequency">Frecuencia de copia de seguridad automática</string>
     <string name="reset_database">Restablecer base de datos</string>
@@ -359,11 +359,11 @@
     <string name="editing_view">Vista de edición</string>
 
     <string name="shareContent">
-        Flux es una aplicación moderna de productividad para Android creada completamente con Compose.\n
+        OmniPad es una aplicación moderna de productividad para Android creada completamente con Compose.\n
         Permite crear, editar y eliminar espacios de trabajo con plantillas como Notas, Hábitos, Diario, Tareas, Eventos, etc., junto con funciones avanzadas como buscar y reemplazar, plantillas de notas, importación local de imagen/video/audio, Markdown, fórmulas matemáticas LaTeX y diagramas Mermaid.\n
         Descárgala y pruébala ahora:\n
-        - GitHub:  https://github.com/chindaronit/Flux/releases\n
-        - F-Droid: https://f-droid.org/packages/com.flux/
+        - GitHub:  https://github.com/chindaronit/OmniPad/releases\n
+        - F-Droid: https://f-droid.org/packages/com.omnipad/
     </string>
 
     <string name="select_folder">Seleccionar carpeta</string>
@@ -528,7 +528,7 @@
     <string name="longest_streak">Racha más larga</string>
     <string name="personal_best">Mejor marca personal</string>
     <string name="last_30_days">Últimos 30 días</string>
-    <string name="tracked_by_flux">Registrado por @Flux</string>
+    <string name="tracked_by_omnipad">Registrado por @OmniPad</string>
     <string name="available_on_fdroid_izzyondroid">Disponible en F-Droid, IzzyOnDroid</string>
     <string name="share_achievement">Compartir logro</string>
     <string name="not_scheduled">No programado</string>
@@ -576,7 +576,7 @@
     <string name="changelog_description">Consulta los cambios de cada versión.</string>
 
     <string name="change">Cambiar</string>
-    <string name="change_root_directory">Cambiar el directorio raíz de los datos de Flux</string>
+    <string name="change_root_directory">Cambiar el directorio raíz de los datos de OmniPad</string>
     <string name="change_storage_root">Cambiar la raíz de almacenamiento</string>
     <string name="couldnt_move_data">No se pudieron mover los datos</string>
     <string name="please_dont_close_app">No cierres la aplicación</string>
@@ -587,7 +587,7 @@
     <string name="welcome_back">Bienvenido de nuevo a</string>
     <string name="authenticate">Autenticar</string>
     <string name="private_secure">Privado y seguro</string>
-    <string name="biometric_unlock_description">Usa la biometría de tu dispositivo para desbloquear de forma segura tus datos de Flux.</string>
+    <string name="biometric_unlock_description">Usa la biometría de tu dispositivo para desbloquear de forma segura tus datos de OmniPad.</string>
     <string name="biometric_data_never_leaves">Tus datos biométricos nunca salen de tu dispositivo</string>
 
     <string name="default_screen">Pantalla predeterminada</string>

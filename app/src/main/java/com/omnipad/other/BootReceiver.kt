@@ -1,0 +1,74 @@
+package com.omnipad.other
+
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import com.omnipad.data.model.RecurrenceRule
+import com.omnipad.data.model.ScheduleRequest
+import com.omnipad.data.model.isLive
+import com.omnipad.data.model.toScheduleRequest
+import com.omnipad.data.repository.EventRepository
+import com.omnipad.data.repository.HabitRepository
+import com.omnipad.data.repository.TodoRepository
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
+import dagger.hilt.android.EntryPointAccessors
+import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+
+class BootReceiver : BroadcastReceiver() {
+
+    override fun onReceive(context: Context, intent: Intent) {
+
+        if (intent.action != Intent.ACTION_BOOT_COMPLETED &&
+            intent.action != Intent.ACTION_LOCKED_BOOT_COMPLETED
+        ) return
+
+        val pendingResult = goAsync()
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val reminders = getStoredReminders(context)
+
+                reminders.forEach { request ->
+                    scheduleNextReminder(context, request)
+                }
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                pendingResult.finish()
+            }
+        }
+    }
+
+    // ---------------------- LOAD + CONVERT ----------------------
+
+    private suspend fun getStoredReminders(context: Context): List<ScheduleRequest> {
+
+        val entryPoint = EntryPointAccessors.fromApplication(
+            context,
+            ReceiverEntryPoint::class.java
+        )
+
+        val habitRepo = entryPoint.habitRepository()
+        val eventRepo = entryPoint.eventRepository()
+        val todoRepo = entryPoint.todoRepository()
+
+        val habits = habitRepo.loadAllHabits().filter { it.isLive() }.map { it.toScheduleRequest() }
+        val events = eventRepo.loadAllEvents().filter { it.isLive() }.map { it.toScheduleRequest() }
+        val todos =  todoRepo.loadAllLists().filter { it.recurrence is RecurrenceRule.Weekly }.map { it.toScheduleRequest() }
+
+        return habits + events + todos
+    }
+}
+
+@EntryPoint
+@InstallIn(SingletonComponent::class)
+interface ReceiverEntryPoint {
+    fun habitRepository(): HabitRepository
+    fun eventRepository(): EventRepository
+    fun todoRepository(): TodoRepository
+}

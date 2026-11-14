@@ -1,4 +1,4 @@
-Flux is a lightweight, offline-first productivity app. Whether you're planning your day, documenting ideas, tracking habits, or managing projects, Flux provides the tools you need while keeping your workflow simple and distraction-free.
+OmniPad is a lightweight, offline-first productivity app. Whether you're planning your day, documenting ideas, tracking habits, or managing projects, OmniPad provides the tools you need while keeping your workflow simple and distraction-free.
 
 ✨ Features
 

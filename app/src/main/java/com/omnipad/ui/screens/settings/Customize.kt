@@ -1,0 +1,350 @@
+package com.omnipad.ui.screens.settings
+
+import android.os.Build
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.AddToHomeScreen
+import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.AutoMode
+import androidx.compose.material.icons.filled.Colorize
+import androidx.compose.material.icons.filled.Event
+import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.rounded.FontDownload
+import androidx.compose.material.icons.rounded.RoundedCorner
+import androidx.compose.material.icons.rounded.ViewCompactAlt
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.navigation.NavController
+import com.omnipad.R
+import com.omnipad.navigation.NavRoutes
+import com.omnipad.ui.common.BasicScaffold
+import com.omnipad.ui.common.FontDialog
+import com.omnipad.ui.events.SettingEvents
+import com.omnipad.ui.state.Settings
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun Customize(
+    navController: NavController,
+    settings: Settings,
+    onSettingsEvents: (SettingEvents) -> Unit
+) {
+    var showRadiusDialog by remember { mutableStateOf(false) }
+    var showFontDialog by remember { mutableStateOf(false) }
+    if (showFontDialog){
+        FontDialog(settings.data.fontNumber, onSelectFont = {
+            onSettingsEvents(SettingEvents.UpdateSettings(
+                settings.data.copy(
+                    fontNumber = it
+                )
+            ))
+        }) {
+            showFontDialog=false
+        }
+    }
+
+    if(showRadiusDialog){
+        OnRadiusClicked(settings) {
+            onSettingsEvents(
+                SettingEvents.UpdateSettings(
+                    settings.data.copy(
+                        cornerRadius = it
+                    )
+                )
+            )
+            showRadiusDialog=false
+        }
+    }
+
+    BasicScaffold(
+        title = stringResource(R.string.Customize),
+        onBackClicked = { navController.popBackStack() }
+    ) { innerPadding ->
+        LazyColumn(
+            modifier = Modifier
+                .padding(innerPadding)
+                .padding(16.dp, 8.dp, 16.dp, 16.dp)
+        ) {
+            item {
+                SingleSettingOption(
+                    radius = settings.data.cornerRadius,
+                    text = stringResource(R.string.Themes),
+                    description = stringResource(R.string.change_app_theme),
+                    leadingIcon = SettingIcon.Vector(Icons.Default.LightMode)
+                ) { navController.navigate(NavRoutes.Theme.route) }
+            }
+
+            item {
+                val supportsDynamicColor = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S // Android 12+
+
+                if (supportsDynamicColor) {
+                    Spacer(Modifier.height(12.dp))
+
+                    SettingOption(
+                        title = stringResource(R.string.Dynamic_theme),
+                        description = stringResource(R.string.Dynamic_theme_desc),
+                        icon = Icons.Filled.Colorize,
+                        radius = shapeManager(radius = settings.data.cornerRadius, isBoth = true),
+                        actionType = ActionType.SWITCH,
+                        variable = settings.data.dynamicTheme,
+                        switchEnabled = {
+                            onSettingsEvents(
+                                SettingEvents.UpdateSettings(
+                                    settings.data.copy(
+                                        dynamicTheme = it
+                                    )
+                                )
+                            )
+                        },
+                    )
+                }
+            }
+
+            item {
+                Spacer(Modifier.height(12.dp))
+                SingleSettingOption(
+                    radius = settings.data.cornerRadius,
+                    text = stringResource(R.string.event_settings_title),
+                    description = stringResource(R.string.event_settings_description),
+                    leadingIcon = SettingIcon.Vector(Icons.Default.Event)
+                ) {
+                    navController.navigate(NavRoutes.EventSettings.route)
+                }
+            }
+
+            item {
+                Spacer(Modifier.height(12.dp))
+                SettingOption(
+                    title = stringResource(R.string.Radius),
+                    description = stringResource(R.string.Radius_desc),
+                    icon = Icons.Rounded.RoundedCorner,
+                    radius = shapeManager(
+                        radius = settings.data.cornerRadius,
+                        isFirst = true
+                    ),
+                    actionType = ActionType.CUSTOM,
+                    onCustomClick = { showRadiusDialog=true }
+                )
+            }
+
+            item {
+                SettingOption(
+                    title = stringResource(R.string.default_screen),
+                    description = stringResource(R.string.change_default_screen_description),
+                    icon = Icons.AutoMirrored.Rounded.AddToHomeScreen,
+                    radius = shapeManager(radius = settings.data.cornerRadius),
+                    actionType = ActionType.CUSTOM,
+                    onCustomClick = { navController.navigate(NavRoutes.DefaultWorkspace.route) }
+                )
+            }
+
+            item {
+                SettingOption(
+                    title = stringResource(R.string.mode_title),
+                    description = stringResource(R.string.mode_description),
+                    icon = Icons.Rounded.ViewCompactAlt,
+                    radius = shapeManager(radius = settings.data.cornerRadius, isLast = true),
+                    actionType = ActionType.CUSTOM,
+                    onCustomClick = {
+                        navController.navigate(NavRoutes.Mode.route) {
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                )
+            }
+
+            item {
+                Spacer(Modifier.height(12.dp))
+
+                SettingOption(
+                    title = stringResource(R.string.system_time_format_title),
+                    description = stringResource(R.string.system_time_format_description),
+                    icon = Icons.Filled.AutoMode,
+                    radius = shapeManager(
+                        radius = settings.data.cornerRadius,
+                        isFirst = !settings.data.useSystemTimeFormat,
+                        isBoth = settings.data.useSystemTimeFormat
+                    ),
+                    actionType = ActionType.SWITCH,
+                    variable = settings.data.useSystemTimeFormat,
+                    switchEnabled = {
+                        onSettingsEvents(
+                            SettingEvents.UpdateSettings(
+                                settings.data.copy(
+                                    useSystemTimeFormat = it
+                                )
+                            )
+                        )
+                    }
+                )
+            }
+
+            item {
+                SettingOption(
+                    title = stringResource(R.string.Hour_Format_24),
+                    description = stringResource(R.string.Hour_Format_24_Desc),
+                    icon = Icons.Filled.AccessTime,
+                    radius = shapeManager(
+                        radius = settings.data.cornerRadius,
+                        isLast = true
+                    ),
+                    isEnabled = !settings.data.useSystemTimeFormat,
+                    actionType = ActionType.SWITCH,
+                    variable = settings.data.is24HourFormat,
+                    switchEnabled = {
+                        onSettingsEvents(
+                            SettingEvents.UpdateSettings(
+                                settings.data.copy(
+                                    is24HourFormat = it
+                                )
+                            )
+                        )
+                    }
+                )
+            }
+
+            item {
+                Spacer(Modifier.height(12.dp))
+                SettingOption(
+                    title = stringResource(R.string.Font),
+                    description = stringResource(R.string.Change_Font),
+                    icon = Icons.Rounded.FontDownload,
+                    radius = shapeManager(
+                        radius = settings.data.cornerRadius,
+                        isBoth = true
+                    ),
+                    actionType = ActionType.CUSTOM,
+                    onCustomClick = { showFontDialog = true }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun OnRadiusClicked(
+    settings: Settings,
+    onExit: (Int) -> Unit
+) {
+
+    var sliderPosition by remember {
+        mutableFloatStateOf(
+            settings.data.cornerRadius
+                .coerceIn(5, 44)
+                .toFloat()
+        )
+    }
+    val hapticFeedback = LocalHapticFeedback.current
+    var lastHapticValue by remember { mutableIntStateOf(sliderPosition.toInt()) }
+
+    val realRadius = sliderPosition.toInt()
+
+    @Composable
+    fun Example(shape: RoundedCornerShape) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 32.dp, vertical = 3.dp)
+                .background(
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    shape = shape
+                )
+                .height(62.dp)
+        )
+    }
+
+    Dialog(onDismissRequest = { onExit(realRadius) }) {
+        Column(
+            modifier = Modifier
+                .background(
+                    color = MaterialTheme.colorScheme.surfaceContainerLow,
+                    shape = RoundedCornerShape((realRadius / 3).dp)
+                )
+                .fillMaxWidth()
+                .wrapContentHeight()
+        ) {
+            Text(
+                text = stringResource(R.string.Select_radius),
+                textAlign = TextAlign.Center,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp, bottom = 16.dp)
+            )
+
+            Example(
+                shapeManager(
+                    radius = realRadius,
+                    isFirst = true
+                )
+            )
+
+            Example(
+                shapeManager(
+                    radius = realRadius
+                )
+            )
+
+            Example(
+                shapeManager(
+                    radius = realRadius,
+                    isLast = true
+                )
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            Text(
+                text = "$realRadius",
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            Slider(
+                value = sliderPosition,
+                onValueChange = {
+                    sliderPosition = it
+
+                    val currentValue = it.toInt()
+                    if (currentValue != lastHapticValue) {
+                        hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        lastHapticValue = currentValue
+                    }
+                },
+                valueRange = 5f..44f,
+                steps = 38,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                colors = SliderDefaults.colors(inactiveTrackColor = MaterialTheme.colorScheme.surfaceContainerHigh)
+            )
+        }
+    }
+}

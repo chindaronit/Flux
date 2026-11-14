@@ -1,6 +1,6 @@
-# Contributing to Flux
+# Contributing to OmniPad
 
-Thank you for your interest in contributing to Flux! Your support means a lot.
+Thank you for your interest in contributing to OmniPad! Your support means a lot.
 
 ---
 
@@ -23,7 +23,7 @@ Thank you for your interest in contributing to Flux! Your support means a lot.
 1. Install the latest stable version of [Android Studio](https://developer.android.com/studio).
 2. Clone the repository:
    ```bash
-   git clone git@github.com:chindaronit/Flux.git
+   git clone git@github.com:SuprDupr/OmniPad.git
    ```
 3. Open the project in Android Studio and let Gradle sync complete.
 4. Select `Run > Run 'app'` to build and launch the app on a device or emulator.
@@ -92,7 +92,7 @@ I'll review your pull request as soon as possible. Thank you for your contributi
 
 ## Architecture Overview
 
-Flux follows **MVI (Model–View–Intent)** architecture with **Jetpack Compose** for the UI layer. The data flow is strictly unidirectional:
+OmniPad follows **MVI (Model–View–Intent)** architecture with **Jetpack Compose** for the UI layer. The data flow is strictly unidirectional:
 
 ```
 User Interaction (Intent / Event)
@@ -116,10 +116,10 @@ Side effects (navigation, toasts, etc.) are handled via `Effects` (one-shot flow
 
 ## Module Structure
 
-All source code lives under `app/src/main/java/com/flux/`.
+All source code lives under `app/src/main/java/com/omnipad/`.
 
 ```
-app/src/main/java/com/flux/
+app/src/main/java/com/omnipad/
 │
 ├── data/                        # Data layer
 │   ├── dao/                     # Room DAO interfaces (one per entity)
@@ -130,7 +130,7 @@ app/src/main/java/com/flux/
 ├── di/                          # Hilt dependency injection modules
 │   ├── DataModules.kt           # Provides database and DAO instances
 │   ├── RepositoryModules.kt     # Binds repository interfaces to implementations
-│   └── Flux.kt                  # @HiltAndroidApp application class
+│   └── OmniPad.kt                  # @HiltAndroidApp application class
 │
 ├── navigation/                  # Compose Navigation graph and route definitions
 │
@@ -196,7 +196,7 @@ When building a new screen or feature, create/update files in this order:
 - **State hoisting**: Keep composables stateless where possible; hoist state to the ViewModel.
 - **No business logic in composables**: Composables should only render state and forward events.
 - **Strings**: All user-visible text must live in `strings.xml`. Never hardcode strings in composables.
-- **Markdown content**: Flux uses CommonMark + GitHub Flavored Markdown (GFM) with LaTeX math support. Refer to `Guide.md` for supported syntax.
+- **Markdown content**: OmniPad uses CommonMark + GitHub Flavored Markdown (GFM) with LaTeX math support. Refer to `Guide.md` for supported syntax.
 
 ---
 
@@ -219,4 +219,4 @@ When building a new screen or feature, create/update files in this order:
 
 ## Questions?
 
-Open a [Discussion](https://github.com/chindaronit/Flux/discussions) or file an [Issue](https://github.com/chindaronit/Flux/issues) — happy to help you get oriented.
+Open a [Discussion](https://github.com/SuprDupr/OmniPad/discussions) or file an [Issue](https://github.com/SuprDupr/OmniPad/issues) — happy to help you get oriented.

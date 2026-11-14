@@ -23,5 +23,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Flux"
+rootProject.name = "OmniPad"
 include(":app")

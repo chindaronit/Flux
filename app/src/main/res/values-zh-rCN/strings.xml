@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Flux</string>
+    <string name="app_name">OmniPad</string>
 
     <!-- Authentication -->
     <string name="Auth_with_Biometric">生物识别认证</string>
@@ -123,7 +123,7 @@
     <string name="Restore">恢复</string>
     <string name="Restore_Description">从完整备份文件夹恢复所有内容</string>
     <string name="restore_backup_warning_title">恢复完整备份？</string>
-    <string name="restore_backup_warning_message">此设备上的所有 Flux 内容和媒体文件都将替换为所选备份中的内容。应用设置会保留。此操作无法撤销。</string>
+    <string name="restore_backup_warning_message">此设备上的所有 OmniPad 内容和媒体文件都将替换为所选备份中的内容。应用设置会保留。此操作无法撤销。</string>
     <string name="reset">重置</string>
     <string name="backup_frequency">自动备份频率</string>
     <string name="reset_database">重置数据库</string>
@@ -365,12 +365,12 @@
 
 
     <string name="shareContent">
-        Flux 是一款完全使用 Compose 构建的现代化安卓效率应用。\n
+        OmniPad 是一款完全使用 Compose 构建的现代化安卓效率应用。\n
         支持创建、编辑、删除工作区，内置笔记、习惯、日记、待办、事件等多种模板；\n
         同时具备查找替换、笔记模板、本地音视频/图片导入、Markdown、LaTeX 公式、Mermaid 图表等高级功能。\n
         立即下载体验：\n
-        - [GitHub]  https://github.com/chindaronit/Flux/releases\n
-        - [F-droid] https://f-droid.org/packages/com.flux/
+        - [GitHub]  https://github.com/chindaronit/OmniPad/releases\n
+        - [F-droid] https://f-droid.org/packages/com.omnipad/
     </string>
 
     <string name="select_folder">选择文件夹</string>
@@ -536,7 +536,7 @@
     <string name="longest_streak">最长连续记录</string>
     <string name="personal_best">个人最佳</string>
     <string name="last_30_days">最近30天</string>
-    <string name="tracked_by_flux">由 @Flux 追踪</string>
+    <string name="tracked_by_omnipad">由 @OmniPad 追踪</string>
     <string name="available_on_fdroid_izzyondroid">可在 F-Droid、IzzyOnDroid 获取</string>
     <string name="share_achievement">分享成就</string>
     <string name="not_scheduled">未安排</string>
@@ -584,7 +584,7 @@
     <string name="changelog_description">查看每个版本的更新内容。</string>
 
     <string name="change">更改</string>
-    <string name="change_root_directory">更改 Flux 数据根目录</string>
+    <string name="change_root_directory">更改 OmniPad 数据根目录</string>
     <string name="change_storage_root">更改存储根目录</string>
     <string name="couldnt_move_data">无法移动数据</string>
     <string name="please_dont_close_app">请不要关闭应用</string>
@@ -595,7 +595,7 @@
     <string name="welcome_back">欢迎回来，进入</string>
     <string name="authenticate">身份验证</string>
     <string name="private_secure">私密且安全</string>
-    <string name="biometric_unlock_description">使用设备的生物识别功能安全地解锁您的 Flux 数据。</string>
+    <string name="biometric_unlock_description">使用设备的生物识别功能安全地解锁您的 OmniPad 数据。</string>
     <string name="biometric_data_never_leaves">您的生物识别数据永远不会离开您的设备</string>
 
     <string name="default_screen">默认屏幕</string>
