@@ -44,7 +44,7 @@ import java.util.UUID
 
 @Database(
     entities = [EventModel::class, LabelModel::class, EventInstanceModel::class, EventExceptionModel::class, EventOccurrenceColorModel::class, SettingsModel::class, NotesModel::class, HabitModel::class, HabitInstanceModel::class, WorkspaceModel::class, TodoModel::class, JournalModel::class, ProgressBoardModel::class, TodoInstance::class],
-    version = 20,
+    version = 21,
     exportSchema = false
 )
 @TypeConverters(Converter::class)
@@ -658,5 +658,11 @@ val MIGRATION_18_19 = object : Migration(18, 19) {
 val MIGRATION_19_20 = object : Migration(19, 20) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL("ALTER TABLE EventModel ADD COLUMN attachments TEXT NOT NULL DEFAULT '[]'")
+    }
+}
+
+val MIGRATION_20_21 = object : Migration(20, 21) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE SettingsModel ADD COLUMN showCompletedEvents INTEGER NOT NULL DEFAULT 1")
     }
 }

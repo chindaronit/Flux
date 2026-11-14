@@ -60,6 +60,10 @@
     <string name="event_attachment_open_failed">Could not open %1$s</string>
     <string name="completed_event_color_title">Completed event color</string>
     <string name="completed_event_color_description">Set one background color for every completed event</string>
+    <string name="event_settings_title">Event settings</string>
+    <string name="event_settings_description">Customize event colors and visibility</string>
+    <string name="show_completed_events_title">Show completed events</string>
+    <string name="show_completed_events_description">Show completed events in workspace agendas and global search</string>
     <string name="default_new_event_color_title">Default new event color</string>
     <string name="default_new_event_color_description">Applied to new events unless you choose another color</string>
     <string name="create_event">Create event</string>

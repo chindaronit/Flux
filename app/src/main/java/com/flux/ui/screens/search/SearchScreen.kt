@@ -68,6 +68,7 @@ import androidx.navigation.NavController
 import com.flux.R
 import com.flux.data.model.EventOccurrence
 import com.flux.data.model.EventModel
+import com.flux.data.model.filterCompletedEventOccurrences
 import com.flux.data.model.findEventOccurrences
 import com.flux.data.model.initialEventOccurrenceIndex
 import com.flux.data.model.HabitInstanceModel
@@ -242,14 +243,21 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
         selectedSpace.intValue,
         matchingEvents,
         eventAgendaStart.value,
-        eventAgendaEnd.value
+        eventAgendaEnd.value,
+        states.eventState.allEventInstances,
+        states.eventState.eventExceptions,
+        states.settings.data.showCompletedEvents
     ) {
         if (selectedSpace.intValue != 3) emptyList()
-        else findEventOccurrences(
-            matchingEvents,
-            states.eventState.eventExceptions,
-            eventAgendaStart.value,
-            eventAgendaEnd.value
+        else filterCompletedEventOccurrences(
+            findEventOccurrences(
+                matchingEvents,
+                states.eventState.eventExceptions,
+                eventAgendaStart.value,
+                eventAgendaEnd.value
+            ),
+            states.eventState.allEventInstances,
+            states.settings.data.showCompletedEvents
         )
     }
     val matchingEventGroups = remember(matchingEventOccurrences) {

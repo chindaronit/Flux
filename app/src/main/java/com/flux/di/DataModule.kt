@@ -28,6 +28,7 @@ import com.flux.data.database.MIGRATION_16_17
 import com.flux.data.database.MIGRATION_17_18
 import com.flux.data.database.MIGRATION_18_19
 import com.flux.data.database.MIGRATION_19_20
+import com.flux.data.database.MIGRATION_20_21
 import com.flux.data.database.MIGRATION_1_2
 import com.flux.data.database.MIGRATION_2_3
 import com.flux.data.database.MIGRATION_3_4
@@ -75,7 +76,8 @@ object DataModule {
             MIGRATION_16_17,
             MIGRATION_17_18,
             MIGRATION_18_19,
-            MIGRATION_19_20
+            MIGRATION_19_20,
+            MIGRATION_20_21
         )
         .build()
 

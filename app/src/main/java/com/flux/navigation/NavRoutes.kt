@@ -28,6 +28,7 @@ import com.flux.ui.screens.settings.Customize
 import com.flux.ui.screens.settings.Data
 import com.flux.ui.screens.settings.DefaultWorkspace
 import com.flux.ui.screens.settings.Editor
+import com.flux.ui.screens.settings.EventSettings
 import com.flux.ui.screens.settings.Languages
 import com.flux.ui.screens.settings.Mode
 import com.flux.ui.screens.settings.NotesPreviewSetting
@@ -66,6 +67,7 @@ sealed class NavRoutes(val route: String) {
     data object Settings : NavRoutes("settings")
     data object Privacy : NavRoutes("settings/privacy")
     data object Customize : NavRoutes("settings/customize")
+    data object EventSettings : NavRoutes("settings/customize/events")
     data object Theme : NavRoutes("settings/customize/theme")
     data object Languages : NavRoutes("settings/language")
     data object About : NavRoutes("settings/about")
@@ -248,6 +250,9 @@ val SettingsScreens =
         },
         NavRoutes.Customize.route to { navController, _, states, viewModels ->
             Customize(navController, states.settings, viewModels.settingsViewModel::onEvent)
+        },
+        NavRoutes.EventSettings.route to { navController, _, states, viewModels ->
+            EventSettings(navController, states.settings, viewModels.settingsViewModel::onEvent)
         },
         NavRoutes.Contact.route to { navController, _, states, _ ->
             Contact(navController, states.settings.data.cornerRadius)

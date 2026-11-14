@@ -58,6 +58,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.flux.R
 import com.flux.data.model.WorkspaceModel
+import com.flux.data.model.filterCompletedEventOccurrences
 import com.flux.data.model.findEventOccurrences
 import com.flux.data.model.initialEventOccurrenceIndex
 import com.flux.navigation.Loader
@@ -109,6 +110,7 @@ fun EventScreen(
     val isLoading = state.isAllEventsLoading
     val is24HourFormat = settings.data.is24HourFormat
     val radius = settings.data.cornerRadius
+    val allEventInstances = state.allEventInstances
     val workspaceEvents = state.allEvent.filter { it.workspaceId == workspaceId }
     val matchingEvents = remember(query, workspaceEvents) {
         workspaceEvents.filter { query.isBlank() || it.title.contains(query, ignoreCase = true) }
@@ -118,13 +120,20 @@ fun EventScreen(
     val agendaOccurrences = remember(
         matchingEvents,
         agendaStartDate.value,
-        agendaEndDate.value
+        agendaEndDate.value,
+        state.eventExceptions,
+        allEventInstances,
+        settings.data.showCompletedEvents
     ) {
-        findEventOccurrences(
-            matchingEvents,
-            state.eventExceptions,
-            agendaStartDate.value,
-            agendaEndDate.value
+        filterCompletedEventOccurrences(
+            findEventOccurrences(
+                matchingEvents,
+                state.eventExceptions,
+                agendaStartDate.value,
+                agendaEndDate.value
+            ),
+            allEventInstances,
+            settings.data.showCompletedEvents
         )
     }
     val agendaGroups = remember(agendaOccurrences) {
@@ -172,7 +181,6 @@ fun EventScreen(
             }
         }
     }
-    val allEventInstances = state.allEventInstances
     var showSpacesMenu by remember { mutableStateOf(false) }
     val notificationPermissionLabel = stringResource(R.string.Notification_Permission)
     val reminderPermissionLabel = stringResource(R.string.Reminder_Permission)

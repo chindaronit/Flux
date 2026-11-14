@@ -64,6 +64,21 @@ data class EventOccurrence(
     val instanceDate: Long get() = date.toEpochDay()
 }
 
+fun filterCompletedEventOccurrences(
+    occurrences: List<EventOccurrence>,
+    instances: List<EventInstanceModel>,
+    showCompletedEvents: Boolean
+): List<EventOccurrence> {
+    if (showCompletedEvents) return occurrences
+
+    val completedOccurrences = instances.mapTo(mutableSetOf()) {
+        it.eventId to it.instanceDate
+    }
+    return occurrences.filterNot { occurrence ->
+        (occurrence.event.id to occurrence.instanceDate) in completedOccurrences
+    }
+}
+
 fun findEventOccurrences(
     events: List<EventModel>,
     exceptions: List<EventExceptionModel>,

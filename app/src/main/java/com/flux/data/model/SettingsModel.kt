@@ -1,6 +1,7 @@
 package com.flux.data.model
 
 import androidx.room.Entity
+import androidx.room.ColumnInfo
 import androidx.room.PrimaryKey
 import kotlinx.serialization.Serializable
 
@@ -32,5 +33,7 @@ data class SettingsModel(
     val notesPreviewMode: Int = 1,
     val defaultWorkspace: String? = null,
     val completedEventColorArgb: Int? = null,
-    val defaultNewEventColorArgb: Int? = null
+    val defaultNewEventColorArgb: Int? = null,
+    @ColumnInfo(defaultValue = "1")
+    val showCompletedEvents: Boolean = true
 )
