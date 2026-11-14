@@ -4,7 +4,8 @@ import android.content.Context
 import android.os.Build
 import android.widget.Toast
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,7 +13,6 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -20,21 +20,21 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -43,26 +43,30 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.omnipad.R
@@ -91,14 +95,9 @@ import com.omnipad.other.isNotificationPermissionGranted
 import com.omnipad.other.openAppNotificationSettings
 import com.omnipad.other.requestExactAlarmPermission
 import com.omnipad.ui.common.BottomBar
-import com.omnipad.ui.common.CategoryRow
 import com.omnipad.ui.common.EmptyData
 import com.omnipad.ui.common.GeneralSearchBar
-import com.omnipad.ui.common.MultiOptionRow
-import com.omnipad.ui.common.SearchFilterCategory
-import com.omnipad.ui.common.SearchFilterOption
 import com.omnipad.ui.common.SelectWorkspaceDialog
-import com.omnipad.ui.common.SelectionType
 import com.omnipad.ui.common.convertMillisToDate
 import com.omnipad.ui.common.convertMillisToTime
 import com.omnipad.ui.events.HabitEvents
@@ -107,7 +106,9 @@ import com.omnipad.ui.events.TaskEvents
 import com.omnipad.ui.events.TodoEvents
 import com.omnipad.ui.events.WorkspaceEvents
 import com.omnipad.ui.screens.events.EventCard
+import com.omnipad.ui.screens.events.EventCalendar
 import com.omnipad.ui.screens.events.EventAgendaDateHeader
+import com.omnipad.ui.screens.events.agendaTodayHeaderIndex
 import com.omnipad.ui.screens.events.formatAgendaDate
 import com.omnipad.ui.screens.habits.HabitPreviewCard
 import com.omnipad.ui.screens.habits.isDateAllowedForHabit
@@ -130,30 +131,72 @@ import java.time.ZonedDateTime
 import java.util.UUID
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.launch
 import kotlin.collections.minus
 import kotlin.collections.plus
+
+private const val ALL_TYPES = 0
+private const val EVENTS_TYPE = 3
+
+internal fun searchResultType(selectedTypeIds: List<Int>): Int =
+    selectedTypeIds.singleOrNull() ?: ALL_TYPES
+
+internal fun searchableWorkspaceIds(workspaces: List<WorkspaceModel>): List<String> =
+    workspaces.filterNot { it.isLocked }.map { it.workspaceId }
+
+internal fun matchingSearchEvents(
+    events: List<EventModel>,
+    selectedWorkspaceIds: Collection<String>,
+    lockedWorkspaceIds: Collection<String>,
+    query: String
+): List<EventModel> = events.filter {
+    it.workspaceId in selectedWorkspaceIds &&
+        it.workspaceId !in lockedWorkspaceIds &&
+        (query.isBlank() || it.title.contains(query, ignoreCase = true))
+}
+
+internal fun searchSectionStartIndices(
+    selectedTypes: List<Int>,
+    noteCount: Int,
+    todoCount: Int,
+    eventGroupSizes: List<Int>,
+    journalCount: Int,
+    currentHabitCount: Int,
+    pastHabitCount: Int,
+    progressGroupSizes: List<Int>
+): Map<Int, Int> {
+    var index = 0
+    return buildMap {
+        selectedTypes.forEach { type ->
+            val itemCount = when (type) {
+                1 -> noteCount
+                2 -> todoCount
+                3 -> eventGroupSizes.sum() + eventGroupSizes.count { it > 0 }
+                4 -> journalCount
+                5 -> currentHabitCount + pastHabitCount + if (pastHabitCount > 0) 1 else 0
+                7 -> progressGroupSizes.count { it > 0 }
+                else -> 0
+            }
+            if (itemCount > 0) {
+                put(type, index)
+                index += 1 + itemCount
+            }
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen(navController: NavController, states: States, viewModels: ViewModels){
     val context = LocalContext.current
     var query by rememberSaveable { mutableStateOf("") }
+    if (states.workspaceState.isLoading) {
+        Loader()
+        return
+    }
     val allSpaces = getSpacesList().filter { it.id!=6 }
     val lockedWorkspace = states.workspaceState.allWorkspaces.filter { it.isLocked }.map { it.workspaceId }
-    var filterState by remember {
-        mutableStateOf(
-            FilterState(
-                selectedWorkspaceIds = states.workspaceState.allWorkspaces
-                    .filterNot { lockedWorkspace.contains(it.workspaceId) }
-                    .map { it.workspaceId }
-                    .toSet(),
-
-                selectedSpacesIds = allSpaces
-                    .map { it.id.toString() }
-                    .toSet()
-            )
-        )
-    }
+    var selectedSpaceIds by remember { mutableStateOf(allSpaces.map { it.id }.toSet()) }
     val notesPreviewMode = states.settings.data.notesPreviewMode
     val radius = states.settings.data.cornerRadius
     val is24HourFormat = states.settings.data.is24HourFormat
@@ -164,10 +207,9 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
         states.todoState.isLoading
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val selectedWorkspaceIds = states.workspaceState.allWorkspaces
-        .filterNot { lockedWorkspace.contains(it.workspaceId) }
-        .filter { it.workspaceId in filterState.selectedWorkspaceIds }.map { it.workspaceId }
-    val selectedSpaces = allSpaces.filter { it.id.toString() in filterState.selectedSpacesIds }
+    val selectedWorkspaceIds = searchableWorkspaceIds(states.workspaceState.allWorkspaces)
+    val selectedSpaces = allSpaces.filter { it.id in selectedSpaceIds }
+    val selectedSpace = searchResultType(selectedSpaces.map { it.id })
 
     val labels = states.labelState.allLabels
         .filterNot { lockedWorkspace.contains(it.workspaceId) }
@@ -192,6 +234,15 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
         .filterNot { lockedWorkspace.contains(it.workspaceId) }
 
     val expandedTODOIds = rememberSaveable { mutableStateOf<Set<String>>(emptySet()) }
+    val toggleTodo: (String) -> Unit = { id ->
+        val todo = todoLists.first { it.id == id }
+        if (todo.recurrence is RecurrenceRule.NONE) {
+            expandedTODOIds.value = if (id in expandedTODOIds.value) expandedTODOIds.value - id
+            else expandedTODOIds.value + id
+        } else {
+            navController.navigate(NavRoutes.TodoDetail.withArgs(todo.workspaceId, id))
+        }
+    }
 
     val journals = states.journalState.data
         .filter { selectedWorkspaceIds.contains(it.workspaceId) }
@@ -214,10 +265,9 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
 
     val currentHabits = habits.filter { it.isLive() }
     val pastHabits = habits.filter { !it.isLive() }
-    val matchingEvents = states.eventState.allEvent
-        .filter { selectedWorkspaceIds.contains(it.workspaceId) }
-        .filter { query.isBlank() || it.title.contains(query, ignoreCase = true) }
-        .filterNot { lockedWorkspace.contains(it.workspaceId) }
+    val matchingEvents = matchingSearchEvents(
+        states.eventState.allEvent, selectedWorkspaceIds, lockedWorkspace, query
+    )
     val boardItems = states.progressBoardState.allItems
         .filter { selectedWorkspaceIds.contains(it.workspaceId) }
         .filter {
@@ -230,17 +280,22 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
     val inProgressItems = boardItems.filter { it.status == 1 }
     val completedItems = boardItems.filter { it.status == 2 }
     var selectedProgressBoardItem by remember { mutableStateOf<ProgressBoardModel?>(null) }
-    val selectedSpace = rememberSaveable { mutableIntStateOf(1) }
-    val eventAgendaStart = remember(query, selectedSpace.intValue) {
+    var showEventCalendar by rememberSaveable { mutableStateOf(false) }
+    var eventCalendarMonthOffset by rememberSaveable { mutableIntStateOf(0) }
+    var showCreateTypeDialog by remember { mutableStateOf(false) }
+    var createSpace by remember { mutableIntStateOf(ALL_TYPES) }
+    val scope = rememberCoroutineScope()
+    val eventAgendaStart = remember(query, selectedSpace) {
         mutableStateOf(LocalDate.now().minusDays(365))
     }
-    val eventAgendaEnd = remember(query, selectedSpace.intValue) {
+    val eventAgendaEnd = remember(query, selectedSpace) {
         mutableStateOf(LocalDate.now().plusDays(365))
     }
     val eventSearchListState = rememberLazyListState()
     val matchingEventOccurrences = remember(
         query,
-        selectedSpace.intValue,
+        selectedSpace,
+        selectedSpaceIds,
         matchingEvents,
         eventAgendaStart.value,
         eventAgendaEnd.value,
@@ -248,7 +303,9 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
         states.eventState.eventExceptions,
         states.settings.data.showCompletedEvents
     ) {
-        if (selectedSpace.intValue != 3) emptyList()
+        if (selectedSpace != EVENTS_TYPE &&
+            (selectedSpace != ALL_TYPES || selectedSpaces.none { it.id == EVENTS_TYPE })
+        ) emptyList()
         else filterCompletedEventOccurrences(
             findEventOccurrences(
                 matchingEvents,
@@ -263,6 +320,18 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
     val matchingEventGroups = remember(matchingEventOccurrences) {
         matchingEventOccurrences.groupBy { it.date }.toList()
     }
+    val sectionStartIndices = searchSectionStartIndices(
+        selectedTypes = selectedSpaces.map { it.id },
+        noteCount = notes.size,
+        todoCount = todoLists.size,
+        eventGroupSizes = matchingEventGroups.map { it.second.size },
+        journalCount = journals.size,
+        currentHabitCount = currentHabits.size,
+        pastHabitCount = pastHabits.size,
+        progressGroupSizes = listOf(notStartedItems.size, inProgressItems.size, completedItems.size)
+    )
+    val currentSectionStartIndices by rememberUpdatedState(sectionStartIndices)
+    val populatedSpaces = selectedSpaces.filter { it.id in sectionStartIndices }
     val initialMatchingOccurrenceIndex = initialEventOccurrenceIndex(matchingEventOccurrences)
     val initialMatchingListIndex = remember(matchingEventGroups, initialMatchingOccurrenceIndex) {
         val initialOccurrence = matchingEventOccurrences.getOrNull(initialMatchingOccurrenceIndex)
@@ -279,14 +348,14 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
             previousGroupsItemCount + 1 + occurrenceOffset
         }
     }
-    LaunchedEffect(query, selectedSpace.intValue, matchingEventOccurrences.isNotEmpty()) {
-        if (selectedSpace.intValue == 3 && matchingEventOccurrences.isNotEmpty()) {
+    LaunchedEffect(query, selectedSpace, matchingEventOccurrences.isNotEmpty()) {
+        if (selectedSpace == EVENTS_TYPE && matchingEventOccurrences.isNotEmpty()) {
             eventSearchListState.scrollToItem(initialMatchingListIndex)
         }
     }
     LaunchedEffect(
         query,
-        selectedSpace.intValue,
+        selectedSpace,
         eventSearchListState,
         matchingEventOccurrences.isNotEmpty(),
         eventAgendaStart.value
@@ -298,13 +367,13 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
                 eventSearchListState.isScrollInProgress
             )
         }.distinctUntilChanged().collect { (firstVisible, lastVisible, isScrolling) ->
-            if (selectedSpace.intValue == 3 && isScrolling &&
+            if (selectedSpace == EVENTS_TYPE && isScrolling &&
                 firstVisible <= 1 &&
                 eventAgendaStart.value.isAfter(LocalDate.of(1900, 1, 1))
             ) {
                 eventAgendaStart.value = eventAgendaStart.value.minusDays(365)
             }
-            if (selectedSpace.intValue == 3 && isScrolling &&
+            if (selectedSpace == EVENTS_TYPE && isScrolling &&
                 matchingEventOccurrences.isNotEmpty() &&
                 lastVisible >= eventSearchListState.layoutInfo.totalItemsCount - 3
             ) {
@@ -312,8 +381,6 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
             }
         }
     }
-    val workspacesLabel = stringResource(R.string.workspaces)
-    val spacesLabel = stringResource(R.string.spaces)
     var showWorkspaceSelectorDialog by remember { mutableStateOf(false) }
     val notificationPermissionLabel = stringResource(R.string.Notification_Permission)
     val reminderPermissionLabel = stringResource(R.string.Reminder_Permission)
@@ -323,13 +390,6 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
             expandedTODOIds.value = todoLists.map { it.id }.toSet()
         }
         else if(query.isBlank()) { expandedTODOIds.value = emptySet() }
-    }
-
-    LaunchedEffect(selectedSpaces) {
-        val availableIds = selectedSpaces.filter { it.id != 6 }.map { it.id }
-        if (availableIds.isNotEmpty() && selectedSpace.intValue !in availableIds) {
-            selectedSpace.intValue = availableIds.first()
-        }
     }
 
     fun hasOrAppendSpace(workspaceId: String, spaceId: Int){
@@ -351,9 +411,9 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
         val zonedDateTime = ZonedDateTime.of(localDate, currentTime, ZoneId.systemDefault())
         val selectedDateMillis = zonedDateTime.toInstant().toEpochMilli()
 
-        hasOrAppendSpace(selectedWorkspaceId, selectedSpace.intValue)
+        hasOrAppendSpace(selectedWorkspaceId, createSpace)
 
-        when(selectedSpace.intValue){
+        when(createSpace){
             1-> navController.navigate(NavRoutes.NoteDetails.withArgs(selectedWorkspaceId, newId))
             2-> navController.navigate(NavRoutes.NewTodoList.withArgs(selectedWorkspaceId, newId))
             3-> navController.navigate(NavRoutes.NewEvent.withArgs(selectedWorkspaceId, newId, selectedDateMillis))
@@ -368,7 +428,7 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
                     openAppNotificationSettings(context)
                 }
                 if (canScheduleReminder(context) && isNotificationPermissionGranted(context)) {
-                    navController.navigate(NavRoutes.NewHabit.withArgs(selectedSpace, newId))
+                    navController.navigate(NavRoutes.NewHabit.withArgs(selectedWorkspaceId, newId))
                 }
             }
             7-> navController.navigate(NavRoutes.NewProgressItem.withArgs(selectedWorkspaceId, newId))
@@ -388,6 +448,31 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
             }
         )
     }
+    if (showCreateTypeDialog) {
+        AlertDialog(
+            onDismissRequest = { showCreateTypeDialog = false },
+            title = { Text(stringResource(R.string.search_choose_create_type)) },
+            text = {
+                Column {
+                    selectedSpaces.forEach { space ->
+                        TextButton(onClick = {
+                            createSpace = space.id
+                            showCreateTypeDialog = false
+                            showWorkspaceSelectorDialog = true
+                        }) {
+                            Icon(space.icon, contentDescription = null)
+                            Text(space.title, Modifier.padding(start = 8.dp))
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showCreateTypeDialog = false }) {
+                    Text(stringResource(R.string.Cancel))
+                }
+            }
+        )
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
@@ -395,11 +480,20 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
             GeneralSearchBar(
                 leadingIcon = Icons.Default.Search,
                 trailingIcon = Icons.Default.FilterList,
+                trailingIconContentDescription = stringResource(R.string.search_filters),
                 textFieldState = TextFieldState(query),
                 onSearch = {
                     query = it
                 },
-                onAddClicked = { showWorkspaceSelectorDialog = true },
+                onAddClicked = if (selectedSpaces.isEmpty()) null else {
+                    {
+                        if (selectedSpace == ALL_TYPES) showCreateTypeDialog = true
+                        else {
+                            createSpace = selectedSpace
+                            showWorkspaceSelectorDialog = true
+                        }
+                    }
+                },
                 onTrailingIconClicked = { isToolsSheetVisible=true },
                 onCloseClicked = { query = "" }
             )
@@ -412,30 +506,103 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
                 isLoading -> Loader()
                 else -> {
                     Column(Modifier.fillMaxSize()) {
-                        if (selectedSpaces.isNotEmpty()) {
-                            LazyRow(
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState())
+                                .padding(horizontal = 16.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            val scopeLabel = when {
+                                selectedSpaces.isEmpty() -> stringResource(R.string.search_no_types)
+                                selectedSpaces.size == allSpaces.size -> stringResource(R.string.search_all_types)
+                                selectedSpaces.size == 1 -> selectedSpaces.first().title
+                                else -> stringResource(R.string.search_type_count, selectedSpaces.size)
+                            }
+                            Text(
+                                text = stringResource(R.string.search_scope, scopeLabel),
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            if (selectedSpace == EVENTS_TYPE) {
+                                FilterChip(
+                                    selected = !showEventCalendar,
+                                    onClick = { showEventCalendar = false },
+                                    label = { Text(stringResource(R.string.event_agenda)) }
+                                )
+                                FilterChip(
+                                    selected = showEventCalendar,
+                                    onClick = { showEventCalendar = true },
+                                    label = { Text(stringResource(R.string.Calendar)) }
+                                )
+                                TextButton(
+                                    enabled = showEventCalendar || matchingEventOccurrences.isNotEmpty(),
+                                    onClick = {
+                                        if (showEventCalendar) eventCalendarMonthOffset = 0
+                                        else agendaTodayHeaderIndex(matchingEventOccurrences, LocalDate.now())?.let { index ->
+                                            scope.launch { eventSearchListState.scrollToItem(index) }
+                                        }
+                                    }
+                                ) {
+                                    Text(stringResource(R.string.Today))
+                                }
+                            }
+                        }
+                        if (selectedSpace == ALL_TYPES && populatedSpaces.isNotEmpty()) {
+                            Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .background(MaterialTheme.colorScheme.surfaceContainerLow)
-                                    .padding(horizontal = 16.dp, vertical = 4.dp),
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    .horizontalScroll(rememberScrollState())
+                                    .padding(horizontal = 16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                items(selectedSpaces){ space->
-                                    FilterChip(
-                                        onClick = { selectedSpace.intValue = space.id },
-                                        label = { Text(space.title) },
-                                        selected = selectedSpace.intValue == space.id,
-                                        leadingIcon = {
-                                            Icon(
-                                                imageVector = if (selectedSpace.intValue == space.id) Icons.Filled.Done else space.icon,
-                                                contentDescription = "Done icon",
-                                                modifier = Modifier.size(FilterChipDefaults.IconSize)
-                                            )
+                                Text(
+                                    stringResource(R.string.search_jump_to),
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                populatedSpaces.forEach { space ->
+                                    val description = stringResource(R.string.search_jump_to_type, space.title)
+                                    AssistChip(
+                                        onClick = {
+                                            scope.launch {
+                                                currentSectionStartIndices[space.id]?.let { index ->
+                                                    eventSearchListState.scrollToItem(index)
+                                                }
+                                            }
                                         },
+                                        modifier = Modifier.semantics { contentDescription = description },
+                                        label = { Text(space.title) }
                                     )
                                 }
                             }
                         }
+                        if (selectedSpace == EVENTS_TYPE && showEventCalendar) {
+                            if (query.isNotBlank() || !states.settings.data.showCompletedEvents) {
+                                Text(
+                                    text = stringResource(R.string.search_calendar_filtered),
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            EventCalendar(
+                                events = matchingEvents,
+                                exceptions = states.eventState.eventExceptions,
+                                instances = states.eventState.allEventInstances,
+                                occurrenceColors = states.eventState.eventOccurrenceColors,
+                                showCompletedEvents = states.settings.data.showCompletedEvents,
+                                completedColorArgb = states.settings.data.completedEventColorArgb,
+                                monthOffset = eventCalendarMonthOffset,
+                                onMonthOffsetChange = { eventCalendarMonthOffset = it },
+                                onEventClick = { occurrence ->
+                                    navController.navigate(NavRoutes.eventEditor(occurrence.event, occurrence.instanceDate))
+                                },
+                                modifier = Modifier.weight(1f).padding(start = 12.dp, end = 12.dp, bottom = 80.dp)
+                            )
+                        } else {
                         LazyColumn(
                             state = eventSearchListState,
                             modifier = Modifier
@@ -448,20 +615,39 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
                             ),
                             verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            if(selectedSpaces.isEmpty()){ item { EmptyData() } }
-                            else when(selectedSpace.intValue) {
-                                1 -> searchedNotes(navController, notesPreviewMode, radius, notes, labels)
-                                2 -> searchedTodo(navController, radius, context, expandedTODOIds.value, todoLists, { id->
-                                    val todoItem = todoLists.first { it.id == id }
-                                    val workspaceId = todoItem.workspaceId
-
-                                    if(todoItem.recurrence is RecurrenceRule.NONE){
-                                        expandedTODOIds.value =
-                                            if (id in expandedTODOIds.value) expandedTODOIds.value - id
-                                            else expandedTODOIds.value + id
+                            if (selectedSpace == ALL_TYPES) {
+                                if (populatedSpaces.isEmpty()) item { EmptyData() }
+                                populatedSpaces.forEach { space ->
+                                    item(key = "type:${space.id}") {
+                                        Text(
+                                            text = space.title,
+                                            modifier = Modifier
+                                                .padding(top = 8.dp, bottom = 2.dp)
+                                                .semantics { heading() },
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            style = MaterialTheme.typography.titleLarge.copy(
+                                                fontWeight = FontWeight.SemiBold
+                                            )
+                                        )
                                     }
-                                    else{ navController.navigate(NavRoutes.TodoDetail.withArgs(workspaceId, id)) }
-                                }, viewModels.todoViewModel::onEvent)
+                                    when (space.id) {
+                                        1 -> searchedNotes(navController, notesPreviewMode, radius, notes, labels)
+                                        2 -> searchedTodo(navController, radius, context, expandedTODOIds.value, todoLists, toggleTodo, viewModels.todoViewModel::onEvent)
+                                        3 -> searchedEvent(
+                                            navController, radius, is24HourFormat, matchingEventOccurrences,
+                                            states.eventState.allEventInstances, states.eventState.eventOccurrenceColors,
+                                            states.settings.data.completedEventColorArgb,
+                                            onEvent = viewModels.eventViewModel::onEvent
+                                        )
+                                        4 -> searchedJournal(navController, radius, journals, labels)
+                                        5 -> searchedHabits(navController, radius, is24HourFormat, currentHabits, pastHabits, states.habitState.allInstances, viewModels.habitViewModel::onEvent)
+                                        7 -> searchedProgressBoard(navController, radius, notStartedItems, inProgressItems, completedItems)
+                                    }
+                                }
+                            } else if(selectedSpaces.isEmpty()){ item { EmptyData() } }
+                            else when(selectedSpace) {
+                                1 -> searchedNotes(navController, notesPreviewMode, radius, notes, labels)
+                                2 -> searchedTodo(navController, radius, context, expandedTODOIds.value, todoLists, toggleTodo, viewModels.todoViewModel::onEvent)
                                 3 -> searchedEvent(
                                     navController, radius, is24HourFormat, matchingEventOccurrences,
                                     states.eventState.allEventInstances,
@@ -474,6 +660,7 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
                                 7 -> searchedProgressBoard(navController, radius, notStartedItems, inProgressItems, completedItems)
                                 else -> {}
                             }
+                        }
                         }
                     }
                     BottomBar(
@@ -499,25 +686,18 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
 
     if(isToolsSheetVisible){
         FilterSheet(
-            filterState,
-            states.workspaceState.allWorkspaces.filterNot { lockedWorkspace.contains(it.workspaceId) },
+            selectedSpaceIds,
             allSpaces,
             sheetState,
             { isToolsSheetVisible=false }
-        ) { map ->
-
-            filterState = FilterState(
-                selectedWorkspaceIds = map[workspacesLabel] ?: emptySet(),
-                selectedSpacesIds = map[spacesLabel] ?: emptySet()
-            )
-        }
+        ) { selectedSpaceIds = it }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 fun LazyListScope.searchedNotes(navController: NavController, notesPreviewMode: Int, radius: Int, notes: List<NotesModel>, labels: List<LabelModel>){
     if (notes.isEmpty()) item { EmptyData() }
-    items(notes, key = { it.notesId }) { note ->
+    items(notes, key = { "note:${it.notesId}" }) { note ->
         NotesPreviewCard(
             radius = radius,
             isSelected = false,
@@ -534,7 +714,7 @@ fun LazyListScope.searchedNotes(navController: NavController, notesPreviewMode: 
 @OptIn(ExperimentalMaterial3Api::class)
 fun LazyListScope.searchedJournal(navController: NavController, radius: Int, allEntries: List<JournalModel>, labels: List<LabelModel>){
     if(allEntries.isEmpty()) item { EmptyData() }
-    items(allEntries, key = { it.journalId }) { journal ->
+    items(allEntries, key = { "journal:${it.journalId}" }) { journal ->
         JournalCardHeader(convertMillisToDate(journal.dateTime) + ", " + convertMillisToTime(journal.dateTime))
         Row(modifier = Modifier.height(IntrinsicSize.Min)) {
             TimelineBody(isLast = false)
@@ -641,7 +821,7 @@ fun LazyListScope.searchedEvent(
         item(key = "date:$date") {
             EventAgendaDateHeader(formatAgendaDate(date))
         }
-        items(dateOccurrences, key = { "${it.event.id}:${it.instanceDate}" }) { occurrence ->
+        items(dateOccurrences, key = { "event:${it.event.id}:${it.instanceDate}" }) { occurrence ->
             val event = occurrence.event
             val isPending = instances.none {
                 it.eventId == event.id && it.instanceDate == occurrence.instanceDate
@@ -743,7 +923,7 @@ fun LazyListScope.searchedTodo(
     onEvent: (TodoEvents) -> Unit
 ) {
     if(todoList.isEmpty()) item { EmptyData() }
-    items(todoList, key = { it.id }) { todoItem ->
+    items(todoList, key = { "todo:${it.id}" }) { todoItem ->
         TodoExpandableCard(
             navController = navController,
             radius = radius,
@@ -759,161 +939,88 @@ fun LazyListScope.searchedTodo(
     }
 }
 
-fun buildSearchFilterCategories(context: Context, workspaces: List<WorkspaceModel>, spaces: List<Space>): List<SearchFilterCategory> {
-    return listOf(
-        SearchFilterCategory(
-            name = context.getString(R.string.workspaces),
-            options = workspaces.map { SearchFilterOption(it.workspaceId, it.title) },
-            type = SelectionType.MULTIPLE
-        ),
-        SearchFilterCategory(
-            name = context.getString(R.string.spaces),
-            options = spaces.map { SearchFilterOption(it.id.toString(), it.title) },
-            type = SelectionType.MULTIPLE
-        )
-    )
-}
-
-data class FilterState(
-    val selectedWorkspaceIds: Set<String>,
-    val selectedSpacesIds: Set<String>
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FilterSheet(
-    filterState: FilterState,
-    workspaces: List<WorkspaceModel>,
+private fun FilterSheet(
+    selectedSpaceIds: Set<Int>,
     spaces: List<Space>,
     sheetState: SheetState,
     onDismiss: () -> Unit = {},
-    onApply: (Map<String, Set<String>>) -> Unit
+    onApply: (Set<Int>) -> Unit
 ) {
-    val context = LocalContext.current
     val windowInfo = LocalWindowInfo.current
     val density = LocalDensity.current
-    val maxHeight = with(density) { windowInfo.containerSize.height.toDp() } * 0.4f
-    val categories = remember(workspaces, spaces) {
-        buildSearchFilterCategories(context, workspaces, spaces)
-    }
-    val workspacesLabel = stringResource(R.string.workspaces)
-    val spacesLabel = stringResource(R.string.spaces)
+    val maxHeight = with(density) { windowInfo.containerSize.height.toDp() } * 0.7f
+    var selection by remember { mutableStateOf(selectedSpaceIds) }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
     ) {
-        // key resets all remembered state whenever filterState changes
-        key(filterState) {
-            var selectedCategory by remember { mutableStateOf(categories.first()) }
-
-            val multiSelections = remember {
-                mutableStateMapOf<String, SnapshotStateList<String>>().apply {
-                    categories.forEach { category ->
-                        val selected = when (category.name) {
-                            workspacesLabel -> filterState.selectedWorkspaceIds
-                            spacesLabel     -> filterState.selectedSpacesIds
-                            else         -> emptySet()
-                        }
-                        put(category.name, mutableStateListOf<String>().apply { addAll(selected) })
-                    }
-                }
-            }
-
-            Column(
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = maxHeight)
+        ) {
+            Text(
+                text = stringResource(R.string.search_filter_title),
+                modifier = Modifier.padding(horizontal = 24.dp),
+                style = MaterialTheme.typography.titleLarge
+            )
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(max = maxHeight)
-                    .padding(top = 8.dp)
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Row(modifier = Modifier.weight(1f)) {
-                    // LEFT PANEL
-                    LazyColumn(
-                        modifier = Modifier
-                            .width(150.dp)
-                            .background(MaterialTheme.colorScheme.surfaceContainer)
-                    ) {
-                        items(categories) { category ->
-                            CategoryRow(
-                                label = category.name,
-                                isSelected = category.name == selectedCategory.name,
-                                onClick = { selectedCategory = category }
-                            )
-                        }
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .width(0.5.dp)
-                            .fillMaxHeight()
-                            .background(MaterialTheme.colorScheme.onSurface)
-                    )
-
-                    // RIGHT PANEL
-                    LazyColumn(modifier = Modifier.weight(1f)) {
-                        if (selectedCategory.options.isEmpty()) {
-                            item {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(24.dp),
-                                    contentAlignment = Alignment.Center
-                                ) { Text(stringResource(R.string.no_options_available)) }
-                            }
-                        }
-
-                        items(selectedCategory.options) { option ->
-                            when (selectedCategory.type) {
-                                SelectionType.MULTIPLE -> {
-                                    val list = multiSelections[selectedCategory.name] ?: return@items
-                                    val isSelected = option.id in list
-                                    MultiOptionRow(
-                                        label = option.label,
-                                        isSelected = isSelected,
-                                        onClick = {
-                                            if (isSelected) list.remove(option.id)
-                                            else list.add(option.id)
-                                        }
-                                    )
-                                }
-                                else -> {}
-                            }
-                        }
-                    }
+                TextButton(onClick = { selection = spaces.map { it.id }.toSet() }) {
+                    Text(stringResource(R.string.search_select_all))
                 }
-
-                HorizontalDivider()
-
-                // FOOTER
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    OutlinedButton(
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            categories.forEach { category ->
-                                val list = multiSelections[category.name] ?: return@forEach
-                                list.clear()
-                                list.addAll(category.options.map { it.id })
-                            }
-                        }
-                    ) { Text(stringResource(R.string.reset)) }
-
-                    Button(
-                        modifier = Modifier.weight(2f),
-                        onClick = {
-                            onApply(multiSelections.mapValues { it.value.toSet() })
-                            onDismiss()
-                        }
-                    ) { Text(stringResource(R.string.Confirm)) }
+                TextButton(onClick = { selection = emptySet() }) {
+                    Text(stringResource(R.string.search_clear_all))
                 }
-
-                Spacer(Modifier.navigationBarsPadding())
             }
+            LazyColumn(modifier = Modifier.weight(1f, fill = false)) {
+                items(spaces, key = { it.id }) { space ->
+                    val checked = space.id in selection
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .toggleable(
+                                value = checked,
+                                role = Role.Checkbox,
+                                onValueChange = { selected ->
+                                    selection = if (selected) selection + space.id else selection - space.id
+                                }
+                            )
+                            .padding(horizontal = 24.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Icon(space.icon, contentDescription = null)
+                        Text(space.title, modifier = Modifier.weight(1f))
+                        Checkbox(checked = checked, onCheckedChange = null)
+                    }
+                }
+            }
+            HorizontalDivider()
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                OutlinedButton(modifier = Modifier.weight(1f), onClick = onDismiss) {
+                    Text(stringResource(R.string.Cancel))
+                }
+                Button(
+                    modifier = Modifier.weight(2f),
+                    onClick = {
+                        onApply(selection)
+                        onDismiss()
+                    }
+                ) { Text(stringResource(R.string.Confirm)) }
+            }
+            Spacer(Modifier.navigationBarsPadding())
         }
     }
 }
