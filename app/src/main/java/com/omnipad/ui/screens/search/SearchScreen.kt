@@ -72,6 +72,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.omnipad.R
+import com.omnipad.data.model.EventExceptionModel
 import com.omnipad.data.model.EventOccurrence
 import com.omnipad.data.model.EventModel
 import com.omnipad.data.model.filterCompletedEventOccurrences
@@ -97,6 +98,7 @@ import com.omnipad.other.isNotificationPermissionGranted
 import com.omnipad.other.openAppNotificationSettings
 import com.omnipad.other.requestExactAlarmPermission
 import com.omnipad.ui.common.BottomBar
+import com.omnipad.ui.common.DeleteAlert
 import com.omnipad.ui.common.EmptyData
 import com.omnipad.ui.common.GeneralSearchBar
 import com.omnipad.ui.common.SelectWorkspaceDialog
@@ -110,6 +112,8 @@ import com.omnipad.ui.events.WorkspaceEvents
 import com.omnipad.ui.screens.events.EventCard
 import com.omnipad.ui.screens.events.EventCalendar
 import com.omnipad.ui.screens.events.EventAgendaDateHeader
+import com.omnipad.ui.screens.events.AgendaEventActions
+import com.omnipad.ui.screens.events.CalendarFocusRequest
 import com.omnipad.ui.screens.events.agendaTodayHeaderIndex
 import com.omnipad.ui.screens.events.formatAgendaDate
 import com.omnipad.ui.screens.habits.HabitPreviewCard
@@ -283,8 +287,25 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
     val completedItems = boardItems.filter { it.status == 2 }
     var selectedProgressBoardItem by remember { mutableStateOf<ProgressBoardModel?>(null) }
     var showEventCalendar by rememberSaveable { mutableStateOf(false) }
-    val isEventCalendar = selectedSpace == EVENTS_TYPE && showEventCalendar
+    val isEventCalendar = showEventCalendar && EVENTS_TYPE in selectedSpaceIds
     var eventCalendarMonthOffset by rememberSaveable { mutableIntStateOf(0) }
+    var eventCalendarFocus by remember { mutableStateOf<CalendarFocusRequest?>(null) }
+    var eventCalendarFocusSequence by remember { mutableIntStateOf(0) }
+    var deletionTarget by remember { mutableStateOf<EventOccurrence?>(null) }
+    var showDeleteChoice by remember { mutableStateOf(false) }
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
+    var deleteOccurrence by remember { mutableStateOf(false) }
+    val openEventCalendar: (EventOccurrence) -> Unit = { occurrence ->
+        eventCalendarFocusSequence++
+        eventCalendarFocus = CalendarFocusRequest(occurrence.event.id, occurrence.date, eventCalendarFocusSequence)
+        showEventCalendar = true
+    }
+    val deleteEvent: (EventOccurrence) -> Unit = { occurrence ->
+        deletionTarget = occurrence
+        deleteOccurrence = false
+        if (occurrence.event.recurrence != RecurrenceRule.Once) showDeleteChoice = true
+        else showDeleteConfirmation = true
+    }
     var showCreateTypeDialog by remember { mutableStateOf(false) }
     var createSpace by remember { mutableIntStateOf(ALL_TYPES) }
     val scope = rememberCoroutineScope()
@@ -477,6 +498,50 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
         )
     }
 
+    if (showDeleteChoice && deletionTarget != null) {
+        AlertDialog(
+            onDismissRequest = { showDeleteChoice = false; deletionTarget = null },
+            title = { Text(stringResource(R.string.delete_event_scope_title)) },
+            text = { Text(stringResource(R.string.delete_event_scope_message)) },
+            confirmButton = {
+                Column(horizontalAlignment = Alignment.End) {
+                    TextButton(onClick = {
+                        deleteOccurrence = true
+                        showDeleteChoice = false
+                        showDeleteConfirmation = true
+                    }) { Text(stringResource(R.string.event_scope_this)) }
+                    TextButton(onClick = {
+                        deleteOccurrence = false
+                        showDeleteChoice = false
+                        showDeleteConfirmation = true
+                    }) { Text(stringResource(R.string.event_scope_series)) }
+                    TextButton(onClick = { showDeleteChoice = false; deletionTarget = null }) {
+                        Text(stringResource(R.string.Cancel))
+                    }
+                }
+            }
+        )
+    }
+    val target = deletionTarget
+    if (showDeleteConfirmation && target != null) {
+        DeleteAlert(
+            onDismissRequest = { showDeleteConfirmation = false; deletionTarget = null },
+            onConfirmation = {
+                if (deleteOccurrence) {
+                    viewModels.eventViewModel.onEvent(TaskEvents.DeleteOccurrence(EventExceptionModel(
+                        target.event.id, target.instanceDate, target.event.workspaceId
+                    )))
+                } else {
+                    viewModels.eventViewModel.onEvent(TaskEvents.DeleteTask(target.event, context))
+                }
+                showDeleteConfirmation = false
+                deletionTarget = null
+            },
+            dialogTitle = stringResource(if (deleteOccurrence) R.string.delete_occurrence_title else R.string.deleteDialogTitle),
+            dialogText = stringResource(if (deleteOccurrence) R.string.delete_occurrence_message else R.string.deleteDialogText)
+        )
+    }
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         topBar = {
@@ -523,21 +588,23 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                val scopeLabel = when {
-                                    selectedSpaces.isEmpty() -> stringResource(R.string.search_no_types)
-                                    selectedSpaces.size == allSpaces.size -> stringResource(R.string.search_all_types)
-                                    selectedSpaces.size == 1 -> selectedSpaces.first().title
-                                    else -> stringResource(R.string.search_type_count, selectedSpaces.size)
+                                if (!isEventCalendar) {
+                                    val scopeLabel = when {
+                                        selectedSpaces.isEmpty() -> stringResource(R.string.search_no_types)
+                                        selectedSpaces.size == allSpaces.size -> stringResource(R.string.search_all_types)
+                                        selectedSpaces.size == 1 -> selectedSpaces.first().title
+                                        else -> stringResource(R.string.search_type_count, selectedSpaces.size)
+                                    }
+                                    Text(
+                                        text = stringResource(R.string.search_scope, scopeLabel),
+                                        style = MaterialTheme.typography.labelLarge,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
                                 }
-                                Text(
-                                    text = stringResource(R.string.search_scope, scopeLabel),
-                                    style = MaterialTheme.typography.labelLarge,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                if (selectedSpace == EVENTS_TYPE) {
+                                if (selectedSpace == EVENTS_TYPE || isEventCalendar) {
                                     FilterChip(
                                         selected = !showEventCalendar,
-                                        onClick = { showEventCalendar = false },
+                                        onClick = { showEventCalendar = false; eventCalendarFocus = null },
                                         label = { Text(stringResource(R.string.event_agenda)) }
                                     )
                                     FilterChip(
@@ -559,13 +626,6 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
                                 }
                             }
                             if (isEventCalendar) {
-                                IconButton(onClick = { isToolsSheetVisible = true }) {
-                                    Icon(
-                                        Icons.Default.FilterList,
-                                        contentDescription = stringResource(R.string.search_filters),
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
-                                }
                                 IconButton(onClick = {
                                     createSpace = EVENTS_TYPE
                                     showWorkspaceSelectorDialog = true
@@ -578,7 +638,7 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
                                 }
                             }
                         }
-                        if (selectedSpace == ALL_TYPES && populatedSpaces.isNotEmpty()) {
+                        if (!isEventCalendar && selectedSpace == ALL_TYPES && populatedSpaces.isNotEmpty()) {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -636,7 +696,8 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
                                 onEventClick = { occurrence ->
                                     navController.navigate(NavRoutes.eventEditor(occurrence.event, occurrence.instanceDate))
                                 },
-                                modifier = Modifier.weight(1f).padding(start = 12.dp, end = 12.dp, bottom = 80.dp)
+                                modifier = Modifier.weight(1f).padding(start = 12.dp, end = 12.dp, bottom = 80.dp),
+                                focusRequest = eventCalendarFocus
                             )
                         } else {
                         LazyColumn(
@@ -673,7 +734,9 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
                                             navController, radius, is24HourFormat, matchingEventOccurrences,
                                             states.eventState.allEventInstances, states.eventState.eventOccurrenceColors,
                                             states.settings.data.completedEventColorArgb,
-                                            onEvent = viewModels.eventViewModel::onEvent
+                                            onEvent = viewModels.eventViewModel::onEvent,
+                                            onCalendar = openEventCalendar,
+                                            onDelete = deleteEvent
                                         )
                                         4 -> searchedJournal(navController, radius, journals, labels)
                                         5 -> searchedHabits(navController, radius, is24HourFormat, currentHabits, pastHabits, states.habitState.allInstances, viewModels.habitViewModel::onEvent)
@@ -689,7 +752,9 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
                                     states.eventState.allEventInstances,
                                     states.eventState.eventOccurrenceColors,
                                     states.settings.data.completedEventColorArgb,
-                                    onEvent = viewModels.eventViewModel::onEvent
+                                    onEvent = viewModels.eventViewModel::onEvent,
+                                    onCalendar = openEventCalendar,
+                                    onDelete = deleteEvent
                                 )
                                 4 -> searchedJournal(navController, radius, journals, labels)
                                 5 -> searchedHabits(navController, radius, is24HourFormat, currentHabits, pastHabits, states.habitState.allInstances, viewModels.habitViewModel::onEvent)
@@ -726,7 +791,13 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
             allSpaces,
             sheetState,
             { isToolsSheetVisible=false }
-        ) { selectedSpaceIds = it }
+        ) {
+            selectedSpaceIds = it
+            if (EVENTS_TYPE !in it) {
+                showEventCalendar = false
+                eventCalendarFocus = null
+            }
+        }
     }
 }
 
@@ -850,7 +921,9 @@ fun LazyListScope.searchedEvent(
     instances: List<com.omnipad.data.model.EventInstanceModel>,
     occurrenceColors: List<com.omnipad.data.model.EventOccurrenceColorModel>,
     completedColorArgb: Int?,
-    onEvent: (TaskEvents) -> Unit
+    onEvent: (TaskEvents) -> Unit,
+    onCalendar: (EventOccurrence) -> Unit,
+    onDelete: (EventOccurrence) -> Unit
 ) {
     if (occurrences.isEmpty()) item { EmptyData() }
     occurrences.groupBy { it.date }.forEach { (date, dateOccurrences) ->
@@ -865,36 +938,43 @@ fun LazyListScope.searchedEvent(
             Row(modifier = Modifier.height(IntrinsicSize.Min)) {
                 TimelineBody(isLast = false)
                 Column {
-                    EventCard(
-                        radius = radius,
-                        is24HourFormat = is24HourFormat,
+                    AgendaEventActions(
                         isPending = isPending,
-                        title = event.title,
-                        repeat = event.recurrence,
-                        startDateTime = event.startDateTime,
-                        isAllDay = event.isAllDay,
-                        occurrenceDate = occurrence.instanceDate,
-                        colorArgb = occurrenceColors.firstOrNull {
-                            it.eventId == event.id && it.occurrenceDate == occurrence.instanceDate
-                        }?.colorArgb ?: event.colorArgb,
-                        completedColorArgb = completedColorArgb,
-                        onChangeStatus = {
-                            onEvent(
-                                TaskEvents.ToggleStatus(
-                                    isPending,
-                                    event.id,
-                                    event.workspaceId,
-                                    occurrence.instanceDate
-                                )
-                            )
+                        onCalendar = { onCalendar(occurrence) },
+                        onComplete = {
+                            onEvent(TaskEvents.ToggleStatus(
+                                isPending, event.id, event.workspaceId, occurrence.instanceDate
+                            ))
                         },
-                        onClick = {
-                            navController.navigate(NavRoutes.eventEditor(event, occurrence.instanceDate))
-                        },
-                        onLongPressed = {
-                            navController.navigate(NavRoutes.eventEditor(event, occurrence.instanceDate))
-                        }
-                    )
+                        onDelete = { onDelete(occurrence) }
+                    ) { trailing ->
+                        EventCard(
+                            radius = radius,
+                            is24HourFormat = is24HourFormat,
+                            isPending = isPending,
+                            title = event.title,
+                            repeat = event.recurrence,
+                            startDateTime = event.startDateTime,
+                            isAllDay = event.isAllDay,
+                            occurrenceDate = occurrence.instanceDate,
+                            colorArgb = occurrenceColors.firstOrNull {
+                                it.eventId == event.id && it.occurrenceDate == occurrence.instanceDate
+                            }?.colorArgb ?: event.colorArgb,
+                            completedColorArgb = completedColorArgb,
+                            onChangeStatus = {
+                                onEvent(TaskEvents.ToggleStatus(
+                                    isPending, event.id, event.workspaceId, occurrence.instanceDate
+                                ))
+                            },
+                            onClick = {
+                                navController.navigate(NavRoutes.eventEditor(event, occurrence.instanceDate))
+                            },
+                            onLongPressed = {
+                                navController.navigate(NavRoutes.eventEditor(event, occurrence.instanceDate))
+                            },
+                            trailingContent = trailing
+                        )
+                    }
                     if (occurrence != dateOccurrences.last()) {
                         Spacer(Modifier.height(8.dp))
                     }
