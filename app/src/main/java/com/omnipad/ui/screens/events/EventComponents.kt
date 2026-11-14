@@ -299,9 +299,10 @@ fun EventCard(
     occurrenceDate: Long? = null,
     colorArgb: Int? = null,
     completedColorArgb: Int? = null,
-    onChangeStatus: () -> Unit,
+    onChangeStatus: (() -> Unit)? = null,
     onClick: () -> Unit,
     onLongPressed: () -> Unit,
+    trailingContent: @Composable (() -> Unit)? = null,
 ) {
     val displayedColorArgb = if (!isPending) completedColorArgb ?: colorArgb else colorArgb
     val containerColor = displayedColorArgb?.let(::Color) ?: if (isPending) {
@@ -338,18 +339,27 @@ fun EventCard(
         shape = shapeManager(radius = radius * 2)
     ) {
         Row(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-            IconRadioButton(
-                selected = !isPending,
-                uncheckedTint = contentColor,
-                checkedTint = contentColor,
-                onClick = onChangeStatus
-            )
+            if (onChangeStatus != null) {
+                IconRadioButton(
+                    selected = !isPending,
+                    uncheckedTint = contentColor,
+                    checkedTint = contentColor,
+                    onClick = onChangeStatus
+                )
+            }
             Column(
                 modifier = Modifier
                     .weight(1f)
                     .padding(horizontal = 8.dp, vertical = 4.dp)
             ) {
                 Text(title, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                if (!isPending && onChangeStatus == null) {
+                    Text(
+                        stringResource(R.string.Completed),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = contentColor
+                    )
+                }
                 occurrenceDate?.let { date ->
                     Text(
                         LocalDate.ofEpochDay(date).format(
@@ -377,6 +387,7 @@ fun EventCard(
                     )
                 }
             }
+            trailingContent?.invoke()
         }
     }
 }
