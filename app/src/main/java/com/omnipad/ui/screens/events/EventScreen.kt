@@ -134,6 +134,7 @@ fun EventScreen(
     val workspaceEvents = state.allEvent.filter { it.workspaceId == workspaceId }
     var showCalendar by rememberSaveable(workspaceId) { mutableStateOf(false) }
     var calendarMonthOffset by rememberSaveable(workspaceId) { mutableIntStateOf(0) }
+    var selectedCalendarDay by rememberSaveable(workspaceId) { mutableStateOf<Long?>(null) }
     var focusRequest by remember(workspaceId) { mutableStateOf<CalendarFocusRequest?>(null) }
     var focusSequence by remember(workspaceId) { mutableStateOf(0) }
     var deletionTarget by remember(workspaceId) { mutableStateOf<EventOccurrence?>(null) }
@@ -377,30 +378,33 @@ fun EventScreen(
                             onSpaceChange
                         ) { showSpacesMenu = false }
                     }
-                    FilterChip(
-                        selected = !showCalendar,
-                        onClick = { showCalendar = false; focusRequest = null },
-                        label = { Text(stringResource(R.string.event_agenda)) }
-                    )
-                    FilterChip(
-                        selected = showCalendar,
-                        onClick = { showCalendar = true },
-                        label = { Text(stringResource(R.string.Calendar)) }
-                    )
-                    TextButton(
-                        enabled = showCalendar || agendaOccurrences.isNotEmpty(),
-                        onClick = {
-                            if (showCalendar) {
-                                calendarMonthOffset = 0
-                            } else {
-                                val index = agendaTodayHeaderIndex(agendaOccurrences, LocalDate.now())
-                                if (index != null) {
-                                    scope.launch { eventListState.scrollToItem(index) }
+                    if (selectedCalendarDay == null) {
+                        FilterChip(
+                            selected = !showCalendar,
+                            onClick = { showCalendar = false; focusRequest = null; selectedCalendarDay = null },
+                            label = { Text(stringResource(R.string.event_agenda)) }
+                        )
+                        FilterChip(
+                            selected = showCalendar,
+                            onClick = { showCalendar = true },
+                            label = { Text(stringResource(R.string.Calendar)) }
+                        )
+                        TextButton(
+                            enabled = showCalendar || agendaOccurrences.isNotEmpty(),
+                            onClick = {
+                                if (showCalendar) {
+                                    selectedCalendarDay = null
+                                    calendarMonthOffset = 0
+                                } else {
+                                    val index = agendaTodayHeaderIndex(agendaOccurrences, LocalDate.now())
+                                    if (index != null) {
+                                        scope.launch { eventListState.scrollToItem(index) }
+                                    }
                                 }
                             }
+                        ) {
+                            Text(stringResource(R.string.Today))
                         }
-                    ) {
-                        Text(stringResource(R.string.Today))
                     }
                 }
                 if (showCalendar) {
@@ -413,6 +417,10 @@ fun EventScreen(
                         completedColorArgb = settings.data.completedEventColorArgb,
                         monthOffset = calendarMonthOffset,
                         onMonthOffsetChange = { calendarMonthOffset = it },
+                        selectedDay = selectedCalendarDay,
+                        onSelectedDayChange = { selectedCalendarDay = it },
+                        is24HourFormat = is24HourFormat,
+                        radius = radius,
                         onEventClick = { occurrence ->
                             navController.navigate(NavRoutes.eventEditor(occurrence.event, occurrence.instanceDate))
                         },

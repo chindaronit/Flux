@@ -7,7 +7,9 @@ import com.omnipad.data.model.EventOccurrence
 import com.omnipad.data.model.RecurrenceRule
 import com.omnipad.data.model.filterCompletedEventOccurrences
 import com.omnipad.data.model.findEventOccurrences
+import com.omnipad.data.model.durationUntilEndTime
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.Month
 import java.time.YearMonth
 import java.time.ZoneId
@@ -18,6 +20,13 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class EventCalendarTest {
+    @Test
+    fun endTimeProducesSameDayOrOvernightDuration() {
+        assertEquals(90 * 60_000L, durationUntilEndTime(LocalTime.of(9, 0), LocalTime.of(10, 30)))
+        assertEquals(2 * 3_600_000L, durationUntilEndTime(LocalTime.of(23, 30), LocalTime.of(1, 30)))
+        assertEquals(24 * 3_600_000L, durationUntilEndTime(LocalTime.of(9, 0), LocalTime.of(9, 0)))
+    }
+
     @Test
     fun monthAndYearSelectorsCalculateDistantOffsetsAndBoundYears() {
         val now = YearMonth.of(2026, 11)
@@ -76,5 +85,68 @@ class EventCalendarTest {
         )
 
         assertEquals(dates.filterNot { it == exceptionDate || it == completedDate }, occurrences.map { it.date })
+    }
+
+    @Test
+    fun dayListsOnlyItsVisibleOccurrencesIncludingAdjacentMonthDates() {
+        val dates = calendarDates(YearMonth.of(2027, 1))
+        val date = dates.first()
+        val start = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val recurring = EventModel(id = "daily", startDateTime = start, recurrence = RecurrenceRule.Custom())
+        val oneOff = EventModel(id = "once", startDateTime = start)
+        val excluded = EventModel(id = "excluded", startDateTime = start, recurrence = RecurrenceRule.Custom())
+        val completed = EventModel(id = "completed", startDateTime = start, recurrence = RecurrenceRule.Custom())
+        val events = listOf(recurring, oneOff, excluded, completed)
+        val exceptions = listOf(EventExceptionModel(excluded.id, date.toEpochDay(), ""))
+        val instances = listOf(EventInstanceModel(eventId = completed.id, instanceDate = date.toEpochDay()))
+
+        val hidden = calendarOccurrencesByDate(events, exceptions, instances, false, dates)
+        assertEquals(setOf("daily", "once"), hidden[date].orEmpty().map { it.event.id }.toSet())
+        assertEquals(setOf("daily", "excluded", "completed"), hidden[date.plusDays(1)].orEmpty().map { it.event.id }.toSet())
+
+        val shown = calendarOccurrencesByDate(events, exceptions, instances, true, dates)
+        assertEquals(setOf("daily", "once", "completed"), shown[date].orEmpty().map { it.event.id }.toSet())
+    }
+
+    @Test
+    fun timelinePositionsDurationsAndPlacesOverlapsInSeparateColumns() {
+        val date = LocalDate.of(2027, 1, 2)
+        val zone = ZoneId.systemDefault()
+        fun event(id: String, hour: Int, minute: Int, duration: Long?) = EventModel(
+            id = id,
+            startDateTime = date.atTime(hour, minute).atZone(zone).toInstant().toEpochMilli(),
+            durationMillis = duration
+        )
+        val events = listOf(
+            event("long", 9, 15, 90 * 60_000L),
+            event("overlap", 10, 0, 60 * 60_000L),
+            event("default", 11, 0, null)
+        )
+        val entries = dayTimelineEntries(date, events, emptyList(), emptyList(), true).second.associateBy { it.occurrence.event.id }
+        assertEquals(9 * 3_600_000L + 15 * 60_000L, entries.getValue("long").start)
+        assertEquals(10 * 3_600_000L + 45 * 60_000L, entries.getValue("long").end)
+        assertEquals(2, entries.getValue("long").columns)
+        assertTrue(entries.getValue("long").column != entries.getValue("overlap").column)
+        assertEquals(30 * 60_000L, entries.getValue("default").end - entries.getValue("default").start)
+        assertEquals(1, entries.getValue("default").columns)
+    }
+
+    @Test
+    fun timelineIncludesOvernightOccurrencesAndAppliesTheirOwnCompletionAndExceptions() {
+        val date = LocalDate.of(2027, 1, 2)
+        val zone = ZoneId.systemDefault()
+        val start = date.minusDays(1).atTime(23, 30).atZone(zone).toInstant().toEpochMilli()
+        val event = EventModel(id = "night", startDateTime = start, durationMillis = 2 * 3_600_000L, recurrence = RecurrenceRule.Custom())
+        val allDay = EventModel(id = "all-day", startDateTime = date.atStartOfDay(zone).toInstant().toEpochMilli(), isAllDay = true)
+        val result = dayTimelineEntries(date, listOf(event, allDay), emptyList(), emptyList(), true)
+        assertEquals(listOf("all-day"), result.first.map { it.event.id })
+        val overnight = result.second.first { it.occurrence.date == date.minusDays(1) }
+        assertEquals(0L, overnight.start)
+        assertEquals(90 * 60_000L, overnight.end)
+        val completed = listOf(EventInstanceModel(eventId = event.id, instanceDate = date.minusDays(1).toEpochDay()))
+        val filtered = dayTimelineEntries(date, listOf(event), emptyList(), completed, false).second
+        assertFalse(filtered.any { it.occurrence.date == date.minusDays(1) })
+        val exception = listOf(EventExceptionModel(event.id, date.minusDays(1).toEpochDay(), ""))
+        assertFalse(dayTimelineEntries(date, listOf(event), exception, emptyList(), true).second.any { it.occurrence.date == date.minusDays(1) })
     }
 }

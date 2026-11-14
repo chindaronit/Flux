@@ -88,6 +88,10 @@ Within every workspace, OmniPad provides multiple **Templates** designed for dif
 * **Journal** — Chronological personal or professional entries
 * **Analytics** — Insights and productivity metrics derived from workspace data
 
+Tap a calendar day to see its timeline. Timed events can have an optional end time,
+including on the following day; events without an end time appear as 30-minute
+blocks. All-day events appear above the timeline.
+
 This modular structure allows users to mix and match templates depending on their requirements. A research workspace might emphasize notes and analytics, while a personal workspace may focus on journals, todos, and events.
 
 By separating data into workspaces and structuring content through templates, OmniPad enables scalable organization, reduces cognitive clutter, and supports diverse productivity systems within a single unified platform.

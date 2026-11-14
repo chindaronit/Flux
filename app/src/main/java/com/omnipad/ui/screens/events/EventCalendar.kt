@@ -1,5 +1,6 @@
 package com.omnipad.ui.screens.events
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -29,6 +30,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBackIos
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.AlertDialog
@@ -89,6 +91,19 @@ internal fun calendarDates(month: YearMonth): List<LocalDate> {
     return (0..java.time.temporal.ChronoUnit.DAYS.between(first, last).toInt())
         .map { first.plusDays(it.toLong()) }
 }
+
+internal fun calendarOccurrencesByDate(
+    events: List<EventModel>,
+    exceptions: List<EventExceptionModel>,
+    instances: List<EventInstanceModel>,
+    showCompletedEvents: Boolean,
+    dates: List<LocalDate>
+): Map<LocalDate, List<EventOccurrence>> =
+    filterCompletedEventOccurrences(
+        findEventOccurrences(events, exceptions, dates.first(), dates.last()),
+        instances,
+        showCompletedEvents
+    ).groupBy { it.date }
 
 internal fun calendarMonthOffset(year: Int, month: Month, currentMonth: YearMonth): Int? {
     val offset = ChronoUnit.MONTHS.between(currentMonth, YearMonth.of(year, month))
@@ -200,6 +215,10 @@ fun EventCalendar(
     monthOffset: Int,
     onMonthOffsetChange: (Int) -> Unit,
     onEventClick: (EventOccurrence) -> Unit,
+    selectedDay: Long?,
+    onSelectedDayChange: (Long?) -> Unit,
+    is24HourFormat: Boolean,
+    radius: Int,
     modifier: Modifier = Modifier,
     focusRequest: CalendarFocusRequest? = null
 ) {
@@ -223,17 +242,40 @@ fun EventCalendar(
     }
     val dates = remember(month) { calendarDates(month) }
     val occurrencesByDate = remember(events, exceptions, instances, showCompletedEvents, month) {
-        filterCompletedEventOccurrences(
-            findEventOccurrences(events, exceptions, dates.first(), dates.last()),
-            instances,
-            showCompletedEvents
-        ).groupBy { it.date }
+        calendarOccurrencesByDate(events, exceptions, instances, showCompletedEvents, dates)
     }
     val completed = remember(instances) { instances.map { it.eventId to it.instanceDate }.toSet() }
     val colors = remember(occurrenceColors) {
         occurrenceColors.associate { (it.eventId to it.occurrenceDate) to it.colorArgb }
     }
     val today = LocalDate.now()
+
+    if (selectedDay != null) {
+        val date = LocalDate.ofEpochDay(selectedDay)
+        BackHandler { onSelectedDayChange(null) }
+        Column(modifier) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = { onSelectedDayChange(null) }) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.event_back_to_month))
+                }
+                Text(formatAgendaDate(date), style = MaterialTheme.typography.titleMedium)
+            }
+            EventDayTimeline(
+                date = date,
+                events = events,
+                exceptions = exceptions,
+                instances = instances,
+                showCompletedEvents = showCompletedEvents,
+                completed = completed,
+                colors = colors,
+                completedColorArgb = completedColorArgb,
+                is24HourFormat = is24HourFormat,
+                radius = radius,
+                onEventClick = onEventClick
+            )
+        }
+        return
+    }
 
     if (showMonthPicker) {
         CalendarMonthPicker(
@@ -318,6 +360,7 @@ fun EventCalendar(
                                 .fillMaxHeight()
                                 .heightIn(min = 110.dp)
                                 .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant)
+                                .clickable { onSelectedDayChange(date.toEpochDay()) }
                                 .drawWithContent {
                                     drawContent()
                                     if (flashActive && highlighted?.date == date && YearMonth.from(date) == month) {
@@ -395,7 +438,6 @@ fun EventCalendar(
                                                     2.dp, content, RoundedCornerShape(4.dp)
                                                 ) else Modifier
                                             )
-                                            .clickable { onEventClick(occurrence) }
                                             .padding(horizontal = 3.dp, vertical = 3.dp),
                                         color = content,
                                         style = MaterialTheme.typography.labelSmall,

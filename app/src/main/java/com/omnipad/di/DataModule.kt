@@ -30,6 +30,7 @@ import com.omnipad.data.database.MIGRATION_18_19
 import com.omnipad.data.database.MIGRATION_19_20
 import com.omnipad.data.database.MIGRATION_20_21
 import com.omnipad.data.database.MIGRATION_21_22
+import com.omnipad.data.database.MIGRATION_22_23
 import com.omnipad.data.database.MIGRATION_1_2
 import com.omnipad.data.database.MIGRATION_2_3
 import com.omnipad.data.database.MIGRATION_3_4
@@ -79,7 +80,8 @@ object DataModule {
             MIGRATION_18_19,
             MIGRATION_19_20,
             MIGRATION_20_21,
-            MIGRATION_21_22
+            MIGRATION_21_22,
+            MIGRATION_22_23
         )
         .build()
 

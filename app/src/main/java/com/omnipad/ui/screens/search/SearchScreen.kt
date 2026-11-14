@@ -289,6 +289,7 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
     var showEventCalendar by rememberSaveable { mutableStateOf(false) }
     val isEventCalendar = showEventCalendar && EVENTS_TYPE in selectedSpaceIds
     var eventCalendarMonthOffset by rememberSaveable { mutableIntStateOf(0) }
+    var selectedCalendarDay by rememberSaveable { mutableStateOf<Long?>(null) }
     var eventCalendarFocus by remember { mutableStateOf<CalendarFocusRequest?>(null) }
     var eventCalendarFocusSequence by remember { mutableIntStateOf(0) }
     var deletionTarget by remember { mutableStateOf<EventOccurrence?>(null) }
@@ -296,6 +297,7 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
     var showDeleteConfirmation by remember { mutableStateOf(false) }
     var deleteOccurrence by remember { mutableStateOf(false) }
     val openEventCalendar: (EventOccurrence) -> Unit = { occurrence ->
+        selectedCalendarDay = null
         eventCalendarFocusSequence++
         eventCalendarFocus = CalendarFocusRequest(occurrence.event.id, occurrence.date, eventCalendarFocusSequence)
         showEventCalendar = true
@@ -601,10 +603,10 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
-                                if (selectedSpace == EVENTS_TYPE || isEventCalendar) {
+                                if (selectedCalendarDay == null && (selectedSpace == EVENTS_TYPE || isEventCalendar)) {
                                     FilterChip(
                                         selected = !showEventCalendar,
-                                        onClick = { showEventCalendar = false; eventCalendarFocus = null },
+                                        onClick = { showEventCalendar = false; eventCalendarFocus = null; selectedCalendarDay = null },
                                         label = { Text(stringResource(R.string.event_agenda)) }
                                     )
                                     FilterChip(
@@ -615,7 +617,10 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
                                     TextButton(
                                         enabled = showEventCalendar || matchingEventOccurrences.isNotEmpty(),
                                         onClick = {
-                                            if (showEventCalendar) eventCalendarMonthOffset = 0
+                                            if (showEventCalendar) {
+                                                selectedCalendarDay = null
+                                                eventCalendarMonthOffset = 0
+                                            }
                                             else agendaTodayHeaderIndex(matchingEventOccurrences, LocalDate.now())?.let { index ->
                                                 scope.launch { eventSearchListState.scrollToItem(index) }
                                             }
@@ -693,6 +698,10 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
                                 completedColorArgb = states.settings.data.completedEventColorArgb,
                                 monthOffset = eventCalendarMonthOffset,
                                 onMonthOffsetChange = { eventCalendarMonthOffset = it },
+                                selectedDay = selectedCalendarDay,
+                                onSelectedDayChange = { selectedCalendarDay = it },
+                                is24HourFormat = is24HourFormat,
+                                radius = radius,
                                 onEventClick = { occurrence ->
                                     navController.navigate(NavRoutes.eventEditor(occurrence.event, occurrence.instanceDate))
                                 },
@@ -796,6 +805,7 @@ fun SearchScreen(navController: NavController, states: States, viewModels: ViewM
             if (EVENTS_TYPE !in it) {
                 showEventCalendar = false
                 eventCalendarFocus = null
+                selectedCalendarDay = null
             }
         }
     }

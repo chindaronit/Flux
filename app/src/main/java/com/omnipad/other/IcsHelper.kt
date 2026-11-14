@@ -3,6 +3,8 @@ package com.omnipad.other
 import com.omnipad.data.model.EventModel
 import com.omnipad.data.model.RecurrenceRule
 import com.omnipad.data.model.effectiveReminderOffsets
+import com.omnipad.data.model.configuredDurationMillis
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -87,7 +89,7 @@ private val WEEKDAY_CODES = listOf("MO", "TU", "WE", "TH", "FR", "SA", "SU")
  * should be emitted as a single non-recurring VEVENT.
  *
  * NOTE: endDateTime is only meaningful here as the recurrence cutoff (UNTIL) — it is
- * NOT a per-occurrence duration, because EventModel has no field for that.
+ * NOT a per-occurrence duration.
  */
 fun RecurrenceRule.toIcsRRule(endDateTime: Long, isAllDay: Boolean = false): String? {
     val core = when (this) {
@@ -197,12 +199,16 @@ object IcsExporter {
             sb.appendLine("DTSTART:${event.startDateTime.toIcsDateTime()}")
         }
 
-        val isRecurring = event.recurrence !is RecurrenceRule.Once && event.recurrence != RecurrenceRule.NONE
-        if (!isRecurring && !event.isAllDay) {
-            // Only a genuinely one-off event has a real DTEND; for recurring events
-            // endDateTime is expressed as RRULE;UNTIL instead (see toIcsRRule).
-            val dtEnd = if (event.endDateTime > 0) event.endDateTime else event.startDateTime
-            sb.appendLine("DTEND:${dtEnd.toIcsDateTime()}")
+        if (!event.isAllDay) {
+            val duration = event.configuredDurationMillis()
+            if (duration != null) {
+                val zone = ZoneId.systemDefault()
+                val start = Instant.ofEpochMilli(event.startDateTime).atZone(zone).toLocalDateTime()
+                val end = start.plus(duration, java.time.temporal.ChronoUnit.MILLIS).atZone(zone).toInstant().toEpochMilli()
+                sb.appendLine("DTEND:${end.toIcsDateTime()}")
+            } else if (event.recurrence == RecurrenceRule.Once) {
+                sb.appendLine("DTEND:${event.startDateTime.toIcsDateTime()}")
+            }
         }
 
         sb.appendLine("SUMMARY:${event.title.escapeIcsText()}")
@@ -267,6 +273,13 @@ object IcsImporter {
                 recurrence = recurrence,
                 startDateTime = start,
                 endDateTime = endDateTime,
+                durationMillis = if (!isAllDay && dtEnd != null && dtEnd!! > start) {
+                    val zone = ZoneId.systemDefault()
+                    Duration.between(
+                        Instant.ofEpochMilli(start).atZone(zone).toLocalDateTime(),
+                        Instant.ofEpochMilli(dtEnd!!).atZone(zone).toLocalDateTime()
+                    ).toMillis().takeIf { it > 0 }
+                } else null,
                 notificationOffset = notificationOffsets.firstOrNull() ?: 0L,
                 notificationOffsets = notificationOffsets.toList(),
                 workspaceId = workspaceId,

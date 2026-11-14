@@ -7,7 +7,9 @@ import java.util.UUID
 import kotlinx.serialization.Serializable
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.ZoneId
+import java.time.Duration
 import java.time.DayOfWeek
 import java.time.temporal.TemporalAdjusters
 import java.time.temporal.ChronoUnit
@@ -30,8 +32,20 @@ data class EventModel(
     val colorArgb: Int? = null,
     val attachments: List<String> = emptyList(),
     @ColumnInfo(defaultValue = "0")
-    val isAllDay: Boolean = false
+    val isAllDay: Boolean = false,
+    val durationMillis: Long? = null
 )
+
+fun EventModel.configuredDurationMillis(): Long? =
+    durationMillis?.takeIf { it > 0 }
+        ?: if (recurrence == RecurrenceRule.Once && endDateTime > startDateTime) {
+            endDateTime - startDateTime
+        } else null
+
+fun durationUntilEndTime(start: LocalTime, end: LocalTime): Long {
+    val duration = Duration.between(start, end).toMillis()
+    return if (duration <= 0) duration + 24 * 60 * 60_000L else duration
+}
 
 fun EventModel.effectiveReminderOffsets(): List<Long> =
     (notificationOffsets ?: listOf(notificationOffset)).distinct()

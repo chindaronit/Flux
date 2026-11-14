@@ -326,6 +326,12 @@
     <!-- Events -->
     <string name="Events">Events</string>
     <string name="Empty_Events">No Events Found</string>
+    <string name="event_back_to_month">Back to month</string>
+    <string name="event_end_time">End time</string>
+    <string name="event_no_end_time">Not set (30 minutes on timeline)</string>
+    <string name="event_end_time_next_day">%1$s (next day)</string>
+    <string name="event_end_time_with_date">%1$s (%2$s)</string>
+    <string name="event_clear_end_time">Clear end time</string>
     <string name="Edit_Event">Edit Event</string>
     <string name="All_Day">All Day</string>
     <string name="Repeat_Task">Repeat Task</string>

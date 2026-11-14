@@ -90,6 +90,8 @@ import com.omnipad.data.model.EventInstanceModel
 import com.omnipad.data.model.EventModel
 import com.omnipad.data.model.WorkspaceModel
 import com.omnipad.data.model.effectiveReminderOffsets
+import com.omnipad.data.model.configuredDurationMillis
+import com.omnipad.data.model.durationUntilEndTime
 import com.omnipad.data.model.eventEditorPreviewColor
 import com.omnipad.data.model.IntervalUnit
 import com.omnipad.data.model.RecurrenceRule
@@ -230,6 +232,7 @@ private fun EventEditor(
     var title by rememberSaveable { mutableStateOf(event.title) }
     var description by rememberSaveable { mutableStateOf(event.description) }
     var showTimePicker by remember { mutableStateOf(false) }
+    var showEventEndTimePicker by remember { mutableStateOf(false) }
     var showStartDatePicker by remember { mutableStateOf(false) }
     var showCustomNotificationDialog by remember { mutableStateOf(false) }
     var showRepetitionSheet by remember { mutableStateOf(false) }
@@ -243,6 +246,9 @@ private fun EventEditor(
             if (event.isAllDay) initialDateTime.toLocalStartOfDayMillis()
             else initialDateTime
         )
+    }
+    var durationMillis by rememberSaveable(event.id, occurrenceDate) {
+        mutableStateOf(event.configuredDurationMillis())
     }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var currentRecurrenceRule by remember { mutableStateOf(event.recurrence) }
@@ -276,6 +282,7 @@ private fun EventEditor(
                     description = description,
                     startDateTime = selectedDateTime,
                     endDateTime = eventEndsOn,
+                    durationMillis = durationMillis,
                     recurrence = currentRecurrenceRule,
                     isAllDay = isAllDay,
                     notificationOffset = notificationOffsets.firstOrNull() ?: 0L,
@@ -466,6 +473,21 @@ private fun EventEditor(
         )
     }
 
+    if (showEventEndTimePicker) {
+        val zone = ZoneId.systemDefault()
+        val start = Instant.ofEpochMilli(selectedDateTime).atZone(zone).toLocalDateTime()
+        val end = start.plus(durationMillis ?: 30 * 60_000L, java.time.temporal.ChronoUnit.MILLIS)
+        TimePicker(
+            initialTime = end.atZone(zone).toInstant().toEpochMilli(),
+            is24Hour = settings.data.is24HourFormat,
+            onConfirm = {
+                val endTime = Instant.ofEpochMilli(it).atZone(zone).toLocalTime()
+                durationMillis = durationUntilEndTime(start.toLocalTime(), endTime)
+            },
+            onDismiss = { showEventEndTimePicker = false }
+        )
+    }
+
     if (showStartDatePicker) {
         val zone = java.time.ZoneId.systemDefault()
         DatePickerModal(
@@ -512,6 +534,7 @@ private fun EventEditor(
                     description != originalEvent.description ||
                     selectedDateTime != originalOccurrenceDateTime ||
                     isAllDay != originalEvent.isAllDay ||
+                    durationMillis != originalEvent.configuredDurationMillis() ||
                     notificationOffsets != originalEvent.effectiveReminderOffsets()
 
             if (!hasOccurrenceChanges) return true
@@ -527,6 +550,7 @@ private fun EventEditor(
                 recurrence = RecurrenceRule.Once,
                 startDateTime = selectedDateTime,
                 endDateTime = -1L,
+                durationMillis = durationMillis,
                 isAllDay = isAllDay,
                 notificationOffset = notificationOffsets.firstOrNull() ?: 0L,
                 notificationOffsets = notificationOffsets,
@@ -552,14 +576,15 @@ private fun EventEditor(
             title = title,
             startDateTime = selectedDateTime,
             description = description,
-            endDateTime = eventEndsOn,
+            endDateTime = if (currentRecurrenceRule == RecurrenceRule.Once && durationMillis == null) -1L else eventEndsOn,
+            durationMillis = durationMillis,
             recurrence = currentRecurrenceRule,
             isAllDay = isAllDay,
             notificationOffset = notificationOffsets.firstOrNull() ?: 0L,
             notificationOffsets = notificationOffsets,
             colorArgb = if (hasOccurrenceColorOverride) originalEvent.colorArgb else selectedColorArgb
         )
-        val hasContent = candidate != originalEvent
+        val hasContent = candidate != originalEvent.copy(durationMillis = originalEvent.configuredDurationMillis())
 
         if (!hasContent) { return true }
 
@@ -578,19 +603,21 @@ private fun EventEditor(
                 description != originalEvent.description ||
                 selectedDateTime != (occurrenceStartDateTime ?: originalEvent.startDateTime) ||
                 isAllDay != originalEvent.isAllDay ||
+                durationMillis != originalEvent.configuredDurationMillis() ||
                 notificationOffsets != originalEvent.effectiveReminderOffsets()
         } else {
             originalEvent.copy(
                 title = title,
                 startDateTime = selectedDateTime,
                 description = description,
-                endDateTime = eventEndsOn,
+                endDateTime = if (currentRecurrenceRule == RecurrenceRule.Once && durationMillis == null) -1L else eventEndsOn,
+                durationMillis = durationMillis,
                 recurrence = currentRecurrenceRule,
                 isAllDay = isAllDay,
                 notificationOffset = notificationOffsets.firstOrNull() ?: 0L,
                 notificationOffsets = notificationOffsets,
                 colorArgb = if (hasOccurrenceColorOverride) originalEvent.colorArgb else selectedColorArgb
-            ) != originalEvent
+            ) != originalEvent.copy(durationMillis = originalEvent.configuredDurationMillis())
         }
         if (hasChanges) {
             discardMessage = if (switchScope) switchScopeChangesMessage else unsavedChangesMessage
@@ -997,6 +1024,31 @@ private fun EventEditor(
                         value = convertMillisToTime(selectedDateTime, settings.data.is24HourFormat),
                         onClick = { showTimePicker = true }
                     )
+                    val start = Instant.ofEpochMilli(selectedDateTime).atZone(ZoneId.systemDefault()).toLocalDateTime()
+                    val end = durationMillis?.let { start.plus(it, java.time.temporal.ChronoUnit.MILLIS) }
+                    val endLabel = if (end == null) {
+                        stringResource(R.string.event_no_end_time)
+                    } else {
+                        val time = convertMillisToTime(end.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(), settings.data.is24HourFormat)
+                        when {
+                            end.toLocalDate() == start.toLocalDate().plusDays(1) ->
+                                stringResource(R.string.event_end_time_next_day, time)
+                            end.toLocalDate().isAfter(start.toLocalDate()) ->
+                                stringResource(R.string.event_end_time_with_date, time, formatAgendaDate(end.toLocalDate()))
+                            else -> time
+                        }
+                    }
+                    EventFormSettingCard(
+                        icon = { Icon(Icons.Default.AccessTime, contentDescription = null) },
+                        label = stringResource(R.string.event_end_time),
+                        value = endLabel,
+                        onClick = { showEventEndTimePicker = true }
+                    )
+                    if (durationMillis != null) {
+                        TextButton(onClick = { durationMillis = null }, modifier = Modifier.align(Alignment.End)) {
+                            Text(stringResource(R.string.event_clear_end_time))
+                        }
+                    }
                 }
                 if (!isOccurrenceEdit) {
                     EventFormSettingCard(
