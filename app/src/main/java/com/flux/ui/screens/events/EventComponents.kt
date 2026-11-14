@@ -295,6 +295,7 @@ fun EventCard(
     title: String,
     repeat: RecurrenceRule,
     startDateTime: Long,
+    isAllDay: Boolean = false,
     occurrenceDate: Long? = null,
     colorArgb: Int? = null,
     completedColorArgb: Int? = null,
@@ -367,7 +368,11 @@ fun EventCard(
                     )
                     Spacer(Modifier.width(6.dp))
                     Text(
-                        "${getRecurrenceText(context, repeat, startDateTime)} at $time",
+                        if (isAllDay) {
+                            stringResource(R.string.event_all_day)
+                        } else {
+                            "${getRecurrenceText(context, repeat, startDateTime)} at $time"
+                        },
                         style = MaterialTheme.typography.bodySmall
                     )
                 }

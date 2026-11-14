@@ -334,6 +334,7 @@ fun EventScreen(
                                         title = task.title,
                                         repeat = task.recurrence,
                                         startDateTime = task.startDateTime,
+                                        isAllDay = task.isAllDay,
                                         occurrenceDate = occurrence.instanceDate,
                                         colorArgb = state.eventOccurrenceColors.firstOrNull {
                                             it.eventId == task.id && it.occurrenceDate == occurrence.instanceDate

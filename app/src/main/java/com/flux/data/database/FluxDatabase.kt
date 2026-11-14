@@ -44,7 +44,7 @@ import java.util.UUID
 
 @Database(
     entities = [EventModel::class, LabelModel::class, EventInstanceModel::class, EventExceptionModel::class, EventOccurrenceColorModel::class, SettingsModel::class, NotesModel::class, HabitModel::class, HabitInstanceModel::class, WorkspaceModel::class, TodoModel::class, JournalModel::class, ProgressBoardModel::class, TodoInstance::class],
-    version = 21,
+    version = 22,
     exportSchema = false
 )
 @TypeConverters(Converter::class)
@@ -664,5 +664,11 @@ val MIGRATION_19_20 = object : Migration(19, 20) {
 val MIGRATION_20_21 = object : Migration(20, 21) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL("ALTER TABLE SettingsModel ADD COLUMN showCompletedEvents INTEGER NOT NULL DEFAULT 1")
+    }
+}
+
+val MIGRATION_21_22 = object : Migration(21, 22) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE EventModel ADD COLUMN isAllDay INTEGER NOT NULL DEFAULT 0")
     }
 }

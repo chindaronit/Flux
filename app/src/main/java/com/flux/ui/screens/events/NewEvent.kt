@@ -153,6 +153,29 @@ fun NewEvent(
                 .toEpochMilli()
         }
     }
+
+    fun Long.toLocalStartOfDayMillis(): Long {
+        val zone = ZoneId.systemDefault()
+        return Instant.ofEpochMilli(this)
+            .atZone(zone)
+            .toLocalDate()
+            .atStartOfDay(zone)
+            .toInstant()
+            .toEpochMilli()
+    }
+    var isAllDay by rememberSaveable(event.id, occurrenceDate) {
+        mutableStateOf(event.isAllDay)
+    }
+    var selectedTimeOfDayMillis by rememberSaveable(event.id, occurrenceDate) {
+        val initialDateTime = occurrenceStartDateTime ?: event.startDateTime
+        mutableLongStateOf(
+            if (event.isAllDay) 9 * 60 * 60 * 1_000L
+            else Instant.ofEpochMilli(initialDateTime)
+                .atZone(ZoneId.systemDefault())
+                .toLocalTime()
+                .toNanoOfDay() / 1_000_000L
+        )
+    }
     var title by rememberSaveable { mutableStateOf(event.title) }
     var description by rememberSaveable { mutableStateOf(event.description) }
     var showTimePicker by remember { mutableStateOf(false) }
@@ -164,7 +187,11 @@ fun NewEvent(
         mutableStateOf(event.effectiveReminderOffsets())
     }
     var selectedDateTime by rememberSaveable(event.id, occurrenceDate) {
-        mutableLongStateOf(occurrenceStartDateTime ?: event.startDateTime)
+        val initialDateTime = occurrenceStartDateTime ?: event.startDateTime
+        mutableLongStateOf(
+            if (event.isAllDay) initialDateTime.toLocalStartOfDayMillis()
+            else initialDateTime
+        )
     }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var currentRecurrenceRule by remember { mutableStateOf(event.recurrence) }
@@ -198,6 +225,7 @@ fun NewEvent(
                     startDateTime = selectedDateTime,
                     endDateTime = eventEndsOn,
                     recurrence = currentRecurrenceRule,
+                    isAllDay = isAllDay,
                     notificationOffset = notificationOffsets.firstOrNull() ?: 0L,
                     notificationOffsets = notificationOffsets,
                     colorArgb = selectedColorArgb
@@ -211,6 +239,24 @@ fun NewEvent(
     val unsavedChangesMessage = stringResource(R.string.unsaved_changes_message)
     val contentCopiedString = stringResource(R.string.content_copied)
     val contentMovedString = stringResource(R.string.content_moved)
+
+    fun setAllDay(enabled: Boolean) {
+        if (isAllDay == enabled) return
+        val zone = ZoneId.systemDefault()
+        if (enabled) {
+            selectedTimeOfDayMillis = Instant.ofEpochMilli(selectedDateTime)
+                .atZone(zone)
+                .toLocalTime()
+                .toNanoOfDay() / 1_000_000L
+            selectedDateTime = selectedDateTime.toLocalStartOfDayMillis()
+        } else {
+            val date = Instant.ofEpochMilli(selectedDateTime).atZone(zone).toLocalDate()
+            selectedDateTime = date.atTime(
+                java.time.LocalTime.ofNanoOfDay(selectedTimeOfDayMillis * 1_000_000L)
+            ).atZone(zone).toInstant().toEpochMilli()
+        }
+        isAllDay = enabled
+    }
 
     fun applyEventColor(colorArgb: Int?) {
         selectedColorArgb = colorArgb
@@ -356,7 +402,13 @@ fun NewEvent(
         TimePicker(
             initialTime = selectedDateTime,
             is24Hour = settings.data.is24HourFormat,
-            onConfirm = { selectedDateTime = it },
+            onConfirm = {
+                selectedDateTime = it
+                selectedTimeOfDayMillis = Instant.ofEpochMilli(it)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalTime()
+                    .toNanoOfDay() / 1_000_000L
+            },
             onDismiss = { showTimePicker = false }
         )
     }
@@ -406,6 +458,7 @@ fun NewEvent(
                 title != originalEvent.title ||
                     description != originalEvent.description ||
                     selectedDateTime != originalOccurrenceDateTime ||
+                    isAllDay != originalEvent.isAllDay ||
                     notificationOffsets != originalEvent.effectiveReminderOffsets()
 
             if (!hasOccurrenceChanges) return true
@@ -421,6 +474,7 @@ fun NewEvent(
                 recurrence = RecurrenceRule.Once,
                 startDateTime = selectedDateTime,
                 endDateTime = -1L,
+                isAllDay = isAllDay,
                 notificationOffset = notificationOffsets.firstOrNull() ?: 0L,
                 notificationOffsets = notificationOffsets,
                 workspaceId = originalEvent.workspaceId,
@@ -447,6 +501,7 @@ fun NewEvent(
             description = description,
             endDateTime = eventEndsOn,
             recurrence = currentRecurrenceRule,
+            isAllDay = isAllDay,
             notificationOffset = notificationOffsets.firstOrNull() ?: 0L,
             notificationOffsets = notificationOffsets,
             colorArgb = selectedColorArgb
@@ -469,6 +524,7 @@ fun NewEvent(
             title != originalEvent.title ||
                 description != originalEvent.description ||
                 selectedDateTime != (occurrenceStartDateTime ?: originalEvent.startDateTime) ||
+                isAllDay != originalEvent.isAllDay ||
                 notificationOffsets != originalEvent.effectiveReminderOffsets()
         } else {
             originalEvent.copy(
@@ -477,6 +533,7 @@ fun NewEvent(
                 description = description,
                 endDateTime = eventEndsOn,
                 recurrence = currentRecurrenceRule,
+                isAllDay = isAllDay,
                 notificationOffset = notificationOffsets.firstOrNull() ?: 0L,
                 notificationOffsets = notificationOffsets,
                 colorArgb = selectedColorArgb
@@ -665,7 +722,11 @@ fun NewEvent(
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
-                            "${selectedDateTime.toFormattedDate()} • ${convertMillisToTime(selectedDateTime, settings.data.is24HourFormat)}",
+                            if (isAllDay) {
+                                "${selectedDateTime.toFormattedDate()} • ${stringResource(R.string.event_all_day)}"
+                            } else {
+                                "${selectedDateTime.toFormattedDate()} • ${convertMillisToTime(selectedDateTime, settings.data.is24HourFormat)}"
+                            },
                             style = MaterialTheme.typography.bodyMedium,
                             color = previewContent.copy(alpha = 0.82f)
                         )
@@ -813,18 +874,49 @@ fun NewEvent(
                         }
                     }
                 }
+                Card(
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.Today, contentDescription = null)
+                            Text(
+                                stringResource(R.string.event_all_day),
+                                style = MaterialTheme.typography.titleSmall
+                            )
+                        }
+                        Switch(
+                            checked = isAllDay,
+                            onCheckedChange = { setAllDay(it) }
+                        )
+                    }
+                }
                 EventFormSettingCard(
                     icon = { Icon(Icons.Default.Today, contentDescription = null) },
                     label = stringResource(R.string.date),
                     value = selectedDateTime.toFormattedDate(),
                     onClick = { showStartDatePicker = true }
                 )
-                EventFormSettingCard(
-                    icon = { Icon(Icons.Default.AccessTime, contentDescription = null) },
-                    label = stringResource(R.string.time),
-                    value = convertMillisToTime(selectedDateTime, settings.data.is24HourFormat),
-                    onClick = { showTimePicker = true }
-                )
+                if (!isAllDay) {
+                    EventFormSettingCard(
+                        icon = { Icon(Icons.Default.AccessTime, contentDescription = null) },
+                        label = stringResource(R.string.time),
+                        value = convertMillisToTime(selectedDateTime, settings.data.is24HourFormat),
+                        onClick = { showTimePicker = true }
+                    )
+                }
                 if (!isOccurrenceEdit) {
                     EventFormSettingCard(
                         icon = { Icon(Icons.Default.Repeat, contentDescription = null) },
@@ -1088,7 +1180,7 @@ fun NewEvent(
         currentRule = currentRecurrenceRule
     ) { newRule, newStart ->
         currentRecurrenceRule = newRule
-        selectedDateTime = newStart
+        selectedDateTime = if (isAllDay) newStart.toLocalStartOfDayMillis() else newStart
     }
 
     if (showDataCopyDialog) {

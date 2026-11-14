@@ -62,6 +62,7 @@
     <string name="completed_event_color_description">Set one background color for every completed event</string>
     <string name="event_settings_title">Event settings</string>
     <string name="event_settings_description">Customize event colors and visibility</string>
+    <string name="event_all_day">All day</string>
     <string name="show_completed_events_title">Show completed events</string>
     <string name="show_completed_events_description">Show completed events in workspace agendas and global search</string>
     <string name="default_new_event_color_title">Default new event color</string>

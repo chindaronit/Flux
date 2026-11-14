@@ -5,6 +5,7 @@ import com.flux.data.model.RecurrenceRule
 import com.flux.data.model.effectiveReminderOffsets
 import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.UUID
@@ -13,8 +14,15 @@ import java.util.UUID
 
 private val ICS_DATETIME_FORMAT: DateTimeFormatter =
     DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'").withZone(ZoneOffset.UTC)
+private val ICS_DATE_FORMAT: DateTimeFormatter =
+    DateTimeFormatter.ofPattern("yyyyMMdd")
 
 private fun Long.toIcsDateTime(): String = ICS_DATETIME_FORMAT.format(Instant.ofEpochMilli(this))
+
+private fun Long.toIcsDate(): String = Instant.ofEpochMilli(this)
+    .atZone(ZoneId.systemDefault())
+    .toLocalDate()
+    .format(ICS_DATE_FORMAT)
 
 private fun String.icsDateTimeToMillis(): Long {
     // Accepts "20260823T093000Z" (UTC datetime) or "20260823" (all-day date, VALUE=DATE)
@@ -23,9 +31,9 @@ private fun String.icsDateTimeToMillis(): Long {
         val ldt = java.time.LocalDateTime.parse(clean, DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss"))
         ldt.atZone(ZoneOffset.UTC).toInstant().toEpochMilli()
     } else {
-        // Date-only value (all-day event) — anchor to UTC midnight of that date.
+        // Date-only values represent a local calendar date, not a UTC instant.
         val date = LocalDate.parse(clean, DateTimeFormatter.ofPattern("yyyyMMdd"))
-        date.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+        date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
     }
 }
 
@@ -81,7 +89,7 @@ private val WEEKDAY_CODES = listOf("MO", "TU", "WE", "TH", "FR", "SA", "SU")
  * NOTE: endDateTime is only meaningful here as the recurrence cutoff (UNTIL) — it is
  * NOT a per-occurrence duration, because EventModel has no field for that.
  */
-fun RecurrenceRule.toIcsRRule(endDateTime: Long): String? {
+fun RecurrenceRule.toIcsRRule(endDateTime: Long, isAllDay: Boolean = false): String? {
     val core = when (this) {
         RecurrenceRule.NONE, RecurrenceRule.Once -> return null
         is RecurrenceRule.Weekly -> {
@@ -111,7 +119,8 @@ fun RecurrenceRule.toIcsRRule(endDateTime: Long): String? {
             if (everyXDays <= 1) "FREQ=DAILY" else "FREQ=DAILY;INTERVAL=$everyXDays"
         }
     }
-    return if (endDateTime > 0) "$core;UNTIL=${endDateTime.toIcsDateTime()}" else core
+    val until = if (isAllDay) endDateTime.toIcsDate() else endDateTime.toIcsDateTime()
+    return if (endDateTime > 0) "$core;UNTIL=$until" else core
 }
 
 /**
@@ -182,10 +191,14 @@ object IcsExporter {
         sb.appendLine("BEGIN:VEVENT")
         sb.appendLine("UID:${event.id}@flux")
         sb.appendLine("DTSTAMP:${System.currentTimeMillis().toIcsDateTime()}")
-        sb.appendLine("DTSTART:${event.startDateTime.toIcsDateTime()}")
+        if (event.isAllDay) {
+            sb.appendLine("DTSTART;VALUE=DATE:${event.startDateTime.toIcsDate()}")
+        } else {
+            sb.appendLine("DTSTART:${event.startDateTime.toIcsDateTime()}")
+        }
 
         val isRecurring = event.recurrence !is RecurrenceRule.Once && event.recurrence != RecurrenceRule.NONE
-        if (!isRecurring) {
+        if (!isRecurring && !event.isAllDay) {
             // Only a genuinely one-off event has a real DTEND; for recurring events
             // endDateTime is expressed as RRULE;UNTIL instead (see toIcsRRule).
             val dtEnd = if (event.endDateTime > 0) event.endDateTime else event.startDateTime
@@ -197,7 +210,7 @@ object IcsExporter {
             sb.appendLine("DESCRIPTION:${event.description.escapeIcsText()}")
         }
 
-        event.recurrence.toIcsRRule(event.endDateTime)?.let { rrule ->
+        event.recurrence.toIcsRRule(event.endDateTime, event.isAllDay)?.let { rrule ->
             sb.appendLine("RRULE:$rrule")
         }
 
@@ -233,6 +246,7 @@ object IcsImporter {
         var summary = ""
         var description = ""
         var dtStart: Long? = null
+        var isAllDay = false
         var dtEnd: Long? = null
         var rrule: String? = null
         val notificationOffsets = mutableListOf<Long>()
@@ -242,6 +256,7 @@ object IcsImporter {
             val (recurrence, until) = rrule?.let { parseIcsRRule(it) } ?: (RecurrenceRule.Once to null)
             val endDateTime = when {
                 until != null -> until              // recurring: UNTIL -> our recurrence cutoff
+                isAllDay -> -1L
                 recurrence == RecurrenceRule.Once -> dtEnd ?: -1L
                 else -> -1L                           // recurring, no UNTIL -> open-ended
             }
@@ -254,7 +269,8 @@ object IcsImporter {
                 endDateTime = endDateTime,
                 notificationOffset = notificationOffsets.firstOrNull() ?: 0L,
                 notificationOffsets = notificationOffsets.toList(),
-                workspaceId = workspaceId
+                workspaceId = workspaceId,
+                isAllDay = isAllDay
             )
         }
 
@@ -266,6 +282,7 @@ object IcsImporter {
                     inAlarm = false
                     uid = null; summary = ""; description = ""
                     dtStart = null; dtEnd = null; rrule = null
+                    isAllDay = false
                     notificationOffsets.clear()
                 }
                 line == "END:VEVENT" -> {
@@ -284,8 +301,11 @@ object IcsImporter {
                 line.startsWith("UID") -> uid = valueOf(line)
                 line.startsWith("SUMMARY") -> summary = valueOf(line).unescapeIcsText()
                 line.startsWith("DESCRIPTION") -> description = valueOf(line).unescapeIcsText()
-                line.startsWith("DTSTART") ->
+                line.startsWith("DTSTART") -> {
+                    isAllDay = line.substringBefore(':')
+                        .contains("VALUE=DATE", ignoreCase = true)
                     dtStart = runCatching { valueOf(line).icsDateTimeToMillis() }.getOrNull()
+                }
                 line.startsWith("DTEND") ->
                     dtEnd = runCatching { valueOf(line).icsDateTimeToMillis() }.getOrNull()
                 line.startsWith("RRULE") -> rrule = valueOf(line)

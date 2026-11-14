@@ -656,6 +656,7 @@ fun LazyListScope.searchedEvent(
                         title = event.title,
                         repeat = event.recurrence,
                         startDateTime = event.startDateTime,
+                        isAllDay = event.isAllDay,
                         occurrenceDate = occurrence.instanceDate,
                         colorArgb = occurrenceColors.firstOrNull {
                             it.eventId == event.id && it.occurrenceDate == occurrence.instanceDate

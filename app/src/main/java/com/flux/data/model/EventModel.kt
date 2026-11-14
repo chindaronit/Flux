@@ -1,6 +1,7 @@
 package com.flux.data.model
 
 import androidx.room.Entity
+import androidx.room.ColumnInfo
 import androidx.room.PrimaryKey
 import java.util.UUID
 import kotlinx.serialization.Serializable
@@ -26,7 +27,9 @@ data class EventModel(
     val notificationOffsets: List<Long>? = null,
     val workspaceId: String = "",
     val colorArgb: Int? = null,
-    val attachments: List<String> = emptyList()
+    val attachments: List<String> = emptyList(),
+    @ColumnInfo(defaultValue = "0")
+    val isAllDay: Boolean = false
 )
 
 fun EventModel.effectiveReminderOffsets(): List<Long> =
@@ -86,6 +89,7 @@ fun findEventOccurrences(
     throughDate: LocalDate
 ): List<EventOccurrence> {
     if (throughDate.isBefore(fromDate)) return emptyList()
+    val zoneId = ZoneId.systemDefault()
     val excludedOccurrences = exceptions
         .groupBy { it.eventId }
         .mapValues { (_, entries) -> entries.map { it.occurrenceDate }.toHashSet() }
@@ -93,7 +97,7 @@ fun findEventOccurrences(
     return buildList {
         events.forEach { event ->
             val eventStart = Instant.ofEpochMilli(event.startDateTime)
-                .atZone(ZoneId.systemDefault())
+                .atZone(zoneId)
                 .toLocalDate()
             if (event.recurrence is RecurrenceRule.Once) {
                 if (eventStart.toEpochDay() !in excludedOccurrences[event.id].orEmpty()) {
@@ -102,7 +106,7 @@ fun findEventOccurrences(
                 return@forEach
             }
             val eventEnd = event.endDateTime.takeIf { it > 0L }
-                ?.let { Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate() }
+                ?.let { Instant.ofEpochMilli(it).atZone(zoneId).toLocalDate() }
             var date = maxOf(eventStart, fromDate)
             val lastDate = minOf(throughDate, eventEnd ?: throughDate)
             while (!date.isAfter(lastDate)) {
@@ -115,7 +119,8 @@ fun findEventOccurrences(
     }.sortedWith { first, second ->
         first.date.compareTo(second.date)
             .takeIf { it != 0 }
-            ?: first.event.startDateTime.compareTo(second.event.startDateTime)
+            ?: Instant.ofEpochMilli(first.event.startDateTime).atZone(zoneId).toLocalTime()
+                .compareTo(Instant.ofEpochMilli(second.event.startDateTime).atZone(zoneId).toLocalTime())
                 .takeIf { it != 0 }
             ?: first.event.title.compareTo(second.event.title, ignoreCase = true)
                 .takeIf { it != 0 }
