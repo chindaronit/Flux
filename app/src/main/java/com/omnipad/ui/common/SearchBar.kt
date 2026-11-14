@@ -43,6 +43,7 @@ fun GeneralSearchBar(
     onAddClicked: (() -> Unit)? = null,
     onSearch: (String) -> Unit,
     onCloseClicked: () -> Unit,
+    trailingIconContentDescription: String? = null,
 ) {
     val query = textFieldState.text.toString()
     var expanded by rememberSaveable { mutableStateOf(false) }
@@ -80,6 +81,7 @@ fun GeneralSearchBar(
                     onAddClicked = onAddClicked,
                     leadingIcon = leadingIcon,
                     trailingIcon = trailingIcon,
+                    trailingIconContentDescription = trailingIconContentDescription,
                     onLeadingIconClicked = onLeadingIconClicked,
                     onTrailingIconClicked = onTrailingIconClicked
                 )
@@ -102,7 +104,8 @@ fun GeneralSearchInputField(
     onSearchClosed: () -> Unit,
     onAddClicked: (() -> Unit)? = null,
     onLeadingIconClicked: () -> Unit = {},
-    onTrailingIconClicked: () -> Unit = {}
+    onTrailingIconClicked: () -> Unit = {},
+    trailingIconContentDescription: String? = null
 ) {
     SearchBarDefaults.InputField(
         query = query,
@@ -129,7 +132,7 @@ fun GeneralSearchInputField(
                     IconButton(onClick = onTrailingIconClicked) {
                         Icon(
                             imageVector = it,
-                            contentDescription = null,
+                            contentDescription = trailingIconContentDescription,
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }

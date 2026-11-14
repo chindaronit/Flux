@@ -4,8 +4,11 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.navigation.NavController
 import com.omnipad.data.model.EventModel
+import com.omnipad.data.model.RecurrenceRule
+import com.omnipad.data.model.eventColorForOccurrence
 import com.omnipad.data.model.HabitModel
 import com.omnipad.data.model.JournalModel
 import com.omnipad.data.model.NotesModel
@@ -43,6 +46,8 @@ import com.omnipad.ui.screens.workspaces.WorkspaceDetails
 import com.omnipad.ui.screens.workspaces.WorkspaceHomeScreen
 import com.omnipad.ui.state.States
 import com.omnipad.ui.viewModel.ViewModels
+import java.time.Instant
+import java.time.ZoneId
 
 sealed class NavRoutes(val route: String) {
     data object AuthScreen : NavRoutes("biometric") // auth screen
@@ -283,37 +288,59 @@ val SettingsScreens =
 val EventScreens =
     mapOf<String, @Composable (navController: NavController, states: States, viewModels: ViewModels, eventId: String, workspaceId: String, instanceDate: Long, eventDate: Long) -> Unit>(
         NavRoutes.NewEvent.route + "/{workspaceId}" + "/{eventId}" + "/{eventDate}"  to { navController, states, viewModels, eventId, workspaceId, _, eventDate ->
-            val event = states.eventState.allEvent.find { it.id == eventId }
-                ?: EventModel(workspaceId = workspaceId, startDateTime = eventDate, id = eventId)
-            NewEvent(
-                navController,
-                event,
-                states.settings,
-                viewModels.eventViewModel::onEvent,
-                workspaces = states.workspaceState.allWorkspaces,
-                allEventInstances = states.eventState.allEventInstances,
-                eventOccurrenceColorArgb = event.colorArgb,
-                onWorkspaceEvents = viewModels.workspaceViewModel::onEvent,
-                settingsViewModel = viewModels.settingsViewModel
-            )
+            if (states.eventState.isAllEventsLoading) {
+                Loader()
+            } else {
+                val storedEvent = states.eventState.allEvent.find { it.id == eventId }
+                val isNewEvent = rememberSaveable(eventId) { storedEvent == null }
+                val event = storedEvent
+                    ?: EventModel(workspaceId = workspaceId, startDateTime = eventDate, id = eventId)
+                val instanceDate = Instant.ofEpochMilli(event.startDateTime)
+                    .atZone(ZoneId.systemDefault()).toLocalDate().toEpochDay()
+                val hasOccurrenceColorOverride = event.recurrence == RecurrenceRule.Once &&
+                    states.eventState.eventOccurrenceColors.any {
+                        it.eventId == event.id && it.occurrenceDate == instanceDate
+                    }
+                NewEvent(
+                    navController,
+                    event,
+                    states.settings,
+                    viewModels.eventViewModel::onEvent,
+                    isNewEvent = isNewEvent,
+                    workspaces = states.workspaceState.allWorkspaces,
+                    allEventInstances = states.eventState.allEventInstances,
+                    eventOccurrenceColorArgb = if (event.recurrence == RecurrenceRule.Once) {
+                        eventColorForOccurrence(event, instanceDate, states.eventState.eventOccurrenceColors)
+                    } else event.colorArgb,
+                    hasOccurrenceColorOverride = hasOccurrenceColorOverride,
+                    onWorkspaceEvents = viewModels.workspaceViewModel::onEvent,
+                    settingsViewModel = viewModels.settingsViewModel
+                )
+            }
         },
         NavRoutes.NewEventOccurrence.route + "/{workspaceId}" + "/{eventId}" + "/{occurrenceDate}" to { navController, states, viewModels, eventId, workspaceId, occurrenceDate, _ ->
-            val event = states.eventState.allEvent.find { it.id == eventId }
-                ?: EventModel(workspaceId = workspaceId, id = eventId)
-            NewEvent(
-                navController,
-                event,
-                states.settings,
-                viewModels.eventViewModel::onEvent,
-                occurrenceDate,
-                workspaces = states.workspaceState.allWorkspaces,
-                allEventInstances = states.eventState.allEventInstances,
-                eventOccurrenceColorArgb = states.eventState.eventOccurrenceColors.firstOrNull {
-                    it.eventId == eventId && it.occurrenceDate == occurrenceDate
-                }?.colorArgb ?: event.colorArgb,
-                onWorkspaceEvents = viewModels.workspaceViewModel::onEvent,
-                settingsViewModel = viewModels.settingsViewModel
-            )
+            if (states.eventState.isAllEventsLoading) {
+                Loader()
+            } else {
+                val event = states.eventState.allEvent.find { it.id == eventId }
+                    ?: EventModel(workspaceId = workspaceId, id = eventId)
+                NewEvent(
+                    navController,
+                    event,
+                    states.settings,
+                    viewModels.eventViewModel::onEvent,
+                    occurrenceDate,
+                    isNewEvent = false,
+                    workspaces = states.workspaceState.allWorkspaces,
+                    allEventInstances = states.eventState.allEventInstances,
+                    eventOccurrenceColorArgb = eventColorForOccurrence(
+                        event, occurrenceDate, states.eventState.eventOccurrenceColors
+                    ),
+                    hasOccurrenceColorOverride = false,
+                    onWorkspaceEvents = viewModels.workspaceViewModel::onEvent,
+                    settingsViewModel = viewModels.settingsViewModel
+                )
+            }
         }
     )
 

@@ -58,6 +58,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -87,6 +88,7 @@ import com.omnipad.data.model.EventInstanceModel
 import com.omnipad.data.model.EventModel
 import com.omnipad.data.model.WorkspaceModel
 import com.omnipad.data.model.effectiveReminderOffsets
+import com.omnipad.data.model.eventEditorPreviewColor
 import com.omnipad.data.model.IntervalUnit
 import com.omnipad.data.model.RecurrenceRule
 import com.omnipad.ui.common.DatePickerModal
@@ -122,9 +124,11 @@ fun NewEvent(
     settings: Settings,
     onTaskEvents: (TaskEvents) -> Unit,
     occurrenceDate: Long? = null,
+    isNewEvent: Boolean,
     workspaces: List<WorkspaceModel>,
     allEventInstances: List<EventInstanceModel>,
     eventOccurrenceColorArgb: Int?,
+    hasOccurrenceColorOverride: Boolean,
     onWorkspaceEvents: (WorkspaceEvents) -> Unit,
     settingsViewModel: SettingsViewModel
 ) {
@@ -218,7 +222,7 @@ fun NewEvent(
         ActivityResultContracts.OpenMultipleDocuments()
     ) { uris ->
         if (uris.isNotEmpty()) {
-            val attachmentEvent = if (event.title.isBlank()) {
+            val attachmentEvent = if (isNewEvent) {
                 event.copy(
                     title = title,
                     description = description,
@@ -228,7 +232,7 @@ fun NewEvent(
                     isAllDay = isAllDay,
                     notificationOffset = notificationOffsets.firstOrNull() ?: 0L,
                     notificationOffsets = notificationOffsets,
-                    colorArgb = selectedColorArgb
+                    colorArgb = selectedColorArgb ?: settings.data.defaultNewEventColorArgb
                 )
             } else {
                 event
@@ -260,13 +264,13 @@ fun NewEvent(
 
     fun applyEventColor(colorArgb: Int?) {
         selectedColorArgb = colorArgb
-        if (event.title.isNotBlank()) {
+        if (!isNewEvent) {
             onTaskEvents(
                 TaskEvents.SetEventColor(
                     event = event,
                     occurrenceDate = instanceDate,
                     colorArgb = colorArgb,
-                    applyToSeries = !isOccurrenceEdit
+                    applyToSeries = !isOccurrenceEdit && !hasOccurrenceColorOverride
                 )
             )
         }
@@ -504,7 +508,7 @@ fun NewEvent(
             isAllDay = isAllDay,
             notificationOffset = notificationOffsets.firstOrNull() ?: 0L,
             notificationOffsets = notificationOffsets,
-            colorArgb = selectedColorArgb
+            colorArgb = if (hasOccurrenceColorOverride) originalEvent.colorArgb else selectedColorArgb
         )
         val hasContent = candidate != originalEvent
 
@@ -536,7 +540,7 @@ fun NewEvent(
                 isAllDay = isAllDay,
                 notificationOffset = notificationOffsets.firstOrNull() ?: 0L,
                 notificationOffsets = notificationOffsets,
-                colorArgb = selectedColorArgb
+                colorArgb = if (hasOccurrenceColorOverride) originalEvent.colorArgb else selectedColorArgb
             ) != originalEvent
         }
         if (hasChanges) {
@@ -557,7 +561,7 @@ fun NewEvent(
                     Text(
                         stringResource(
                             when {
-                                event.title.isBlank() -> R.string.create_event
+                                isNewEvent -> R.string.create_event
                                 occurrenceDate == null && event.recurrence != RecurrenceRule.Once ->
                                     R.string.event_edit_series
                                 else -> R.string.Edit_Event
@@ -581,7 +585,7 @@ fun NewEvent(
                             contentDescription = stringResource(R.string.event_color_title)
                         )
                     }
-                    if (event.title.isNotBlank()) {
+                    if (!isNewEvent) {
                         IconButton(
                             onClick = {
                                 pendingStatus = !pendingStatus
@@ -657,7 +661,7 @@ fun NewEvent(
                 ) {
                     Icon(Icons.Default.Check, contentDescription = null)
                     Text(
-                        stringResource(if (event.title.isBlank()) R.string.create_event else R.string.save),
+                        stringResource(if (isNewEvent) R.string.create_event else R.string.save),
                         modifier = Modifier.padding(start = 8.dp),
                         style = MaterialTheme.typography.titleMedium
                     )
@@ -665,13 +669,21 @@ fun NewEvent(
             }
         }
     ) { innerPadding ->
-        val previewColorArgb = selectedColorArgb
-            ?: (if (isOccurrenceEdit) event.colorArgb else null)
-            ?: settings.data.defaultNewEventColorArgb
+        val previewColorArgb = eventEditorPreviewColor(
+            selectedColorArgb = selectedColorArgb,
+            seriesColorArgb = event.colorArgb,
+            useSeriesFallback = isOccurrenceEdit || hasOccurrenceColorOverride,
+            isNewEvent = isNewEvent,
+            defaultNewEventColorArgb = settings.data.defaultNewEventColorArgb,
+            completedColorArgb = settings.data.completedEventColorArgb,
+            isPending = pendingStatus
+        )
         val previewBackground = previewColorArgb?.let(::Color)
-            ?: MaterialTheme.colorScheme.primaryContainer
+            ?: if (isNewEvent || !pendingStatus) MaterialTheme.colorScheme.primaryContainer
+            else MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)
         val previewContent = previewColorArgb?.let(::eventTextColor)
-            ?: MaterialTheme.colorScheme.onPrimaryContainer
+            ?: if (isNewEvent || !pendingStatus) MaterialTheme.colorScheme.onPrimaryContainer
+            else MaterialTheme.colorScheme.onSurface
         Column(
             Modifier
                 .fillMaxSize()

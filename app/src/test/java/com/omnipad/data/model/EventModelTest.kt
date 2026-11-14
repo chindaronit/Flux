@@ -1,11 +1,48 @@
 package com.omnipad.data.model
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 import java.time.LocalDate
 import java.time.ZoneId
 
 class EventModelTest {
+    @Test
+    fun occurrenceColorOverridesSeriesOnlyForMatchingEventAndDate() {
+        val event = EventModel(id = "event", colorArgb = 1)
+        val date = LocalDate.of(2026, 11, 13).toEpochDay()
+        val colors = listOf(
+            EventOccurrenceColorModel("other", "", date, 2),
+            EventOccurrenceColorModel(event.id, "", date + 1, 3),
+            EventOccurrenceColorModel(event.id, "", date, 4)
+        )
+
+        assertEquals(4, eventColorForOccurrence(event, date, colors))
+        assertEquals(3, eventColorForOccurrence(event, date + 1, colors))
+        assertEquals(1, eventColorForOccurrence(event, date - 1, colors))
+        assertNull(eventColorForOccurrence(event.copy(colorArgb = null), date - 1, colors))
+    }
+
+    @Test
+    fun editorPreviewUsesNewDefaultsOnlyForNewEventsAndMatchesCompletedColors() {
+        fun preview(
+            selected: Int?,
+            series: Int? = null,
+            occurrence: Boolean = false,
+            isNew: Boolean = false,
+            isPending: Boolean = true
+        ) = eventEditorPreviewColor(selected, series, occurrence, isNew, 1, 2, isPending)
+
+        assertEquals(1, preview(selected = null, isNew = true))
+        assertEquals(3, preview(selected = 3, isNew = true))
+        assertNull(preview(selected = null))
+        assertEquals(4, preview(selected = 4, series = 3, occurrence = true))
+        assertEquals(3, preview(selected = null, series = 3, occurrence = true))
+        assertEquals(2, preview(selected = null, isPending = false))
+        assertEquals(2, preview(selected = 4, isPending = false))
+        assertEquals(displayedEventColor(4, 2, false), preview(selected = 4, isPending = false))
+    }
+
     @Test
     fun findEventOccurrencesSortsEachDayByLocalTimeThenTitleAndId() {
         val date = LocalDate.of(2026, 11, 13)

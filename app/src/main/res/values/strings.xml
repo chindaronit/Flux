@@ -380,6 +380,29 @@
 
     <!-- Calendar -->
     <string name="Calendar">Calendar</string>
+    <string name="event_agenda">Agenda</string>
+    <string name="search_all_types">All types</string>
+    <string name="search_scope">Search in: %1$s</string>
+    <string name="search_no_types">No types</string>
+    <string name="search_type_count">%1$d types</string>
+    <string name="search_filter_title">Search in spaces</string>
+    <string name="search_filters">Search filters</string>
+    <string name="search_select_all">Select all</string>
+    <string name="search_clear_all">Clear all</string>
+    <string name="search_choose_create_type">Choose an item type</string>
+    <string name="search_calendar_filtered">Filtered events</string>
+    <string name="search_jump_to">Jump to</string>
+    <string name="search_jump_to_type">Jump to %1$s results</string>
+    <string name="event_previous_month">Previous month</string>
+    <string name="event_next_month">Next month</string>
+    <string name="event_choose_month">Choose month</string>
+    <string name="event_choose_year">Choose year</string>
+    <string name="event_choose_month_description">Choose month, currently %1$s</string>
+    <string name="event_choose_year_description">Choose year, currently %1$s</string>
+    <string name="event_show_in_calendar">Show in calendar</string>
+    <string name="event_mark_complete">Mark complete</string>
+    <string name="event_mark_incomplete">Mark incomplete</string>
+    <string name="event_more_actions">Event actions</string>
 
     <!-- Journal -->
     <string name="Journal">Journal</string>
